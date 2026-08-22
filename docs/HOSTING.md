@@ -65,6 +65,10 @@ VPS, на котором разом крутится и backend, и раздач
 frontend + БД) на одной машине. Если важнее нулевые вложения и не
 пугает более сложная настройка — **Oracle Cloud Always Free**.
 
+Готовые `Dockerfile`/`docker-compose.yml` для этого варианта уже лежат
+в репозитории — пошаговая инструкция по деплою в
+[`docs/DEPLOY.md`](DEPLOY.md).
+
 Источники (обзор цен 2026 года):
 - [Render vs Railway vs Fly.io: 2026 Pricing Showdown](https://expresstech.io/render-vs-railway-vs-fly-io-2026-pricing-showdown/)
 - [7 Fly.io Alternatives in 2026](https://expresstech.io/7-fly-io-alternatives-in-2026-real-pricing-after-the-free-tier-died/)

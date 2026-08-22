@@ -12,6 +12,7 @@
 - [`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) — план развития до
   промышленной системы.
 - [`docs/HOSTING.md`](docs/HOSTING.md) — варианты недорогого хостинга.
+- [`docs/DEPLOY.md`](docs/DEPLOY.md) — пошаговый деплой на Hetzner + Coolify (готовые Dockerfile/docker-compose уже в репозитории).
 
 ## Стек
 
