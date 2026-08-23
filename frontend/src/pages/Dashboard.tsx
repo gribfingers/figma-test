@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, Flight } from "../api";
+import { Field } from "../components/Field";
+import { RefreshIcon } from "../components/Icon";
 
 const OPS_STATUS_LABEL: Record<string, string> = {
   SCHEDULED: "Scheduled",
@@ -86,45 +88,41 @@ export function Dashboard() {
 
       <div className="panel">
         <form onSubmit={runSearch}>
-          <div className="toolbar" style={{ flexWrap: "wrap" }}>
-            <div className="field" style={{ margin: 0 }}>
-              <label>Airline</label>
+          <div className="toolbar" style={{ flexWrap: "wrap", alignItems: "flex-end" }}>
+            <Field label="Airline" style={{ minWidth: 120 }}>
               <select value={draftSearch.airline} onChange={(e) => setDraftSearch({ ...draftSearch, airline: e.target.value })}>
                 <option value="">All</option>
                 {airlines.map((a) => <option key={a} value={a}>{a}</option>)}
               </select>
-            </div>
-            <div className="field" style={{ margin: 0 }}>
-              <label>Flight number</label>
+            </Field>
+            <Field label="Flight number" style={{ minWidth: 130 }}>
               <input value={draftSearch.flight} onChange={(e) => setDraftSearch({ ...draftSearch, flight: e.target.value })} placeholder="All" />
-            </div>
-            <div className="field" style={{ margin: 0 }}>
-              <label>Departure</label>
+            </Field>
+            <Field label="Departure" style={{ minWidth: 120 }}>
               <select value={draftSearch.origin} onChange={(e) => setDraftSearch({ ...draftSearch, origin: e.target.value })}>
                 <option value="">All</option>
                 {origins.map((o) => <option key={o} value={o}>{o}</option>)}
               </select>
-            </div>
-            <div className="field" style={{ margin: 0 }}>
-              <label>Destination</label>
+            </Field>
+            <Field label="Destination" style={{ minWidth: 120 }}>
               <select value={draftSearch.destination} onChange={(e) => setDraftSearch({ ...draftSearch, destination: e.target.value })}>
                 <option value="">All</option>
                 {destinations.map((d) => <option key={d} value={d}>{d}</option>)}
               </select>
-            </div>
-            <div className="field" style={{ margin: 0 }}>
-              <label>Date/time from</label>
+            </Field>
+            <Field label="Date/time from" style={{ minWidth: 170 }}>
               <input type="datetime-local" value={draftSearch.dateFrom} onChange={(e) => setDraftSearch({ ...draftSearch, dateFrom: e.target.value })} />
-            </div>
-            <div className="field" style={{ margin: 0 }}>
-              <label>Date/time to</label>
+            </Field>
+            <Field label="Date/time to" style={{ minWidth: 170 }}>
               <input type="datetime-local" value={draftSearch.dateTo} onChange={(e) => setDraftSearch({ ...draftSearch, dateTo: e.target.value })} />
-            </div>
+            </Field>
             <button type="submit">Search</button>
             <button type="button" className="secondary" onClick={resetSearch}>Reset</button>
             <div className="spacer" />
             <Link to="/flights/new"><button type="button">New flight</button></Link>
-            <button type="button" className="secondary" onClick={load} title="Refresh">⟳</button>
+            <button type="button" className="secondary icon-btn" onClick={load} title="Refresh">
+              <RefreshIcon />
+            </button>
           </div>
         </form>
       </div>

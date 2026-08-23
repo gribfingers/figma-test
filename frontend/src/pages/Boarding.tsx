@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { api, Flight, Passenger } from "../api";
+import { ArrowBackIcon } from "../components/Icon";
 
 const STATUS_BADGE: Record<string, string> = {
   BOARDED: "ok",
@@ -82,7 +83,9 @@ export function Boarding() {
 
   return (
     <div>
-      <Link to="/">← Flight board</Link>
+      <Link to="/" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+        <ArrowBackIcon size={16} /> Flight board
+      </Link>
       <h1>Boarding agent workstation (gate)</h1>
       <p className="subtitle">
         Flight <span className="mono">{flight.carrier_code}{flight.flight_number}</span>{" "}
@@ -104,14 +107,16 @@ export function Boarding() {
       <div className="panel">
         <h3>Scan boarding pass (BCBP)</h3>
         <form onSubmit={handleScan} className="toolbar">
-          <input
-            className="mono"
-            placeholder="Paste the boarding pass BCBP string…"
-            value={scanValue}
-            disabled={closed}
-            onChange={(e) => setScanValue(e.target.value)}
-            style={{ flex: 1 }}
-          />
+          <div className="field2" style={{ flex: 1 }}>
+            <label>BCBP string</label>
+            <input
+              className="mono"
+              placeholder="Paste the boarding pass BCBP string…"
+              value={scanValue}
+              disabled={closed}
+              onChange={(e) => setScanValue(e.target.value)}
+            />
+          </div>
           <button type="submit" disabled={closed}>Scan</button>
         </form>
       </div>
