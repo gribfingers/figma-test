@@ -151,8 +151,8 @@ export function Boarding() {
                 <td style={{ display: "flex", gap: 6 }}>
                   {p.checkin_status === "CHECKED_IN" && p.boarding_status === "NOT_BOARDED" && !closed && (
                     <>
-                      <button className="secondary" onClick={() => boardDirectly(p)}>Board</button>
-                      <button className="danger" onClick={() => offload(p)}>Offload</button>
+                      <button className="secondary small" onClick={() => boardDirectly(p)}>Board</button>
+                      <button className="danger small" onClick={() => offload(p)}>Offload</button>
                     </>
                   )}
                 </td>

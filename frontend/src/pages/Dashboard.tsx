@@ -183,8 +183,8 @@ export function Dashboard() {
                   <td>{f.aircraft_version ?? "—"}</td>
                   <td><span className={`badge ${f.status === "CLOSED" ? "danger" : f.status === "BOARDING" ? "warn" : "ok"}`}>{f.status}</span></td>
                   <td style={{ display: "flex", gap: 6, whiteSpace: "nowrap" }}>
-                    <Link to={`/checkin/${f.id}`}><button className="secondary">Check-in</button></Link>
-                    <Link to={`/boarding/${f.id}`}><button className="secondary">Boarding</button></Link>
+                    <Link to={`/checkin/${f.id}`}><button className="secondary small">Check-in</button></Link>
+                    <Link to={`/boarding/${f.id}`}><button className="secondary small">Boarding</button></Link>
                   </td>
                 </tr>
               ))}
