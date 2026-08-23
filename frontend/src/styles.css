@@ -6,6 +6,7 @@
   --muted-2: #9aa1ac;
   --border: #e3e8ee;
   --border-strong: #c8d0da;
+  --panel-border: #dee2e5;
   --accent: #1979d9;
   --accent-hover: #166ec7;
   --accent-soft: #f2f6fa;
@@ -64,7 +65,7 @@ body {
   letter-spacing: 0.01em;
 }
 .brand { color: #fff; text-decoration: none; }
-.content { padding: 24px; max-width: 1280px; margin: 0 auto; width: 100%; }
+.content { padding: 16px; width: 100%; }
 
 h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.01em; margin: 0 0 4px; }
 h2 { font-size: 18px; font-weight: 600; margin: 0 0 12px; }
@@ -80,12 +81,12 @@ h3 {
 
 .panel {
   background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
   padding: 18px;
   margin-bottom: 16px;
-  box-shadow: 0 1px 2px rgba(20, 30, 60, 0.03);
 }
+.panel:last-child { margin-bottom: 0; }
 
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
@@ -471,9 +472,8 @@ pre.manifest {
 a { color: var(--accent); }
 
 @media (max-width: 640px) {
-  .content { padding: 16px; }
   .topbar { padding: 12px 16px; }
   h1 { font-size: 20px; }
-  .panel { padding: 14px; border-radius: 10px; }
+  .panel { padding: 14px; }
   button { padding: 9px 14px; font-size: 13px; }
 }
