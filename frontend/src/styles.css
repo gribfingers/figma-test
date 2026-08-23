@@ -93,7 +93,7 @@ h3 {
 @media (max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
 
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
-th, td { text-align: left; border-bottom: 1px solid var(--border); }
+th, td { text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
 /* ---- TableHead, per Figma TableHead component set (id 30142:19188) ---- */
 th {
   padding: 7px 16px;

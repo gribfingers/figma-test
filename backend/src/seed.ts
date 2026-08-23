@@ -14,14 +14,17 @@ function isoInDays(days: number, hour: number): string {
   return d.toISOString();
 }
 
+// aircraft_version is the cabin configuration code (seats per class); counts match
+// the Business(C)/Economy(Y) rows this app's seat map actually generates — there's
+// no Premium/W cabin in the seat map model, so it's omitted rather than faked.
 const flights = [
-  { flight_number: "1234", carrier_code: "SU", origin: "SVO", destination: "LED", std: isoInDays(0, 14), aircraft_type: "A320" },
-  { flight_number: "5678", carrier_code: "SU", origin: "SVO", destination: "IST", std: isoInDays(0, 18), aircraft_type: "B738" },
+  { flight_number: "1234", carrier_code: "SU", origin: "SVO", destination: "LED", std: isoInDays(0, 14), aircraft_type: "A320", aircraft_reg: "K0876", aircraft_version: "C18Y162" },
+  { flight_number: "5678", carrier_code: "SU", origin: "SVO", destination: "IST", std: isoInDays(0, 18), aircraft_type: "B738", aircraft_reg: "K0654", aircraft_version: "C24Y168" },
 ];
 
 const insertFlight = db.prepare(
-  `INSERT INTO flights (flight_number, carrier_code, origin, destination, std, aircraft_type, status)
-   VALUES (?, ?, ?, ?, ?, ?, 'CHECKIN_OPEN')`
+  `INSERT INTO flights (flight_number, carrier_code, origin, destination, std, aircraft_type, aircraft_reg, aircraft_version, status)
+   VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'CHECKIN_OPEN')`
 );
 const insertSeat = db.prepare(`INSERT INTO seats (flight_id, seat, cabin_class, exit_row) VALUES (?, ?, ?, ?)`);
 const insertPax = db.prepare(
@@ -43,7 +46,7 @@ const samplePax = [
 let locatorSeed = 100000;
 const tx = db.transaction(() => {
   for (const f of flights) {
-    const info = insertFlight.run(f.flight_number, f.carrier_code, f.origin, f.destination, f.std, f.aircraft_type);
+    const info = insertFlight.run(f.flight_number, f.carrier_code, f.origin, f.destination, f.std, f.aircraft_type, f.aircraft_reg, f.aircraft_version);
     const flightId = info.lastInsertRowid as number;
     for (const s of buildSeatMap(f.aircraft_type)) {
       insertSeat.run(flightId, s.seat, s.cabinClass, s.exitRow ? 1 : 0);

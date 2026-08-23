@@ -149,7 +149,7 @@ export function Dashboard() {
                 <th><input placeholder="ETD" value={quick.etd} onChange={(e) => setQuick({ ...quick, etd: e.target.value })} style={{ width: "100%" }} /></th>
                 <th><input placeholder="STA" value={quick.sta} onChange={(e) => setQuick({ ...quick, sta: e.target.value })} style={{ width: "100%" }} /></th>
                 <th><input placeholder="ATA" value={quick.ata} onChange={(e) => setQuick({ ...quick, ata: e.target.value })} style={{ width: "100%" }} /></th>
-                <th colSpan={6}></th>
+                <th colSpan={5}></th>
               </tr>
               <tr>
                 <th>STD</th>
@@ -165,8 +165,6 @@ export function Dashboard() {
                 <th>Type</th>
                 <th>A/C reg</th>
                 <th>Version</th>
-                <th>DCS status</th>
-                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -174,7 +172,7 @@ export function Dashboard() {
                 <tr key={f.id}>
                   <td className="mono">{formatTime(f.std)}</td>
                   <td>{f.carrier_code}</td>
-                  <td className="mono">{f.carrier_code}{f.flight_number}</td>
+                  <td className="mono">{f.flight_number}</td>
                   <td className="mono">{f.origin} → {f.destination}</td>
                   <td><span className={`chip middle ${OPS_STATUS_BADGE[f.ops_status] ?? "muted"}`}>{OPS_STATUS_LABEL[f.ops_status] ?? f.ops_status}</span></td>
                   <td className="mono">{formatTime(f.etd)}</td>
@@ -184,16 +182,11 @@ export function Dashboard() {
                   <td className="mono">{f.gate ?? "—"}</td>
                   <td>{f.aircraft_type}</td>
                   <td className="mono">{f.aircraft_reg ?? "—"}</td>
-                  <td>{f.aircraft_version ?? "—"}</td>
-                  <td><span className={`chip middle ${f.status === "CLOSED" ? "danger" : f.status === "BOARDING" ? "warn" : "ok"}`}>{f.status}</span></td>
-                  <td style={{ display: "flex", gap: 6, whiteSpace: "nowrap" }}>
-                    <Link to={`/checkin/${f.id}`}><button className="secondary small">Check-in</button></Link>
-                    <Link to={`/boarding/${f.id}`}><button className="secondary small">Boarding</button></Link>
-                  </td>
+                  <td className="mono">{f.aircraft_version ?? "—"}</td>
                 </tr>
               ))}
               {visibleFlights.length === 0 && (
-                <tr><td colSpan={15} style={{ color: "var(--muted)" }}>No flights match the current filters.</td></tr>
+                <tr><td colSpan={13} style={{ color: "var(--muted)" }}>No flights match the current filters.</td></tr>
               )}
             </tbody>
           </table>
