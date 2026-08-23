@@ -18,6 +18,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends python3 make g+
 COPY package*.json ./
 RUN npm ci --omit=dev
 COPY --from=builder /app/dist ./dist
+COPY scripts ./scripts
 
 ENV DB_PATH=/app/data/data.sqlite3
 VOLUME ["/app/data"]
