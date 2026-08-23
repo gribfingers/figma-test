@@ -107,15 +107,17 @@ export function Boarding() {
       <div className="panel">
         <h3>Scan boarding pass (BCBP)</h3>
         <form onSubmit={handleScan} className="toolbar">
-          <div className="field2" style={{ flex: 1 }}>
+          <div style={{ flex: 1 }}>
             <label>BCBP string</label>
-            <input
-              className="mono"
-              placeholder="Paste the boarding pass BCBP string…"
-              value={scanValue}
-              disabled={closed}
-              onChange={(e) => setScanValue(e.target.value)}
-            />
+            <div className="input-box">
+              <input
+                className="mono"
+                placeholder="Paste the boarding pass BCBP string…"
+                value={scanValue}
+                disabled={closed}
+                onChange={(e) => setScanValue(e.target.value)}
+              />
+            </div>
           </div>
           <button type="submit" disabled={closed}>Scan</button>
         </form>

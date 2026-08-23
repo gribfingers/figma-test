@@ -43,19 +43,19 @@ export function NewFlight() {
         <form onSubmit={createFlight}>
           <div className="grid-2">
             <Field label="Airline (IATA code)">
-              <input value={form.carrier_code} onChange={(e) => setForm({ ...form, carrier_code: e.target.value.toUpperCase() })} maxLength={3} required />
+              <input value={form.carrier_code} onChange={(e) => setForm({ ...form, carrier_code: e.target.value.toUpperCase() })} maxLength={3} required placeholder=" " />
             </Field>
             <Field label="Flight number">
-              <input value={form.flight_number} onChange={(e) => setForm({ ...form, flight_number: e.target.value })} required />
+              <input value={form.flight_number} onChange={(e) => setForm({ ...form, flight_number: e.target.value })} required placeholder=" " />
             </Field>
             <Field label="Origin (IATA)">
-              <input value={form.origin} onChange={(e) => setForm({ ...form, origin: e.target.value.toUpperCase() })} maxLength={3} required />
+              <input value={form.origin} onChange={(e) => setForm({ ...form, origin: e.target.value.toUpperCase() })} maxLength={3} required placeholder=" " />
             </Field>
             <Field label="Destination (IATA)">
-              <input value={form.destination} onChange={(e) => setForm({ ...form, destination: e.target.value.toUpperCase() })} maxLength={3} required />
+              <input value={form.destination} onChange={(e) => setForm({ ...form, destination: e.target.value.toUpperCase() })} maxLength={3} required placeholder=" " />
             </Field>
             <Field label="Departure date/time">
-              <input type="datetime-local" value={form.std} onChange={(e) => setForm({ ...form, std: e.target.value })} required />
+              <input type="datetime-local" value={form.std} onChange={(e) => setForm({ ...form, std: e.target.value })} required placeholder=" " />
             </Field>
             <Field label="Aircraft type">
               <select value={form.aircraft_type} onChange={(e) => setForm({ ...form, aircraft_type: e.target.value })}>

@@ -96,7 +96,7 @@ export function Dashboard() {
               </select>
             </Field>
             <Field label="Flight number" style={{ minWidth: 130 }}>
-              <input value={draftSearch.flight} onChange={(e) => setDraftSearch({ ...draftSearch, flight: e.target.value })} placeholder="All" />
+              <input value={draftSearch.flight} onChange={(e) => setDraftSearch({ ...draftSearch, flight: e.target.value })} placeholder=" " />
             </Field>
             <Field label="Departure" style={{ minWidth: 120 }}>
               <select value={draftSearch.origin} onChange={(e) => setDraftSearch({ ...draftSearch, origin: e.target.value })}>
@@ -111,10 +111,10 @@ export function Dashboard() {
               </select>
             </Field>
             <Field label="Date/time from" style={{ minWidth: 170 }}>
-              <input type="datetime-local" value={draftSearch.dateFrom} onChange={(e) => setDraftSearch({ ...draftSearch, dateFrom: e.target.value })} />
+              <input type="datetime-local" value={draftSearch.dateFrom} onChange={(e) => setDraftSearch({ ...draftSearch, dateFrom: e.target.value })} placeholder=" " />
             </Field>
             <Field label="Date/time to" style={{ minWidth: 170 }}>
-              <input type="datetime-local" value={draftSearch.dateTo} onChange={(e) => setDraftSearch({ ...draftSearch, dateTo: e.target.value })} />
+              <input type="datetime-local" value={draftSearch.dateTo} onChange={(e) => setDraftSearch({ ...draftSearch, dateTo: e.target.value })} placeholder=" " />
             </Field>
             <button type="submit">Search</button>
             <button type="button" className="secondary" onClick={resetSearch}>Reset</button>

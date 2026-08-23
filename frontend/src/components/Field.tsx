@@ -11,8 +11,8 @@ interface Props {
 export function Field({ label, error, children, style }: Props) {
   return (
     <div className={`field2 ${error ? "error" : ""}`} style={style}>
-      <label>{label}</label>
       {children}
+      <label>{label}</label>
     </div>
   );
 }

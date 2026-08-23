@@ -100,13 +100,12 @@ export function CheckIn() {
           <div className="panel">
             <h3>PNR lookup</h3>
             <div className="toolbar">
-              <div className="field2" style={{ flex: 1, display: "flex", flexDirection: "row", alignItems: "center", gap: 8 }}>
-                <SearchIcon size={16} className="mono" />
+              <div className="input-box" style={{ flex: 1 }}>
+                <SearchIcon size={16} />
                 <input
                   placeholder="Surname or record locator (PNR)"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  style={{ border: "none", padding: 0, flex: 1 }}
                 />
               </div>
             </div>
@@ -147,26 +146,26 @@ export function CheckIn() {
                     </select>
                   </Field>
                   <Field label="Document number">
-                    <input value={doc.document_number} disabled={alreadyCheckedIn} required
+                    <input value={doc.document_number} disabled={alreadyCheckedIn} required placeholder=" "
                       onChange={(e) => setDoc({ ...doc, document_number: e.target.value })} />
                   </Field>
                   <Field label="Nationality (country code)">
-                    <input value={doc.nationality} disabled={alreadyCheckedIn} maxLength={2}
+                    <input value={doc.nationality} disabled={alreadyCheckedIn} maxLength={2} placeholder=" "
                       onChange={(e) => setDoc({ ...doc, nationality: e.target.value.toUpperCase() })} />
                   </Field>
                   <Field label="Date of birth">
-                    <input type="date" value={doc.dob ?? ""} disabled={alreadyCheckedIn}
+                    <input type="date" value={doc.dob ?? ""} disabled={alreadyCheckedIn} placeholder=" "
                       onChange={(e) => setDoc({ ...doc, dob: e.target.value })} />
                   </Field>
                   <Field label="Document expiry">
-                    <input type="date" value={doc.doc_expiry} disabled={alreadyCheckedIn} required
+                    <input type="date" value={doc.doc_expiry} disabled={alreadyCheckedIn} required placeholder=" "
                       onChange={(e) => setDoc({ ...doc, doc_expiry: e.target.value })} />
                   </Field>
                   <Field label="Bags: count / weight (kg)">
                     <div style={{ display: "flex", gap: 6 }}>
-                      <input type="number" min={0} value={bags.bag_count} disabled={alreadyCheckedIn}
+                      <input type="number" min={0} value={bags.bag_count} disabled={alreadyCheckedIn} placeholder=" "
                         onChange={(e) => setBags({ ...bags, bag_count: Number(e.target.value) })} />
-                      <input type="number" min={0} step={0.5} value={bags.bag_weight_kg} disabled={alreadyCheckedIn}
+                      <input type="number" min={0} step={0.5} value={bags.bag_weight_kg} disabled={alreadyCheckedIn} placeholder=" "
                         onChange={(e) => setBags({ ...bags, bag_weight_kg: Number(e.target.value) })} />
                     </div>
                   </Field>
