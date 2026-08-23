@@ -39,6 +39,26 @@ export const AIRCRAFT_TEMPLATES: Record<string, AircraftTemplate> = {
     exitRows: [14, 15],
     letters: ["A", "B", "C", "D", "E", "F"],
   },
+  A321: {
+    type: "A321",
+    name: "Airbus A321",
+    businessRows: [1, 2, 3, 4],
+    economyRows: Array.from({ length: 29 }, (_, i) => i + 5), // rows 5-33
+    exitRows: [15, 16],
+    letters: ["A", "B", "C", "D", "E", "F"],
+  },
+  // A330 is a widebody (2-4-2 economy, twin aisle) — this app's seat map model
+  // is single-aisle 6-abreast only, so it's represented with the same
+  // simplified A-F layout as the narrow-bodies above rather than a real
+  // twin-aisle grid. See the file-level note.
+  A330: {
+    type: "A330",
+    name: "Airbus A330",
+    businessRows: [1, 2, 3, 4, 5, 6],
+    economyRows: Array.from({ length: 33 }, (_, i) => i + 7), // rows 7-39
+    exitRows: [20, 21],
+    letters: ["A", "B", "C", "D", "E", "F"],
+  },
 };
 
 export function buildSeatMap(aircraftType: string): SeatDef[] {

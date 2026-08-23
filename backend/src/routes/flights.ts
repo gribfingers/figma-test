@@ -79,12 +79,39 @@ flightsRouter.get("/:id", (req, res) => {
   res.json(flight);
 });
 
-/** Update FIDS-board fields (terminal, gate, ops status, ETD/STA/ATA, aircraft reg/version). */
+/** Update FIDS-board fields (terminal, gate, ops status, ETD/STA/ATA, aircraft reg/version/type). */
 flightsRouter.patch("/:id", (req, res) => {
   const flight = db.prepare("SELECT * FROM flights WHERE id = ?").get(req.params.id) as Flight | undefined;
   if (!flight) return res.status(404).json({ error: "Flight not found" });
 
-  const { terminal, gate, aircraft_reg, aircraft_version, etd, sta, ata, ops_status } = req.body;
+  const { terminal, gate, aircraft_reg, aircraft_version, etd, sta, ata, ops_status, aircraft_type } = req.body;
+
+  // Changing aircraft_type regenerates the seat map, which would orphan any
+  // passenger already holding an assigned seat — refuse rather than corrupt it.
+  if (aircraft_type && aircraft_type !== flight.aircraft_type) {
+    let seatDefs;
+    try {
+      seatDefs = buildSeatMap(aircraft_type);
+    } catch (e: any) {
+      return res.status(400).json({ error: e.message });
+    }
+    const { c: occupied } = db
+      .prepare("SELECT COUNT(*) as c FROM passengers WHERE flight_id = ? AND seat IS NOT NULL")
+      .get(req.params.id) as { c: number };
+    if (occupied > 0) {
+      return res.status(409).json({
+        error: `Cannot change aircraft type: ${occupied} passenger(s) already have an assigned seat on this flight.`,
+      });
+    }
+    const tx = db.transaction(() => {
+      db.prepare("DELETE FROM seats WHERE flight_id = ?").run(req.params.id);
+      const insertSeat = db.prepare(`INSERT INTO seats (flight_id, seat, cabin_class, exit_row) VALUES (?, ?, ?, ?)`);
+      for (const s of seatDefs) insertSeat.run(req.params.id, s.seat, s.cabinClass, s.exitRow ? 1 : 0);
+      db.prepare("UPDATE flights SET aircraft_type = ? WHERE id = ?").run(aircraft_type, req.params.id);
+    });
+    tx();
+  }
+
   db.prepare(
     `UPDATE flights SET
        terminal = COALESCE(?, terminal),
