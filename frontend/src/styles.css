@@ -87,6 +87,11 @@ h3 {
   margin-bottom: 16px;
 }
 .panel:last-child { margin-bottom: 0; }
+/* A panel whose table should bleed flush to the panel's left/right edges
+   (zero side padding); non-table content stays inset via .panel-head. */
+.panel--flush { padding-left: 0; padding-right: 0; }
+.panel-head { padding: 0 18px; }
+.table-scroll { overflow-x: auto; }
 
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
@@ -94,6 +99,9 @@ h3 {
 
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
 th, td { text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+/* Only the header row directly above the body should have a separating line —
+   an earlier row (e.g. Dashboard's quick-filter row) shouldn't draw one above it. */
+thead tr:not(:last-child) th { border-bottom: none; }
 /* ---- TableHead, per Figma TableHead component set (id 30142:19188) ---- */
 th {
   padding: 7px 16px;

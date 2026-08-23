@@ -131,9 +131,9 @@ export function Dashboard() {
         </form>
       </div>
 
-      <div className="panel">
-        <h3>Flights ({visibleFlights.length})</h3>
-        <div style={{ overflowX: "auto" }}>
+      <div className="panel panel--flush">
+        <h3 className="panel-head">Flights ({visibleFlights.length})</h3>
+        <div className="table-scroll">
           <table>
             <thead>
               <tr>

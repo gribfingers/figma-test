@@ -98,18 +98,21 @@ export function CheckIn() {
 
       <div className="grid-2">
         <div>
-          <div className="panel">
-            <h3>PNR lookup</h3>
-            <div className="toolbar">
-              <div className="input-box" style={{ flex: 1 }}>
-                <SearchIcon size={16} />
-                <input
-                  placeholder="Surname or record locator (PNR)"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                />
+          <div className="panel panel--flush">
+            <div className="panel-head">
+              <h3>PNR lookup</h3>
+              <div className="toolbar">
+                <div className="input-box" style={{ flex: 1 }}>
+                  <SearchIcon size={16} />
+                  <input
+                    placeholder="Surname or record locator (PNR)"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                  />
+                </div>
               </div>
             </div>
+            <div className="table-scroll">
             <table>
               <thead>
                 <tr><th>PNR</th><th>Passenger</th><th>Status</th><th>Seat</th></tr>
@@ -130,6 +133,7 @@ export function CheckIn() {
                 {results.length === 0 && <tr><td colSpan={4} style={{ color: "var(--muted)" }}>No results</td></tr>}
               </tbody>
             </table>
+            </div>
           </div>
 
           {selected && (

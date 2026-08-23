@@ -123,14 +123,15 @@ export function Boarding() {
         </form>
       </div>
 
-      <div className="panel">
-        <div className="toolbar">
+      <div className="panel panel--flush">
+        <div className="toolbar panel-head">
           <h3 style={{ margin: 0 }}>Flight passengers</h3>
           <div className="spacer" />
           <button className="secondary" onClick={showPnl}>PNL</button>
           <button className="secondary" onClick={showPfs}>PFS (prelim.)</button>
           <button className="danger" onClick={closeFlight} disabled={closed}>Close flight</button>
         </div>
+        <div className="table-scroll">
         <table>
           <thead>
             <tr>
@@ -160,6 +161,7 @@ export function Boarding() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {manifest && (
