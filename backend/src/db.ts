@@ -17,7 +17,15 @@ CREATE TABLE IF NOT EXISTS flights (
   aircraft_type TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'SCHEDULED',
   last_checkin_sequence INTEGER NOT NULL DEFAULT 0,
-  closed_at TEXT
+  closed_at TEXT,
+  terminal TEXT,
+  gate TEXT,
+  aircraft_reg TEXT,
+  aircraft_version TEXT,
+  etd TEXT,
+  sta TEXT,
+  ata TEXT,
+  ops_status TEXT NOT NULL DEFAULT 'SCHEDULED'
 );
 
 CREATE TABLE IF NOT EXISTS seats (
@@ -56,3 +64,21 @@ CREATE TABLE IF NOT EXISTS passengers (
 CREATE INDEX IF NOT EXISTS idx_passengers_flight ON passengers(flight_id);
 CREATE INDEX IF NOT EXISTS idx_passengers_locator ON passengers(record_locator);
 `);
+
+// Lightweight migration for databases created before the FIDS columns existed.
+const existingFlightColumns = new Set(
+  (db.prepare("PRAGMA table_info(flights)").all() as { name: string }[]).map((c) => c.name)
+);
+const flightMigrations: [string, string][] = [
+  ["terminal", "ALTER TABLE flights ADD COLUMN terminal TEXT"],
+  ["gate", "ALTER TABLE flights ADD COLUMN gate TEXT"],
+  ["aircraft_reg", "ALTER TABLE flights ADD COLUMN aircraft_reg TEXT"],
+  ["aircraft_version", "ALTER TABLE flights ADD COLUMN aircraft_version TEXT"],
+  ["etd", "ALTER TABLE flights ADD COLUMN etd TEXT"],
+  ["sta", "ALTER TABLE flights ADD COLUMN sta TEXT"],
+  ["ata", "ALTER TABLE flights ADD COLUMN ata TEXT"],
+  ["ops_status", "ALTER TABLE flights ADD COLUMN ops_status TEXT NOT NULL DEFAULT 'SCHEDULED'"],
+];
+for (const [column, ddl] of flightMigrations) {
+  if (!existingFlightColumns.has(column)) db.exec(ddl);
+}

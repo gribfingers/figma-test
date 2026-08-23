@@ -3,6 +3,13 @@ export type CheckinStatus = "NOT_CHECKED_IN" | "CHECKED_IN";
 export type BoardingStatus = "NOT_BOARDED" | "BOARDED" | "OFFLOADED" | "NO_SHOW";
 
 /**
+ * Operational (FIDS-board) status, distinct from `status`: `status` tracks
+ * this DCS's own check-in/boarding lifecycle, `ops_status` tracks what an
+ * airport display board would show for the flight itself.
+ */
+export type OpsStatus = "SCHEDULED" | "DELAYED" | "BOARDING" | "DEPARTED" | "ARRIVED" | "CANCELLED";
+
+/**
  * SSR (Special Service Request) codes — a small subset of the standard
  * IATA/ATA SSR code list used in reservations/DCS messaging.
  */
@@ -29,6 +36,14 @@ export interface Flight {
   status: FlightStatus;
   last_checkin_sequence: number;
   closed_at: string | null;
+  terminal: string | null;
+  gate: string | null;
+  aircraft_reg: string | null;
+  aircraft_version: string | null;
+  etd: string | null; // estimated time of departure, ISO
+  sta: string | null; // scheduled time of arrival, ISO
+  ata: string | null; // actual time of arrival, ISO
+  ops_status: OpsStatus;
 }
 
 export interface Passenger {

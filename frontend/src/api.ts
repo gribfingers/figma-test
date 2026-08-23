@@ -1,3 +1,5 @@
+export type OpsStatus = "SCHEDULED" | "DELAYED" | "BOARDING" | "DEPARTED" | "ARRIVED" | "CANCELLED";
+
 export interface Flight {
   id: number;
   flight_number: string;
@@ -9,6 +11,14 @@ export interface Flight {
   status: string;
   last_checkin_sequence: number;
   closed_at: string | null;
+  terminal: string | null;
+  gate: string | null;
+  aircraft_reg: string | null;
+  aircraft_version: string | null;
+  etd: string | null;
+  sta: string | null;
+  ata: string | null;
+  ops_status: OpsStatus;
 }
 
 export interface Passenger {
@@ -64,6 +74,8 @@ export const api = {
   getFlight: (id: number) => request<Flight>(`/flights/${id}`),
   createFlight: (data: Partial<Flight>) =>
     request<Flight>("/flights", { method: "POST", body: JSON.stringify(data) }),
+  updateFlight: (id: number, data: Partial<Flight>) =>
+    request<Flight>(`/flights/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
   seatmap: (flightId: number) => request<SeatCell[]>(`/flights/${flightId}/seatmap`),
   passengers: (flightId: number, q?: string) =>
     request<Passenger[]>(`/flights/${flightId}/passengers${q ? `?q=${encodeURIComponent(q)}` : ""}`),

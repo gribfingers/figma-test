@@ -4,6 +4,28 @@ import { api, Flight } from "../api";
 
 const AIRCRAFT_TYPES = ["A320", "B738"];
 
+const OPS_STATUS_LABEL: Record<string, string> = {
+  SCHEDULED: "По расписанию",
+  DELAYED: "Задержан",
+  BOARDING: "Посадка",
+  DEPARTED: "Вылетел",
+  ARRIVED: "Прибыл",
+  CANCELLED: "Отменён",
+};
+const OPS_STATUS_BADGE: Record<string, string> = {
+  SCHEDULED: "ok",
+  DELAYED: "warn",
+  BOARDING: "warn",
+  DEPARTED: "muted",
+  ARRIVED: "muted",
+  CANCELLED: "danger",
+};
+
+function formatTime(iso: string | null): string {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleTimeString("ru-RU", { timeZone: "UTC", hour: "2-digit", minute: "2-digit" });
+}
+
 export function Dashboard() {
   const [flights, setFlights] = useState<Flight[]>([]);
   const [error, setError] = useState("");
@@ -40,41 +62,61 @@ export function Dashboard() {
 
       {error && <div className="error-box">{error}</div>}
 
-      <div className="grid-2">
-        <div className="panel">
-          <h3>Рейсы</h3>
+      <div className="panel">
+        <h3>Рейсы (табло вылета)</h3>
+        <div style={{ overflowX: "auto" }}>
           <table>
             <thead>
               <tr>
+                <th>STD</th>
+                <th>Авиакомпания</th>
                 <th>Рейс</th>
                 <th>Маршрут</th>
-                <th>Вылет (UTC)</th>
-                <th>ВС</th>
                 <th>Статус</th>
+                <th>ETD</th>
+                <th>STA</th>
+                <th>ATA</th>
+                <th>Терминал</th>
+                <th>Гейт</th>
+                <th>Тип ВС</th>
+                <th>Борт</th>
+                <th>Версия</th>
+                <th>Внутр. статус DCS</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
               {flights.map((f) => (
                 <tr key={f.id}>
+                  <td className="mono">{formatTime(f.std)}</td>
+                  <td>{f.carrier_code}</td>
                   <td className="mono">{f.carrier_code}{f.flight_number}</td>
                   <td className="mono">{f.origin} → {f.destination}</td>
-                  <td>{new Date(f.std).toLocaleString("ru-RU", { timeZone: "UTC" })}</td>
+                  <td><span className={`badge ${OPS_STATUS_BADGE[f.ops_status] ?? "muted"}`}>{OPS_STATUS_LABEL[f.ops_status] ?? f.ops_status}</span></td>
+                  <td className="mono">{formatTime(f.etd)}</td>
+                  <td className="mono">{formatTime(f.sta)}</td>
+                  <td className="mono">{formatTime(f.ata)}</td>
+                  <td className="mono">{f.terminal ?? "—"}</td>
+                  <td className="mono">{f.gate ?? "—"}</td>
                   <td>{f.aircraft_type}</td>
+                  <td className="mono">{f.aircraft_reg ?? "—"}</td>
+                  <td>{f.aircraft_version ?? "—"}</td>
                   <td><span className={`badge ${f.status === "CLOSED" ? "danger" : f.status === "BOARDING" ? "warn" : "ok"}`}>{f.status}</span></td>
-                  <td style={{ display: "flex", gap: 6 }}>
+                  <td style={{ display: "flex", gap: 6, whiteSpace: "nowrap" }}>
                     <Link to={`/checkin/${f.id}`}><button className="secondary">Регистрация</button></Link>
                     <Link to={`/boarding/${f.id}`}><button className="secondary">Посадка</button></Link>
                   </td>
                 </tr>
               ))}
               {flights.length === 0 && (
-                <tr><td colSpan={6} style={{ color: "var(--muted)" }}>Рейсов нет — создайте первый рейс.</td></tr>
+                <tr><td colSpan={15} style={{ color: "var(--muted)" }}>Рейсов нет — создайте первый рейс.</td></tr>
               )}
             </tbody>
           </table>
         </div>
+      </div>
 
+      <div className="grid-2">
         <div className="panel">
           <h3>Новый рейс</h3>
           <form onSubmit={createFlight}>

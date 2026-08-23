@@ -12,7 +12,22 @@ flightsRouter.get("/", (_req, res) => {
 });
 
 flightsRouter.post("/", (req, res) => {
-  const { flight_number, carrier_code, origin, destination, std, aircraft_type } = req.body;
+  const {
+    flight_number,
+    carrier_code,
+    origin,
+    destination,
+    std,
+    aircraft_type,
+    terminal,
+    gate,
+    aircraft_reg,
+    aircraft_version,
+    etd,
+    sta,
+    ata,
+    ops_status,
+  } = req.body;
   if (!flight_number || !carrier_code || !origin || !destination || !std || !aircraft_type) {
     return res.status(400).json({ error: "flight_number, carrier_code, origin, destination, std, aircraft_type are required" });
   }
@@ -24,8 +39,9 @@ flightsRouter.post("/", (req, res) => {
   }
 
   const insertFlight = db.prepare(
-    `INSERT INTO flights (flight_number, carrier_code, origin, destination, std, aircraft_type, status)
-     VALUES (?, ?, ?, ?, ?, ?, 'CHECKIN_OPEN')`
+    `INSERT INTO flights (flight_number, carrier_code, origin, destination, std, aircraft_type, status,
+       terminal, gate, aircraft_reg, aircraft_version, etd, sta, ata, ops_status)
+     VALUES (?, ?, ?, ?, ?, ?, 'CHECKIN_OPEN', ?, ?, ?, ?, ?, ?, ?, ?)`
   );
   const info = insertFlight.run(
     flight_number,
@@ -33,7 +49,15 @@ flightsRouter.post("/", (req, res) => {
     origin.toUpperCase(),
     destination.toUpperCase(),
     std,
-    aircraft_type
+    aircraft_type,
+    terminal ?? null,
+    gate ?? null,
+    aircraft_reg ?? null,
+    aircraft_version ?? null,
+    etd ?? std,
+    sta ?? null,
+    ata ?? null,
+    ops_status ?? "SCHEDULED"
   );
   const flightId = info.lastInsertRowid as number;
 
@@ -53,6 +77,39 @@ flightsRouter.get("/:id", (req, res) => {
   const flight = db.prepare("SELECT * FROM flights WHERE id = ?").get(req.params.id) as Flight | undefined;
   if (!flight) return res.status(404).json({ error: "Flight not found" });
   res.json(flight);
+});
+
+/** Update FIDS-board fields (terminal, gate, ops status, ETD/STA/ATA, aircraft reg/version). */
+flightsRouter.patch("/:id", (req, res) => {
+  const flight = db.prepare("SELECT * FROM flights WHERE id = ?").get(req.params.id) as Flight | undefined;
+  if (!flight) return res.status(404).json({ error: "Flight not found" });
+
+  const { terminal, gate, aircraft_reg, aircraft_version, etd, sta, ata, ops_status } = req.body;
+  db.prepare(
+    `UPDATE flights SET
+       terminal = COALESCE(?, terminal),
+       gate = COALESCE(?, gate),
+       aircraft_reg = COALESCE(?, aircraft_reg),
+       aircraft_version = COALESCE(?, aircraft_version),
+       etd = COALESCE(?, etd),
+       sta = COALESCE(?, sta),
+       ata = COALESCE(?, ata),
+       ops_status = COALESCE(?, ops_status)
+     WHERE id = ?`
+  ).run(
+    terminal ?? null,
+    gate ?? null,
+    aircraft_reg ?? null,
+    aircraft_version ?? null,
+    etd ?? null,
+    sta ?? null,
+    ata ?? null,
+    ops_status ?? null,
+    req.params.id
+  );
+
+  const updated = db.prepare("SELECT * FROM flights WHERE id = ?").get(req.params.id);
+  res.json(updated);
 });
 
 flightsRouter.get("/:id/seatmap", (req, res) => {
