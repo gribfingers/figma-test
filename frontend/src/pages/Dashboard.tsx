@@ -74,11 +74,7 @@ export function Dashboard() {
     e.preventDefault();
     setAppliedSearch(draftSearch);
   }
-  function resetSearch() {
-    setDraftSearch(EMPTY_SEARCH);
-    setAppliedSearch(EMPTY_SEARCH);
-    setQuick(EMPTY_QUICK);
-  }
+  const searchIsUnchanged = JSON.stringify(draftSearch) === JSON.stringify(appliedSearch);
 
   return (
     <div>
@@ -97,7 +93,7 @@ export function Dashboard() {
               onChange={(v) => setDraftSearch({ ...draftSearch, airline: v })}
               options={[{ value: "", label: "All" }, ...airlines.map((a) => ({ value: a, label: a }))]}
             />
-            <Field label="Flight number" style={{ minWidth: 130 }}>
+            <Field label="Flight range" style={{ minWidth: 130 }}>
               <input value={draftSearch.flight} onChange={(e) => setDraftSearch({ ...draftSearch, flight: e.target.value })} placeholder=" " />
             </Field>
             <Select
@@ -120,10 +116,9 @@ export function Dashboard() {
             <Field label="Date/time to" style={{ minWidth: 170 }}>
               <input type="datetime-local" value={draftSearch.dateTo} onChange={(e) => setDraftSearch({ ...draftSearch, dateTo: e.target.value })} placeholder=" " />
             </Field>
-            <button type="submit">Search</button>
-            <button type="button" className="secondary" onClick={resetSearch}>Reset</button>
+            <button type="submit" disabled={searchIsUnchanged}>Search</button>
             <div className="spacer" />
-            <Link to="/flights/new"><button type="button">New flight</button></Link>
+            <Link to="/flights/new"><button type="button" className="secondary">New flight</button></Link>
             <button type="button" className="secondary icon-btn" onClick={load} title="Refresh">
               <RefreshIcon />
             </button>
@@ -141,7 +136,7 @@ export function Dashboard() {
                 <th><input placeholder="Airline" value={quick.airline} onChange={(e) => setQuick({ ...quick, airline: e.target.value })} style={{ width: "100%" }} /></th>
                 <th><input placeholder="Flight" value={quick.flight} onChange={(e) => setQuick({ ...quick, flight: e.target.value })} style={{ width: "100%" }} /></th>
                 <th colSpan={2}>
-                  <div style={{ display: "flex", gap: 4 }}>
+                  <div style={{ display: "flex", gap: 8 }}>
                     <input placeholder="Departure" value={quick.origin} onChange={(e) => setQuick({ ...quick, origin: e.target.value })} style={{ width: "100%" }} />
                     <input placeholder="Destination" value={quick.destination} onChange={(e) => setQuick({ ...quick, destination: e.target.value })} style={{ width: "100%" }} />
                   </div>

@@ -100,8 +100,11 @@ h3 {
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
 th, td { text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
 /* Only the header row directly above the body should have a separating line —
-   an earlier row (e.g. Dashboard's quick-filter row) shouldn't draw one above it. */
-thead tr:not(:last-child) th { border-bottom: none; }
+   an earlier row (e.g. Dashboard's quick-filter row) shouldn't draw one above it.
+   Its cells also get tighter padding so adjacent filter boxes read as an 8px gap. */
+thead tr:not(:last-child) th { border-bottom: none; padding: 8px 4px; }
+thead tr:not(:last-child) th:first-child { padding-left: 16px; }
+thead tr:not(:last-child) th:last-child { padding-right: 16px; }
 /* ---- TableHead, per Figma TableHead component set (id 30142:19188) ---- */
 th {
   padding: 7px 16px;
