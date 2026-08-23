@@ -155,7 +155,6 @@ tr.clickable:hover { background: var(--accent-soft); }
 .field2:focus-within label { left: 12px; right: 12px; }
 
 .field2 input,
-.field2 select,
 .field2 textarea {
   position: relative;
   z-index: 1;
@@ -171,13 +170,13 @@ tr.clickable:hover { background: var(--accent-soft); }
   color: var(--field-value);
 }
 .field2 input::placeholder { color: transparent; }
-.field2 input:focus, .field2 select:focus, .field2 textarea:focus { outline: none; box-shadow: none; }
+.field2 input:focus, .field2 textarea:focus { outline: none; box-shadow: none; }
 
-/* Floating state: focused, has a value, or is a <select> (which always shows a chosen value). */
+/* Floating state: focused, has a value, or is a custom Select (which always shows a chosen value). */
 .field2:focus-within label,
 .field2:has(input:not(:placeholder-shown)) label,
 .field2:has(textarea:not(:placeholder-shown)) label,
-.field2:has(select) label {
+.field2.select-field label {
   top: 7px;
   transform: translateY(0);
   font-size: 11px;
@@ -187,30 +186,86 @@ tr.clickable:hover { background: var(--accent-soft); }
 .field2.error label { color: var(--field-label-error); }
 
 .field2:focus-within input,
-.field2:focus-within select,
 .field2:focus-within textarea,
 .field2:has(input:not(:placeholder-shown)) input,
-.field2:has(textarea:not(:placeholder-shown)) textarea,
-.field2:has(select) select {
+.field2:has(textarea:not(:placeholder-shown)) textarea {
   padding-top: 15px;
 }
 
-.field2:has(input:disabled, select:disabled) { background: #eceff2; }
-.field2 input:disabled, .field2 select:disabled { color: var(--muted-2); }
-.field2:has(select) { position: relative; }
-.field2:has(select)::after {
-  content: "";
+.field2:has(input:disabled) { background: #eceff2; }
+.field2 input:disabled { color: var(--muted-2); }
+
+/* ---- Custom Select (dropdown), per Figma "MenuItem" spec (id 30142:16569) ---- */
+.field2.select-field:has(.select-trigger:disabled) { background: #eceff2; }
+/* Extra specificity (two classes) so this beats the global button/button:hover rules. */
+.select-field .select-trigger {
+  all: unset;
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding-top: 15px;
+  padding-right: 20px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--field-value);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.select-field .select-trigger:hover,
+.select-field .select-trigger:focus,
+.select-field .select-trigger:active {
+  background: transparent;
+  color: var(--field-value);
+}
+.select-field .select-trigger:disabled { cursor: not-allowed; color: var(--muted-2); }
+.select-field .select-chevron {
   position: absolute;
   right: 14px;
   top: 50%;
-  width: 7px;
-  height: 7px;
-  border-right: 1.6px solid var(--field-placeholder);
-  border-bottom: 1.6px solid var(--field-placeholder);
-  transform: translateY(-65%) rotate(45deg);
+  transform: translateY(-50%);
+  color: var(--field-placeholder);
   pointer-events: none;
+  transition: transform 0.12s ease;
 }
-.field2 select { appearance: none; padding-right: 20px; cursor: pointer; }
+.select-field.open .select-chevron { transform: translateY(-50%) rotate(180deg); }
+
+.select-menu {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 4px);
+  left: 0;
+  width: max(100%, 300px);
+  max-height: 320px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  background: #ffffff;
+  border: 1px solid #dee2e5;
+  border-radius: 4px;
+  box-shadow: 0 2px 24px -6px rgba(222, 226, 229, 1);
+}
+.select-menu li {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 17px;
+  letter-spacing: 0.1px;
+  color: #181f24;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.select-menu li:hover,
+.select-menu li.selected {
+  background: var(--field-bg);
+}
 
 /* Fields without a floating label (custom-placeholder search/scan boxes). */
 .input-box {

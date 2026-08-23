@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { Field } from "../components/Field";
+import { Select } from "../components/Select";
 import { ArrowBackIcon } from "../components/Icon";
 
 const AIRCRAFT_TYPES = ["A320", "B738"];
@@ -57,11 +58,12 @@ export function NewFlight() {
             <Field label="Departure date/time">
               <input type="datetime-local" value={form.std} onChange={(e) => setForm({ ...form, std: e.target.value })} required placeholder=" " />
             </Field>
-            <Field label="Aircraft type">
-              <select value={form.aircraft_type} onChange={(e) => setForm({ ...form, aircraft_type: e.target.value })}>
-                {AIRCRAFT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </Field>
+            <Select
+              label="Aircraft type"
+              value={form.aircraft_type}
+              onChange={(v) => setForm({ ...form, aircraft_type: v })}
+              options={AIRCRAFT_TYPES.map((t) => ({ value: t, label: t }))}
+            />
           </div>
           <button type="submit" style={{ marginTop: 4 }}>Create flight</button>
         </form>

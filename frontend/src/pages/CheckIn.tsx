@@ -4,6 +4,7 @@ import { api, Flight, Passenger, SeatCell } from "../api";
 import { SeatMapGrid } from "../components/SeatMapGrid";
 import { BoardingPassCard } from "../components/BoardingPassCard";
 import { Field } from "../components/Field";
+import { Select } from "../components/Select";
 import { ArrowBackIcon, SearchIcon } from "../components/Icon";
 
 const SSR_OPTIONS = ["WCHR", "WCHS", "UMNR", "BLND", "DEAF", "VGML", "PETC", "EXST"];
@@ -136,15 +137,13 @@ export function CheckIn() {
               <h3>Passenger details {selected.surname}/{selected.given_name} · PNR {selected.record_locator}</h3>
               <form onSubmit={submitCheckin}>
                 <div className="grid-2">
-                  <Field label="Document type">
-                    <select
-                      value={doc.document_type}
-                      disabled={alreadyCheckedIn}
-                      onChange={(e) => setDoc({ ...doc, document_type: e.target.value })}
-                    >
-                      {DOCUMENT_TYPES.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
-                    </select>
-                  </Field>
+                  <Select
+                    label="Document type"
+                    value={doc.document_type}
+                    disabled={alreadyCheckedIn}
+                    onChange={(v) => setDoc({ ...doc, document_type: v })}
+                    options={DOCUMENT_TYPES}
+                  />
                   <Field label="Document number">
                     <input value={doc.document_number} disabled={alreadyCheckedIn} required placeholder=" "
                       onChange={(e) => setDoc({ ...doc, document_number: e.target.value })} />

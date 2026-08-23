@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, Flight } from "../api";
 import { Field } from "../components/Field";
+import { Select } from "../components/Select";
 import { RefreshIcon } from "../components/Icon";
 
 const OPS_STATUS_LABEL: Record<string, string> = {
@@ -89,27 +90,30 @@ export function Dashboard() {
       <div className="panel">
         <form onSubmit={runSearch}>
           <div className="toolbar" style={{ flexWrap: "wrap", alignItems: "flex-end" }}>
-            <Field label="Airline" style={{ minWidth: 120 }}>
-              <select value={draftSearch.airline} onChange={(e) => setDraftSearch({ ...draftSearch, airline: e.target.value })}>
-                <option value="">All</option>
-                {airlines.map((a) => <option key={a} value={a}>{a}</option>)}
-              </select>
-            </Field>
+            <Select
+              label="Airline"
+              style={{ minWidth: 120 }}
+              value={draftSearch.airline}
+              onChange={(v) => setDraftSearch({ ...draftSearch, airline: v })}
+              options={[{ value: "", label: "All" }, ...airlines.map((a) => ({ value: a, label: a }))]}
+            />
             <Field label="Flight number" style={{ minWidth: 130 }}>
               <input value={draftSearch.flight} onChange={(e) => setDraftSearch({ ...draftSearch, flight: e.target.value })} placeholder=" " />
             </Field>
-            <Field label="Departure" style={{ minWidth: 120 }}>
-              <select value={draftSearch.origin} onChange={(e) => setDraftSearch({ ...draftSearch, origin: e.target.value })}>
-                <option value="">All</option>
-                {origins.map((o) => <option key={o} value={o}>{o}</option>)}
-              </select>
-            </Field>
-            <Field label="Destination" style={{ minWidth: 120 }}>
-              <select value={draftSearch.destination} onChange={(e) => setDraftSearch({ ...draftSearch, destination: e.target.value })}>
-                <option value="">All</option>
-                {destinations.map((d) => <option key={d} value={d}>{d}</option>)}
-              </select>
-            </Field>
+            <Select
+              label="Departure"
+              style={{ minWidth: 120 }}
+              value={draftSearch.origin}
+              onChange={(v) => setDraftSearch({ ...draftSearch, origin: v })}
+              options={[{ value: "", label: "All" }, ...origins.map((o) => ({ value: o, label: o }))]}
+            />
+            <Select
+              label="Destination"
+              style={{ minWidth: 120 }}
+              value={draftSearch.destination}
+              onChange={(v) => setDraftSearch({ ...draftSearch, destination: v })}
+              options={[{ value: "", label: "All" }, ...destinations.map((d) => ({ value: d, label: d }))]}
+            />
             <Field label="Date/time from" style={{ minWidth: 170 }}>
               <input type="datetime-local" value={draftSearch.dateFrom} onChange={(e) => setDraftSearch({ ...draftSearch, dateFrom: e.target.value })} placeholder=" " />
             </Field>
