@@ -12,15 +12,15 @@ export function BoardingPassCard({ passenger, flightLabel, route }: { passenger:
 
   return (
     <div className="panel" style={{ background: "#0d1420", color: "#fff" }}>
-      <h3 style={{ color: "#9db8e8" }}>Посадочный талон</h3>
+      <h3 style={{ color: "#9db8e8" }}>Boarding pass</h3>
       <div className="grid-2">
         <div>
           <div style={{ fontSize: 16, fontWeight: 700 }}>{passenger.surname}/{passenger.given_name}</div>
           <div className="mono" style={{ marginTop: 4, color: "#b9c4d6" }}>{flightLabel} · {route}</div>
         </div>
         <div style={{ textAlign: "right" }}>
-          <div>Место <b>{passenger.seat}</b></div>
-          <div>Посл. № {String(passenger.checkin_sequence).padStart(4, "0")}</div>
+          <div>Seat <b>{passenger.seat}</b></div>
+          <div>Seq. # {String(passenger.checkin_sequence).padStart(4, "0")}</div>
         </div>
       </div>
       <div style={{ display: "flex", gap: 1, alignItems: "flex-end", height: 30, margin: "12px 0 6px" }}>

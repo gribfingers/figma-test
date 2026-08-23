@@ -1,62 +1,64 @@
-# DCS — регистрация и посадка пассажиров (прототип по стандартам IATA)
+# DCS — Passenger Check-in & Boarding (IATA-aligned prototype)
 
-Прототип Departure Control System: два рабочих места — **агент
-регистрации** (check-in) и **агент посадки** (гейт), реализующие
-жизненный цикл пассажира от списка бронирований (PNL) до закрытия рейса
-(PFS), включая реальное кодирование посадочного талона по стандарту
-**IATA Resolution 792 (BCBP)**.
+A Departure Control System prototype: two workstations — **check-in
+agent** and **gate/boarding agent** — implementing the passenger
+lifecycle from the booking list (PNL) through flight close-out (PFS),
+including real boarding-pass encoding per **IATA Resolution 792
+(BCBP)**.
 
-См. также:
-- [`docs/IATA_NOTES.md`](docs/IATA_NOTES.md) — что именно реализовано по
-  стандартам IATA, а что упрощено.
-- [`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) — план развития до
-  промышленной системы.
-- [`docs/HOSTING.md`](docs/HOSTING.md) — варианты недорогого хостинга.
-- [`docs/DEPLOY.md`](docs/DEPLOY.md) — пошаговый деплой на Hetzner + Coolify (готовые Dockerfile/docker-compose уже в репозитории).
+See also:
+- [`docs/IATA_NOTES.md`](docs/IATA_NOTES.md) — exactly what follows the
+  IATA standards, and what's simplified.
+- [`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) — the plan to grow this
+  into a production system.
+- [`docs/HOSTING.md`](docs/HOSTING.md) — cheap hosting options.
+- [`docs/DEPLOY.md`](docs/DEPLOY.md) — step-by-step deploy on Hetzner +
+  Coolify (Dockerfile/docker-compose already included).
 
-## Стек
+## Stack
 
 - **Backend:** Node.js + Express + TypeScript, SQLite (`better-sqlite3`).
 - **Frontend:** React + TypeScript + Vite.
 
-## Запуск локально
+## Run locally
 
 ```bash
 # Backend
 cd backend
 npm install
-npm run seed     # создаёт demo-рейсы и пассажиров
+npm run seed     # creates demo flights and passengers
 npm run dev      # http://localhost:4000
 
-# Frontend (в отдельном терминале)
+# Frontend (separate terminal)
 cd frontend
 npm install
-npm run dev      # http://localhost:5173, проксирует /api на backend
+npm run dev      # http://localhost:5173, proxies /api to the backend
 ```
 
-Откройте `http://localhost:5173` — табло рейсов со ссылками на рабочие
-места регистрации и посадки для каждого demo-рейса.
+Open `http://localhost:5173` — a flight board with links to the
+check-in and boarding workstations for each demo flight.
 
-## Сквозной сценарий
+## End-to-end scenario
 
-1. **Табло рейсов** (`/`) — создать рейс или открыть демо-рейс.
-2. **Регистрация** (`/checkin/:flightId`) — найти PNR по фамилии/коду
-   брони, ввести данные документа, выбрать место на карте салона,
-   указать багаж и SSR, выпустить посадочный талон (генерируется
-   BCBP-строка по Resolution 792).
-3. **Посадка** (`/boarding/:flightId`) — вставить BCBP-строку в поле
-   сканирования (или нажать «Посадка» у пассажира в списке), система
-   декодирует талон и сверяет его с базой; доступны снятие с рейса и
-   закрытие рейса с выпуском PFS.
-4. **Экспорт** — кнопки PNL/PFS показывают сообщения в стиле IATA
+1. **Flight board** (`/`) — create a flight or open a demo one.
+2. **Check-in** (`/checkin/:flightId`) — look up a PNR by surname or
+   record locator, enter document data, pick a seat on the cabin map,
+   record bags and SSRs, issue a boarding pass (a BCBP string per
+   Resolution 792 is generated).
+3. **Boarding** (`/boarding/:flightId`) — paste the BCBP string into the
+   scan field (or click "Board" next to a passenger in the list); the
+   system decodes it and cross-checks against the database. Offloading
+   and flight close-out (with PFS) are also available here.
+4. **Export** — the PNL/PFS buttons show messages styled after IATA
    Passenger Name List / Passenger Final Summary.
 
-## Продакшен-сборка
+## Production build
 
 ```bash
 cd backend && npm run build && npm start
-cd frontend && npm run build   # статика в frontend/dist — раздавать через nginx/статик-хостинг
+cd frontend && npm run build   # static output in frontend/dist — serve via nginx or a static host
 ```
 
-Перед реальной эксплуатацией обязательно добавить аутентификацию
-агентов — в текущем прототипе рабочие места открыты без авторизации.
+Before any real-world use, you must add authentication for the agent
+workstations — in this prototype they are open with no login, as noted
+in the code.

@@ -33,7 +33,7 @@ export function Boarding() {
     if (!scanValue.trim()) return;
     try {
       const { passenger } = await api.scanBoardingPass(scanValue.trim());
-      setMessage({ kind: "ok", text: `Допущен на посадку: ${passenger.surname}/${passenger.given_name}, место ${passenger.seat}` });
+      setMessage({ kind: "ok", text: `Cleared to board: ${passenger.surname}/${passenger.given_name}, seat ${passenger.seat}` });
       setScanValue("");
       refresh();
     } catch (e: any) {
@@ -61,74 +61,74 @@ export function Boarding() {
   }
 
   async function closeFlight() {
-    if (!confirm("Закрыть рейс? Незарегистрированные на посадку пассажиры будут отмечены как NO SHOW.")) return;
+    if (!confirm("Close the flight? Passengers checked in but not boarded will be marked NO SHOW.")) return;
     const { flight: updated, pfs } = await api.closeFlight(fid);
     setFlight(updated);
-    setManifest({ label: "PFS (итоговый список после закрытия рейса)", text: pfs });
+    setManifest({ label: "PFS (final list after flight close-out)", text: pfs });
     refresh();
   }
 
   async function showPnl() {
     const text = await api.pnl(fid);
-    setManifest({ label: "PNL (список пассажиров)", text });
+    setManifest({ label: "PNL (passenger name list)", text });
   }
   async function showPfs() {
     const text = await api.pfs(fid);
-    setManifest({ label: "PFS (текущий предварительный итог)", text });
+    setManifest({ label: "PFS (current preliminary summary)", text });
   }
 
-  if (!flight) return <div className="content">Загрузка…</div>;
+  if (!flight) return <div className="content">Loading…</div>;
   const closed = flight.status === "CLOSED" || flight.status === "DEPARTED";
 
   return (
     <div>
-      <Link to="/">← Табло рейсов</Link>
-      <h1>Рабочее место агента посадки (гейт)</h1>
+      <Link to="/">← Flight board</Link>
+      <h1>Boarding agent workstation (gate)</h1>
       <p className="subtitle">
-        Рейс <span className="mono">{flight.carrier_code}{flight.flight_number}</span>{" "}
+        Flight <span className="mono">{flight.carrier_code}{flight.flight_number}</span>{" "}
         {flight.origin} → {flight.destination} ·{" "}
-        {new Date(flight.std).toLocaleString("ru-RU", { timeZone: "UTC" })} UTC ·{" "}
+        {new Date(flight.std).toLocaleString("en-GB", { timeZone: "UTC" })} UTC ·{" "}
         <span className={`badge ${closed ? "danger" : "ok"}`}>{flight.status}</span>
       </p>
 
       <div className="counters">
-        <div className="counter"><div className="num">{counts.total ?? 0}</div><div className="lbl">Всего в PNL</div></div>
-        <div className="counter"><div className="num">{counts.checked_in ?? 0}</div><div className="lbl">Зарегистрировано</div></div>
-        <div className="counter"><div className="num">{counts.boarded ?? 0}</div><div className="lbl">На борту</div></div>
-        <div className="counter"><div className="num">{counts.not_boarded ?? 0}</div><div className="lbl">Ожидают посадки</div></div>
-        <div className="counter"><div className="num">{counts.offloaded ?? 0}</div><div className="lbl">Сняты с рейса</div></div>
+        <div className="counter"><div className="num">{counts.total ?? 0}</div><div className="lbl">Total in PNL</div></div>
+        <div className="counter"><div className="num">{counts.checked_in ?? 0}</div><div className="lbl">Checked in</div></div>
+        <div className="counter"><div className="num">{counts.boarded ?? 0}</div><div className="lbl">Boarded</div></div>
+        <div className="counter"><div className="num">{counts.not_boarded ?? 0}</div><div className="lbl">Awaiting boarding</div></div>
+        <div className="counter"><div className="num">{counts.offloaded ?? 0}</div><div className="lbl">Offloaded</div></div>
       </div>
 
       {message && <div className={message.kind === "ok" ? "ok-box" : "error-box"}>{message.text}</div>}
 
       <div className="panel">
-        <h3>Сканирование посадочного талона (BCBP)</h3>
+        <h3>Scan boarding pass (BCBP)</h3>
         <form onSubmit={handleScan} className="toolbar">
           <input
             className="mono"
-            placeholder="Вставьте строку BCBP посадочного талона…"
+            placeholder="Paste the boarding pass BCBP string…"
             value={scanValue}
             disabled={closed}
             onChange={(e) => setScanValue(e.target.value)}
             style={{ flex: 1 }}
           />
-          <button type="submit" disabled={closed}>Сканировать</button>
+          <button type="submit" disabled={closed}>Scan</button>
         </form>
       </div>
 
       <div className="panel">
         <div className="toolbar">
-          <h3 style={{ margin: 0 }}>Пассажиры рейса</h3>
+          <h3 style={{ margin: 0 }}>Flight passengers</h3>
           <div className="spacer" />
           <button className="secondary" onClick={showPnl}>PNL</button>
-          <button className="secondary" onClick={showPfs}>PFS (предв.)</button>
-          <button className="danger" onClick={closeFlight} disabled={closed}>Закрыть рейс</button>
+          <button className="secondary" onClick={showPfs}>PFS (prelim.)</button>
+          <button className="danger" onClick={closeFlight} disabled={closed}>Close flight</button>
         </div>
         <table>
           <thead>
             <tr>
-              <th>№ рег.</th><th>PNR</th><th>Пассажир</th><th>Место</th><th>SSR</th>
-              <th>Регистрация</th><th>Посадка</th><th></th>
+              <th>Seq. #</th><th>PNR</th><th>Passenger</th><th>Seat</th><th>SSR</th>
+              <th>Check-in</th><th>Boarding</th><th></th>
             </tr>
           </thead>
           <tbody>
@@ -144,8 +144,8 @@ export function Boarding() {
                 <td style={{ display: "flex", gap: 6 }}>
                   {p.checkin_status === "CHECKED_IN" && p.boarding_status === "NOT_BOARDED" && !closed && (
                     <>
-                      <button className="secondary" onClick={() => boardDirectly(p)}>Посадка</button>
-                      <button className="danger" onClick={() => offload(p)}>Снять</button>
+                      <button className="secondary" onClick={() => boardDirectly(p)}>Board</button>
+                      <button className="danger" onClick={() => offload(p)}>Offload</button>
                     </>
                   )}
                 </td>

@@ -1,106 +1,107 @@
-# План проекта: система регистрации и посадки пассажиров (DCS)
+# Project plan: passenger check-in and boarding system (DCS)
 
-## 1. Цель и текущий статус
+## 1. Goal and current status
 
-Цель — рабочая система Departure Control System (DCS) с двумя рабочими
-местами (агент регистрации, агент посадки), реализующая жизненный цикл
-пассажира от бронирования (PNL) до закрытия рейса (PFS), в соответствии
-с ключевыми концепциями IATA.
+The goal is a working Departure Control System (DCS) with two
+workstations (check-in agent, boarding agent) implementing the
+passenger lifecycle from booking (PNL) through flight close-out (PFS),
+following the core concepts of IATA.
 
-**Статус на сегодня (эта итерация):** реализован и протестирован
-работающий прототип (MVP) — см. `README.md` для запуска и
-`docs/IATA_NOTES.md` для точной карты соответствия стандартам.
+**Status as of this iteration:** a working prototype (MVP) is
+implemented and tested — see `README.md` to run it, and
+`docs/IATA_NOTES.md` for an exact map of standards compliance.
 
-## 2. Фазы проекта
+## 2. Project phases
 
-### Фаза 0 — Требования и границы соответствия (1–2 недели)
-- Зафиксировать, какие IATA/ATA документы обязательны для проекта:
-  Resolution 792 (BCBP), PSC Resolutions Manual (SSR), Reservations
-  Interline Message Procedures (PNL/ADL/PFS), Airport Handling Manual
-  (AHM, load control), DGR (опасные грузы — если есть багаж/груз).
-- Определить целевую авиакомпанию/хаб, типы ВС, объём одновременных
-  рейсов, требования по резервному копированию и SLA.
-- Юридические требования: обработка персональных данных пассажиров
-  (152-ФЗ/GDPR в зависимости от юрисдикции), хранение документов.
+### Phase 0 — Requirements and compliance scope (1–2 weeks)
+- Pin down which IATA/ATA documents are mandatory for the project:
+  Resolution 792 (BCBP), the PSC Resolutions Manual (SSR), Reservations
+  Interline Message Procedures (PNL/ADL/PFS), the Airport Handling
+  Manual (AHM, load control), DGR (dangerous goods, if cargo/baggage is
+  in scope).
+- Define the target airline/hub, aircraft types, concurrent-flight
+  volume, backup and SLA requirements.
+- Legal requirements: handling passengers' personal data (GDPR or local
+  equivalent depending on jurisdiction), document retention.
 
-**Результат:** документ требований, реестр применимых стандартов.
+**Output:** a requirements document and a register of applicable
+standards.
 
-### Фаза 1 — MVP: регистрация и посадка (готово в этой итерации)
-- Backend: Node/Express + SQLite, модели Flight/Passenger/Seat.
-- Кодирование/декодирование посадочного талона (BCBP, Res. 792).
-- Рабочее место агента регистрации: поиск PNR, проверка документа,
-  карта мест, SSR, багаж, выпуск талона.
-- Рабочее место агента посадки: сканирование (ввод BCBP), статусы
-  посадки, снятие с рейса, закрытие рейса, экспорт PNL/PFS.
+### Phase 1 — MVP: check-in and boarding (delivered this iteration)
+- Backend: Node/Express + SQLite, Flight/Passenger/Seat models.
+- Boarding-pass encode/decode (BCBP, Res. 792).
+- Check-in agent workstation: PNR lookup, document verification, seat
+  map, SSR, bags, boarding-pass issuance.
+- Boarding agent workstation: scan (BCBP entry), boarding statuses,
+  offloading, flight close-out, PNL/PFS export.
 
-**Результат:** демонстрируемый прототип (этот репозиторий).
+**Output:** a demonstrable prototype (this repository).
 
-### Фаза 2 — Интеграция с DCS/PSS-экосистемой (6–8 недель)
-- Настоящий EDIFACT (PADIS: PSLIST, ADLIST и т.д.) или Type B
-  телеграфный обмен с системой бронирования (PSS/GDS) — вместо
-  упрощённых текстовых PNL/ADL/PFS.
-- Подключение к внешней системе управления рейсами (flight schedule,
-  slot management).
-- Интеграция с системой оплаты/тарифов для сверхнормативного багажа.
+### Phase 2 — Integration with the DCS/PSS ecosystem (6–8 weeks)
+- Real EDIFACT (PADIS: PSLIST, ADLIST, etc.) or Type B teletype exchange
+  with the reservation system (PSS/GDS) — replacing the simplified
+  text-based PNL/ADL/PFS.
+- Connection to an external flight schedule / slot management system.
+- Integration with a payment/fare system for excess baggage.
 
-### Фаза 3 — Весовая и центровочная ведомость (Weight & Balance) (4 недели)
-- Расчёт ZFW, MACTOW, индекса центровки по данным AHM для конкретного
-  типа ВС.
-- Автоматическая балансировка распределения пассажиров/багажа по
-  зонам загрузки.
+### Phase 3 — Weight & Balance (4 weeks)
+- ZFW, MACTOW, and centre-of-gravity index calculation from AHM data
+  for the specific aircraft type.
+- Automatic balancing of passenger/baggage distribution across load
+  zones.
 
-### Фаза 4 — Обработка багажа (4 недели)
-- Печать багажных бирок по стандарту IATA (BSM/BTM сообщения,
-  License Plate Number формат бирки).
-- Интеграция с системой сортировки багажа (BHS) аэропорта.
-- Отслеживание багажа (RFID/баркод), розыск (AHL/BAGGAGE messages).
+### Phase 4 — Baggage handling (4 weeks)
+- Printing baggage tags per the IATA standard (BSM/BTM messages,
+  License Plate Number tag format).
+- Integration with the airport's baggage handling system (BHS).
+- Baggage tracking (RFID/barcode), tracing (AHL/BAGGAGE messages).
 
-### Фаза 5 — Самостоятельная регистрация и мобильный талон (4 недели)
-- Киоски саморегистрации, веб/мобильная регистрация пассажиров.
-- Мобильный посадочный талон (Apple Wallet / Google Wallet, полноценный
-  2D штрихкод PDF417/Aztec, а не текстовое поле).
-- Биометрическая посадка (опционально, зависит от аэропорта).
+### Phase 5 — Self-service check-in and mobile boarding pass (4 weeks)
+- Self-check-in kiosks, web/mobile passenger check-in.
+- Mobile boarding pass (Apple Wallet / Google Wallet, a real 2D barcode
+  — PDF417/Aztec — instead of a text field).
+- Biometric boarding (optional, airport-dependent).
 
-### Фаза 6 — Эксплуатационная надёжность и безопасность (постоянно)
-- Резервирование БД (переход на управляемый PostgreSQL), отказоустойчивость.
-- Аутентификация и ролевой доступ агентов (сейчас рабочие места открыты
-  без авторизации — обязательно закрыть перед реальной эксплуатацией).
-- Аудит действий агентов, журналирование, защита персональных данных.
-- Нагрузочное тестирование на пиковую посадку (широкофюзеляжные рейсы,
-  чартерные пики).
+### Phase 6 — Operational resilience and security (ongoing)
+- Database redundancy (moving to managed PostgreSQL), fault tolerance.
+- Agent authentication and role-based access (workstations are currently
+  open with no login — this must be closed before real use).
+- Agent action auditing, logging, personal-data protection.
+- Load testing for peak boarding (widebody flights, charter peaks).
 
-### Фаза 7 — Пилотное внедрение и сертификация (4–6 недель)
-- Тестирование на реальных данных одного рейса/гейта.
-- Приёмочные испытания с участием агентов регистрации и посадки.
-- План отката на бумажный/резервный процесс на случай отказа системы.
+### Phase 7 — Pilot rollout and certification (4–6 weeks)
+- Testing with real data on one flight/gate.
+- Acceptance testing with check-in and boarding agents.
+- A fallback plan (paper/backup process) in case of system failure.
 
-## 3. Роли команды
+## 3. Team roles
 
-| Роль | Зона ответственности |
+| Role | Responsibility |
 |---|---|
-| Руководитель проекта | сроки, риски, координация с аэропортом/авиакомпанией |
-| Бизнес-аналитик по DCS/IATA | требования, соответствие стандартам, приёмка |
-| Backend-инженер(ы) | API, интеграции EDIFACT/PSS, Weight & Balance |
-| Frontend-инженер | рабочие места агентов, UX для операционного персонала |
-| DevOps | хостинг, CI/CD, мониторинг, резервное копирование |
-| QA-инженер | тест-кейсы по сценариям регистрации/посадки, нагрузочные тесты |
-| Специалист по ИБ и защите данных | доступ, шифрование, соответствие законодательству |
+| Project manager | timeline, risk, coordination with the airport/airline |
+| DCS/IATA business analyst | requirements, standards compliance, acceptance |
+| Backend engineer(s) | API, EDIFACT/PSS integrations, Weight & Balance |
+| Frontend engineer | agent workstations, UX for operational staff |
+| DevOps | hosting, CI/CD, monitoring, backups |
+| QA engineer | check-in/boarding test scenarios, load testing |
+| Security & data-protection specialist | access control, encryption, legal compliance |
 
-## 4. Ключевые риски
+## 4. Key risks
 
-- **Интеграция с существующим PSS/GDS авиакомпании** — самый
-  трудоёмкий и непредсказуемый по срокам пункт (часто требует
-  сертификации у поставщика GDS).
-- **Отказ сети/оборудования на гейте** — нужен офлайн-режим посадки
-  (локальный кэш списка пассажиров).
-- **Соответствие требованиям пограничного контроля (APIS/ETD)** — по
-  многим направлениям обязательно по закону, а не по желанию.
-- **Безопасность персональных данных** — паспортные данные, дата
-  рождения — чувствительная информация, требует шифрования в покое и
-  контроля доступа.
+- **Integration with the airline's existing PSS/GDS** — the most
+  labor-intensive and unpredictable item (often requires certification
+  with the GDS provider).
+- **Network/hardware failure at the gate** — an offline boarding mode
+  (a local cache of the passenger list) is needed.
+- **Border-control compliance (APIS/ETD)** — mandatory by law in many
+  jurisdictions, not optional.
+- **Personal data security** — passport data and date of birth are
+  sensitive information, requiring encryption at rest and access
+  control.
 
-## 5. Ориентировочные сроки
+## 5. Rough timeline
 
-MVP (эта итерация) — готов. Полная система промышленного уровня
-(фазы 2–7) — реалистично **6–9 месяцев** при команде из 4–6 человек,
-в зависимости от глубины интеграции с конкретной авиакомпанией/PSS.
+The MVP (this iteration) is done. A full production-grade system
+(phases 2–7) realistically takes **6–9 months** with a team of 4–6
+people, depending on the depth of integration with a specific
+airline/PSS.

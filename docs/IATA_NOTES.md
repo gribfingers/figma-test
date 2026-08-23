@@ -1,88 +1,87 @@
-# Соответствие стандартам IATA — что реализовано, а что упрощено
+# Compliance with IATA standards — what's implemented, what's simplified
 
-Прототип целенаправленно следует ключевым концепциям IATA DCS (Departure
-Control System), но не является сертифицированной реализацией. Ниже —
-честная карта: что сделано близко к стандарту, а что упрощено ради
-демонстрационного масштаба проекта.
+This prototype deliberately follows the core concepts of an IATA DCS
+(Departure Control System), but it is not a certified implementation.
+Below is an honest map: what's close to the real standard, and what's
+simplified for the sake of a demonstration-scale project.
 
-## 1. Посадочный талон (BCBP) — IATA Resolution 792
+## 1. Boarding pass (BCBP) — IATA Resolution 792
 
-Реализовано в `backend/src/bcbp.ts`:
+Implemented in `backend/src/bcbp.ts`:
 
-- Полная обязательная 60-символьная структура заголовка BCBP для одного
-  сегмента полёта: format code, имя пассажира (20 симв.), признак
-  электронного билета, PNR код перевозчика, аэропорты отправления/
-  назначения, код и номер рейса, юлианская дата (день года), класс
-  обслуживания, номер места, регистрационный номер очереди (check-in
-  sequence), статус пассажира.
-- Кодирование и декодирование в обе стороны (`encodeBcbp` / `decodeBcbp`),
-  проверено сквозным тестом: регистрация → выпуск талона → сканирование
-  на посадке → декодирование → допуск на борт.
+- The full mandatory 60-character BCBP header structure for a single
+  flight leg: format code, passenger name (20 chars), electronic-ticket
+  indicator, operating carrier's PNR code, origin/destination airports,
+  carrier code and flight number, Julian date (day of year), class of
+  service, seat number, check-in sequence number, passenger status.
+- Encoding and decoding in both directions (`encodeBcbp` / `decodeBcbp`),
+  verified end to end: check-in → boarding pass issued → gate scan →
+  decode → cleared to board.
 
-Упрощено / не реализовано:
+Simplified / not implemented:
 
-- Многосегментные перелёты (поле "number of legs" всегда 1).
-- Условные (conditional) элементы второго уровня: номер часто летающего
-  пассажира, номера бирок багажа, признак fast-track, structured message
-  и т.д. — поле "field size of variable field" всегда `00`.
-- Реальная печать 2D-штрихкода (PDF417/Aztec) на бланк талона — в
-  интерфейсе агента посадки штрихкод вводится вручную (текстовая строка
-  BCBP), рисунок "штрихкода" на посадочном талоне — стилизованная
-  визуализация, не годная для сканера.
+- Multi-leg itineraries (the "number of legs" field is always 1).
+- Second-level conditional items: frequent-flyer number, bag tag
+  numbers, fast-track indicator, structured message, etc. — the
+  "field size of variable-size field" is always `00`.
+- Actually printing a 2D barcode (PDF417/Aztec) on the boarding pass —
+  in the boarding agent's UI the barcode is entered manually (the raw
+  BCBP text string); the "barcode" graphic shown on the boarding pass is
+  a stylised visual, not something a real scanner could read.
 
-## 2. Обмен сообщениями DCS — PNL / ADL / PFS
+## 2. DCS messaging — PNL / ADL / PFS
 
-Реализовано в `backend/src/edifact.ts`: генерация текстовых сообщений в
-стиле исторических IATA Type B пассажирских списков (Passenger Name List,
-Additions/Deletions List, Passenger Final/Flight Summary List), с
-заголовком рейса/даты/маршрута и построчным перечнем пассажиров, включая
-SSR.
+Implemented in `backend/src/edifact.ts`: text messages styled after the
+historical IATA Type B passenger list messages (Passenger Name List,
+Additions/Deletions List, Passenger Final/Flight Summary List), with a
+flight/date/route header and a line-by-line passenger list including
+SSRs.
 
-Упрощено / не реализовано:
+Simplified / not implemented:
 
-- Настоящий синтаксис UN/EDIFACT (сегменты UNB/UNH/UNT, PADIS message
-  types PSLIST/ADLIST и т.п.) и телеграфная адресация Type B (SITA/ARINC
-  адреса, routing indicators) — это отдельный, объёмный протокол,
-  требующий сертификации и подключения к сети конкретного GDS/hosting
-  provider.
-- ADL здесь считается по номеру очереди регистрации, а не по кодам
-  действий бронирования (реальный ADL использует RT/action codes).
+- Actual UN/EDIFACT syntax (UNB/UNH/UNT segments, PADIS message types
+  like PSLIST/ADLIST, etc.) and Type B teletype addressing (SITA/ARINC
+  addresses, routing indicators) — a separate, sizeable protocol
+  requiring certification and connection to a specific GDS/hosting
+  provider's network.
+- ADL here is computed from the check-in sequence number rather than
+  reservation action codes (a real ADL uses RT/action codes).
 
-## 3. Специальные запросы обслуживания (SSR)
+## 3. Special Service Requests (SSR)
 
-Используется подмножество стандартных кодов ATA/IATA SSR: `WCHR`,
-`WCHS`, `UMNR`, `BLND`, `DEAF`, `VGML`, `PETC`, `EXST` — полный список
-кодов SSR (сотни значений) не воспроизведён.
+A subset of the standard ATA/IATA SSR codes is used: `WCHR`, `WCHS`,
+`UMNR`, `BLND`, `DEAF`, `VGML`, `PETC`, `EXST` — the full SSR code list
+(hundreds of values) is not reproduced.
 
-## 4. Документы пассажира / APIS
+## 4. Passenger documents / APIS
 
-Проверка документа при регистрации — упрощённый аналог APIS (Advance
-Passenger Information System): срок действия документа сверяется с
-датой вылета. Реальный APIS требует передачи данных государственным
-органам (border control) в специфичном формате (UN/EDIFACT PAXLST) и
-разбора машиносчитываемой зоны (MRZ) паспорта — не реализовано.
+Document verification at check-in is a simplified analogue of APIS
+(Advance Passenger Information System): document expiry is checked
+against the flight date. Real APIS requires transmitting data to border
+control authorities in a specific format (UN/EDIFACT PAXLST) and parsing
+the passport's machine-readable zone (MRZ) — not implemented.
 
-## 5. Карта мест и посадка
+## 5. Seat map and boarding
 
-Генератор карты мест (`backend/src/utils/seatmap.ts`) — демонстрационные
-шаблоны для A320/B738 (бизнес/эконом, ряды у аварийных выходов), не
-данные реальной конфигурации воздушного судна конкретного борта (это
-приходит из AHM Aircraft Type Configuration авиакомпании).
+The seat map generator (`backend/src/utils/seatmap.ts`) uses
+demonstration templates for A320/B738 (business/economy, exit rows) —
+not the real configuration of a specific tail number (that comes from
+the airline's AHM Aircraft Type Configuration data).
 
-## 6. Весовая и центровочная ведомость (Weight & Balance)
+## 6. Weight & Balance
 
-PFS содержит только базовые агрегаты (число пассажиров, младенцы,
-суммарный вес багажа) — это иллюстрация принципа передачи данных для
-load control по духу IATA Airport Handling Manual (AHM), но не полноценный
-расчёт центровки (ZFW, MACTOW, индекс центровки и т.д.), которым
-занимается отдельная система Weight & Balance.
+The PFS only carries basic aggregates (passenger count, infants, total
+bag weight) — illustrating the spirit of load-control data per the IATA
+Airport Handling Manual (AHM), but not a full centre-of-gravity
+calculation (ZFW, MACTOW, trim index, etc.), which is handled by a
+separate Weight & Balance system.
 
-## Итог
+## Summary
 
-Прототип корректно воспроизводит **структуру и жизненный цикл** данных
-DCS (PNR → регистрация → посадочный талон → посадка → закрытие рейса →
-итоговый список), включая реально работающий алгоритм BCBP. Для
-промышленной эксплуатации потребуется: сертифицированная EDIFACT/Type B
-интеграция с PSS/GDS, полноценный Weight & Balance, интеграция с
-государственными системами (APIS/ETD), обработка багажа (BSM/BTM),
-отказоустойчивость и информационная безопасность — см. `PROJECT_PLAN.md`.
+The prototype correctly reproduces the **structure and lifecycle** of
+DCS data (PNR → check-in → boarding pass → boarding → flight close-out
+→ final list), including a genuinely working BCBP algorithm. Production
+use would require: a certified EDIFACT/Type B integration with a
+PSS/GDS, full Weight & Balance, integration with government systems
+(APIS/ETD), baggage handling (BSM/BTM), resilience, and information
+security — see `PROJECT_PLAN.md`.

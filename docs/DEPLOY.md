@@ -1,69 +1,94 @@
-# Деплой на Hetzner + Coolify
+# Deploying to Hetzner + Coolify
 
-В репозитории уже готовы `docker-compose.yml`, `backend/Dockerfile` и
-`frontend/Dockerfile` — их нельзя было собрать в sandbox-среде этой
-сессии (исходящий доступ к Docker Hub там заблокирован политикой
-песочницы), но на обычном VPS с полным доступом в интернет сборка
-пройдёт стандартно; Dockerfile'ы написаны по стандартным multi-stage
-паттернам для Node/Vite/Nginx.
+The repository ships `docker-compose.yml`, `backend/Dockerfile`, and
+`frontend/Dockerfile` — standard multi-stage builds for Node/Vite/Nginx.
+This project has already been deployed once following these exact
+steps; the notes below reflect what actually worked, including one gotcha.
 
-Ниже — то, что нужно сделать вам самостоятельно (аккаунт и оплата
-сервера — это ваши учётные данные, у меня к ним доступа нет), и то, что
-дальше можно попросить сделать меня (я могу подключиться к серверу по
-SSH и выполнить деплой, если вы дадите доступ).
+## Step 1 — Server
 
-## Шаг 1 — Сервер (делаете вы)
+1. Sign up at [hetzner.com/cloud](https://www.hetzner.com/cloud) (a
+   card is required).
+2. Create a server: **CPX22** (2 vCPU / 4 GB RAM, ~$23/mo excl. VAT),
+   **Ubuntu** image, the region closest to your users. Attach an SSH key
+   during creation — without one you'll only get a mailed root
+   password.
+3. Note the server's IPv4 address.
 
-1. Зарегистрируйтесь на [hetzner.com/cloud](https://www.hetzner.com/cloud)
-   (нужна банковская карта).
-2. Создайте сервер: план **CX22** (2 vCPU / 4 GB RAM, ~€4–5/мес),
-   образ **Ubuntu 24.04**, ближайший к вам регион.
-3. Запишите IP-адрес сервера — он понадобится дальше.
-
-## Шаг 2 — Coolify (можно сделать самим или попросить меня по SSH)
+## Step 2 — Coolify
 
 ```bash
-ssh root@<IP_СЕРВЕРА>
+ssh root@<SERVER_IP>
 curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash
 ```
 
-Установка занимает пару минут. По окончании откройте
-`http://<IP_СЕРВЕРА>:8000` — там мастер создания администратора Coolify.
+Takes a couple of minutes. Afterwards open `http://<SERVER_IP>:8000` —
+Coolify's first-run wizard to create an admin account.
 
-## Шаг 3 — Подключить репозиторий
+## Step 3 — Connect the repository
 
-В панели Coolify:
-1. **New Project** → **New Resource** → **Docker Compose**.
-2. Укажите публичный репозиторий `https://github.com/gribfingers/figma-test`,
-   ветку `main` (после того как смержите PR) — Coolify найдёт
-   `docker-compose.yml` в корне автоматически.
-3. Во вкладке сервиса `frontend` привяжите домен (свой, или временный
-   `*.sslip.io`, который Coolify выдаёт бесплатно с авто-HTTPS).
-4. Нажмите **Deploy** — соберутся оба образа (`backend`, `frontend`) и
-   поднимутся с постоянным томом `backend_data` для SQLite (данные
-   переживут последующие передеплои).
+In the Coolify dashboard:
+1. Under **Servers**, when adding the resource's server choose
+   **"This machine"** — Coolify itself runs on this same box, no need
+   to provision or connect a separate server.
+2. **New Project** → **New Resource** → **Public Git Repository**
+   (not the standalone "Docker Compose" card — that one expects an
+   inline compose file with no git repo, but ours references local
+   Dockerfiles via `build:` paths that need the actual repo checked
+   out).
+3. Repository URL: `https://github.com/gribfingers/figma-test`,
+   branch `main`. Click **Check repository**.
+4. Set **Build pack** to **Docker Compose**. Set **Compose file** to
+   `/docker-compose.yml` (note: `.yml`, not `.yaml` — Coolify defaults
+   to `.yaml` and won't find the file otherwise).
+5. Click **Continue**, then on the app's **General** page click
+   **Reload compose** to confirm both `backend` and `frontend` services
+   show up under "Show deployable compose".
 
-## Шаг 4 — Наполнить демо-данными (один раз)
+## Step 4 — Domain (important gotcha)
 
-Через встроенный терминал Coolify для сервиса `backend` (или `docker
-compose exec backend sh` по SSH):
+Coolify's own reverse proxy (Traefik) already binds host ports 80/443,
+so if `docker-compose.yml` publishes the frontend directly on `80:80`,
+the deploy fails with `port is already allocated`. This repo's compose
+file uses `expose: ["80"]` instead — the frontend container listens
+internally but isn't bound to a host port directly.
+
+To make it reachable:
+1. Open **Domains** in the app's left menu → **Add domain**.
+2. **Service:** `frontend` (not `backend` — the backend should stay
+   internal; the frontend's nginx already proxies `/api/*` to it inside
+   the Docker network).
+3. Click **Generate domain** — Coolify creates a free `*.sslip.io`
+   address with automatic HTTPS. Save.
+4. Back in **General → Build pipeline**, click **Reload compose**, then
+   **Deploy**.
+
+The plain server IP (`http://<SERVER_IP>`) will return 404 — Traefik
+routes by the `Host` header, so only the generated domain works.
+
+## Step 5 — Seed demo data (once)
+
+Via Coolify's **Terminal** tab for the `backend` service, or SSH:
 
 ```bash
-node dist/seed.js
+docker compose exec backend node dist/seed.js
 ```
 
-После этого на домене фронтенда сразу будет табло с двумя demo-рейсами
-— как на скриншотах, которые я присылал ранее.
+Or create flights directly through the API:
 
-## Что дальше
+```bash
+curl -X POST https://<your-domain>/api/flights \
+  -H 'Content-Type: application/json' \
+  -d '{"flight_number":"1234","carrier_code":"SU","origin":"SVO","destination":"LED","std":"2026-08-23T14:00:00Z","aircraft_type":"A320"}'
+```
 
-- Обновления: пуш в `main` → в Coolify нажать **Redeploy** (либо
-  включить автодеплой по вебхуку в настройках ресурса).
-- Резервное копирование: том `backend_data` — единственное, что нужно
-  бэкапить (файл SQLite с пассажирами и рейсами).
-- Перед реальной эксплуатацией: обязательно добавить аутентификацию
-  агентов (см. предупреждение в `README.md`) — сейчас домен будет
-  публично доступен без пароля.
+## What's next
 
-Если хотите, чтобы я довёл деплой до конца сам — дайте мне SSH-доступ
-к серверу (IP + ключ/пароль) после шага 1, и я выполню шаги 2–4.
+- **Updates:** push to `main`, then click **Deploy** in Coolify (or wire
+  up a GitHub webhook under the app's **Webhooks** page, in the
+  **Automation** section of its left menu, for auto-deploy on push).
+- **Backups:** the `backend_data` named volume is the only thing worth
+  backing up (the SQLite file with flights and passengers).
+- **Before any real-world use:** add authentication for the agent
+  workstations (see the warning in `README.md`) — right now the domain
+  is public with no login.

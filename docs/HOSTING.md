@@ -1,75 +1,81 @@
-# Дешёвый хостинг для проекта
+# Cheap hosting for this project
 
-Стек — Node/Express backend + статический React frontend + SQLite
-(легко заменить на управляемый Postgres). Ниже — варианты от дешёвого
-к бесплатному, по состоянию на 2026 год.
+Stack — Node/Express backend + static React frontend + SQLite (easy to
+swap for managed Postgres). Options below, from cheap to free, as of
+2026.
 
-## Рекомендация: VPS (Hetzner) + Docker/Coolify — ~€4/мес
+## Recommendation: VPS (Hetzner) + Docker/Coolify
 
-Самый предсказуемый по цене вариант для такого стека — один недорогой
-VPS, на котором разом крутится и backend, и раздача статики фронтенда,
-без отдельного биллинга за базу данных и без сюрпризов с трафиком.
+The most predictable-cost option for this stack is a single VPS running
+both the backend and the frontend's static files, with no separate
+database billing and no bandwidth surprises.
 
-- **Hetzner Cloud**, план CX22 (2 vCPU / 4 GB RAM) — в районе
-  **€4–5/мес** (самый дешёвый план CX11/CPX11 ещё дешевле, но 4 ГБ ОЗУ
-  даёт запас под Node + сборку фронтенда).
-- Поверх — **[Coolify](https://coolify.io)** (бесплатный self-hosted
-  PaaS, ставится одной командой) — даёт git-push деплой, HTTPS через
-  Let's Encrypt, перезапуск контейнеров, без ручной настройки nginx.
-- Backend и фронтенд — в Docker-контейнерах на одном сервере; SQLite
-  файл — на persistent-диске сервера (или сразу перейти на Postgres в
-  соседнем контейнере, если нужна надёжность бэкапов).
+- **Hetzner Cloud**, CPX22 plan (2 vCPU / 4 GB RAM) — **~$23/mo**
+  (excl. VAT) at current pricing; there's a cheaper CPX12 (1 vCPU / 2 GB)
+  around $13/mo, but 4 GB of RAM gives headroom for Node plus the
+  frontend build. (An earlier draft of this doc quoted €4–5/mo based on
+  a different plan — the actual price for CPX22 as deployed is the
+  figure above; always check current pricing in the Hetzner console
+  before committing.)
+- On top — **[Coolify](https://coolify.io)** (a free, self-hosted PaaS,
+  installed with one command) — gives git-push deploys, HTTPS via Let's
+  Encrypt, container restarts, no manual nginx setup.
+- Backend and frontend run in Docker containers on the same server;
+  the SQLite file lives on the server's persistent disk (or move to
+  Postgres in a sibling container if you need stronger backup
+  guarantees).
 
-Почему это дешевле специализированных PaaS: у Render/Railway/Fly.io
-итоговый счёт почти всегда выше заявленного тарифа из-за отдельной
-оплаты за базу данных и исходящий трафик (egress) — на VPS всё это уже
-включено в фиксированную цену.
+Why this is cheaper than a specialised PaaS: with Render/Railway/Fly.io
+the final bill is almost always higher than the advertised rate because
+of separate database and egress billing — on a VPS all of that is
+already included in the flat price.
 
-## Альтернатива без своего сервера — Railway (~$5/мес)
+## Alternative without managing a server — Railway (~$5/mo)
 
-Если не хочется администрировать сервер:
+If you'd rather not administer a server:
 
-- **[Railway](https://railway.app)**, Hobby-план — от **$5/мес**
-  (включённого лимита обычно хватает для демо/пилотного проекта:
-  backend + Postgres в одном проекте, деплой из GitHub без Docker).
-- Минус — тарификация по факту использования сверх лимита, без
-  жёсткого потолка расходов; для продакшена стоит выставить алерты
-  по бюджету.
+- **[Railway](https://railway.app)**, Hobby plan — from **$5/mo**
+  (the included usage is usually enough for a demo/pilot project:
+  backend + Postgres in one project, deploy from GitHub, no Docker
+  needed).
+- Downside — usage-based billing above the included limit, with no hard
+  spending cap; for production, set up budget alerts.
 
-## Бесплатный вариант — Oracle Cloud "Always Free"
+## Free option — Oracle Cloud "Always Free"
 
-- Oracle Cloud исторически даёт бессрочно бесплатную ARM-VM (до 4
-  OCPU / 24 ГБ ОЗУ на момент подготовки этого документа) — этого с
-  запасом достаточно под весь стек. Минусы: более сложная первичная
-  настройка аккаунта, доступность конкретной free-конфигурации по
-  регионам иногда меняется — стоит проверить актуальные условия перед
-  тем как на них полагаться в проде.
+- Oracle Cloud has historically offered a permanently free ARM VM (up
+  to 4 OCPU / 24 GB RAM at the time this doc was written) — comfortably
+  enough for the whole stack. Downsides: a more involved initial account
+  setup, and the exact free-tier availability varies by region and
+  changes over time — verify current terms before relying on it in
+  production.
 
-## Не рекомендуется для этого стека
+## Not recommended for this stack
 
-- **Vercel/Netlify в одиночку** — отлично для статики фронтенда, но
-  backend с SQLite там не разместить (serverless-функции без
-  постоянной файловой системы) — пришлось бы разносить фронт и бэк по
-  разным провайдерам и переходить на внешний Postgres (Neon/Supabase),
-  что для маленького проекта усложняет эксплуатацию без выигрыша в
-  цене.
-- **Render Hobby** — сам по себе бесплатный веб-сервис "засыпает" при
-  простое (не годится для рабочего места агента посадки, где важен
-  мгновенный отклик), а платный tier с базой данных и трафиком обычно
-  выходит дороже VPS.
+- **Vercel/Netlify alone** — great for static frontend hosting, but
+  there's nowhere to run the SQLite-backed backend (serverless functions
+  have no persistent filesystem) — you'd end up splitting frontend and
+  backend across different providers and moving to an external Postgres
+  (Neon/Supabase), which adds operational complexity for a small project
+  without saving money.
+- **Render Hobby** — the free web service tier "sleeps" when idle (not
+  acceptable for a boarding-gate workstation, where instant response
+  matters), and the paid tier with a database and traffic usually costs
+  more than a VPS.
 
-## Итоговый выбор
+## Bottom line
 
-Для рабочего прототипа/пилота — **Hetzner CX22 + Coolify**: около
-€4–5 в месяц, полный контроль, предсказуемый счёт, весь стек (backend +
-frontend + БД) на одной машине. Если важнее нулевые вложения и не
-пугает более сложная настройка — **Oracle Cloud Always Free**.
+For a working prototype/pilot — **Hetzner CPX22 + Coolify**: roughly
+$23/mo, full control, a predictable bill, the whole stack (backend +
+frontend + DB) on one machine. If zero upfront cost matters more than
+convenience and you don't mind a more involved setup — **Oracle Cloud
+Always Free**.
 
-Готовые `Dockerfile`/`docker-compose.yml` для этого варианта уже лежат
-в репозитории — пошаговая инструкция по деплою в
+The `Dockerfile`/`docker-compose.yml` for this setup are already in the
+repository — step-by-step deploy instructions are in
 [`docs/DEPLOY.md`](DEPLOY.md).
 
-Источники (обзор цен 2026 года):
+Sources (2026 pricing overview):
 - [Render vs Railway vs Fly.io: 2026 Pricing Showdown](https://expresstech.io/render-vs-railway-vs-fly-io-2026-pricing-showdown/)
 - [7 Fly.io Alternatives in 2026](https://expresstech.io/7-fly-io-alternatives-in-2026-real-pricing-after-the-free-tier-died/)
 - [Platforms with a real free tier for developers in 2026](https://render.com/articles/platforms-with-a-real-free-tier-for-developers-in-2026)

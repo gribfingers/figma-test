@@ -5,7 +5,7 @@ export function App() {
     <div className="shell">
       <header className="topbar">
         <Link to="/" className="brand">
-          DCS · Регистрация и посадка
+          DCS · Check-in & Boarding
         </Link>
       </header>
       <main className="content">
