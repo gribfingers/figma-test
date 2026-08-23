@@ -1,8 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, Flight } from "../api";
-
-const AIRCRAFT_TYPES = ["A320", "B738"];
 
 const OPS_STATUS_LABEL: Record<string, string> = {
   SCHEDULED: "Scheduled",
@@ -26,47 +24,131 @@ function formatTime(iso: string | null): string {
   return new Date(iso).toLocaleTimeString("en-GB", { timeZone: "UTC", hour: "2-digit", minute: "2-digit" });
 }
 
+const EMPTY_SEARCH = { airline: "", flight: "", origin: "", destination: "", dateFrom: "", dateTo: "" };
+const EMPTY_QUICK = { airline: "", flight: "", origin: "", destination: "", std: "", etd: "", sta: "", ata: "" };
+
 export function Dashboard() {
   const [flights, setFlights] = useState<Flight[]>([]);
   const [error, setError] = useState("");
-  const [form, setForm] = useState({
-    flight_number: "",
-    carrier_code: "SU",
-    origin: "",
-    destination: "",
-    std: "",
-    aircraft_type: "A320",
-  });
+
+  // Row 1: broader search, applied on "Search" (or Reset).
+  const [draftSearch, setDraftSearch] = useState(EMPTY_SEARCH);
+  const [appliedSearch, setAppliedSearch] = useState(EMPTY_SEARCH);
+  // Row 2: live per-column quick filters, applied as you type.
+  const [quick, setQuick] = useState(EMPTY_QUICK);
 
   function load() {
     api.listFlights().then(setFlights).catch((e) => setError(e.message));
   }
   useEffect(load, []);
 
-  async function createFlight(e: React.FormEvent) {
+  const airlines = useMemo(() => Array.from(new Set(flights.map((f) => f.carrier_code))).sort(), [flights]);
+  const origins = useMemo(() => Array.from(new Set(flights.map((f) => f.origin))).sort(), [flights]);
+  const destinations = useMemo(() => Array.from(new Set(flights.map((f) => f.destination))).sort(), [flights]);
+
+  const visibleFlights = useMemo(() => {
+    return flights.filter((f) => {
+      if (appliedSearch.airline && f.carrier_code !== appliedSearch.airline) return false;
+      if (appliedSearch.flight && !f.flight_number.includes(appliedSearch.flight.trim())) return false;
+      if (appliedSearch.origin && f.origin !== appliedSearch.origin) return false;
+      if (appliedSearch.destination && f.destination !== appliedSearch.destination) return false;
+      if (appliedSearch.dateFrom && new Date(f.std) < new Date(appliedSearch.dateFrom)) return false;
+      if (appliedSearch.dateTo && new Date(f.std) > new Date(appliedSearch.dateTo)) return false;
+
+      if (quick.airline && !f.carrier_code.toLowerCase().includes(quick.airline.toLowerCase())) return false;
+      if (quick.flight && !f.flight_number.toLowerCase().includes(quick.flight.toLowerCase())) return false;
+      if (quick.origin && !f.origin.toLowerCase().includes(quick.origin.toLowerCase())) return false;
+      if (quick.destination && !f.destination.toLowerCase().includes(quick.destination.toLowerCase())) return false;
+      if (quick.std && !formatTime(f.std).includes(quick.std)) return false;
+      if (quick.etd && !formatTime(f.etd).includes(quick.etd)) return false;
+      if (quick.sta && !formatTime(f.sta).includes(quick.sta)) return false;
+      if (quick.ata && !formatTime(f.ata).includes(quick.ata)) return false;
+      return true;
+    });
+  }, [flights, appliedSearch, quick]);
+
+  function runSearch(e: React.FormEvent) {
     e.preventDefault();
-    setError("");
-    try {
-      await api.createFlight({ ...form, std: new Date(form.std).toISOString() });
-      setForm({ ...form, flight_number: "", origin: "", destination: "", std: "" });
-      load();
-    } catch (e: any) {
-      setError(e.message);
-    }
+    setAppliedSearch(draftSearch);
+  }
+  function resetSearch() {
+    setDraftSearch(EMPTY_SEARCH);
+    setAppliedSearch(EMPTY_SEARCH);
+    setQuick(EMPTY_QUICK);
   }
 
   return (
     <div>
       <h1>Flight board</h1>
-      <p className="subtitle">Ops desk: create flights and jump to agent workstations.</p>
+      <p className="subtitle">Ops desk: search the schedule and jump to agent workstations.</p>
 
       {error && <div className="error-box">{error}</div>}
 
       <div className="panel">
-        <h3>Flights (departure board)</h3>
+        <form onSubmit={runSearch}>
+          <div className="toolbar" style={{ flexWrap: "wrap" }}>
+            <div className="field" style={{ margin: 0 }}>
+              <label>Airline</label>
+              <select value={draftSearch.airline} onChange={(e) => setDraftSearch({ ...draftSearch, airline: e.target.value })}>
+                <option value="">All</option>
+                {airlines.map((a) => <option key={a} value={a}>{a}</option>)}
+              </select>
+            </div>
+            <div className="field" style={{ margin: 0 }}>
+              <label>Flight number</label>
+              <input value={draftSearch.flight} onChange={(e) => setDraftSearch({ ...draftSearch, flight: e.target.value })} placeholder="All" />
+            </div>
+            <div className="field" style={{ margin: 0 }}>
+              <label>Departure</label>
+              <select value={draftSearch.origin} onChange={(e) => setDraftSearch({ ...draftSearch, origin: e.target.value })}>
+                <option value="">All</option>
+                {origins.map((o) => <option key={o} value={o}>{o}</option>)}
+              </select>
+            </div>
+            <div className="field" style={{ margin: 0 }}>
+              <label>Destination</label>
+              <select value={draftSearch.destination} onChange={(e) => setDraftSearch({ ...draftSearch, destination: e.target.value })}>
+                <option value="">All</option>
+                {destinations.map((d) => <option key={d} value={d}>{d}</option>)}
+              </select>
+            </div>
+            <div className="field" style={{ margin: 0 }}>
+              <label>Date/time from</label>
+              <input type="datetime-local" value={draftSearch.dateFrom} onChange={(e) => setDraftSearch({ ...draftSearch, dateFrom: e.target.value })} />
+            </div>
+            <div className="field" style={{ margin: 0 }}>
+              <label>Date/time to</label>
+              <input type="datetime-local" value={draftSearch.dateTo} onChange={(e) => setDraftSearch({ ...draftSearch, dateTo: e.target.value })} />
+            </div>
+            <button type="submit">Search</button>
+            <button type="button" className="secondary" onClick={resetSearch}>Reset</button>
+            <div className="spacer" />
+            <Link to="/flights/new"><button type="button">New flight</button></Link>
+            <button type="button" className="secondary" onClick={load} title="Refresh">⟳</button>
+          </div>
+        </form>
+      </div>
+
+      <div className="panel">
+        <h3>Flights ({visibleFlights.length})</h3>
         <div style={{ overflowX: "auto" }}>
           <table>
             <thead>
+              <tr>
+                <th><input placeholder="STD" disabled style={{ width: "100%", opacity: 0.4 }} /></th>
+                <th><input placeholder="Airline" value={quick.airline} onChange={(e) => setQuick({ ...quick, airline: e.target.value })} style={{ width: "100%" }} /></th>
+                <th><input placeholder="Flight" value={quick.flight} onChange={(e) => setQuick({ ...quick, flight: e.target.value })} style={{ width: "100%" }} /></th>
+                <th colSpan={2}>
+                  <div style={{ display: "flex", gap: 4 }}>
+                    <input placeholder="Departure" value={quick.origin} onChange={(e) => setQuick({ ...quick, origin: e.target.value })} style={{ width: "100%" }} />
+                    <input placeholder="Destination" value={quick.destination} onChange={(e) => setQuick({ ...quick, destination: e.target.value })} style={{ width: "100%" }} />
+                  </div>
+                </th>
+                <th><input placeholder="ETD" value={quick.etd} onChange={(e) => setQuick({ ...quick, etd: e.target.value })} style={{ width: "100%" }} /></th>
+                <th><input placeholder="STA" value={quick.sta} onChange={(e) => setQuick({ ...quick, sta: e.target.value })} style={{ width: "100%" }} /></th>
+                <th><input placeholder="ATA" value={quick.ata} onChange={(e) => setQuick({ ...quick, ata: e.target.value })} style={{ width: "100%" }} /></th>
+                <th colSpan={6}></th>
+              </tr>
               <tr>
                 <th>STD</th>
                 <th>Airline</th>
@@ -86,7 +168,7 @@ export function Dashboard() {
               </tr>
             </thead>
             <tbody>
-              {flights.map((f) => (
+              {visibleFlights.map((f) => (
                 <tr key={f.id}>
                   <td className="mono">{formatTime(f.std)}</td>
                   <td>{f.carrier_code}</td>
@@ -108,48 +190,11 @@ export function Dashboard() {
                   </td>
                 </tr>
               ))}
-              {flights.length === 0 && (
-                <tr><td colSpan={15} style={{ color: "var(--muted)" }}>No flights yet — create the first one.</td></tr>
+              {visibleFlights.length === 0 && (
+                <tr><td colSpan={15} style={{ color: "var(--muted)" }}>No flights match the current filters.</td></tr>
               )}
             </tbody>
           </table>
-        </div>
-      </div>
-
-      <div className="grid-2">
-        <div className="panel">
-          <h3>New flight</h3>
-          <form onSubmit={createFlight}>
-            <div className="grid-2">
-              <div className="field">
-                <label>Airline (IATA code)</label>
-                <input value={form.carrier_code} onChange={(e) => setForm({ ...form, carrier_code: e.target.value.toUpperCase() })} maxLength={3} required />
-              </div>
-              <div className="field">
-                <label>Flight number</label>
-                <input value={form.flight_number} onChange={(e) => setForm({ ...form, flight_number: e.target.value })} required />
-              </div>
-              <div className="field">
-                <label>Origin (IATA)</label>
-                <input value={form.origin} onChange={(e) => setForm({ ...form, origin: e.target.value.toUpperCase() })} maxLength={3} required />
-              </div>
-              <div className="field">
-                <label>Destination (IATA)</label>
-                <input value={form.destination} onChange={(e) => setForm({ ...form, destination: e.target.value.toUpperCase() })} maxLength={3} required />
-              </div>
-              <div className="field">
-                <label>Departure date/time</label>
-                <input type="datetime-local" value={form.std} onChange={(e) => setForm({ ...form, std: e.target.value })} required />
-              </div>
-              <div className="field">
-                <label>Aircraft type</label>
-                <select value={form.aircraft_type} onChange={(e) => setForm({ ...form, aircraft_type: e.target.value })}>
-                  {AIRCRAFT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-                </select>
-              </div>
-            </div>
-            <button type="submit">Create flight</button>
-          </form>
         </div>
       </div>
     </div>
