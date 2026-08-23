@@ -19,8 +19,8 @@
   --danger-hover: #a81f30;
   --danger-soft: #fdecee;
   --danger-border: #f3b4bb;
-  --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --mono: var(--font);
   --radius: 8px;
   --shadow-focus: 0 0 0 3px rgba(25, 121, 217, 0.14);
   --shadow-focus-danger: 0 0 0 3px rgba(209, 41, 61, 0.14);
@@ -103,17 +103,32 @@ th {
 }
 th input {
   min-width: 88px;
-  padding: 5px 8px;
-  font-size: 12px;
+  height: 34px;
+  padding: 0 10px;
+  font-size: 14px;
   font-weight: 400;
   text-transform: none;
   letter-spacing: normal;
-  border-radius: 6px;
+  border: 1px solid var(--field-border);
+  border-radius: var(--field-radius);
+  background: var(--field-bg);
+  color: var(--field-value);
+  transition: border-color 0.12s ease, background-color 0.12s ease;
 }
+th input::placeholder { color: var(--field-placeholder); }
+th input:hover { border-color: var(--field-border-hover); }
+th input:focus {
+  outline: none;
+  border: 2px solid var(--field-border-focus);
+  padding: 0 9px;
+  background: var(--field-bg-focus);
+  box-shadow: none;
+}
+th input:disabled { background: #eceff2; color: var(--muted-2); cursor: not-allowed; }
 tr.clickable { cursor: pointer; }
 tr.clickable:hover { background: var(--accent-soft); }
 
-.mono { font-family: var(--mono); }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 
 /* ---- Fields (bordered box, floating label + value), per Figma "Input" spec ---- */
 .field2 {
@@ -297,16 +312,17 @@ tr.clickable:hover { background: var(--accent-soft); }
 .input-box input::placeholder { color: var(--field-placeholder); }
 .input-box svg { color: var(--field-placeholder); flex-shrink: 0; }
 
-/* Plain (unboxed) inputs — used sparingly, e.g. inline table quick-filters. */
+/* Plain (unboxed) inputs — fallback for any input outside .field2/.input-box, kept on the same tokens. */
 input, select {
   font: inherit;
   padding: 7px 10px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: #fff;
-  color: var(--ink);
+  border: 1px solid var(--field-border);
+  border-radius: var(--field-radius);
+  background: var(--field-bg);
+  color: var(--field-value);
 }
-input:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: var(--shadow-focus); }
+input:hover, select:hover { border-color: var(--field-border-hover); }
+input:focus, select:focus { outline: none; border: 2px solid var(--field-border-focus); padding: 6px 9px; background: var(--field-bg-focus); box-shadow: none; }
 
 label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
 .field { margin-bottom: 10px; }
@@ -433,7 +449,7 @@ button.icon-btn {
 .counter .num { font-size: 22px; font-weight: 800; }
 .counter .lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
 
-.seatmap { display: flex; flex-direction: column; gap: 3px; font-family: var(--mono); font-size: 13px; }
+.seatmap { display: flex; flex-direction: column; gap: 3px; font-family: var(--mono); font-size: 13px; font-variant-numeric: tabular-nums; }
 .seatrow { display: flex; gap: 3px; align-items: center; }
 .seat {
   width: 34px;
@@ -463,6 +479,7 @@ pre.manifest {
   font-size: 12px;
   line-height: 1.5;
   font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
 }
 
 .toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
