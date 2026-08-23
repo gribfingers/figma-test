@@ -91,7 +91,7 @@ export function CheckIn() {
         Flight <span className="mono">{flight.carrier_code}{flight.flight_number}</span>{" "}
         {flight.origin} → {flight.destination} ·{" "}
         {new Date(flight.std).toLocaleString("en-GB", { timeZone: "UTC" })} UTC · {flight.aircraft_type} ·{" "}
-        <span className={`badge ${flight.status === "CLOSED" ? "danger" : "ok"}`}>{flight.status}</span>
+        <span className={`chip middle ${flight.status === "CLOSED" ? "danger" : "ok"}`}>{flight.status}</span>
       </p>
 
       {error && <div className="error-box">{error}</div>}
@@ -120,7 +120,7 @@ export function CheckIn() {
                     <td className="mono">{p.record_locator}</td>
                     <td>{p.surname}/{p.given_name}</td>
                     <td>
-                      <span className={`badge ${p.checkin_status === "CHECKED_IN" ? "ok" : "muted"}`}>
+                      <span className={`chip middle ${p.checkin_status === "CHECKED_IN" ? "ok" : "muted"}`}>
                         {p.checkin_status === "CHECKED_IN" ? "Checked in" : "Not checked in"}
                       </span>
                     </td>

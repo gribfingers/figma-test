@@ -91,7 +91,7 @@ export function Boarding() {
         Flight <span className="mono">{flight.carrier_code}{flight.flight_number}</span>{" "}
         {flight.origin} → {flight.destination} ·{" "}
         {new Date(flight.std).toLocaleString("en-GB", { timeZone: "UTC" })} UTC ·{" "}
-        <span className={`badge ${closed ? "danger" : "ok"}`}>{flight.status}</span>
+        <span className={`chip middle ${closed ? "danger" : "ok"}`}>{flight.status}</span>
       </p>
 
       <div className="counters">
@@ -146,8 +146,8 @@ export function Boarding() {
                 <td>{p.surname}/{p.given_name}{p.infant ? " 👶" : ""}</td>
                 <td className="mono">{p.seat ?? "—"}</td>
                 <td className="mono">{(p.ssr ?? []).join(", ")}</td>
-                <td><span className={`badge ${p.checkin_status === "CHECKED_IN" ? "ok" : "muted"}`}>{p.checkin_status === "CHECKED_IN" ? "OK" : "—"}</span></td>
-                <td><span className={`badge ${STATUS_BADGE[p.boarding_status]}`}>{p.boarding_status}</span></td>
+                <td><span className={`chip middle ${p.checkin_status === "CHECKED_IN" ? "ok" : "muted"}`}>{p.checkin_status === "CHECKED_IN" ? "OK" : "—"}</span></td>
+                <td><span className={`chip middle ${STATUS_BADGE[p.boarding_status]}`}>{p.boarding_status}</span></td>
                 <td style={{ display: "flex", gap: 6 }}>
                   {p.checkin_status === "CHECKED_IN" && p.boarding_status === "NOT_BOARDED" && !closed && (
                     <>

@@ -93,13 +93,22 @@ h3 {
 @media (max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
 
 table { width: 100%; border-collapse: collapse; font-size: 14px; }
-th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--border); }
+th, td { text-align: left; border-bottom: 1px solid var(--border); }
+/* ---- TableHead, per Figma TableHead component set (id 30142:19188) ---- */
 th {
-  color: var(--muted);
-  font-weight: 600;
+  padding: 7px 16px;
+  color: #707d95;
+  font-weight: 600; /* Semi Bold */
   font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  line-height: 16px;
+}
+/* ---- TableCell, per Figma TableCell component set (id 30142:15552) ---- */
+td {
+  padding: 14px 16px;
+  color: var(--field-value);
+  font-weight: 400; /* Regular */
+  font-size: 14px;
+  letter-spacing: 0.1px;
 }
 th input {
   min-width: 88px;
@@ -404,19 +413,25 @@ button.icon-btn {
   justify-content: center;
 }
 
-.badge {
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+/* ---- Chip, per Figma <Chip> component set (id 30142:15663) ---- */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  font-weight: 600; /* Semi Bold */
+  font-size: 12px;
+  line-height: 18px;
+  letter-spacing: 0;
+  color: #181f24;
+  white-space: nowrap;
 }
-.badge.ok { background: var(--ok-bg); color: var(--ok); }
-.badge.warn { background: var(--warn-bg); color: var(--warn); }
-.badge.danger { background: var(--danger-soft); color: var(--danger); }
-.badge.muted { background: #eef0f3; color: var(--muted); }
+.chip.small { padding: 1px 4px; border-radius: 3px; }
+.chip.middle { padding: 3px 6px; border-radius: 4px; }
+.chip.grey, .chip.default, .chip.muted { background: #ebf0f3; }
+.chip.green, .chip.ok { background: rgba(60, 184, 0, 0.2); }
+.chip.red, .chip.danger { background: rgba(219, 45, 45, 0.2); }
+/* No amber/warning color was supplied in the Chip spec (only Default/Green/Grey/Blue/Red) —
+   Blue is used as the closest spec color to flag a "needs attention" state. */
+.chip.blue, .chip.warn { background: rgba(28, 130, 236, 0.2); }
 
 .error-box {
   background: var(--danger-soft);

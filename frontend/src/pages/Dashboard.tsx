@@ -176,7 +176,7 @@ export function Dashboard() {
                   <td>{f.carrier_code}</td>
                   <td className="mono">{f.carrier_code}{f.flight_number}</td>
                   <td className="mono">{f.origin} → {f.destination}</td>
-                  <td><span className={`badge ${OPS_STATUS_BADGE[f.ops_status] ?? "muted"}`}>{OPS_STATUS_LABEL[f.ops_status] ?? f.ops_status}</span></td>
+                  <td><span className={`chip middle ${OPS_STATUS_BADGE[f.ops_status] ?? "muted"}`}>{OPS_STATUS_LABEL[f.ops_status] ?? f.ops_status}</span></td>
                   <td className="mono">{formatTime(f.etd)}</td>
                   <td className="mono">{formatTime(f.sta)}</td>
                   <td className="mono">{formatTime(f.ata)}</td>
@@ -185,7 +185,7 @@ export function Dashboard() {
                   <td>{f.aircraft_type}</td>
                   <td className="mono">{f.aircraft_reg ?? "—"}</td>
                   <td>{f.aircraft_version ?? "—"}</td>
-                  <td><span className={`badge ${f.status === "CLOSED" ? "danger" : f.status === "BOARDING" ? "warn" : "ok"}`}>{f.status}</span></td>
+                  <td><span className={`chip middle ${f.status === "CLOSED" ? "danger" : f.status === "BOARDING" ? "warn" : "ok"}`}>{f.status}</span></td>
                   <td style={{ display: "flex", gap: 6, whiteSpace: "nowrap" }}>
                     <Link to={`/checkin/${f.id}`}><button className="secondary small">Check-in</button></Link>
                     <Link to={`/boarding/${f.id}`}><button className="secondary small">Boarding</button></Link>
