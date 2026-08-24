@@ -171,7 +171,7 @@ export function Dashboard() {
             </thead>
             <tbody>
               {visibleFlights.map((f) => (
-                <tr key={f.id}>
+                <tr key={f.id} className="row-hover">
                   <td className="mono">{formatTime(f.std)}</td>
                   <td>{f.carrier_code}</td>
                   <td className="mono">{f.flight_number}</td>
