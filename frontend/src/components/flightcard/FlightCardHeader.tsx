@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { Flight } from "../../api";
 import { ChevronDownIcon } from "../Icon";
+import { FlightStatusSelect } from "./FlightStatusSelect";
 
 interface Props {
   flight: Flight;
@@ -38,8 +40,19 @@ function fmtCardDate(std: string): string {
   return `${day}${month}${year} · ${time}`;
 }
 
+// No matching backend field yet (see FlightStatusSelect) — this only picks
+// a reasonable starting point in the new glossary from the existing
+// lifecycle field, it isn't a real mapping.
+function defaultStatusKey(status: Flight["ops_status"]): string {
+  if (status === "BOARDING") return "open";
+  if (status === "DEPARTED" || status === "ARRIVED") return "take_off";
+  if (status === "CANCELLED") return "canceled_no_host";
+  return "active_not_open";
+}
+
 export function FlightCardHeader({ flight, activeTab }: Props) {
   const activeCount = activePhaseCount(flight.ops_status);
+  const [statusKey, setStatusKey] = useState(() => defaultStatusKey(flight.ops_status));
 
   return (
     <div className="flight-card-head">
@@ -54,10 +67,7 @@ export function FlightCardHeader({ flight, activeTab }: Props) {
         <div className="flight-card-date">{fmtCardDate(flight.std)}</div>
       </div>
 
-      {/* Not wired up yet — placeholder like the other dropdown actions below. */}
-      <button type="button" className="secondary">
-        Open <ChevronDownIcon size={16} />
-      </button>
+      <FlightStatusSelect value={statusKey} onChange={setStatusKey} />
 
       <div className="flight-status-group">
         {PHASES.map((p, i) => (

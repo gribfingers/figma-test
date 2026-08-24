@@ -846,6 +846,36 @@ a { color: var(--accent); }
 .flight-status-label { font-size: 12px; font-weight: 700; color: var(--field-value); white-space: nowrap; }
 .flight-status-range { font-size: 11px; color: var(--muted); margin-top: 2px; white-space: nowrap; }
 
+/* Flight status dropdown (the "Open" button) — see flightStatuses.ts */
+.status-select { position: relative; }
+.status-select .chevron-flip { transition: transform 0.12s ease; }
+.status-select.open .chevron-flip { transform: rotate(180deg); }
+.status-menu {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 4px);
+  left: 0;
+  width: max-content;
+  min-width: 300px;
+  max-width: 380px;
+  max-height: 360px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  background: #ffffff;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  box-shadow: 0 2px 24px -6px rgba(222, 226, 229, 1);
+}
+.status-menu li { padding: 8px 16px; cursor: pointer; white-space: normal; }
+.status-menu li:hover,
+.status-menu li.selected { background: var(--accent-soft); }
+.status-menu-row { display: flex; align-items: baseline; gap: 8px; }
+.status-menu-en { font-size: 14px; font-weight: 600; color: var(--field-value); }
+.status-menu-ru { font-size: 12px; color: var(--muted); }
+.status-menu-desc { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+
 .flight-tabs {
   display: flex;
   gap: 28px;
