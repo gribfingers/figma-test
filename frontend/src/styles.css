@@ -84,7 +84,7 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 .side-item:hover { background: var(--field-bg); }
-.side-item.selected { border-right-color: transparent; color: var(--field-value); background: transparent; }
+.side-item.selected { border-right-color: transparent; color: var(--field-value); background: var(--bg); }
 .side-list { display: flex; flex-direction: column; }
 .side-bottom {
   margin-top: auto;
@@ -151,7 +151,7 @@ body {
   flex-shrink: 0;
 }
 .top-tab.selected {
-  background: transparent;
+  background: var(--bg);
   border-bottom-color: transparent;
   color: #181f24;
 }
