@@ -90,9 +90,6 @@ export function FlightCardHeader({ flight, activeTab, dirty, onSave, onAction }:
       </div>
 
       <div className="flight-card-actions">
-        <button type="button" className="secondary">
-          Popular action
-        </button>
         <FlightActionsMenu onAction={onAction} />
         {activeTab === "main" && (
           <button type="button" disabled={!dirty} onClick={onSave}>
