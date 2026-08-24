@@ -55,8 +55,65 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-.shell { display: flex; flex-direction: column; min-height: 100%; }
+.app-layout { display: flex; min-height: 100%; }
+.shell { flex: 1; min-width: 0; display: flex; flex-direction: column; min-height: 100%; }
 .content { padding: 16px; width: 100%; }
+
+/* ---- Left Sidebar, per Figma "C Drawer" frame (id 30392:24572) ---- */
+.side-drawer {
+  width: 56px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+}
+.side-item {
+  all: unset;
+  box-sizing: border-box;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-right: 1px solid var(--panel-border);
+  color: var(--muted);
+  cursor: pointer;
+  text-decoration: none;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.side-item:hover { background: var(--field-bg); }
+.side-item.selected { border-right-color: transparent; color: var(--field-value); background: transparent; }
+.side-list { display: flex; flex-direction: column; }
+.side-bottom {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--panel-border);
+}
+.side-bottom .side-item { border-right: none; }
+.side-update { flex-direction: column; gap: 2px; height: 64px; }
+.side-time { font-family: var(--font); font-weight: 700; font-size: 11px; color: #707d95; }
+.side-device-ok { color: #40a011; }
+
+.side-item[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: #181f24;
+  color: #ffffff;
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 9px;
+  border-radius: 4px;
+  white-space: nowrap;
+  z-index: 50;
+  pointer-events: none;
+}
 
 /* ---- Top Tabs, per Figma "Top Tab" component set (id 25111:116475) ---- */
 .tabs-bar {
