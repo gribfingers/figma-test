@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { Field } from "../components/Field";
 import { Select } from "../components/Select";
+import { DateTimePicker } from "../components/DateTimePicker";
 import { ArrowBackIcon } from "../components/Icon";
 
 const AIRCRAFT_TYPES = ["A320", "B738"];
@@ -22,6 +23,7 @@ export function NewFlight() {
   async function createFlight(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    if (!form.std) return setError("Departure date/time is required");
     try {
       await api.createFlight({ ...form, std: new Date(form.std).toISOString() });
       navigate("/");
@@ -55,9 +57,11 @@ export function NewFlight() {
             <Field label="Destination (IATA)">
               <input value={form.destination} onChange={(e) => setForm({ ...form, destination: e.target.value.toUpperCase() })} maxLength={3} required placeholder=" " />
             </Field>
-            <Field label="Departure date/time">
-              <input type="datetime-local" value={form.std} onChange={(e) => setForm({ ...form, std: e.target.value })} required placeholder=" " />
-            </Field>
+            <DateTimePicker
+              label="Departure date/time"
+              value={form.std}
+              onChange={(v) => setForm({ ...form, std: v })}
+            />
             <Select
               label="Aircraft type"
               value={form.aircraft_type}

@@ -207,7 +207,7 @@ tr.clickable:hover { background: var(--accent-soft); }
   color: var(--field-value);
 }
 .field2 input::placeholder { color: transparent; }
-.field2 input:focus, .field2 textarea:focus { outline: none; box-shadow: none; }
+.field2 input:focus, .field2 textarea:focus { outline: none; box-shadow: none; border: none; padding: 0; }
 
 /* Floating state: focused, has a value, or is a custom Select (which always shows a chosen value). */
 .field2:focus-within label,
@@ -271,6 +271,122 @@ tr.clickable:hover { background: var(--accent-soft); }
 }
 .select-field.open .select-chevron { transform: translateY(-50%) rotate(180deg); }
 
+/* ---- Custom DateTimePicker: same field box, but floats only with a value ---- */
+.field2.datetime-field:focus-within label,
+.field2.datetime-field.has-value label {
+  top: 7px;
+  transform: translateY(0);
+  font-size: 11px;
+  font-weight: 500;
+}
+.field2.datetime-field:focus-within .datetime-trigger,
+.field2.datetime-field.has-value .datetime-trigger {
+  padding-top: 15px;
+}
+.datetime-field .datetime-trigger {
+  all: unset;
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding-right: 20px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--field-value);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.datetime-field .datetime-trigger:hover,
+.datetime-field .datetime-trigger:focus,
+.datetime-field .datetime-trigger:active {
+  background: transparent;
+  color: var(--field-value);
+}
+.datetime-field .datetime-trigger:disabled { cursor: not-allowed; color: var(--muted-2); }
+.field2.datetime-field:has(.datetime-trigger:disabled) { background: #eceff2; }
+
+.datetime-menu {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 4px);
+  left: 0;
+  width: 288px;
+  padding: 12px;
+  background: #ffffff;
+  border: 1px solid #dee2e5;
+  border-radius: 4px;
+  box-shadow: 0 2px 24px -6px rgba(222, 226, 229, 1);
+}
+.dt-cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--field-value);
+}
+.dt-nav {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  color: var(--field-placeholder);
+  cursor: pointer;
+}
+.dt-nav:hover { background: var(--field-bg); color: var(--field-value); }
+.dt-cal-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 2px;
+}
+.dt-cal-weekdays span {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--field-placeholder);
+  padding: 4px 0;
+}
+.dt-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+.dt-day {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--field-value);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.dt-day:hover { background: var(--field-bg); }
+.dt-day.outside { color: var(--field-placeholder); }
+.dt-day.today { font-weight: 700; color: var(--accent); }
+.dt-day.selected { background: var(--accent); color: #fff; font-weight: 600; }
+.dt-cal-time {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--field-border);
+}
+.dt-cal-time .field2 { flex: 1; }
+
 .select-menu {
   position: absolute;
   z-index: 30;
@@ -329,7 +445,7 @@ tr.clickable:hover { background: var(--accent-soft); }
   font-size: 14px;
   color: var(--field-value);
 }
-.input-box input:focus { outline: none; box-shadow: none; }
+.input-box input:focus { outline: none; box-shadow: none; border: none; padding: 0; }
 .input-box input::placeholder { color: var(--field-placeholder); }
 .input-box svg { color: var(--field-placeholder); flex-shrink: 0; }
 

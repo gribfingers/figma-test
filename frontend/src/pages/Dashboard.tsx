@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { api, Flight } from "../api";
 import { Field } from "../components/Field";
 import { Select } from "../components/Select";
+import { DateTimePicker } from "../components/DateTimePicker";
 import { RefreshIcon } from "../components/Icon";
 
 const OPS_STATUS_LABEL: Record<string, string> = {
@@ -110,12 +111,18 @@ export function Dashboard() {
               onChange={(v) => setDraftSearch({ ...draftSearch, destination: v })}
               options={[{ value: "", label: "All" }, ...destinations.map((d) => ({ value: d, label: d }))]}
             />
-            <Field label="Date/time from" style={{ minWidth: 170 }}>
-              <input type="datetime-local" value={draftSearch.dateFrom} onChange={(e) => setDraftSearch({ ...draftSearch, dateFrom: e.target.value })} placeholder=" " />
-            </Field>
-            <Field label="Date/time to" style={{ minWidth: 170 }}>
-              <input type="datetime-local" value={draftSearch.dateTo} onChange={(e) => setDraftSearch({ ...draftSearch, dateTo: e.target.value })} placeholder=" " />
-            </Field>
+            <DateTimePicker
+              label="Date/time from"
+              style={{ minWidth: 170 }}
+              value={draftSearch.dateFrom}
+              onChange={(v) => setDraftSearch({ ...draftSearch, dateFrom: v })}
+            />
+            <DateTimePicker
+              label="Date/time to"
+              style={{ minWidth: 170 }}
+              value={draftSearch.dateTo}
+              onChange={(v) => setDraftSearch({ ...draftSearch, dateTo: v })}
+            />
             <button type="submit" disabled={searchIsUnchanged}>Search</button>
             <div className="spacer" />
             <Link to="/flights/new"><button type="button" className="secondary">New flight</button></Link>
