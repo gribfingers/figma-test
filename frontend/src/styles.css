@@ -407,6 +407,16 @@ tr.row-hover:hover { background: var(--accent-soft); }
 .field2 input:disabled { color: var(--muted-2); }
 
 /* ---- Custom Select (dropdown), per Figma "MenuItem" spec (id 30142:16569) ---- */
+/* Clicking a <button> doesn't always give it real DOM focus (e.g. Safari,
+   unless "Full Keyboard Access" is on), so :focus-within can't be relied on
+   here — tie the focused look to the dropdown's own open state instead,
+   same as .datetime-field.open below. */
+.field2.select-field.open {
+  border: 2px solid var(--field-border-focus);
+  padding: 0 11px;
+  background: var(--field-bg-focus);
+}
+.field2.select-field.open label { color: var(--field-label-focus); }
 .field2.select-field:has(.select-trigger:disabled) { background: #eceff2; }
 /* Extra specificity (two classes) so this beats the global button/button:hover rules. */
 .select-field .select-trigger {
