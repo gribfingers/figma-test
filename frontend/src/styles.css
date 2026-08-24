@@ -1052,7 +1052,7 @@ a { color: var(--accent); }
 .passengers-table th, .passengers-table td { padding: 8px 10px; white-space: nowrap; }
 .passengers-table th:first-child, .passengers-table td:first-child { padding-left: 16px; }
 .pax-name-cell { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
-.pax-nest-arrow, .pax-infant-icon { color: var(--muted); flex-shrink: 0; }
+.pax-nest-arrow, .pax-infant-icon, .pax-child-icon { color: var(--muted); flex-shrink: 0; }
 .pax-infant-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); flex-shrink: 0; margin-left: 2px; }
 tr.pax-row-nested .pax-name-cell { padding-left: 8px; }
 tr.pax-row-nested td { color: var(--muted); }

@@ -28,8 +28,8 @@ const insertFlight = db.prepare(
 );
 const insertSeat = db.prepare(`INSERT INTO seats (flight_id, seat, cabin_class, exit_row) VALUES (?, ?, ?, ?)`);
 const insertPax = db.prepare(
-  `INSERT INTO passengers (record_locator, flight_id, surname, given_name, ticket_number, ssr, infant, gender, dob, seat, bag_count, bag_weight_kg, checkin_status)
-   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  `INSERT INTO passengers (record_locator, flight_id, surname, given_name, ticket_number, ssr, infant, gender, dob, seat, bag_count, bag_weight_kg, checkin_status, extra)
+   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 );
 
 const MALE_NAMES = ["PETR", "SERGEI", "ALEXEY", "DMITRY", "IVAN", "ANDREI", "NIKOLAI", "VLADIMIR", "MIKHAIL", "ALEXANDER", "OLEG", "PAVEL", "ROMAN", "IGOR", "YURI", "VIKTOR", "ANTON", "DENIS", "KIRILL", "ARTEM"];
@@ -86,7 +86,7 @@ function buildRoster(): PaxSpec[] {
   for (const { gender, category, count } of plan) {
     for (let i = 0; i < count; i++) {
       const [maleSurname, femaleSurname] = pick(SURNAMES);
-      const dob = category === "infant" ? randDob(0, 1) : category === "child" ? randDob(2, 11) : randDob(18, 70);
+      const dob = category === "infant" ? randDob(0, 1) : category === "child" ? randDob(5, 14) : randDob(18, 70);
       roster.push({
         gender,
         category,
@@ -115,10 +115,20 @@ const tx = db.transaction(() => {
 
     const roster = buildRoster();
     const infants = roster.filter((p) => p.category === "infant");
+    const children = roster.filter((p) => p.category === "child");
+    const adults = roster.filter((p) => p.category === "adult");
     const nonInfants = roster.filter((p) => p.category !== "infant");
-    // Pair each infant with an adult travelling on the same PNR (see
-    // PassengersTab.tsx's nested-row grouping, which keys off this).
-    const guardians = shuffle(nonInfants.filter((p) => p.category === "adult")).slice(0, infants.length);
+
+    // Both infants and children are paired with an adult travelling on the
+    // same PNR (record_locator) — infants additionally render as a nested
+    // row under their guardian (PassengersTab.tsx), children don't, but
+    // still need a guardian on the booking like a real child fare would.
+    // The two pools are picked independently, so an adult can end up
+    // guarding an infant, one or more children, or both (siblings).
+    const infantGuardians = shuffle(adults).slice(0, infants.length);
+    const childGuardians = shuffle(adults).slice(0, children.length);
+    const locatorByGuardian = new Map<PaxSpec, string>();
+    for (const g of new Set([...infantGuardians, ...childGuardians])) locatorByGuardian.set(g, nextLocator());
 
     // ~60% of seated (non-infant) passengers are checked in with a real
     // seat; the rest are still awaiting check-in, per the request that
@@ -128,7 +138,10 @@ const tx = db.transaction(() => {
     const checkedInSet = new Set(shuffle(nonInfants).slice(0, checkedInCount));
 
     let seatCursor = 0;
-    const locatorByGuardian = new Map(guardians.map((g) => [g, nextLocator()]));
+
+    function typeCode(p: PaxSpec): string {
+      return p.category === "infant" ? "INF" : p.category === "child" ? "CHD" : "ADT";
+    }
 
     function insertOne(p: PaxSpec, locator: string) {
       const isCheckedIn = checkedInSet.has(p);
@@ -146,15 +159,19 @@ const tx = db.transaction(() => {
         seat,
         seat ? (Math.random() < 0.8 ? 1 + Math.floor(Math.random() * 2) : 0) : 0,
         seat ? Math.round(Math.random() * 20 * 10) / 10 : 0,
-        seat ? "CHECKED_IN" : "NOT_CHECKED_IN"
+        seat ? "CHECKED_IN" : "NOT_CHECKED_IN",
+        JSON.stringify({ type: typeCode(p) })
       );
       if (seat) db.prepare("UPDATE seats SET passenger_id = ? WHERE flight_id = ? AND seat = ?").run(info2.lastInsertRowid, flightId, seat);
     }
 
-    for (const g of guardians) insertOne(g, locatorByGuardian.get(g)!);
-    for (const p of nonInfants) if (!guardians.includes(p)) insertOne(p, nextLocator());
+    for (const a of adults) insertOne(a, locatorByGuardian.get(a) ?? nextLocator());
+    for (let i = 0; i < children.length; i++) {
+      const guardian = childGuardians[i % childGuardians.length];
+      insertOne(children[i], locatorByGuardian.get(guardian)!);
+    }
     for (let i = 0; i < infants.length; i++) {
-      const guardian = guardians[i % guardians.length];
+      const guardian = infantGuardians[i % infantGuardians.length];
       insertOne(infants[i], locatorByGuardian.get(guardian)!);
     }
   }

@@ -73,4 +73,9 @@ export interface Passenger {
   checkin_sequence: number | null;
   bcbp: string | null;
   created_at: string;
+  // Free-form JSON blob for fields with no dedicated column yet (waitlist
+  // code, priority list, passenger type, iAPP mobile check-in, inbound/
+  // outbound connecting flight) — see frontend paxExtra.ts. Same pattern as
+  // Flight.extra.
+  extra: string | null;
 }

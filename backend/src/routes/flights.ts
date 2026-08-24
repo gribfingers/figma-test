@@ -193,15 +193,15 @@ flightsRouter.post("/:id/passengers", (req, res) => {
   const flight = db.prepare("SELECT * FROM flights WHERE id = ?").get(req.params.id) as Flight | undefined;
   if (!flight) return res.status(404).json({ error: "Flight not found" });
 
-  const { surname, given_name, ticket_number, ssr, infant, gender, dob, record_locator } = req.body;
+  const { surname, given_name, ticket_number, ssr, infant, gender, dob, record_locator, bag_count, bag_weight_kg, extra } = req.body;
   if (!surname || !given_name || !ticket_number) {
     return res.status(400).json({ error: "surname, given_name, ticket_number are required" });
   }
 
   const info = db
     .prepare(
-      `INSERT INTO passengers (record_locator, flight_id, surname, given_name, ticket_number, ssr, infant, gender, dob)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO passengers (record_locator, flight_id, surname, given_name, ticket_number, ssr, infant, gender, dob, bag_count, bag_weight_kg, extra)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .run(
       (record_locator || randomLocator()).toUpperCase(),
@@ -212,7 +212,10 @@ flightsRouter.post("/:id/passengers", (req, res) => {
       JSON.stringify(ssr ?? []),
       infant ? 1 : 0,
       gender === "M" || gender === "F" ? gender : null,
-      dob || null
+      dob || null,
+      bag_count ?? 0,
+      bag_weight_kg ?? 0,
+      extra !== undefined ? extra : null
     );
 
   const passenger = db.prepare("SELECT * FROM passengers WHERE id = ?").get(info.lastInsertRowid) as Passenger;
@@ -226,7 +229,7 @@ flightsRouter.patch("/:flightId/passengers/:passengerId", (req, res) => {
     .get(req.params.passengerId, req.params.flightId) as Passenger | undefined;
   if (!passenger) return res.status(404).json({ error: "Passenger not found" });
 
-  const { surname, given_name, record_locator, gender, dob, infant, ssr } = req.body;
+  const { surname, given_name, record_locator, gender, dob, infant, ssr, bag_count, bag_weight_kg, extra, ticket_number } = req.body;
   db.prepare(
     `UPDATE passengers SET
        surname = COALESCE(?, surname),
@@ -235,7 +238,11 @@ flightsRouter.patch("/:flightId/passengers/:passengerId", (req, res) => {
        gender = COALESCE(?, gender),
        dob = COALESCE(?, dob),
        infant = COALESCE(?, infant),
-       ssr = COALESCE(?, ssr)
+       ssr = COALESCE(?, ssr),
+       bag_count = COALESCE(?, bag_count),
+       bag_weight_kg = COALESCE(?, bag_weight_kg),
+       extra = COALESCE(?, extra),
+       ticket_number = COALESCE(?, ticket_number)
      WHERE id = ?`
   ).run(
     surname ? surname.toUpperCase() : null,
@@ -245,6 +252,10 @@ flightsRouter.patch("/:flightId/passengers/:passengerId", (req, res) => {
     dob ?? null,
     infant !== undefined ? (infant ? 1 : 0) : null,
     ssr !== undefined ? JSON.stringify(ssr) : null,
+    bag_count !== undefined ? bag_count : null,
+    bag_weight_kg !== undefined ? bag_weight_kg : null,
+    extra !== undefined ? extra : null,
+    ticket_number || null,
     req.params.passengerId
   );
 

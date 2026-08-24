@@ -59,7 +59,8 @@ CREATE TABLE IF NOT EXISTS passengers (
   seat TEXT,
   checkin_sequence INTEGER,
   bcbp TEXT,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  extra TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_passengers_flight ON passengers(flight_id);
@@ -88,4 +89,10 @@ for (const [column, ddl] of flightMigrations) {
 const existingPassengerColumns = new Set(
   (db.prepare("PRAGMA table_info(passengers)").all() as { name: string }[]).map((c) => c.name)
 );
-if (!existingPassengerColumns.has("gender")) db.exec("ALTER TABLE passengers ADD COLUMN gender TEXT");
+const passengerMigrations: [string, string][] = [
+  ["gender", "ALTER TABLE passengers ADD COLUMN gender TEXT"],
+  ["extra", "ALTER TABLE passengers ADD COLUMN extra TEXT"],
+];
+for (const [column, ddl] of passengerMigrations) {
+  if (!existingPassengerColumns.has(column)) db.exec(ddl);
+}

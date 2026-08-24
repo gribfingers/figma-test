@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { api, Flight, Passenger, SeatCell } from "../../api";
 import { SeatMapGrid } from "../SeatMapGrid";
-import { ArrowNestedIcon, InfantIcon, SearchIcon } from "../Icon";
+import { ArrowNestedIcon, ChildIcon, InfantIcon, SearchIcon } from "../Icon";
 import { SortTh, useSort } from "../SortTh";
+import { parsePassengerExtra } from "../../paxExtra";
 import { PassengerModals } from "./PassengerModals";
 
 interface Props {
@@ -81,8 +82,10 @@ type PaxSortKey = "name" | "seat" | "class" | "status" | "bag" | "age" | "gender
 
 // TR/AUX/COM/FFP/ET are per-passenger flags with no backing fields yet
 // (transfer, auxiliary service, has-comments, frequent-flyer, e-ticket) —
-// shown as static badges for now; ET and FFP already open their modals,
-// the rest are wired up once there's real state behind them.
+// shown as static badges (whether the flag is "on" isn't backed by real
+// data either). Each opens the modal that best matches what it stands for:
+// TR -> the passenger's route (their connections), AUX -> the ancillary
+// services breakdown, same as the ASVC button.
 const STATIC_FLAGS: { code: string; on: boolean }[] = [
   { code: "TR", on: true },
   { code: "AUX", on: true },
@@ -164,6 +167,7 @@ export function PassengersTab({ flight }: Props) {
                 const ssr = p.ssr ?? [];
                 const shown = ssr.slice(0, 2);
                 const overflow = ssr.length - shown.length;
+                const extra = parsePassengerExtra(p);
                 return (
                   <tr
                     key={p.id}
@@ -177,6 +181,11 @@ export function PassengersTab({ flight }: Props) {
                       <div className="pax-name-cell">
                         {nested && <ArrowNestedIcon size={14} className="pax-nest-arrow" />}
                         {nested && <InfantIcon size={14} className="pax-infant-icon" />}
+                        {!nested && extra.type === "CHD" && (
+                          <span title="Child (travelling with a guardian on this PNR)">
+                            <ChildIcon size={14} className="pax-child-icon" />
+                          </span>
+                        )}
                         {hasInfant && <span className="pax-infant-dot" title="Travelling with an infant" />}
                         <span>
                           {p.surname} {p.given_name}
@@ -191,6 +200,8 @@ export function PassengersTab({ flight }: Props) {
                                 if (f.code === "ET") setModal({ kind: "coupon", passenger: p });
                                 if (f.code === "FFP") setModal({ kind: "ffp", passenger: p });
                                 if (f.code === "COM") setModal({ kind: "comments", passenger: p });
+                                if (f.code === "TR") setModal({ kind: "route", passenger: p });
+                                if (f.code === "AUX") setModal({ kind: "asvc", passenger: p });
                               }}
                             >
                               {f.code}
@@ -228,12 +239,12 @@ export function PassengersTab({ flight }: Props) {
                         ASVC
                       </button>
                     </td>
-                    <td>—</td>
-                    <td>—</td>
-                    <td className="mono">—</td>
-                    <td>—</td>
-                    <td className="pax-route-cell" onClick={(e) => { e.stopPropagation(); setModal({ kind: "route", passenger: p }); }}>—</td>
-                    <td className="pax-route-cell" onClick={(e) => { e.stopPropagation(); setModal({ kind: "route", passenger: p }); }}>—</td>
+                    <td>{extra.wl || "—"}</td>
+                    <td>{extra.pl || "—"}</td>
+                    <td className="mono">{extra.type || "—"}</td>
+                    <td>{extra.iapp ? "✓" : "—"}</td>
+                    <td className="pax-route-cell" onClick={(e) => { e.stopPropagation(); setModal({ kind: "route", passenger: p }); }}>{extra.inbound || "—"}</td>
+                    <td className="pax-route-cell" onClick={(e) => { e.stopPropagation(); setModal({ kind: "route", passenger: p }); }}>{extra.outbound || "—"}</td>
                     <td className="mono">{p.bag_count > 0 ? `${p.bag_count}/${p.bag_weight_kg}` : "—"}</td>
                     <td>{ageFromDob(p.dob)}</td>
                     <td>{p.gender ?? "—"}</td>

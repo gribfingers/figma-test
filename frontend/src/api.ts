@@ -45,6 +45,7 @@ export interface Passenger {
   checkin_sequence: number | null;
   bcbp: string | null;
   created_at: string;
+  extra: string | null;
 }
 
 export interface SeatCell {

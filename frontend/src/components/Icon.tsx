@@ -184,3 +184,16 @@ export function ArrowNestedIcon({ size = 14, className }: IconProps) {
     </svg>
   );
 }
+
+/** Small stick figure — flags a child passenger (has a guardian on the same PNR, but keeps their own seat/row, unlike an infant). */
+export function ChildIcon({ size = 14, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <circle cx="12" cy="5" r="2.2" fill="currentColor" stroke="none" />
+      <path d="M12 8.5v6" />
+      <path d="M8.5 11.5c1-.9 2.2-1.3 3.5-1.3s2.5.4 3.5 1.3" />
+      <path d="M12 14.5l-2.8 5" />
+      <path d="M12 14.5l2.8 5" />
+    </svg>
+  );
+}
