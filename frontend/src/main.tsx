@@ -9,6 +9,7 @@ import { NewFlight } from "./pages/NewFlight";
 import { FlightCard } from "./pages/FlightCard";
 import { CheckIn } from "./pages/CheckIn";
 import { Boarding } from "./pages/Boarding";
+import { PassengerAdmin } from "./pages/PassengerAdmin";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
@@ -21,6 +22,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             <Route path="flights/:flightId" element={<FlightCard />} />
             <Route path="checkin/:flightId" element={<CheckIn />} />
             <Route path="boarding/:flightId" element={<Boarding />} />
+            <Route path="passengers-admin" element={<PassengerAdmin />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

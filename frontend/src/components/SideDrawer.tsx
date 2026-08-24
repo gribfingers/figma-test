@@ -26,10 +26,14 @@ export function SideDrawer() {
         <Link to="/" className={`side-item ${pathname === "/" ? "selected" : ""}`} data-tooltip="Flight schedule">
           <PlaneIcon size={20} />
         </Link>
-        {/* Placeholder sections — no pages behind these yet. */}
-        <button type="button" className="side-item" data-tooltip="Directories">
+        <Link
+          to="/passengers-admin"
+          className={`side-item ${pathname === "/passengers-admin" ? "selected" : ""}`}
+          data-tooltip="Passenger directory"
+        >
           <FolderIcon size={20} />
-        </button>
+        </Link>
+        {/* Placeholder section — no page behind this yet. */}
         <button type="button" className="side-item" data-tooltip="Settings">
           <SettingsIcon size={20} />
         </button>
