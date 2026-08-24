@@ -4,7 +4,20 @@ import { Field } from "../components/Field";
 import { Select } from "../components/Select";
 import { Modal } from "../components/Modal";
 import { SearchIcon } from "../components/Icon";
+import { SortTh, useSort } from "../components/SortTh";
 import { useRegisterTab } from "../tabs";
+
+type PaxAdminSortKey = "surname" | "given_name" | "record_locator" | "gender" | "dob" | "infant" | "seat" | "ticket_number";
+const PAX_ADMIN_SORT_GETTERS: Record<PaxAdminSortKey, (p: Passenger) => string | number> = {
+  surname: (p) => p.surname,
+  given_name: (p) => p.given_name,
+  record_locator: (p) => p.record_locator,
+  gender: (p) => p.gender ?? "",
+  dob: (p) => p.dob ?? "",
+  infant: (p) => (p.infant ? 1 : 0),
+  seat: (p) => p.seat ?? "",
+  ticket_number: (p) => p.ticket_number,
+};
 
 type PaxDraft = {
   surname: string;
@@ -72,6 +85,8 @@ export function PassengerAdmin() {
     api.passengers(flightId, query).then(setPassengers).catch((e) => setError(e.message));
   }
   useEffect(loadPassengers, [flightId, query]);
+
+  const { sorted: sortedPassengers, sortKey, sortDir, onSort } = useSort(passengers, PAX_ADMIN_SORT_GETTERS);
 
   const flightOptions = useMemo(
     () => flights.map((f) => ({ value: String(f.id), label: `${f.carrier_code}${f.flight_number} ${f.origin}→${f.destination}` })),
@@ -183,19 +198,19 @@ export function PassengerAdmin() {
           <table className="passengers-table">
             <thead>
               <tr>
-                <th>Surname</th>
-                <th>Given name</th>
-                <th>Record locator</th>
-                <th>Gender</th>
-                <th>DOB</th>
-                <th>Infant</th>
-                <th>Seat</th>
-                <th>Ticket number</th>
+                <SortTh id="surname" label="Surname" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="given_name" label="Given name" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="record_locator" label="Record locator" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="gender" label="Gender" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="dob" label="DOB" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="infant" label="Infant" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="seat" label="Seat" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="ticket_number" label="Ticket number" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
                 <th></th>
               </tr>
             </thead>
             <tbody>
-              {passengers.map((p) => {
+              {sortedPassengers.map((p) => {
                 const isEditing = editingId === p.id;
                 return (
                   <tr key={p.id}>

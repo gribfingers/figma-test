@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { api, Flight, Passenger } from "../api";
 import { ArrowBackIcon } from "../components/Icon";
+import { SortTh, useSort } from "../components/SortTh";
 import { useRegisterTab } from "../tabs";
 
 const STATUS_BADGE: Record<string, string> = {
@@ -9,6 +10,17 @@ const STATUS_BADGE: Record<string, string> = {
   NOT_BOARDED: "muted",
   OFFLOADED: "danger",
   NO_SHOW: "warn",
+};
+
+type BoardingSortKey = "seq" | "pnr" | "passenger" | "seat" | "ssr" | "checkin" | "boarding";
+const BOARDING_SORT_GETTERS: Record<BoardingSortKey, (p: Passenger) => string | number> = {
+  seq: (p) => p.checkin_sequence ?? Number.MAX_SAFE_INTEGER,
+  pnr: (p) => p.record_locator,
+  passenger: (p) => `${p.surname}/${p.given_name}`,
+  seat: (p) => p.seat ?? "",
+  ssr: (p) => (p.ssr ?? []).join(", "),
+  checkin: (p) => p.checkin_status,
+  boarding: (p) => p.boarding_status,
 };
 
 export function Boarding() {
@@ -80,6 +92,8 @@ export function Boarding() {
     setManifest({ label: "PFS (current preliminary summary)", text });
   }
 
+  const { sorted: sortedPassengers, sortKey, sortDir, onSort } = useSort(passengers, BOARDING_SORT_GETTERS);
+
   if (!flight) return <div className="content">Loading…</div>;
   const closed = flight.status === "CLOSED" || flight.status === "DEPARTED";
 
@@ -137,12 +151,18 @@ export function Boarding() {
         <table>
           <thead>
             <tr>
-              <th>Seq. #</th><th>PNR</th><th>Passenger</th><th>Seat</th><th>SSR</th>
-              <th>Check-in</th><th>Boarding</th><th></th>
+              <SortTh id="seq" label="Seq. #" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+              <SortTh id="pnr" label="PNR" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+              <SortTh id="passenger" label="Passenger" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+              <SortTh id="seat" label="Seat" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+              <SortTh id="ssr" label="SSR" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+              <SortTh id="checkin" label="Check-in" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+              <SortTh id="boarding" label="Boarding" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+              <th></th>
             </tr>
           </thead>
           <tbody>
-            {passengers.map((p) => (
+            {sortedPassengers.map((p) => (
               <tr key={p.id}>
                 <td className="mono">{p.checkin_sequence ?? "—"}</td>
                 <td className="mono">{p.record_locator}</td>

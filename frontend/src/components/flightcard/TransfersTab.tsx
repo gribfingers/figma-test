@@ -1,3 +1,5 @@
+import { SortTh, useSort } from "../SortTh";
+
 interface TransferRow {
   flight: string;
   route: string;
@@ -6,6 +8,16 @@ interface TransferRow {
   bag: number;
   delay?: string;
 }
+
+type TransferSortKey = "flight" | "route" | "time" | "pax" | "bag" | "delay";
+const TRANSFER_SORT_GETTERS: Record<TransferSortKey, (r: TransferRow) => string | number> = {
+  flight: (r) => r.flight,
+  route: (r) => r.route,
+  time: (r) => r.time,
+  pax: (r) => r.pax,
+  bag: (r) => r.bag,
+  delay: (r) => r.delay ?? "",
+};
 
 // Connecting-flight data isn't modelled in the backend yet — sample rows,
 // same shape as the Figma reference, stand in until that exists.
@@ -20,22 +32,23 @@ const OUTBOUND: TransferRow[] = [
 ];
 
 function TransferTable({ title, rows }: { title: string; rows: TransferRow[] }) {
+  const { sorted, sortKey, sortDir, onSort } = useSort(rows, TRANSFER_SORT_GETTERS);
   return (
     <div>
       <h3>{title}</h3>
       <table>
         <thead>
           <tr>
-            <th>Flight</th>
-            <th>Route</th>
-            <th>Time</th>
-            <th>Passengers</th>
-            <th>Baggage</th>
-            <th>Delay</th>
+            <SortTh id="flight" label="Flight" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+            <SortTh id="route" label="Route" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+            <SortTh id="time" label="Time" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+            <SortTh id="pax" label="Passengers" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+            <SortTh id="bag" label="Baggage" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+            <SortTh id="delay" label="Delay" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
           </tr>
         </thead>
         <tbody>
-          {rows.map((r) => (
+          {sorted.map((r) => (
             <tr key={r.flight}>
               <td className="mono link-text">{r.flight}</td>
               <td className="mono">{r.route}</td>

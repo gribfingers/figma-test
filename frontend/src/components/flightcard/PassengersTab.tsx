@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api, Flight, Passenger, SeatCell } from "../../api";
 import { SeatMapGrid } from "../SeatMapGrid";
 import { ArrowNestedIcon, InfantIcon, SearchIcon } from "../Icon";
+import { SortTh, useSort } from "../SortTh";
 import { PassengerModals } from "./PassengerModals";
 
 interface Props {
@@ -42,25 +43,41 @@ function buildRows(passengers: Passenger[]): PaxRow[] {
   return rows;
 }
 
-function statusChip(p: Passenger) {
-  if (p.boarding_status === "BOARDED") return <span className="chip middle ok">Boarded</span>;
-  if (p.boarding_status === "OFFLOADED") return <span className="chip middle danger">Offloaded</span>;
-  if (p.checkin_status === "CHECKED_IN") return <span className="chip middle ok">Checked-in</span>;
+function statusLabel(p: Passenger): string {
+  if (p.boarding_status === "BOARDED") return "Boarded";
+  if (p.boarding_status === "OFFLOADED") return "Offloaded";
+  if (p.checkin_status === "CHECKED_IN") return "Checked-in";
   return "—";
 }
+function statusChip(p: Passenger) {
+  const label = statusLabel(p);
+  if (label === "—") return "—";
+  return <span className={`chip middle ${label === "Offloaded" ? "danger" : "ok"}`}>{label}</span>;
+}
 
-function ageFromDob(dob: string | null): string {
-  if (!dob) return "—";
+function ageYears(dob: string | null): number {
+  if (!dob) return -1;
   const birth = new Date(dob);
-  if (Number.isNaN(birth.getTime())) return "—";
+  if (Number.isNaN(birth.getTime())) return -1;
   const now = new Date();
   let age = now.getUTCFullYear() - birth.getUTCFullYear();
   const beforeBirthday =
     now.getUTCMonth() < birth.getUTCMonth() ||
     (now.getUTCMonth() === birth.getUTCMonth() && now.getUTCDate() < birth.getUTCDate());
   if (beforeBirthday) age -= 1;
-  return String(age);
+  return age;
 }
+function ageFromDob(dob: string | null): string {
+  const age = ageYears(dob);
+  return age < 0 ? "—" : String(age);
+}
+
+function classFor(p: Passenger, seatByCode: Map<string, SeatCell>): string {
+  const seat = p.seat ? seatByCode.get(p.seat) : undefined;
+  return seat ? (seat.cabin_class === "J" ? "C" : "Y") : "—";
+}
+
+type PaxSortKey = "name" | "seat" | "class" | "status" | "bag" | "age" | "gender";
 
 // TR/AUX/COM/FFP/ET are per-passenger flags with no backing fields yet
 // (transfer, auxiliary service, has-comments, frequent-flyer, e-ticket) —
@@ -90,7 +107,22 @@ export function PassengersTab({ flight }: Props) {
 
   const activeSeat = passengers.find((p) => p.id === activeId)?.seat ?? null;
   const seatByCode = new Map(seats.map((s) => [s.seat, s]));
-  const rows = buildRows(passengers);
+
+  // Sorting operates on the flat passenger list, before infants get grouped
+  // under their guardian by buildRows — buildRows walks the array in order
+  // and always re-attaches an infant right after its guardian regardless of
+  // where either ended up, so the nesting survives any sort.
+  const paxSortGetters: Record<PaxSortKey, (p: Passenger) => string | number> = {
+    name: (p) => `${p.surname} ${p.given_name}`,
+    seat: (p) => p.seat ?? "",
+    class: (p) => classFor(p, seatByCode),
+    status: (p) => statusLabel(p),
+    bag: (p) => p.bag_count,
+    age: (p) => ageYears(p.dob),
+    gender: (p) => p.gender ?? "",
+  };
+  const { sorted: sortedPassengers, sortKey, sortDir, onSort } = useSort(passengers, paxSortGetters);
+  const rows = buildRows(sortedPassengers);
 
   return (
     <div className="passengers-tab">
@@ -108,10 +140,10 @@ export function PassengersTab({ flight }: Props) {
             <thead>
               <tr>
                 <th></th>
-                <th>Name</th>
-                <th>Seat</th>
-                <th>Class</th>
-                <th>Status</th>
+                <SortTh id="name" label="Name" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="seat" label="Seat" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="class" label="Class" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="status" label="Status" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
                 <th>Services</th>
                 <th>ASVC</th>
                 <th>WL</th>
@@ -120,9 +152,9 @@ export function PassengersTab({ flight }: Props) {
                 <th>iAPP</th>
                 <th>Inbound</th>
                 <th>Outbound</th>
-                <th>Bag</th>
-                <th>Age</th>
-                <th>Gender</th>
+                <SortTh id="bag" label="Bag" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="age" label="Age" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="gender" label="Gender" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
               </tr>
             </thead>
             <tbody>

@@ -6,7 +6,16 @@ import { BoardingPassCard } from "../components/BoardingPassCard";
 import { Field } from "../components/Field";
 import { Select } from "../components/Select";
 import { ArrowBackIcon, SearchIcon } from "../components/Icon";
+import { SortTh, useSort } from "../components/SortTh";
 import { useRegisterTab } from "../tabs";
+
+type ResultSortKey = "pnr" | "passenger" | "status" | "seat";
+const RESULT_SORT_GETTERS: Record<ResultSortKey, (p: Passenger) => string | number> = {
+  pnr: (p) => p.record_locator,
+  passenger: (p) => `${p.surname}/${p.given_name}`,
+  status: (p) => p.checkin_status,
+  seat: (p) => p.seat ?? "",
+};
 
 const SSR_OPTIONS = ["WCHR", "WCHS", "UMNR", "BLND", "DEAF", "VGML", "PETC", "EXST"];
 const DOCUMENT_TYPES = [
@@ -79,6 +88,8 @@ export function CheckIn() {
     setSsr((prev) => (prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]));
   }
 
+  const { sorted: sortedResults, sortKey, sortDir, onSort } = useSort(results, RESULT_SORT_GETTERS);
+
   if (!flight) return <div className="content">Loading…</div>;
 
   const alreadyCheckedIn = selected?.checkin_status === "CHECKED_IN";
@@ -117,10 +128,15 @@ export function CheckIn() {
             <div className="table-scroll">
             <table>
               <thead>
-                <tr><th>PNR</th><th>Passenger</th><th>Status</th><th>Seat</th></tr>
+                <tr>
+                <SortTh id="pnr" label="PNR" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="passenger" label="Passenger" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="status" label="Status" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="seat" label="Seat" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+              </tr>
               </thead>
               <tbody>
-                {results.map((p) => (
+                {sortedResults.map((p) => (
                   <tr key={p.id} className="clickable" onClick={() => selectPassenger(p)}>
                     <td className="mono">{p.record_locator}</td>
                     <td>{p.surname}/{p.given_name}</td>

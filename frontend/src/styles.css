@@ -327,6 +327,12 @@ th input:focus {
   box-shadow: none;
 }
 th input:disabled { background: #eceff2; color: var(--muted-2); cursor: not-allowed; }
+
+th.th-sort { cursor: pointer; user-select: none; }
+th.th-sort:hover { color: var(--accent); }
+.th-sort-inner { display: inline-flex; align-items: center; gap: 4px; }
+.sort-arrow { font-size: 9px; opacity: 0.35; }
+th.th-sort.active .sort-arrow { opacity: 1; color: var(--accent); }
 tr.clickable { cursor: pointer; }
 tr.clickable:hover { background: var(--accent-soft); }
 /* Hover-only row state (no click handler yet — the flight-card click-through is a follow-up). */

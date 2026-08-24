@@ -5,6 +5,7 @@ import { Field } from "../components/Field";
 import { Select } from "../components/Select";
 import { DateTimePicker } from "../components/DateTimePicker";
 import { RefreshIcon } from "../components/Icon";
+import { SortTh, useSort } from "../components/SortTh";
 import { useRegisterTab } from "../tabs";
 
 const OPS_STATUS_LABEL: Record<string, string> = {
@@ -28,6 +29,30 @@ function formatTime(iso: string | null): string {
   if (!iso) return "—";
   return new Date(iso).toLocaleTimeString("en-GB", { timeZone: "UTC", hour: "2-digit", minute: "2-digit" });
 }
+
+type FlightSortKey =
+  | "std" | "carrier_code" | "flight_number" | "route" | "ops_status"
+  | "etd" | "sta" | "ata" | "terminal" | "gate" | "aircraft_type" | "aircraft_reg" | "aircraft_version";
+
+function toEpoch(iso: string | null): number {
+  return iso ? new Date(iso).getTime() : -Infinity;
+}
+
+const FLIGHT_SORT_GETTERS: Record<FlightSortKey, (f: Flight) => string | number> = {
+  std: (f) => toEpoch(f.std),
+  carrier_code: (f) => f.carrier_code,
+  flight_number: (f) => f.flight_number,
+  route: (f) => `${f.origin}${f.destination}`,
+  ops_status: (f) => OPS_STATUS_LABEL[f.ops_status] ?? f.ops_status,
+  etd: (f) => toEpoch(f.etd),
+  sta: (f) => toEpoch(f.sta),
+  ata: (f) => toEpoch(f.ata),
+  terminal: (f) => f.terminal ?? "",
+  gate: (f) => f.gate ?? "",
+  aircraft_type: (f) => f.aircraft_type,
+  aircraft_reg: (f) => f.aircraft_reg ?? "",
+  aircraft_version: (f) => f.aircraft_version ?? "",
+};
 
 const EMPTY_SEARCH = { airline: "", flight: "", origin: "", destination: "", dateFrom: "", dateTo: "" };
 const EMPTY_QUICK = { airline: "", flight: "", origin: "", destination: "", std: "", etd: "", sta: "", ata: "" };
@@ -79,6 +104,8 @@ export function Dashboard() {
     setAppliedSearch(draftSearch);
   }
   const searchIsUnchanged = JSON.stringify(draftSearch) === JSON.stringify(appliedSearch);
+
+  const { sorted: sortedFlights, sortKey, sortDir, onSort } = useSort<Flight, FlightSortKey>(visibleFlights, FLIGHT_SORT_GETTERS, "std");
 
   return (
     <div>
@@ -157,23 +184,23 @@ export function Dashboard() {
                 <th colSpan={5}></th>
               </tr>
               <tr>
-                <th>STD</th>
-                <th>Airline</th>
-                <th>Flight</th>
-                <th>Route</th>
-                <th>Status</th>
-                <th>ETD</th>
-                <th>STA</th>
-                <th>ATA</th>
-                <th>Terminal</th>
-                <th>Gate</th>
-                <th>Type</th>
-                <th>A/C reg</th>
-                <th>Version</th>
+                <SortTh id="std" label="STD" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="carrier_code" label="Airline" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="flight_number" label="Flight" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="route" label="Route" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="ops_status" label="Status" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="etd" label="ETD" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="sta" label="STA" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="ata" label="ATA" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="terminal" label="Terminal" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="gate" label="Gate" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="aircraft_type" label="Type" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="aircraft_reg" label="A/C reg" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="aircraft_version" label="Version" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
               </tr>
             </thead>
             <tbody>
-              {visibleFlights.map((f) => (
+              {sortedFlights.map((f) => (
                 <tr key={f.id} className="row-hover" onClick={() => navigate(`/flights/${f.id}`)}>
                   <td className="mono">{formatTime(f.std)}</td>
                   <td>{f.carrier_code}</td>
