@@ -905,10 +905,11 @@ a { color: var(--accent); }
 .flight-card-body { padding: 20px; }
 
 /* Main tab: single flight segment + editable fields */
-.segment-card { border: 1px solid var(--panel-border); border-radius: 4px; padding: 16px; }
+.segment-card { border: 1px solid var(--panel-border); border-radius: 4px; padding: 16px; align-self: start; }
 .segment-endpoints { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .segment-point { display: flex; align-items: center; gap: 10px; }
 .segment-point.right { flex-direction: row-reverse; }
+.segment-point-edit { display: flex; align-items: center; gap: 8px; }
 .segment-time { font-size: 20px; font-weight: 800; color: var(--field-value); white-space: nowrap; }
 .segment-duration { color: var(--muted); font-size: 12px; white-space: nowrap; align-self: center; }
 .segment-airports { display: flex; justify-content: space-between; margin-top: 4px; }
@@ -933,6 +934,9 @@ a { color: var(--accent); }
 .checkbox-list { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
 .checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--field-value); cursor: pointer; }
 .checkbox-row input[type="checkbox"] { width: 16px; height: 16px; margin: 0; cursor: pointer; }
+
+.main-tab-side { display: flex; flex-direction: column; }
+.route-toggle-row { display: flex; justify-content: flex-end; margin-top: auto; padding-top: 24px; }
 
 /* Counters tab: bordered mini-tables (Seats / SSR / Pax statuses / Baggage) */
 .counters-grid { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }

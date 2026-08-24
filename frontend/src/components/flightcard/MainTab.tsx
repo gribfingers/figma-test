@@ -8,9 +8,10 @@ interface Props {
   flight: Flight;
 }
 
-function fmtTime(iso: string | null): string {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleTimeString("en-GB", { timeZone: "UTC", hour: "2-digit", minute: "2-digit" });
+function fmtTimeValue(iso: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
 }
 
 function fmtDuration(std: string, sta: string | null): string {
@@ -39,6 +40,15 @@ const CHECKS = [
 ];
 
 export function MainTab({ flight }: Props) {
+  // Route (airport/time) fields are shown as plain text until "Change
+  // route" is used — that's the manual-entry path for small airports
+  // without a preloaded schedule. "Back to initial route" discards edits.
+  const [editingRoute, setEditingRoute] = useState(false);
+  const [depAirport, setDepAirport] = useState(flight.origin);
+  const [arrAirport, setArrAirport] = useState(flight.destination);
+  const [depTime, setDepTime] = useState(fmtTimeValue(flight.std));
+  const [arrTime, setArrTime] = useState(fmtTimeValue(flight.sta));
+
   const [terminalFrom, setTerminalFrom] = useState(flight.terminal ?? "");
   const [terminalTo, setTerminalTo] = useState("");
   const [checkinDesk, setCheckinDesk] = useState("");
@@ -52,28 +62,72 @@ export function MainTab({ flight }: Props) {
   const [maxWeight, setMaxWeight] = useState("");
   const [checks, setChecks] = useState<Record<string, boolean>>({});
 
+  function toggleRoute() {
+    if (editingRoute) {
+      setDepAirport(flight.origin);
+      setArrAirport(flight.destination);
+      setDepTime(fmtTimeValue(flight.std));
+      setArrTime(fmtTimeValue(flight.sta));
+    }
+    setEditingRoute((v) => !v);
+  }
+
   return (
     <div className="grid-2">
       <div className="segment-card">
         <div className="segment-endpoints">
-          <div className="segment-point">
-            <div className="segment-time">{fmtTime(flight.std)}</div>
-            <Field label="Terminal" style={{ width: 84 }}>
-              <input value={terminalFrom} onChange={(e) => setTerminalFrom(e.target.value)} placeholder=" " />
-            </Field>
-          </div>
+          {editingRoute ? (
+            <div className="segment-point-edit">
+              <Field label="Airport" style={{ width: 84 }}>
+                <input value={depAirport} maxLength={3} onChange={(e) => setDepAirport(e.target.value.toUpperCase())} placeholder=" " />
+              </Field>
+              <Field label="Time" style={{ width: 84 }}>
+                <input value={depTime} onChange={(e) => setDepTime(e.target.value)} placeholder=" " />
+              </Field>
+              <Field label="Terminal" style={{ width: 84 }}>
+                <input value={terminalFrom} onChange={(e) => setTerminalFrom(e.target.value)} placeholder=" " />
+              </Field>
+            </div>
+          ) : (
+            <div className="segment-point">
+              <div className="segment-time">{depTime || "—"}</div>
+              <Field label="Terminal" style={{ width: 84 }}>
+                <input value={terminalFrom} onChange={(e) => setTerminalFrom(e.target.value)} placeholder=" " />
+              </Field>
+            </div>
+          )}
+
           <div className="segment-duration">{fmtDuration(flight.std, flight.sta)}</div>
-          <div className="segment-point right">
-            <Field label="Terminal" style={{ width: 84 }}>
-              <input value={terminalTo} onChange={(e) => setTerminalTo(e.target.value)} placeholder=" " />
-            </Field>
-            <div className="segment-time">{fmtTime(flight.sta)}</div>
+
+          {editingRoute ? (
+            <div className="segment-point-edit">
+              <Field label="Airport" style={{ width: 84 }}>
+                <input value={arrAirport} maxLength={3} onChange={(e) => setArrAirport(e.target.value.toUpperCase())} placeholder=" " />
+              </Field>
+              <Field label="Time" style={{ width: 84 }}>
+                <input value={arrTime} onChange={(e) => setArrTime(e.target.value)} placeholder=" " />
+              </Field>
+              <Field label="Terminal" style={{ width: 84 }}>
+                <input value={terminalTo} onChange={(e) => setTerminalTo(e.target.value)} placeholder=" " />
+              </Field>
+            </div>
+          ) : (
+            <div className="segment-point right">
+              <Field label="Terminal" style={{ width: 84 }}>
+                <input value={terminalTo} onChange={(e) => setTerminalTo(e.target.value)} placeholder=" " />
+              </Field>
+              <div className="segment-time">{arrTime || "—"}</div>
+            </div>
+          )}
+        </div>
+
+        {!editingRoute && (
+          <div className="segment-airports">
+            <div className="segment-airport-code">{depAirport}</div>
+            <div className="segment-airport-code">{arrAirport}</div>
           </div>
-        </div>
-        <div className="segment-airports">
-          <div className="segment-airport-code">{flight.origin}</div>
-          <div className="segment-airport-code">{flight.destination}</div>
-        </div>
+        )}
+
         <div className="segment-path">
           <span className="segment-dot" />
           <span className="segment-line-fill" />
@@ -103,12 +157,9 @@ export function MainTab({ flight }: Props) {
             <input value={seatConfig} onChange={(e) => setSeatConfig(e.target.value)} placeholder=" " />
           </Field>
         </div>
-        <button type="button" className="tertiary" style={{ marginTop: 16 }}>
-          Change route
-        </button>
       </div>
 
-      <div>
+      <div className="main-tab-side">
         <div className="field2 tall">
           <textarea value={comment} onChange={(e) => setComment(e.target.value)} placeholder=" " rows={3} />
           <label>Flight comment</label>
@@ -151,6 +202,12 @@ export function MainTab({ flight }: Props) {
               {c}
             </label>
           ))}
+        </div>
+
+        <div className="route-toggle-row">
+          <button type="button" className="tertiary" onClick={toggleRoute}>
+            {editingRoute ? "Back to initial route" : "Change route"}
+          </button>
         </div>
       </div>
     </div>
