@@ -46,6 +46,12 @@ const SSR_POOL = ["WCHR", "VGML", "PETC", "EXST"];
 function pick<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
+function pickSsr(): string[] {
+  const roll = Math.random();
+  if (roll < 0.03) return shuffle(SSR_POOL).slice(0, 2); // occasionally more than one remark
+  if (roll < 0.18) return [pick(SSR_POOL)];
+  return [];
+}
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -93,7 +99,7 @@ function buildRoster(): PaxSpec[] {
         surname: gender === "M" ? maleSurname : femaleSurname,
         givenName: pick(gender === "M" ? MALE_NAMES : FEMALE_NAMES),
         dob,
-        ssr: category === "adult" && Math.random() < 0.15 ? [pick(SSR_POOL)] : [],
+        ssr: category === "adult" ? pickSsr() : [],
       });
     }
   }
@@ -160,7 +166,14 @@ const tx = db.transaction(() => {
         seat ? (Math.random() < 0.8 ? 1 + Math.floor(Math.random() * 2) : 0) : 0,
         seat ? Math.round(Math.random() * 20 * 10) / 10 : 0,
         seat ? "CHECKED_IN" : "NOT_CHECKED_IN",
-        JSON.stringify({ type: typeCode(p) })
+        // wl/pl (waitlisted-for-reseat / priority-list flags) get a small
+        // random chance so the passengers tab's quick filters have some real
+        // matches to demo, same as the SSR chance above.
+        JSON.stringify({
+          type: typeCode(p),
+          wl: p.category !== "infant" && Math.random() < 0.06,
+          pl: p.category !== "infant" && Math.random() < 0.05,
+        })
       );
       if (seat) db.prepare("UPDATE seats SET passenger_id = ? WHERE flight_id = ? AND seat = ?").run(info2.lastInsertRowid, flightId, seat);
     }

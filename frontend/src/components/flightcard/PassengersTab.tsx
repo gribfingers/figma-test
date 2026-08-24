@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { api, Flight, Passenger, SeatCell } from "../../api";
 import { SeatMapGrid } from "../SeatMapGrid";
-import { ArrowNestedIcon, ChildIcon, InfantIcon, SearchIcon } from "../Icon";
+import { ArrowNestedIcon, ChildIcon, InfantIcon } from "../Icon";
 import { SortTh, useSort } from "../SortTh";
-import { FlagStatus, asvcStatus, commentsStatus, etStatus, ffpStatus, parsePassengerExtra, trStatus } from "../../paxExtra";
+import { FlagStatus, asvcForPassenger, asvcStatus, commentsStatus, etStatus, ffpStatus, parsePassengerExtra, trStatus } from "../../paxExtra";
 import { PassengerModals } from "./PassengerModals";
+import { PASSENGER_COLUMNS, PassengersToolbar, QuickFilter } from "./PassengersToolbar";
 
 interface Props {
   flight: Flight;
@@ -112,6 +113,20 @@ export function PassengersTab({ flight }: Props) {
   const [activeId, setActiveId] = useState<number | null>(null);
   const [modal, setModal] = useState<{ kind: ModalKind; passenger: Passenger } | null>(null);
 
+  const [quickFilter, setQuickFilter] = useState<QuickFilter>("all");
+  const [serviceFilter, setServiceFilter] = useState<string[]>([]);
+  const [asvcFilter, setAsvcFilter] = useState("");
+  const [visibleColumns, setVisibleColumns] = useState<Set<string>>(() => new Set(PASSENGER_COLUMNS.map((c) => c.key)));
+
+  function toggleColumn(key: string) {
+    setVisibleColumns((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
   function handleUpdated(updated: Passenger) {
     setPassengers((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
     setModal((m) => (m && m.passenger.id === updated.id ? { ...m, passenger: updated } : m));
@@ -127,6 +142,19 @@ export function PassengersTab({ flight }: Props) {
   const activeSeat = passengers.find((p) => p.id === activeId)?.seat ?? null;
   const seatByCode = new Map(seats.map((s) => [s.seat, s]));
 
+  const reseatCount = passengers.filter((p) => parsePassengerExtra(p).wl).length;
+  const priorityCount = passengers.filter((p) => parsePassengerExtra(p).pl).length;
+
+  const asvcQuery = asvcFilter.trim().toLowerCase();
+  const filteredPassengers = passengers.filter((p) => {
+    const extra = parsePassengerExtra(p);
+    if (quickFilter === "reseat" && !extra.wl) return false;
+    if (quickFilter === "priority" && !extra.pl) return false;
+    if (serviceFilter.length > 0 && !(p.ssr ?? []).some((code) => serviceFilter.includes(code))) return false;
+    if (asvcQuery && !asvcForPassenger(p).some((leg) => leg.services.some((s) => s.name.toLowerCase().includes(asvcQuery)))) return false;
+    return true;
+  });
+
   // Sorting operates on the flat passenger list, before infants get grouped
   // under their guardian by buildRows — buildRows walks the array in order
   // and always re-attaches an infant right after its guardian regardless of
@@ -140,41 +168,50 @@ export function PassengersTab({ flight }: Props) {
     age: (p) => ageYears(p.dob),
     gender: (p) => p.gender ?? "",
   };
-  const { sorted: sortedPassengers, sortKey, sortDir, onSort } = useSort(passengers, paxSortGetters);
+  const { sorted: sortedPassengers, sortKey, sortDir, onSort } = useSort(filteredPassengers, paxSortGetters);
   const rows = buildRows(sortedPassengers);
+  const visibleColCount = 2 + visibleColumns.size;
 
   return (
     <div className="passengers-tab">
       <div className="passengers-list">
-        <div className="toolbar">
-          <div className="input-box" style={{ flex: 1, maxWidth: 280 }}>
-            <SearchIcon size={16} />
-            <input placeholder="Search passengers…" value={query} onChange={(e) => setQuery(e.target.value)} />
-          </div>
-          <div className="spacer" />
-          <span className="passengers-count">{passengers.length} passengers</span>
-        </div>
+        <PassengersToolbar
+          seats={seats}
+          reseatCount={reseatCount}
+          priorityCount={priorityCount}
+          quickFilter={quickFilter}
+          onQuickFilter={setQuickFilter}
+          query={query}
+          onQuery={setQuery}
+          serviceFilter={serviceFilter}
+          onServiceFilter={setServiceFilter}
+          asvcFilter={asvcFilter}
+          onAsvcFilter={setAsvcFilter}
+          visibleColumns={visibleColumns}
+          onToggleColumn={toggleColumn}
+          totalCount={filteredPassengers.length}
+        />
         <div className="table-scroll">
           <table className="passengers-table">
             <thead>
               <tr>
                 <th></th>
                 <SortTh id="name" label="Name" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                <th>Flags</th>
-                <SortTh id="seat" label="Seat" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                <SortTh id="class" label="Class" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                <SortTh id="status" label="Status" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                <th>Services</th>
-                <th>ASVC</th>
-                <th>WL</th>
-                <th>PL</th>
-                <th>Type</th>
-                <th>iAPP</th>
-                <th>Inbound</th>
-                <th>Outbound</th>
-                <SortTh id="bag" label="Bag" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                <SortTh id="age" label="Age" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                <SortTh id="gender" label="Gender" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                {visibleColumns.has("flags") && <th>Flags</th>}
+                {visibleColumns.has("seat") && <SortTh id="seat" label="Seat" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />}
+                {visibleColumns.has("class") && <SortTh id="class" label="Class" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />}
+                {visibleColumns.has("status") && <SortTh id="status" label="Status" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />}
+                {visibleColumns.has("services") && <th>Services</th>}
+                {visibleColumns.has("asvc") && <th>ASVC</th>}
+                {visibleColumns.has("wl") && <th>WL</th>}
+                {visibleColumns.has("pl") && <th>PL</th>}
+                {visibleColumns.has("type") && <th>Type</th>}
+                {visibleColumns.has("iapp") && <th>iAPP</th>}
+                {visibleColumns.has("inbound") && <th>Inbound</th>}
+                {visibleColumns.has("outbound") && <th>Outbound</th>}
+                {visibleColumns.has("bag") && <SortTh id="bag" label="Bag" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />}
+                {visibleColumns.has("age") && <SortTh id="age" label="Age" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />}
+                {visibleColumns.has("gender") && <SortTh id="gender" label="Gender" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />}
               </tr>
             </thead>
             <tbody>
@@ -182,8 +219,6 @@ export function PassengersTab({ flight }: Props) {
                 const seat = p.seat ? seatByCode.get(p.seat) : undefined;
                 const cls = seat ? (seat.cabin_class === "J" ? "C" : "Y") : "—";
                 const ssr = p.ssr ?? [];
-                const shown = ssr.slice(0, 2);
-                const overflow = ssr.length - shown.length;
                 const extra = parsePassengerExtra(p);
                 return (
                   <tr
@@ -209,66 +244,63 @@ export function PassengersTab({ flight }: Props) {
                         </span>
                       </div>
                     </td>
-                    <td className="pax-flags-cell">
-                      <span className="pax-flags">
-                        {FLAG_CODES.map((code) => (
-                          <span
-                            key={code}
-                            className={`chip middle ${STATUS_CLASS[FLAG_STATUS[code](p)]} pax-flag`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setModal({ kind: FLAG_MODAL[code], passenger: p });
-                            }}
-                          >
-                            {code}
-                          </span>
-                        ))}
-                      </span>
-                    </td>
-                    <td className="mono">{p.seat ?? "—"}</td>
-                    <td>{cls}</td>
-                    <td>{statusChip(p)}</td>
-                    <td>
-                      {shown.length === 0 ? (
-                        "—"
-                      ) : (
-                        <span className="pax-service-chips">
-                          {shown.map((s) => (
-                            <span key={s} className="chip small muted mono">
-                              {s}
+                    {visibleColumns.has("flags") && (
+                      <td className="pax-flags-cell">
+                        <span className="pax-flags">
+                          {FLAG_CODES.map((code) => (
+                            <span
+                              key={code}
+                              className={`chip middle ${STATUS_CLASS[FLAG_STATUS[code](p)]} pax-flag`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setModal({ kind: FLAG_MODAL[code], passenger: p });
+                              }}
+                            >
+                              {code}
                             </span>
                           ))}
-                          {overflow > 0 && <span className="chip small muted">+{overflow}</span>}
                         </span>
-                      )}
-                    </td>
-                    <td>
-                      <button
-                        type="button"
-                        className="chip small muted pax-asvc-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setModal({ kind: "asvc", passenger: p });
-                        }}
-                      >
-                        ASVC
-                      </button>
-                    </td>
-                    <td>{extra.wl || "—"}</td>
-                    <td>{extra.pl || "—"}</td>
-                    <td className="mono">{extra.type || "—"}</td>
-                    <td>{extra.iapp ? "✓" : "—"}</td>
-                    <td className="pax-route-cell" onClick={(e) => { e.stopPropagation(); setModal({ kind: "route", passenger: p }); }}>{extra.inbound || "—"}</td>
-                    <td className="pax-route-cell" onClick={(e) => { e.stopPropagation(); setModal({ kind: "route", passenger: p }); }}>{extra.outbound || "—"}</td>
-                    <td className="mono">{p.bag_count > 0 ? `${p.bag_count}/${p.bag_weight_kg}` : "—"}</td>
-                    <td>{ageFromDob(p.dob)}</td>
-                    <td>{p.gender ?? "—"}</td>
+                      </td>
+                    )}
+                    {visibleColumns.has("seat") && <td className="mono">{p.seat ?? "—"}</td>}
+                    {visibleColumns.has("class") && <td>{cls}</td>}
+                    {visibleColumns.has("status") && <td>{statusChip(p)}</td>}
+                    {visibleColumns.has("services") && (
+                      <td>
+                        {ssr.length === 0 ? (
+                          "—"
+                        ) : (
+                          <span className="pax-service-chips">
+                            <span className="chip small muted mono">{ssr[0]}</span>
+                            {ssr.length > 1 && (
+                              <span className="chip small muted" title={ssr.join(", ")}>
+                                +{ssr.length - 1}
+                              </span>
+                            )}
+                          </span>
+                        )}
+                      </td>
+                    )}
+                    {visibleColumns.has("asvc") && <td className="mono" style={{ color: "var(--muted)" }}>ASVC</td>}
+                    {visibleColumns.has("wl") && <td>{extra.wl ? "✓" : "—"}</td>}
+                    {visibleColumns.has("pl") && <td>{extra.pl ? "✓" : "—"}</td>}
+                    {visibleColumns.has("type") && <td className="mono">{extra.type || "—"}</td>}
+                    {visibleColumns.has("iapp") && <td>{extra.iapp ? "✓" : "—"}</td>}
+                    {visibleColumns.has("inbound") && (
+                      <td className="pax-route-cell" onClick={(e) => { e.stopPropagation(); setModal({ kind: "route", passenger: p }); }}>{extra.inbound || "—"}</td>
+                    )}
+                    {visibleColumns.has("outbound") && (
+                      <td className="pax-route-cell" onClick={(e) => { e.stopPropagation(); setModal({ kind: "route", passenger: p }); }}>{extra.outbound || "—"}</td>
+                    )}
+                    {visibleColumns.has("bag") && <td className="mono">{p.bag_count > 0 ? `${p.bag_count}/${p.bag_weight_kg}` : "—"}</td>}
+                    {visibleColumns.has("age") && <td>{ageFromDob(p.dob)}</td>}
+                    {visibleColumns.has("gender") && <td>{p.gender ?? "—"}</td>}
                   </tr>
                 );
               })}
-              {passengers.length === 0 && (
+              {rows.length === 0 && (
                 <tr>
-                  <td colSpan={17} style={{ color: "var(--muted)" }}>
+                  <td colSpan={visibleColCount} style={{ color: "var(--muted)" }}>
                     No passengers found.
                   </td>
                 </tr>

@@ -31,8 +31,8 @@ type PaxDraft = {
   bag_count: number;
   bag_weight_kg: number;
   ssr: string[];
-  wl: string;
-  pl: string;
+  wl: boolean;
+  pl: boolean;
   type: string;
   iapp: boolean;
   inbound: string;
@@ -52,8 +52,8 @@ const EMPTY_DRAFT: PaxDraft = {
   bag_count: 0,
   bag_weight_kg: 0,
   ssr: [],
-  wl: "",
-  pl: "",
+  wl: false,
+  pl: false,
   type: "",
   iapp: false,
   inbound: "",
@@ -75,8 +75,8 @@ function draftFrom(p: Passenger): PaxDraft {
     bag_count: p.bag_count ?? 0,
     bag_weight_kg: p.bag_weight_kg ?? 0,
     ssr: p.ssr ?? [],
-    wl: extra.wl ?? "",
-    pl: extra.pl ?? "",
+    wl: extra.wl ?? false,
+    pl: extra.pl ?? false,
     type: extra.type ?? "",
     iapp: extra.iapp ?? false,
     inbound: extra.inbound ?? "",
@@ -186,12 +186,14 @@ function PassengerFormFields({ draft, onChange }: PassengerFormProps) {
       </div>
 
       <div style={{ display: "flex", gap: 12 }}>
-        <Field label="WL" style={{ width: 90 }}>
-          <input value={draft.wl} onChange={(e) => onChange({ ...draft, wl: e.target.value })} placeholder=" " />
-        </Field>
-        <Field label="PL" style={{ width: 90 }}>
-          <input value={draft.pl} onChange={(e) => onChange({ ...draft, pl: e.target.value })} placeholder=" " />
-        </Field>
+        <label style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 16 }}>
+          <input type="checkbox" checked={draft.wl} onChange={(e) => onChange({ ...draft, wl: e.target.checked })} />
+          WL
+        </label>
+        <label style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 16 }}>
+          <input type="checkbox" checked={draft.pl} onChange={(e) => onChange({ ...draft, pl: e.target.checked })} />
+          PL
+        </label>
         <Field label="Type" style={{ width: 100 }}>
           <input value={draft.type} onChange={(e) => onChange({ ...draft, type: e.target.value.toUpperCase() })} placeholder=" " maxLength={3} />
         </Field>

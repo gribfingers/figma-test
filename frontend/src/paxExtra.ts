@@ -4,14 +4,14 @@ import { Passenger } from "./api";
 export const SSR_OPTIONS = ["WCHR", "WCHS", "UMNR", "BLND", "DEAF", "VGML", "PETC", "EXST"];
 
 /**
- * Fields with no dedicated column yet — waitlist code, priority list,
+ * Fields with no dedicated column yet — waitlisted/priority-list flags,
  * passenger type, iAPP (checked in via mobile app), and the connecting
  * inbound/outbound flight number — stored as JSON in Passenger.extra,
  * same pattern as Flight.extra.
  */
 export interface PassengerExtra {
-  wl?: string;
-  pl?: string;
+  wl?: boolean;
+  pl?: boolean;
   type?: string;
   iapp?: boolean;
   inbound?: string;
