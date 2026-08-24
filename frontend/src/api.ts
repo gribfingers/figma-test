@@ -36,6 +36,7 @@ export interface Passenger {
   doc_expiry: string | null;
   ssr: string[];
   infant: boolean;
+  gender: "M" | "F" | null;
   bag_count: number;
   bag_weight_kg: number;
   checkin_status: "NOT_CHECKED_IN" | "CHECKED_IN";
@@ -62,7 +63,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
   });
   const isText = res.headers.get("content-type")?.includes("text/plain");
-  const body = isText ? await res.text() : await res.json();
+  const body = res.status === 204 ? undefined : isText ? await res.text() : await res.json();
   if (!res.ok) {
     const message = typeof body === "object" && body?.error ? body.error : String(body);
     throw new Error(message);
@@ -82,6 +83,10 @@ export const api = {
     request<Passenger[]>(`/flights/${flightId}/passengers${q ? `?q=${encodeURIComponent(q)}` : ""}`),
   addPassenger: (flightId: number, data: Partial<Passenger>) =>
     request<Passenger>(`/flights/${flightId}/passengers`, { method: "POST", body: JSON.stringify(data) }),
+  updatePassenger: (flightId: number, passengerId: number, data: Partial<Passenger>) =>
+    request<Passenger>(`/flights/${flightId}/passengers/${passengerId}`, { method: "PATCH", body: JSON.stringify(data) }),
+  deletePassenger: (flightId: number, passengerId: number) =>
+    request<void>(`/flights/${flightId}/passengers/${passengerId}`, { method: "DELETE" }),
 
   findByLocator: (locator: string) =>
     request<(Passenger & { flight_number: string; carrier_code: string; origin: string; destination: string; std: string; flight_status: string })[]>(

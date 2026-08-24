@@ -64,6 +64,7 @@ export interface Passenger {
   doc_expiry: string | null;
   ssr: string; // JSON-encoded string[]
   infant: 0 | 1;
+  gender: "M" | "F" | null;
   bag_count: number;
   bag_weight_kg: number;
   checkin_status: CheckinStatus;

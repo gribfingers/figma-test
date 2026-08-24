@@ -161,3 +161,26 @@ export function DeviceIcon({ size = 18, className }: IconProps) {
     </svg>
   );
 }
+
+/** Bassinet glyph — flags an infant travelling with a passenger (nested table row). */
+export function InfantIcon({ size = 14, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M4 14a8 8 0 0 1 16 0" />
+      <path d="M3 14h18" />
+      <circle cx="7" cy="18" r="1.6" />
+      <circle cx="17" cy="18" r="1.6" />
+      <path d="M12 6v3" />
+      <circle cx="12" cy="4.3" r="1.2" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+export function ArrowNestedIcon({ size = 14, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M6 4v9a3 3 0 0 0 3 3h9" />
+      <path d="M14 12l4 4-4 4" />
+    </svg>
+  );
+}

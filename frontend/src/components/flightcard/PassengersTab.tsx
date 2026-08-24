@@ -1,27 +1,85 @@
 import { useEffect, useState } from "react";
 import { api, Flight, Passenger, SeatCell } from "../../api";
 import { SeatMapGrid } from "../SeatMapGrid";
-import { SearchIcon } from "../Icon";
+import { ArrowNestedIcon, InfantIcon, SearchIcon } from "../Icon";
+import { PassengerModals } from "./PassengerModals";
 
 interface Props {
   flight: Flight;
 }
 
-// Full column set (services, ASVC, waitlist, iAPP, inbound/outbound, bag,
-// age, gender…) is being scoped separately — this is a first pass with the
-// columns backed by the current Passenger model.
+interface PaxRow {
+  passenger: Passenger;
+  nested: boolean;
+  hasInfant: boolean;
+}
+
+// Infants have no guardian_id field of their own yet — approximated by
+// pairing an infant with the non-infant passenger sharing their PNR
+// (record_locator), which is how the seed data models it. Falls back to a
+// flat, unnested row for an infant with no such match.
+function buildRows(passengers: Passenger[]): PaxRow[] {
+  const infantsByLocator = new Map<string, Passenger[]>();
+  for (const p of passengers) {
+    if (!p.infant) continue;
+    if (!infantsByLocator.has(p.record_locator)) infantsByLocator.set(p.record_locator, []);
+    infantsByLocator.get(p.record_locator)!.push(p);
+  }
+  const nested = new Set<number>();
+  const rows: PaxRow[] = [];
+  for (const p of passengers) {
+    if (p.infant) continue;
+    const infants = infantsByLocator.get(p.record_locator) ?? [];
+    rows.push({ passenger: p, nested: false, hasInfant: infants.length > 0 });
+    for (const inf of infants) {
+      rows.push({ passenger: inf, nested: true, hasInfant: false });
+      nested.add(inf.id);
+    }
+  }
+  for (const p of passengers) {
+    if (p.infant && !nested.has(p.id)) rows.push({ passenger: p, nested: false, hasInfant: false });
+  }
+  return rows;
+}
+
 function statusChip(p: Passenger) {
   if (p.boarding_status === "BOARDED") return <span className="chip middle ok">Boarded</span>;
   if (p.boarding_status === "OFFLOADED") return <span className="chip middle danger">Offloaded</span>;
-  if (p.checkin_status === "CHECKED_IN") return <span className="chip middle warn">Checked-in</span>;
-  return <span className="chip middle muted">Not checked</span>;
+  if (p.checkin_status === "CHECKED_IN") return <span className="chip middle ok">Checked-in</span>;
+  return "—";
 }
+
+function ageFromDob(dob: string | null): string {
+  if (!dob) return "—";
+  const birth = new Date(dob);
+  if (Number.isNaN(birth.getTime())) return "—";
+  const now = new Date();
+  let age = now.getUTCFullYear() - birth.getUTCFullYear();
+  const beforeBirthday =
+    now.getUTCMonth() < birth.getUTCMonth() ||
+    (now.getUTCMonth() === birth.getUTCMonth() && now.getUTCDate() < birth.getUTCDate());
+  if (beforeBirthday) age -= 1;
+  return String(age);
+}
+
+// TR/AUX/COM/FFP/ET are per-passenger flags with no backing fields yet
+// (transfer, auxiliary service, has-comments, frequent-flyer, e-ticket) —
+// shown as static badges for now; ET and FFP already open their modals,
+// the rest are wired up once there's real state behind them.
+const STATIC_FLAGS: { code: string; on: boolean }[] = [
+  { code: "TR", on: true },
+  { code: "AUX", on: true },
+  { code: "COM", on: false },
+  { code: "FFP", on: false },
+  { code: "ET", on: false },
+];
 
 export function PassengersTab({ flight }: Props) {
   const [passengers, setPassengers] = useState<Passenger[]>([]);
   const [seats, setSeats] = useState<SeatCell[]>([]);
   const [query, setQuery] = useState("");
   const [activeId, setActiveId] = useState<number | null>(null);
+  const [modal, setModal] = useState<{ kind: "asvc" | "comments" | "coupon" | "ffp" | "route"; passenger: Passenger } | null>(null);
 
   useEffect(() => {
     api.passengers(flight.id, query).then(setPassengers);
@@ -31,6 +89,8 @@ export function PassengersTab({ flight }: Props) {
   }, [flight.id]);
 
   const activeSeat = passengers.find((p) => p.id === activeId)?.seat ?? null;
+  const seatByCode = new Map(seats.map((s) => [s.seat, s]));
+  const rows = buildRows(passengers);
 
   return (
     <div className="passengers-tab">
@@ -44,33 +104,113 @@ export function PassengersTab({ flight }: Props) {
           <span className="passengers-count">{passengers.length} passengers</span>
         </div>
         <div className="table-scroll">
-          <table>
+          <table className="passengers-table">
             <thead>
               <tr>
                 <th></th>
                 <th>Name</th>
                 <th>Seat</th>
+                <th>Class</th>
                 <th>Status</th>
                 <th>Services</th>
+                <th>ASVC</th>
+                <th>WL</th>
+                <th>PL</th>
+                <th>Type</th>
+                <th>iAPP</th>
+                <th>Inbound</th>
+                <th>Outbound</th>
+                <th>Bag</th>
+                <th>Age</th>
+                <th>Gender</th>
               </tr>
             </thead>
             <tbody>
-              {passengers.map((p) => (
-                <tr key={p.id} className="clickable" onClick={() => setActiveId(p.id)}>
-                  <td>
-                    <input type="checkbox" onClick={(e) => e.stopPropagation()} />
-                  </td>
-                  <td>
-                    {p.surname} {p.given_name}
-                  </td>
-                  <td className="mono">{p.seat ?? "—"}</td>
-                  <td>{statusChip(p)}</td>
-                  <td className="mono">{(p.ssr ?? []).join(", ") || "—"}</td>
-                </tr>
-              ))}
+              {rows.map(({ passenger: p, nested, hasInfant }) => {
+                const seat = p.seat ? seatByCode.get(p.seat) : undefined;
+                const cls = seat ? (seat.cabin_class === "J" ? "C" : "Y") : "—";
+                const ssr = p.ssr ?? [];
+                const shown = ssr.slice(0, 2);
+                const overflow = ssr.length - shown.length;
+                return (
+                  <tr
+                    key={p.id}
+                    className={`clickable ${nested ? "pax-row-nested" : ""}`}
+                    onClick={() => setActiveId(p.id)}
+                  >
+                    <td>
+                      <input type="checkbox" onClick={(e) => e.stopPropagation()} />
+                    </td>
+                    <td>
+                      <div className="pax-name-cell">
+                        {nested && <ArrowNestedIcon size={14} className="pax-nest-arrow" />}
+                        {nested && <InfantIcon size={14} className="pax-infant-icon" />}
+                        {hasInfant && <span className="pax-infant-dot" title="Travelling with an infant" />}
+                        <span>
+                          {p.surname} {p.given_name}
+                        </span>
+                        <span className="pax-flags">
+                          {STATIC_FLAGS.map((f) => (
+                            <span
+                              key={f.code}
+                              className={`chip small ${f.on ? "ok" : "muted"} pax-flag`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (f.code === "ET") setModal({ kind: "coupon", passenger: p });
+                                if (f.code === "FFP") setModal({ kind: "ffp", passenger: p });
+                                if (f.code === "COM") setModal({ kind: "comments", passenger: p });
+                              }}
+                            >
+                              {f.code}
+                            </span>
+                          ))}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="mono">{p.seat ?? "—"}</td>
+                    <td>{cls}</td>
+                    <td>{statusChip(p)}</td>
+                    <td>
+                      {shown.length === 0 ? (
+                        "—"
+                      ) : (
+                        <span className="pax-service-chips">
+                          {shown.map((s) => (
+                            <span key={s} className="chip small muted mono">
+                              {s}
+                            </span>
+                          ))}
+                          {overflow > 0 && <span className="chip small muted">+{overflow}</span>}
+                        </span>
+                      )}
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="chip small muted pax-asvc-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setModal({ kind: "asvc", passenger: p });
+                        }}
+                      >
+                        ASVC
+                      </button>
+                    </td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td className="mono">—</td>
+                    <td>—</td>
+                    <td className="pax-route-cell" onClick={(e) => { e.stopPropagation(); setModal({ kind: "route", passenger: p }); }}>—</td>
+                    <td className="pax-route-cell" onClick={(e) => { e.stopPropagation(); setModal({ kind: "route", passenger: p }); }}>—</td>
+                    <td className="mono">{p.bag_count > 0 ? `${p.bag_count}/${p.bag_weight_kg}` : "—"}</td>
+                    <td>{ageFromDob(p.dob)}</td>
+                    <td>{p.gender ?? "—"}</td>
+                  </tr>
+                );
+              })}
               {passengers.length === 0 && (
                 <tr>
-                  <td colSpan={5} style={{ color: "var(--muted)" }}>
+                  <td colSpan={16} style={{ color: "var(--muted)" }}>
                     No passengers found.
                   </td>
                 </tr>
@@ -82,6 +222,8 @@ export function PassengersTab({ flight }: Props) {
       <div className="passengers-seatmap">
         <SeatMapGrid seats={seats} selected={activeSeat} />
       </div>
+
+      {modal && <PassengerModals kind={modal.kind} passenger={modal.passenger} onClose={() => setModal(null)} />}
     </div>
   );
 }

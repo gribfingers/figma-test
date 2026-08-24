@@ -193,15 +193,15 @@ flightsRouter.post("/:id/passengers", (req, res) => {
   const flight = db.prepare("SELECT * FROM flights WHERE id = ?").get(req.params.id) as Flight | undefined;
   if (!flight) return res.status(404).json({ error: "Flight not found" });
 
-  const { surname, given_name, ticket_number, ssr, infant, record_locator } = req.body;
+  const { surname, given_name, ticket_number, ssr, infant, gender, dob, record_locator } = req.body;
   if (!surname || !given_name || !ticket_number) {
     return res.status(400).json({ error: "surname, given_name, ticket_number are required" });
   }
 
   const info = db
     .prepare(
-      `INSERT INTO passengers (record_locator, flight_id, surname, given_name, ticket_number, ssr, infant)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO passengers (record_locator, flight_id, surname, given_name, ticket_number, ssr, infant, gender, dob)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .run(
       (record_locator || randomLocator()).toUpperCase(),
@@ -210,9 +210,58 @@ flightsRouter.post("/:id/passengers", (req, res) => {
       given_name.toUpperCase(),
       ticket_number,
       JSON.stringify(ssr ?? []),
-      infant ? 1 : 0
+      infant ? 1 : 0,
+      gender === "M" || gender === "F" ? gender : null,
+      dob || null
     );
 
   const passenger = db.prepare("SELECT * FROM passengers WHERE id = ?").get(info.lastInsertRowid) as Passenger;
   res.status(201).json(serializePassenger(passenger));
+});
+
+/** General passenger-record edit (surname/given_name/gender/dob/infant/ssr/record_locator) — for the passenger admin page, distinct from the seat/document fields the check-in flow (routes/checkin.ts) owns. */
+flightsRouter.patch("/:flightId/passengers/:passengerId", (req, res) => {
+  const passenger = db
+    .prepare("SELECT * FROM passengers WHERE id = ? AND flight_id = ?")
+    .get(req.params.passengerId, req.params.flightId) as Passenger | undefined;
+  if (!passenger) return res.status(404).json({ error: "Passenger not found" });
+
+  const { surname, given_name, record_locator, gender, dob, infant, ssr } = req.body;
+  db.prepare(
+    `UPDATE passengers SET
+       surname = COALESCE(?, surname),
+       given_name = COALESCE(?, given_name),
+       record_locator = COALESCE(?, record_locator),
+       gender = COALESCE(?, gender),
+       dob = COALESCE(?, dob),
+       infant = COALESCE(?, infant),
+       ssr = COALESCE(?, ssr)
+     WHERE id = ?`
+  ).run(
+    surname ? surname.toUpperCase() : null,
+    given_name ? given_name.toUpperCase() : null,
+    record_locator ? record_locator.toUpperCase() : null,
+    gender === "M" || gender === "F" ? gender : null,
+    dob ?? null,
+    infant !== undefined ? (infant ? 1 : 0) : null,
+    ssr !== undefined ? JSON.stringify(ssr) : null,
+    req.params.passengerId
+  );
+
+  const updated = db.prepare("SELECT * FROM passengers WHERE id = ?").get(req.params.passengerId) as Passenger;
+  res.json(serializePassenger(updated));
+});
+
+flightsRouter.delete("/:flightId/passengers/:passengerId", (req, res) => {
+  const passenger = db
+    .prepare("SELECT * FROM passengers WHERE id = ? AND flight_id = ?")
+    .get(req.params.passengerId, req.params.flightId) as Passenger | undefined;
+  if (!passenger) return res.status(404).json({ error: "Passenger not found" });
+
+  const tx = db.transaction(() => {
+    db.prepare("UPDATE seats SET passenger_id = NULL WHERE passenger_id = ?").run(passenger.id);
+    db.prepare("DELETE FROM passengers WHERE id = ?").run(passenger.id);
+  });
+  tx();
+  res.status(204).end();
 });

@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS passengers (
   doc_expiry TEXT,
   ssr TEXT NOT NULL DEFAULT '[]',
   infant INTEGER NOT NULL DEFAULT 0,
+  gender TEXT,
   bag_count INTEGER NOT NULL DEFAULT 0,
   bag_weight_kg REAL NOT NULL DEFAULT 0,
   checkin_status TEXT NOT NULL DEFAULT 'NOT_CHECKED_IN',
@@ -83,3 +84,8 @@ const flightMigrations: [string, string][] = [
 for (const [column, ddl] of flightMigrations) {
   if (!existingFlightColumns.has(column)) db.exec(ddl);
 }
+
+const existingPassengerColumns = new Set(
+  (db.prepare("PRAGMA table_info(passengers)").all() as { name: string }[]).map((c) => c.name)
+);
+if (!existingPassengerColumns.has("gender")) db.exec("ALTER TABLE passengers ADD COLUMN gender TEXT");
