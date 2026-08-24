@@ -6,6 +6,7 @@ import { BoardingPassCard } from "../components/BoardingPassCard";
 import { Field } from "../components/Field";
 import { Select } from "../components/Select";
 import { ArrowBackIcon, SearchIcon } from "../components/Icon";
+import { useRegisterTab } from "../tabs";
 
 const SSR_OPTIONS = ["WCHR", "WCHS", "UMNR", "BLND", "DEAF", "VGML", "PETC", "EXST"];
 const DOCUMENT_TYPES = [
@@ -18,6 +19,7 @@ export function CheckIn() {
   const { flightId } = useParams();
   const fid = Number(flightId);
   const [flight, setFlight] = useState<Flight | null>(null);
+  useRegisterTab(flight ? `Check-in ${flight.carrier_code}${flight.flight_number}` : "Check-in");
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Passenger[]>([]);
   const [selected, setSelected] = useState<Passenger | null>(null);

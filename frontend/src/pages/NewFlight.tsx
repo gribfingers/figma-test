@@ -5,10 +5,12 @@ import { Field } from "../components/Field";
 import { Select } from "../components/Select";
 import { DateTimePicker } from "../components/DateTimePicker";
 import { ArrowBackIcon } from "../components/Icon";
+import { useRegisterTab } from "../tabs";
 
 const AIRCRAFT_TYPES = ["A320", "B738"];
 
 export function NewFlight() {
+  useRegisterTab("New flight");
   const navigate = useNavigate();
   const [error, setError] = useState("");
   const [form, setForm] = useState({

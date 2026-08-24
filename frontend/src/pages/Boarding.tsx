@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { api, Flight, Passenger } from "../api";
 import { ArrowBackIcon } from "../components/Icon";
+import { useRegisterTab } from "../tabs";
 
 const STATUS_BADGE: Record<string, string> = {
   BOARDED: "ok",
@@ -14,6 +15,7 @@ export function Boarding() {
   const { flightId } = useParams();
   const fid = Number(flightId);
   const [flight, setFlight] = useState<Flight | null>(null);
+  useRegisterTab(flight ? `Boarding ${flight.carrier_code}${flight.flight_number}` : "Boarding");
   const [passengers, setPassengers] = useState<Passenger[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [scanValue, setScanValue] = useState("");

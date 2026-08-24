@@ -56,16 +56,92 @@ body {
 }
 
 .shell { display: flex; flex-direction: column; min-height: 100%; }
-.topbar {
-  background: #0a1a3f;
-  color: #fff;
-  padding: 14px 24px;
-  font-weight: 700;
-  font-size: 14px;
-  letter-spacing: 0.01em;
-}
-.brand { color: #fff; text-decoration: none; }
 .content { padding: 16px; width: 100%; }
+
+/* ---- Top Tabs, per Figma "Top Tab" component set (id 25111:116475) ---- */
+.tabs-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg);
+  flex-shrink: 0;
+}
+.tabs-list { display: flex; align-items: flex-end; overflow-x: auto; }
+.top-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 56px;
+  padding: 22px 12px;
+  box-sizing: border-box;
+  background: #ffffff;
+  border-right: 1px solid var(--panel-border);
+  border-bottom: 1px solid var(--panel-border);
+  font-family: var(--font);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.1px;
+  color: #707d95;
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.top-tab.selected {
+  background: transparent;
+  border-bottom-color: transparent;
+  color: #181f24;
+}
+.top-tab.selected:hover { border-bottom-color: var(--panel-border); }
+.top-tab-close {
+  all: unset;
+  box-sizing: border-box;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #707d95;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.top-tab:hover .top-tab-close { display: flex; }
+.top-tab.selected .top-tab-close { background: #f4f7fa; }
+
+.tabs-actions { display: flex; align-items: center; gap: 2px; flex-shrink: 0; padding: 0 16px; }
+.tabs-icon-btn {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  color: var(--field-placeholder);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.tabs-icon-btn:hover { background: var(--field-bg); color: var(--field-value); }
+.tabs-avatar-btn {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-left: 6px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #ffffff;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.tabs-avatar-btn:hover { background: var(--accent-hover); }
 
 h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.01em; margin: 0 0 4px; }
 h2 { font-size: 18px; font-weight: 600; margin: 0 0 12px; }
@@ -654,7 +730,8 @@ pre.manifest {
 a { color: var(--accent); }
 
 @media (max-width: 640px) {
-  .topbar { padding: 12px 16px; }
+  .top-tab { padding: 18px 10px; height: 48px; font-size: 12px; }
+  .tabs-actions { padding: 0 10px; }
   h1 { font-size: 20px; }
   .panel { padding: 14px; }
   button { padding: 9px 14px; font-size: 13px; }

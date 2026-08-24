@@ -1,12 +1,11 @@
-import { Link, Outlet } from "react-router-dom";
+import { Outlet } from "react-router-dom";
+import { TopTabs } from "./components/TopTabs";
 
 export function App() {
   return (
     <div className="shell">
-      <header className="topbar">
-        <Link to="/" className="brand">
-          DCS · Check-in & Boarding
-        </Link>
+      <header>
+        <TopTabs />
       </header>
       <main className="content">
         <Outlet />

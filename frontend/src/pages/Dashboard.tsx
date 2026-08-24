@@ -5,6 +5,7 @@ import { Field } from "../components/Field";
 import { Select } from "../components/Select";
 import { DateTimePicker } from "../components/DateTimePicker";
 import { RefreshIcon } from "../components/Icon";
+import { useRegisterTab } from "../tabs";
 
 const OPS_STATUS_LABEL: Record<string, string> = {
   SCHEDULED: "Scheduled",
@@ -32,6 +33,7 @@ const EMPTY_SEARCH = { airline: "", flight: "", origin: "", destination: "", dat
 const EMPTY_QUICK = { airline: "", flight: "", origin: "", destination: "", std: "", etd: "", sta: "", ata: "" };
 
 export function Dashboard() {
+  useRegisterTab("Flights", false);
   const [flights, setFlights] = useState<Flight[]>([]);
   const [error, setError] = useState("");
 
