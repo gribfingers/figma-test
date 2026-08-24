@@ -1,0 +1,252 @@
+import { useEffect, useRef, useState } from "react";
+import { api, SeatCell } from "../api";
+import { SEAT_ATTRS, SeatExtra, parseSeatExtra } from "../seatExtra";
+import { SeatMapGrid } from "./SeatMapGrid";
+import { Modal } from "./Modal";
+import { Field } from "./Field";
+import { ExpandIcon, HideIcon, LayersIcon, MinusIcon, PencilIcon, PlusIcon, RowsIcon } from "./Icon";
+
+interface Props {
+  flightId: number;
+  seats: SeatCell[];
+  selected?: string | null;
+  onSelect?: (seat: string) => void;
+  onSeatUpdated: (seat: SeatCell) => void;
+  horizontal: boolean;
+  onToggleHorizontal: () => void;
+  onHide: () => void;
+}
+
+const LEGEND_STATES: { cls: string; label: string }[] = [
+  { cls: "", label: "Free" },
+  { cls: "occupied", label: "Checked-in" },
+  { cls: "boarded", label: "Boarded" },
+];
+
+/**
+ * Seat map with the reference toolbar: deck switcher (this app's aircraft
+ * are all single-deck, so "Upper Deck" is a disabled placeholder), zoom
+ * (CSS transform: scale), a legend popover, a layers menu that toggles
+ * which attribute icons render on the map, horizontal-layout toggle, and
+ * hide. The pencil button is this app's addition (not in the reference
+ * toolbar) — it's the entry point into the seat attribute editor the
+ * request asked for: click any seat while it's active to assign exit-row/
+ * blocking/service/pricing attributes to it.
+ */
+export function SeatMapPanel({ flightId, seats, selected, onSelect, onSeatUpdated, horizontal, onToggleHorizontal, onHide }: Props) {
+  const [zoom, setZoom] = useState(100);
+  const [legendOpen, setLegendOpen] = useState(false);
+  const [layersOpen, setLayersOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [editingSeat, setEditingSeat] = useState<SeatCell | null>(null);
+  const [visibleLayers, setVisibleLayers] = useState<Set<string>>(() => new Set(SEAT_ATTRS.map((a) => a.key)));
+
+  const legendRef = useRef<HTMLDivElement>(null);
+  const layersRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function onDocMouseDown(e: MouseEvent) {
+      if (legendRef.current && !legendRef.current.contains(e.target as Node)) setLegendOpen(false);
+      if (layersRef.current && !layersRef.current.contains(e.target as Node)) setLayersOpen(false);
+    }
+    document.addEventListener("mousedown", onDocMouseDown);
+    return () => document.removeEventListener("mousedown", onDocMouseDown);
+  }, []);
+
+  function toggleLayer(key: string) {
+    setVisibleLayers((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
+  return (
+    <div className="seatmap-panel">
+      <div className="seatmap-toolbar">
+        <div className="seatmap-decks">
+          <button type="button" className="seatmap-deck selected">Main Deck</button>
+          <button type="button" className="seatmap-deck" disabled title="This aircraft has no upper deck">Upper Deck</button>
+        </div>
+        <div className="seatmap-toolbar-actions">
+          <div className="seatmap-zoom">
+            <button type="button" className="seatmap-zoom-btn" onClick={() => setZoom((z) => Math.max(50, z - 10))} aria-label="Zoom out">
+              <MinusIcon size={14} />
+            </button>
+            <span>{zoom}%</span>
+            <button type="button" className="seatmap-zoom-btn" onClick={() => setZoom((z) => Math.min(150, z + 10))} aria-label="Zoom in">
+              <PlusIcon size={14} />
+            </button>
+          </div>
+          <button
+            type="button"
+            className={`seatmap-tool-btn ${editMode ? "active" : ""}`}
+            title="Edit seat attributes"
+            onClick={() => setEditMode((e) => !e)}
+          >
+            <PencilIcon size={16} />
+          </button>
+          <div className="seatmap-popover-anchor" ref={legendRef}>
+            <button type="button" className="seatmap-tool-btn" title="Legend" onClick={() => setLegendOpen((o) => !o)}>
+              <RowsIcon size={16} />
+            </button>
+            {legendOpen && (
+              <div className="seatmap-legend">
+                <div className="seatmap-legend-states">
+                  {LEGEND_STATES.map((s) => (
+                    <div key={s.label} className="seatmap-legend-row">
+                      <span className={`seat seatmap-legend-swatch ${s.cls}`} />
+                      {s.label}
+                    </div>
+                  ))}
+                </div>
+                <div className="seatmap-legend-attrs">
+                  {SEAT_ATTRS.map((a) => (
+                    <div key={a.key} className="seatmap-legend-row">
+                      <a.icon size={14} />
+                      {a.label}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="seatmap-popover-anchor" ref={layersRef}>
+            <button type="button" className="seatmap-tool-btn" title="Layers" onClick={() => setLayersOpen((o) => !o)}>
+              <LayersIcon size={16} />
+            </button>
+            {layersOpen && (
+              <ul className="select-menu seatmap-layers-list">
+                {SEAT_ATTRS.map((a) => (
+                  <li key={a.key} className="pax-columns-item" onClick={() => toggleLayer(a.key)}>
+                    <input type="checkbox" checked={visibleLayers.has(a.key)} readOnly />
+                    <a.icon size={14} />
+                    {a.label}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <button
+            type="button"
+            className={`seatmap-tool-btn ${horizontal ? "active" : ""}`}
+            title="Horizontal view"
+            onClick={onToggleHorizontal}
+          >
+            <ExpandIcon size={16} />
+          </button>
+          <button type="button" className="seatmap-tool-btn" title="Hide seat map" onClick={onHide}>
+            <HideIcon size={16} />
+          </button>
+        </div>
+      </div>
+
+      <div className="seatmap-scroll">
+        <div className="seatmap-zoom-wrap" style={{ transform: `scale(${zoom / 100})` }}>
+          <SeatMapGrid
+            seats={seats}
+            selected={selected}
+            onSelect={onSelect}
+            editMode={editMode}
+            onEditSeat={setEditingSeat}
+            visibleLayers={visibleLayers}
+          />
+        </div>
+      </div>
+
+      {editingSeat && (
+        <SeatEditorModal
+          flightId={flightId}
+          seat={editingSeat}
+          onClose={() => setEditingSeat(null)}
+          onSaved={(updated) => {
+            onSeatUpdated(updated);
+            setEditingSeat(null);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function SeatEditorModal({
+  flightId,
+  seat,
+  onClose,
+  onSaved,
+}: {
+  flightId: number;
+  seat: SeatCell;
+  onClose: () => void;
+  onSaved: (s: SeatCell) => void;
+}) {
+  const initial = parseSeatExtra(seat);
+  const [extra, setExtra] = useState<SeatExtra>(initial);
+  const [exitRow, setExitRow] = useState(!!seat.exit_row);
+  const [saving, setSaving] = useState(false);
+
+  function toggle(key: keyof SeatExtra) {
+    setExtra((e) => ({ ...e, [key]: !e[key] }));
+  }
+
+  async function save() {
+    setSaving(true);
+    try {
+      const updated = await api.updateSeat(flightId, seat.seat, { exit_row: exitRow, extra: JSON.stringify(extra) });
+      onSaved(updated);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Modal
+      title={`Seat ${seat.seat}`}
+      onClose={onClose}
+      width={480}
+      footer={
+        <>
+          <button type="button" className="tertiary" onClick={onClose}>Close</button>
+          <button type="button" className="tertiary" disabled={saving} onClick={save}>Save</button>
+        </>
+      }
+    >
+      <div className="seat-editor">
+        <label className="seat-editor-check">
+          <input type="checkbox" checked={exitRow} onChange={(e) => setExitRow(e.target.checked)} />
+          Аварийное (exit row)
+        </label>
+        {SEAT_ATTRS.map((a) => (
+          <label key={a.key} className="seat-editor-check">
+            <input type="checkbox" checked={!!extra[a.key]} onChange={() => toggle(a.key)} />
+            <a.icon size={14} />
+            {a.label}
+          </label>
+        ))}
+        <div className="seat-editor-row">
+          <Field label="Price" style={{ width: 100 }}>
+            <input
+              type="number"
+              min={0}
+              value={extra.price ?? ""}
+              placeholder=" "
+              onChange={(e) => setExtra((ex) => ({ ...ex, price: e.target.value ? Number(e.target.value) : undefined }))}
+            />
+          </Field>
+          <label className="seat-editor-check" style={{ marginBottom: 16 }}>
+            <input type="checkbox" checked={!!extra.priceIcon} onChange={() => toggle("priceIcon")} />
+            Цена + иконка
+          </label>
+        </div>
+        <Field label="RFISC" style={{ marginBottom: 16 }}>
+          <input
+            value={extra.rfisc ?? ""}
+            placeholder=" "
+            onChange={(e) => setExtra((ex) => ({ ...ex, rfisc: e.target.value.toUpperCase() || undefined }))}
+          />
+        </Field>
+      </div>
+    </Modal>
+  );
+}

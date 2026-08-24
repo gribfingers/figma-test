@@ -207,3 +207,170 @@ export function MoreIcon({ size = 18, className }: IconProps) {
     </svg>
   );
 }
+
+// ---- Seat-map attribute icons (SeatMapPanel's editor + overlay layers) ----
+
+export function NoReclineIcon({ size = 14, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M8 20V9a3 3 0 0 1 3-3h1" />
+      <path d="M8 20h9" />
+      <path d="M15 20v-6h3" />
+      <path d="M4 4l16 16" />
+    </svg>
+  );
+}
+
+export function CgBlockIcon({ size = 14, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <circle cx="12" cy="12" r="7" />
+      <path d="M12 3v4M12 17v4M3 12h4M17 12h4" />
+    </svg>
+  );
+}
+
+export function BrokenIcon({ size = 14, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M13 3L6 13h5l-1 8 7-10h-5l1-8z" />
+      <path d="M4 4l16 16" />
+    </svg>
+  );
+}
+
+export function CrewIcon({ size = 14, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M4 13a8 8 0 0 1 16 0" />
+      <path d="M4 13v3a2 2 0 0 0 2 2h1v-6H5a1 1 0 0 0-1 1z" />
+      <path d="M20 13v3a2 2 0 0 1-2 2h-1v-6h2a1 1 0 0 1 1 1z" />
+      <path d="M12 18v2" />
+    </svg>
+  );
+}
+
+export function StretcherIcon({ size = 14, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <rect x="3" y="8" width="18" height="8" rx="1.5" />
+      <path d="M12 8v8M3 12h18" />
+    </svg>
+  );
+}
+
+export function WheelchairIcon({ size = 14, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <circle cx="10" cy="5" r="1.6" fill="currentColor" stroke="none" />
+      <path d="M10 8v5l4 3" />
+      <path d="M10 11h5" />
+      <path d="M9 13a5 5 0 1 0 6 6" />
+      <path d="M14 16h4" />
+    </svg>
+  );
+}
+
+export function AnimalIcon({ size = 14, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <circle cx="7" cy="9" r="1.6" />
+      <circle cx="12" cy="6.5" r="1.6" />
+      <circle cx="17" cy="9" r="1.6" />
+      <circle cx="9.5" cy="13" r="1.6" />
+      <path d="M12 20c-2.5 0-4.5-1.6-4.5-3.6 0-1.7 1.6-2.9 3-3.9.5-.4 1-.7 1.5-.7s1 .3 1.5.7c1.4 1 3 2.2 3 3.9 0 2-2 3.6-4.5 3.6z" />
+    </svg>
+  );
+}
+
+export function TransitIcon({ size = 14, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M8 10l4 4 4-4" />
+    </svg>
+  );
+}
+
+export function FixedArmrestIcon({ size = 14, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <rect x="3" y="10" width="18" height="5" rx="1.5" />
+      <path d="M4 4l16 16" />
+    </svg>
+  );
+}
+
+export function LegroomIcon({ size = 14, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M20 12H6" />
+      <path d="M10 7l-5 5 5 5" />
+    </svg>
+  );
+}
+
+export function PencilIcon({ size = 18, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M4 20l1-4.5L15.5 5 19 8.5 8.5 19 4 20z" />
+      <path d="M13 7l4 4" />
+    </svg>
+  );
+}
+
+export function LayersIcon({ size = 18, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M12 3l9 5-9 5-9-5 9-5z" />
+      <path d="M3 13l9 5 9-5" />
+      <path d="M3 17l9 5 9-5" />
+    </svg>
+  );
+}
+
+export function RowsIcon({ size = 18, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <rect x="3" y="4" width="18" height="4" rx="1" />
+      <rect x="3" y="10" width="18" height="4" rx="1" />
+      <rect x="3" y="16" width="18" height="4" rx="1" />
+    </svg>
+  );
+}
+
+export function ExpandIcon({ size = 18, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M9 4H4v5" />
+      <path d="M15 4h5v5" />
+      <path d="M4 15v5h5" />
+      <path d="M20 15v5h-5" />
+    </svg>
+  );
+}
+
+export function HideIcon({ size = 18, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M5 12h14" />
+      <path d="M14 6l6 6-6 6" />
+    </svg>
+  );
+}
+
+export function MinusIcon({ size = 16, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M5 12h14" />
+    </svg>
+  );
+}
+
+export function PlusIcon({ size = 16, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  );
+}

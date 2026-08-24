@@ -56,6 +56,8 @@ export interface SeatCell {
   surname: string | null;
   given_name: string | null;
   record_locator: string | null;
+  boarding_status: string | null;
+  extra: string | null;
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -80,6 +82,8 @@ export const api = {
   updateFlight: (id: number, data: Partial<Flight>) =>
     request<Flight>(`/flights/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
   seatmap: (flightId: number) => request<SeatCell[]>(`/flights/${flightId}/seatmap`),
+  updateSeat: (flightId: number, seat: string, data: { exit_row?: boolean; extra?: string }) =>
+    request<SeatCell>(`/flights/${flightId}/seats/${seat}`, { method: "PATCH", body: JSON.stringify(data) }),
   passengers: (flightId: number, q?: string) =>
     request<Passenger[]>(`/flights/${flightId}/passengers${q ? `?q=${encodeURIComponent(q)}` : ""}`),
   addPassenger: (flightId: number, data: Partial<Passenger>) =>

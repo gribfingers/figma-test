@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, Flight, Passenger, SeatCell } from "../../api";
-import { SeatMapGrid } from "../SeatMapGrid";
+import { SeatMapPanel } from "../SeatMapPanel";
 import { ArrowNestedIcon, ChildIcon, InfantIcon } from "../Icon";
 import { SortTh, useSort } from "../SortTh";
 import { FlagStatus, asvcForPassenger, asvcStatus, commentsStatus, etStatus, ffpStatus, parsePassengerExtra, trStatus } from "../../paxExtra";
@@ -117,6 +117,12 @@ export function PassengersTab({ flight }: Props) {
   const [serviceFilter, setServiceFilter] = useState<string[]>([]);
   const [asvcFilter, setAsvcFilter] = useState("");
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(() => new Set(PASSENGER_COLUMNS.map((c) => c.key)));
+  const [mapHorizontal, setMapHorizontal] = useState(false);
+  const [mapHidden, setMapHidden] = useState(false);
+
+  function handleSeatUpdated(updated: SeatCell) {
+    setSeats((prev) => prev.map((s) => (s.seat === updated.seat ? updated : s)));
+  }
 
   function toggleColumn(key: string) {
     setVisibleColumns((prev) => {
@@ -173,7 +179,7 @@ export function PassengersTab({ flight }: Props) {
   const visibleColCount = 2 + visibleColumns.size;
 
   return (
-    <div className="passengers-tab">
+    <div className={`passengers-tab ${mapHorizontal ? "map-horizontal" : ""} ${mapHidden ? "map-hidden" : ""}`}>
       <div className="passengers-list">
         <PassengersToolbar
           seats={seats}
@@ -309,9 +315,23 @@ export function PassengersTab({ flight }: Props) {
           </table>
         </div>
       </div>
-      <div className="passengers-seatmap">
-        <SeatMapGrid seats={seats} selected={activeSeat} />
-      </div>
+      {mapHidden ? (
+        <button type="button" className="passengers-seatmap-collapsed" onClick={() => setMapHidden(false)} title="Show seat map">
+          Seat map
+        </button>
+      ) : (
+        <div className="passengers-seatmap">
+          <SeatMapPanel
+            flightId={flight.id}
+            seats={seats}
+            selected={activeSeat}
+            onSeatUpdated={handleSeatUpdated}
+            horizontal={mapHorizontal}
+            onToggleHorizontal={() => setMapHorizontal((h) => !h)}
+            onHide={() => setMapHidden(true)}
+          />
+        </div>
+      )}
 
       {modal && (
         <PassengerModals

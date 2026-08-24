@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS seats (
   cabin_class TEXT NOT NULL,
   exit_row INTEGER NOT NULL DEFAULT 0,
   passenger_id INTEGER,
+  extra TEXT,
   PRIMARY KEY (flight_id, seat)
 );
 
@@ -96,3 +97,8 @@ const passengerMigrations: [string, string][] = [
 for (const [column, ddl] of passengerMigrations) {
   if (!existingPassengerColumns.has(column)) db.exec(ddl);
 }
+
+const existingSeatColumns = new Set(
+  (db.prepare("PRAGMA table_info(seats)").all() as { name: string }[]).map((c) => c.name)
+);
+if (!existingSeatColumns.has("extra")) db.exec("ALTER TABLE seats ADD COLUMN extra TEXT");

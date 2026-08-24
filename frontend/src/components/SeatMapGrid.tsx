@@ -1,15 +1,21 @@
 import { Fragment } from "react";
 import { SeatCell } from "../api";
+import { parseSeatExtra, primaryAttr, seatState } from "../seatExtra";
 
 interface Props {
   seats: SeatCell[];
   selected?: string | null;
   onSelect?: (seat: string) => void;
+  /** Edit mode: every seat (occupied or not) is clickable, to open the attribute editor. */
+  editMode?: boolean;
+  onEditSeat?: (seat: SeatCell) => void;
+  /** Which attribute keys the "layers" menu currently shows on the map — everything, if omitted. */
+  visibleLayers?: Set<string>;
 }
 
 const LETTER_ORDER = ["A", "B", "C", "D", "E", "F"];
 
-export function SeatMapGrid({ seats, selected, onSelect }: Props) {
+export function SeatMapGrid({ seats, selected, onSelect, editMode, onEditSeat, visibleLayers }: Props) {
   const rows = new Map<number, SeatCell[]>();
   for (const s of seats) {
     const row = Number(s.seat.slice(0, 3));
@@ -25,24 +31,42 @@ export function SeatMapGrid({ seats, selected, onSelect }: Props) {
         return (
           <div className="seatrow" key={row}>
             <span style={{ width: 26, color: "var(--muted)" }}>{row}</span>
-            {rowSeats.map((s, i) => {
+            {rowSeats.map((s) => {
               const letter = s.seat.slice(3);
+              const extra = parseSeatExtra(s);
+              const state = seatState(s);
+              const attr = primaryAttr(extra, visibleLayers);
+              const blocked = extra.hardBlock;
               const classes = [
                 "seat",
-                s.passenger_id ? "occupied" : "",
+                state !== "free" ? "occupied" : "",
+                state === "boarded" ? "boarded" : "",
                 s.seat === selected ? "selected" : "",
                 s.exit_row ? "exit" : "",
                 s.cabin_class === "J" ? "business" : "",
+                blocked ? "blocked" : "",
+                attr ? "has-attr" : "",
               ].filter(Boolean).join(" ");
               const showAisle = letter === "C"; // 3-3 narrow-body layout aisle after column C
+              const Icon = attr?.icon;
               return (
                 <Fragment key={s.seat}>
                   <span
                     className={classes}
-                    title={s.passenger_id ? `${s.surname}/${s.given_name} (${s.record_locator})` : s.seat}
-                    onClick={() => !s.passenger_id && onSelect?.(s.seat)}
+                    title={
+                      s.passenger_id
+                        ? `${s.surname}/${s.given_name} (${s.record_locator})${attr ? ` — ${attr.label}` : ""}`
+                        : attr
+                        ? `${s.seat} — ${attr.label}`
+                        : s.seat
+                    }
+                    onClick={() => {
+                      if (editMode) onEditSeat?.(s);
+                      else if (!s.passenger_id && !blocked) onSelect?.(s.seat);
+                    }}
                   >
-                    {letter}
+                    {Icon ? <Icon size={13} /> : letter}
+                    {extra.price != null && <span className="seat-price">{extra.price}</span>}
                   </span>
                   {showAisle && <span className="aisle" />}
                 </Fragment>

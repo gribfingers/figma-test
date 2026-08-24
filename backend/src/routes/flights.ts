@@ -152,13 +152,44 @@ flightsRouter.patch("/:id", (req, res) => {
 flightsRouter.get("/:id/seatmap", (req, res) => {
   const seats = db
     .prepare(
-      `SELECT s.seat, s.cabin_class, s.exit_row, s.passenger_id,
-              p.surname, p.given_name, p.record_locator
+      `SELECT s.seat, s.cabin_class, s.exit_row, s.passenger_id, s.extra,
+              p.surname, p.given_name, p.record_locator, p.boarding_status
        FROM seats s LEFT JOIN passengers p ON p.id = s.passenger_id
        WHERE s.flight_id = ? ORDER BY s.seat`
     )
     .all(req.params.id);
   res.json(seats);
+});
+
+/** Seat-map editor: assign exit-row/blocking/service/pricing attributes to one seat (seatExtra.ts on the frontend defines the shape). */
+flightsRouter.patch("/:flightId/seats/:seat", (req, res) => {
+  const row = db
+    .prepare("SELECT * FROM seats WHERE flight_id = ? AND seat = ?")
+    .get(req.params.flightId, req.params.seat);
+  if (!row) return res.status(404).json({ error: "Seat not found" });
+
+  const { exit_row, extra } = req.body;
+  db.prepare(
+    `UPDATE seats SET
+       exit_row = COALESCE(?, exit_row),
+       extra = COALESCE(?, extra)
+     WHERE flight_id = ? AND seat = ?`
+  ).run(
+    exit_row !== undefined ? (exit_row ? 1 : 0) : null,
+    extra !== undefined ? extra : null,
+    req.params.flightId,
+    req.params.seat
+  );
+
+  const updated = db
+    .prepare(
+      `SELECT s.seat, s.cabin_class, s.exit_row, s.passenger_id, s.extra,
+              p.surname, p.given_name, p.record_locator, p.boarding_status
+       FROM seats s LEFT JOIN passengers p ON p.id = s.passenger_id
+       WHERE s.flight_id = ? AND s.seat = ?`
+    )
+    .get(req.params.flightId, req.params.seat);
+  res.json(updated);
 });
 
 flightsRouter.get("/:id/passengers", (req, res) => {

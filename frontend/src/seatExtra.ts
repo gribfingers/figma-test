@@ -1,0 +1,80 @@
+import { SeatCell } from "./api";
+import {
+  AnimalIcon, BrokenIcon, CgBlockIcon, ChildIcon, CloseIcon, CrewIcon, FixedArmrestIcon,
+  InfantIcon, LegroomIcon, NoReclineIcon, StretcherIcon, TransitIcon, WheelchairIcon,
+} from "./components/Icon";
+
+/**
+ * "General layer" seat attributes from the seat-map legend, stored as JSON
+ * in seats.extra (same pattern as Flight.extra / Passenger.extra). Exit-row
+ * already has its own seats.exit_row column and its own dashed-border
+ * treatment (SeatMapGrid), so it isn't duplicated here. Pricing/RFISC are
+ * the two other legend sections ("ПЛАТНОСТЬ", "RFISC").
+ */
+export interface SeatExtra {
+  noRecline?: boolean;
+  hardBlock?: boolean; // seat can never be assigned
+  softBlock?: boolean; // blocked, but can be overridden manually
+  cgBlock?: boolean; // center-of-gravity / trim block
+  broken?: boolean;
+  crew?: boolean;
+  stretcher?: boolean;
+  wheelchair?: boolean;
+  animal?: boolean;
+  child?: boolean;
+  infant?: boolean;
+  transit?: boolean; // SOM transit point
+  fixedArmrest?: boolean;
+  legroom?: boolean;
+  price?: number;
+  priceIcon?: boolean; // show a star alongside the price
+  rfisc?: string;
+}
+
+export function parseSeatExtra(s: SeatCell): SeatExtra {
+  if (!s.extra) return {};
+  try {
+    return JSON.parse(s.extra);
+  } catch {
+    return {};
+  }
+}
+
+export interface SeatAttrDef {
+  key: keyof SeatExtra;
+  label: string;
+  icon: (props: { size?: number; className?: string }) => JSX.Element;
+}
+
+// Priority order for which single icon a seat cell shows when several
+// attributes are set — matches how the reference map shows one glyph per
+// seat; the editor still lets every flag be set independently.
+export const SEAT_ATTRS: SeatAttrDef[] = [
+  { key: "hardBlock", label: "Жёсткий блок", icon: CloseIcon },
+  { key: "softBlock", label: "Мягкий блок", icon: CloseIcon },
+  { key: "broken", label: "Сломанное", icon: BrokenIcon },
+  { key: "cgBlock", label: "Блок центровки", icon: CgBlockIcon },
+  { key: "crew", label: "Экипаж", icon: CrewIcon },
+  { key: "stretcher", label: "Носилки", icon: StretcherIcon },
+  { key: "wheelchair", label: "Кресло", icon: WheelchairIcon },
+  { key: "animal", label: "Животное", icon: AnimalIcon },
+  { key: "infant", label: "Младенец", icon: InfantIcon },
+  { key: "child", label: "Ребёнок", icon: ChildIcon },
+  { key: "transit", label: "Транзит (SOM)", icon: TransitIcon },
+  { key: "noRecline", label: "Не откидывается спинка", icon: NoReclineIcon },
+  { key: "fixedArmrest", label: "Не поднимающийся подлокотник", icon: FixedArmrestIcon },
+  { key: "legroom", label: "Место для ног", icon: LegroomIcon },
+];
+
+/** The one attribute icon to show on a seat cell, by SEAT_ATTRS priority — restricted to `visible` when the layers menu has hidden some. */
+export function primaryAttr(extra: SeatExtra, visible?: Set<string>): SeatAttrDef | null {
+  return SEAT_ATTRS.find((a) => extra[a.key] && (!visible || visible.has(a.key))) ?? null;
+}
+
+export type SeatState = "free" | "checked_in" | "boarded";
+
+export function seatState(s: SeatCell): SeatState {
+  if (!s.passenger_id) return "free";
+  if (s.boarding_status === "BOARDED") return "boarded";
+  return "checked_in";
+}
