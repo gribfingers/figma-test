@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { Field } from "../components/Field";
 import { Select } from "../components/Select";
+import { AirportSelect } from "../components/AirportSelect";
 import { DateTimePicker } from "../components/DateTimePicker";
 import { PlaneIcon } from "../components/Icon";
 import { useRegisterTab } from "../tabs";
@@ -58,6 +59,7 @@ export function NewFlight() {
   async function createFlight(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    if (!origin || !destination) return setError("Origin and destination airports are required");
     if (!std) return setError("Departure date/time is required");
     try {
       const flight = await api.createFlight({
@@ -114,18 +116,14 @@ export function NewFlight() {
 
               <div className="segment-endpoints" style={{ marginTop: 16 }}>
                 <div className="segment-point-edit">
-                  <Field label="Airport" style={{ width: 84 }}>
-                    <input value={origin} maxLength={3} required onChange={(e) => setOrigin(e.target.value.toUpperCase())} placeholder=" " />
-                  </Field>
+                  <AirportSelect label="Airport" value={origin} onChange={setOrigin} style={{ width: 84 }} />
                   <Field label="Terminal" style={{ width: 84 }}>
                     <input value={terminalFrom} onChange={(e) => setTerminalFrom(e.target.value)} placeholder=" " />
                   </Field>
                 </div>
                 <div className="segment-duration" />
                 <div className="segment-point-edit">
-                  <Field label="Airport" style={{ width: 84 }}>
-                    <input value={destination} maxLength={3} required onChange={(e) => setDestination(e.target.value.toUpperCase())} placeholder=" " />
-                  </Field>
+                  <AirportSelect label="Airport" value={destination} onChange={setDestination} style={{ width: 84 }} />
                   <Field label="Terminal" style={{ width: 84 }}>
                     <input value={terminalTo} onChange={(e) => setTerminalTo(e.target.value)} placeholder=" " />
                   </Field>

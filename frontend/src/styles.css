@@ -613,6 +613,19 @@ tr.row-hover:hover { background: var(--accent-soft); }
   background: var(--field-bg);
 }
 
+/* Airport picker: options grouped by city (see AirportSelect / airports.ts). */
+.select-menu.airport-menu { width: 260px; }
+.select-menu li.select-group-label {
+  padding: 8px 16px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: default;
+}
+.select-menu li.select-group-label:hover { background: transparent; }
+
 /* Fields without a floating label (custom-placeholder search/scan boxes). */
 .input-box {
   display: flex;

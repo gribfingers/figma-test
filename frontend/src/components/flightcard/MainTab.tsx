@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Flight } from "../../api";
 import { Field } from "../Field";
 import { Select } from "../Select";
+import { AirportSelect } from "../AirportSelect";
 import { PlaneIcon } from "../Icon";
 import { MainDraft } from "./mainDraft";
 import { AIRCRAFT_TYPES } from "../../aircraftTypes";
@@ -59,14 +60,12 @@ export function MainTab({ flight, draft, onChange }: Props) {
         <div className="segment-endpoints">
           {editingRoute ? (
             <div className="segment-point-edit">
-              <Field label="Airport" style={{ width: 84 }}>
-                <input
-                  value={draft.depAirport}
-                  maxLength={3}
-                  onChange={(e) => onChange({ depAirport: e.target.value.toUpperCase() })}
-                  placeholder=" "
-                />
-              </Field>
+              <AirportSelect
+                label="Airport"
+                value={draft.depAirport}
+                onChange={(v) => onChange({ depAirport: v })}
+                style={{ width: 84 }}
+              />
               <Field label="Time" style={{ width: 84 }}>
                 <input value={draft.depTime} onChange={(e) => onChange({ depTime: e.target.value })} placeholder=" " />
               </Field>
@@ -95,14 +94,12 @@ export function MainTab({ flight, draft, onChange }: Props) {
 
           {editingRoute ? (
             <div className="segment-point-edit">
-              <Field label="Airport" style={{ width: 84 }}>
-                <input
-                  value={draft.arrAirport}
-                  maxLength={3}
-                  onChange={(e) => onChange({ arrAirport: e.target.value.toUpperCase() })}
-                  placeholder=" "
-                />
-              </Field>
+              <AirportSelect
+                label="Airport"
+                value={draft.arrAirport}
+                onChange={(v) => onChange({ arrAirport: v })}
+                style={{ width: 84 }}
+              />
               <Field label="Time" style={{ width: 84 }}>
                 <input value={draft.arrTime} onChange={(e) => onChange({ arrTime: e.target.value })} placeholder=" " />
               </Field>

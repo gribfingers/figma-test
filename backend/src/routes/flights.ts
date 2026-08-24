@@ -84,7 +84,7 @@ flightsRouter.patch("/:id", (req, res) => {
   const flight = db.prepare("SELECT * FROM flights WHERE id = ?").get(req.params.id) as Flight | undefined;
   if (!flight) return res.status(404).json({ error: "Flight not found" });
 
-  const { origin, destination, terminal, gate, aircraft_reg, aircraft_version, etd, sta, ata, ops_status, aircraft_type, extra } = req.body;
+  const { origin, destination, std, terminal, gate, aircraft_reg, aircraft_version, etd, sta, ata, ops_status, aircraft_type, extra } = req.body;
 
   // Changing aircraft_type regenerates the seat map, which would orphan any
   // passenger already holding an assigned seat — refuse rather than corrupt it.
@@ -116,6 +116,7 @@ flightsRouter.patch("/:id", (req, res) => {
     `UPDATE flights SET
        origin = COALESCE(?, origin),
        destination = COALESCE(?, destination),
+       std = COALESCE(?, std),
        terminal = COALESCE(?, terminal),
        gate = COALESCE(?, gate),
        aircraft_reg = COALESCE(?, aircraft_reg),
@@ -129,6 +130,7 @@ flightsRouter.patch("/:id", (req, res) => {
   ).run(
     origin ? String(origin).toUpperCase() : null,
     destination ? String(destination).toUpperCase() : null,
+    std ?? null,
     terminal ?? null,
     gate ?? null,
     aircraft_reg ?? null,
