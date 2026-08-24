@@ -6,6 +6,7 @@ import { AirportSelect } from "../AirportSelect";
 import { PlaneIcon } from "../Icon";
 import { MainDraft } from "./mainDraft";
 import { AIRCRAFT_TYPES } from "../../aircraftTypes";
+import { alphanumericUpper, digitsOnly, timeInput } from "../../validation";
 
 interface Props {
   flight: Flight;
@@ -67,12 +68,12 @@ export function MainTab({ flight, draft, onChange }: Props) {
                 style={{ width: 84 }}
               />
               <Field label="Time" style={{ width: 84 }}>
-                <input value={draft.depTime} onChange={(e) => onChange({ depTime: e.target.value })} placeholder=" " />
+                <input value={draft.depTime} onChange={(e) => onChange({ depTime: timeInput(e.target.value) })} placeholder=" " />
               </Field>
               <Field label="Terminal" style={{ width: 84 }}>
                 <input
                   value={draft.terminalFrom}
-                  onChange={(e) => onChange({ terminalFrom: e.target.value })}
+                  onChange={(e) => onChange({ terminalFrom: alphanumericUpper(e.target.value, 2) })}
                   placeholder=" "
                 />
               </Field>
@@ -83,7 +84,7 @@ export function MainTab({ flight, draft, onChange }: Props) {
               <Field label="Terminal" style={{ width: 84 }}>
                 <input
                   value={draft.terminalFrom}
-                  onChange={(e) => onChange({ terminalFrom: e.target.value })}
+                  onChange={(e) => onChange({ terminalFrom: alphanumericUpper(e.target.value, 2) })}
                   placeholder=" "
                 />
               </Field>
@@ -101,12 +102,12 @@ export function MainTab({ flight, draft, onChange }: Props) {
                 style={{ width: 84 }}
               />
               <Field label="Time" style={{ width: 84 }}>
-                <input value={draft.arrTime} onChange={(e) => onChange({ arrTime: e.target.value })} placeholder=" " />
+                <input value={draft.arrTime} onChange={(e) => onChange({ arrTime: timeInput(e.target.value) })} placeholder=" " />
               </Field>
               <Field label="Terminal" style={{ width: 84 }}>
                 <input
                   value={draft.terminalTo}
-                  onChange={(e) => onChange({ terminalTo: e.target.value })}
+                  onChange={(e) => onChange({ terminalTo: alphanumericUpper(e.target.value, 2) })}
                   placeholder=" "
                 />
               </Field>
@@ -116,7 +117,7 @@ export function MainTab({ flight, draft, onChange }: Props) {
               <Field label="Terminal" style={{ width: 84 }}>
                 <input
                   value={draft.terminalTo}
-                  onChange={(e) => onChange({ terminalTo: e.target.value })}
+                  onChange={(e) => onChange({ terminalTo: alphanumericUpper(e.target.value, 2) })}
                   placeholder=" "
                 />
               </Field>
@@ -147,10 +148,18 @@ export function MainTab({ flight, draft, onChange }: Props) {
             options={AIRCRAFT_TYPES.map((t) => ({ value: t, label: t }))}
           />
           <Field label="Check-in desk">
-            <input value={draft.checkinDesk} onChange={(e) => onChange({ checkinDesk: e.target.value })} placeholder=" " />
+            <input
+              value={draft.checkinDesk}
+              onChange={(e) => onChange({ checkinDesk: digitsOnly(e.target.value, 4) })}
+              placeholder=" "
+            />
           </Field>
           <Field label="A/C reg">
-            <input value={draft.acReg} onChange={(e) => onChange({ acReg: e.target.value })} placeholder=" " />
+            <input
+              value={draft.acReg}
+              onChange={(e) => onChange({ acReg: alphanumericUpper(e.target.value, 10) })}
+              placeholder=" "
+            />
           </Field>
         </div>
         <div className="grid-3" style={{ marginTop: 12 }}>
@@ -158,23 +167,37 @@ export function MainTab({ flight, draft, onChange }: Props) {
             Flight type: <b>Scheduled</b>
           </div>
           <Field label="Gate">
-            <input value={draft.gate} onChange={(e) => onChange({ gate: e.target.value })} placeholder=" " />
+            <input value={draft.gate} onChange={(e) => onChange({ gate: digitsOnly(e.target.value, 3) })} placeholder=" " />
           </Field>
           <Field label="Seat config">
-            <input value={draft.seatConfig} onChange={(e) => onChange({ seatConfig: e.target.value })} placeholder=" " />
+            <input
+              value={draft.seatConfig}
+              onChange={(e) => onChange({ seatConfig: alphanumericUpper(e.target.value, 12) })}
+              placeholder=" "
+            />
           </Field>
         </div>
       </div>
 
       <div className="main-tab-side">
         <div className="field2 tall">
-          <textarea value={draft.comment} onChange={(e) => onChange({ comment: e.target.value })} placeholder=" " rows={3} />
+          <textarea
+            value={draft.comment}
+            onChange={(e) => onChange({ comment: e.target.value })}
+            placeholder=" "
+            rows={3}
+            maxLength={500}
+          />
           <label>Flight comment</label>
         </div>
 
         <div className="grid-2" style={{ marginTop: 16 }}>
           <Field label="Partner flight">
-            <input value={draft.partnerFlight} onChange={(e) => onChange({ partnerFlight: e.target.value })} placeholder=" " />
+            <input
+              value={draft.partnerFlight}
+              onChange={(e) => onChange({ partnerFlight: alphanumericUpper(e.target.value, 8) })}
+              placeholder=" "
+            />
           </Field>
           <Select
             label="Agreement type"
@@ -193,7 +216,11 @@ export function MainTab({ flight, draft, onChange }: Props) {
             APIS
           </button>
           <Field label="Max KZ, kg">
-            <input value={draft.maxWeight} onChange={(e) => onChange({ maxWeight: e.target.value })} placeholder=" " />
+            <input
+              value={draft.maxWeight}
+              onChange={(e) => onChange({ maxWeight: digitsOnly(e.target.value, 6) })}
+              placeholder=" "
+            />
           </Field>
         </div>
 

@@ -8,6 +8,7 @@ import { DateTimePicker } from "../components/DateTimePicker";
 import { PlaneIcon } from "../components/Icon";
 import { useRegisterTab } from "../tabs";
 import { AIRCRAFT_TYPES } from "../aircraftTypes";
+import { alphanumericUpper, digitsOnly } from "../validation";
 
 const AGREEMENT_TYPES = [
   { value: "codeshare", label: "Codeshare" },
@@ -97,14 +98,18 @@ export function NewFlight() {
                 <Field label="Airline (IATA)">
                   <input
                     value={carrierCode}
-                    maxLength={3}
                     required
-                    onChange={(e) => setCarrierCode(e.target.value.toUpperCase())}
+                    onChange={(e) => setCarrierCode(alphanumericUpper(e.target.value, 3))}
                     placeholder=" "
                   />
                 </Field>
                 <Field label="Flight number">
-                  <input value={flightNumber} required onChange={(e) => setFlightNumber(e.target.value)} placeholder=" " />
+                  <input
+                    value={flightNumber}
+                    required
+                    onChange={(e) => setFlightNumber(alphanumericUpper(e.target.value, 5))}
+                    placeholder=" "
+                  />
                 </Field>
                 <Select
                   label="Aircraft type"
@@ -118,14 +123,22 @@ export function NewFlight() {
                 <div className="segment-point-edit">
                   <AirportSelect label="Airport" value={origin} onChange={setOrigin} style={{ width: 84 }} />
                   <Field label="Terminal" style={{ width: 84 }}>
-                    <input value={terminalFrom} onChange={(e) => setTerminalFrom(e.target.value)} placeholder=" " />
+                    <input
+                      value={terminalFrom}
+                      onChange={(e) => setTerminalFrom(alphanumericUpper(e.target.value, 2))}
+                      placeholder=" "
+                    />
                   </Field>
                 </div>
                 <div className="segment-duration" />
                 <div className="segment-point-edit">
                   <AirportSelect label="Airport" value={destination} onChange={setDestination} style={{ width: 84 }} />
                   <Field label="Terminal" style={{ width: 84 }}>
-                    <input value={terminalTo} onChange={(e) => setTerminalTo(e.target.value)} placeholder=" " />
+                    <input
+                      value={terminalTo}
+                      onChange={(e) => setTerminalTo(alphanumericUpper(e.target.value, 2))}
+                      placeholder=" "
+                    />
                   </Field>
                 </div>
               </div>
@@ -140,31 +153,53 @@ export function NewFlight() {
               <div className="grid-3">
                 <DateTimePicker label="Departure date/time" value={std} onChange={setStd} />
                 <Field label="Check-in desk">
-                  <input value={checkinDesk} onChange={(e) => setCheckinDesk(e.target.value)} placeholder=" " />
+                  <input
+                    value={checkinDesk}
+                    onChange={(e) => setCheckinDesk(digitsOnly(e.target.value, 4))}
+                    placeholder=" "
+                  />
                 </Field>
                 <Field label="A/C reg">
-                  <input value={acReg} onChange={(e) => setAcReg(e.target.value)} placeholder=" " />
+                  <input
+                    value={acReg}
+                    onChange={(e) => setAcReg(alphanumericUpper(e.target.value, 10))}
+                    placeholder=" "
+                  />
                 </Field>
               </div>
               <div className="grid-2" style={{ marginTop: 12 }}>
                 <Field label="Gate">
-                  <input value={gate} onChange={(e) => setGate(e.target.value)} placeholder=" " />
+                  <input value={gate} onChange={(e) => setGate(digitsOnly(e.target.value, 3))} placeholder=" " />
                 </Field>
                 <Field label="Seat config">
-                  <input value={seatConfig} onChange={(e) => setSeatConfig(e.target.value)} placeholder=" " />
+                  <input
+                    value={seatConfig}
+                    onChange={(e) => setSeatConfig(alphanumericUpper(e.target.value, 12))}
+                    placeholder=" "
+                  />
                 </Field>
               </div>
             </div>
 
             <div className="main-tab-side">
               <div className="field2 tall">
-                <textarea value={comment} onChange={(e) => setComment(e.target.value)} placeholder=" " rows={3} />
+                <textarea
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder=" "
+                  rows={3}
+                  maxLength={500}
+                />
                 <label>Flight comment</label>
               </div>
 
               <div className="grid-2" style={{ marginTop: 16 }}>
                 <Field label="Partner flight">
-                  <input value={partnerFlight} onChange={(e) => setPartnerFlight(e.target.value)} placeholder=" " />
+                  <input
+                    value={partnerFlight}
+                    onChange={(e) => setPartnerFlight(alphanumericUpper(e.target.value, 8))}
+                    placeholder=" "
+                  />
                 </Field>
                 <Select label="Agreement type" value={agreement} onChange={setAgreement} options={AGREEMENT_TYPES} />
               </div>
@@ -178,7 +213,11 @@ export function NewFlight() {
                   APIS
                 </button>
                 <Field label="Max KZ, kg">
-                  <input value={maxWeight} onChange={(e) => setMaxWeight(e.target.value)} placeholder=" " />
+                  <input
+                    value={maxWeight}
+                    onChange={(e) => setMaxWeight(digitsOnly(e.target.value, 6))}
+                    placeholder=" "
+                  />
                 </Field>
               </div>
 
