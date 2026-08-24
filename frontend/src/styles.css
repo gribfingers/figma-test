@@ -83,7 +83,8 @@ body {
   flex-shrink: 0;
   -webkit-tap-highlight-color: transparent;
 }
-.side-item:hover { background: var(--field-bg); }
+/* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
+.side-drawer .side-item:hover { background: var(--field-bg); }
 .side-item.selected { border-right-color: transparent; color: var(--field-value); background: var(--bg); }
 .side-list { display: flex; flex-direction: column; }
 .side-bottom {
@@ -197,6 +198,8 @@ body {
 }
 .top-tab:hover .top-tab-close { display: flex; }
 .top-tab.selected .top-tab-close { background: #f4f7fa; }
+/* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
+.tabs-list .top-tab-close:hover { background: var(--field-bg); color: var(--field-value); }
 
 .tabs-actions {
   display: flex;
@@ -221,7 +224,8 @@ body {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-.tabs-icon-btn:hover { background: var(--field-bg); color: var(--field-value); }
+/* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
+.tabs-bar .tabs-icon-btn:hover { background: var(--field-bg); color: var(--field-value); }
 .moscow-clock {
   font-family: var(--mono);
   font-variant-numeric: tabular-nums;
@@ -246,7 +250,8 @@ body {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-.tabs-avatar-btn:hover { background: var(--accent-hover); }
+/* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
+.tabs-bar .tabs-avatar-btn:hover { background: var(--field-bg); color: var(--field-value); }
 
 h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.01em; margin: 0 0 4px; }
 h2 { font-size: 18px; font-weight: 600; margin: 0 0 12px; }
@@ -559,7 +564,8 @@ tr.row-hover:hover { background: var(--accent-soft); }
   color: var(--field-placeholder);
   cursor: pointer;
 }
-.dt-nav:hover { background: var(--field-bg); color: var(--field-value); }
+/* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
+.dt-cal-header .dt-nav:hover { background: var(--field-bg); color: var(--field-value); }
 .dt-cal-weekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -1056,7 +1062,8 @@ a { color: var(--accent); }
 .pax-infant-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); flex-shrink: 0; margin-left: 2px; }
 tr.pax-row-nested .pax-name-cell { padding-left: 8px; }
 tr.pax-row-nested td { color: var(--muted); }
-.pax-flags { display: inline-flex; gap: 3px; margin-left: 8px; }
+.passengers-table td.pax-flags-cell { padding-left: 20px; }
+.pax-flags { display: inline-flex; gap: 6px; }
 .pax-flag { cursor: pointer; }
 .pax-service-chips { display: inline-flex; gap: 4px; }
 .pax-asvc-btn {
@@ -1111,7 +1118,8 @@ tr.pax-row-nested td { color: var(--muted); }
   flex-shrink: 0;
   -webkit-tap-highlight-color: transparent;
 }
-.modal-close-btn:hover { background: var(--field-bg); color: var(--field-value); }
+/* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
+.modal-header .modal-close-btn:hover { background: var(--field-bg); color: var(--field-value); }
 .modal-content {
   padding: 0 16px;
   font-size: 14px;
@@ -1146,18 +1154,23 @@ tr.pax-row-nested td { color: var(--muted); }
 .modal-tab.selected { color: var(--accent); border-bottom-color: var(--accent); }
 
 .comment-list { display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto; padding-bottom: 4px; }
-.comment-card { background: var(--field-bg); border-radius: 4px; padding: 10px 12px; font-size: 13px; line-height: 1.4; color: var(--field-value); }
+.comment-card { display: flex; align-items: flex-start; gap: 8px; background: var(--field-bg); border-radius: 4px; padding: 10px 12px; font-size: 13px; line-height: 1.4; color: var(--field-value); }
 .comment-card.muted { color: var(--muted); }
+.comment-card span { flex: 1; }
+.comment-delete { all: unset; box-sizing: border-box; display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 4px; color: var(--muted); cursor: pointer; opacity: 0; flex-shrink: 0; }
+.comment-card:hover .comment-delete { opacity: 1; }
+.comment-card .comment-delete:hover { background: var(--danger-soft); color: var(--danger); }
 
 .asvc-columns { display: flex; gap: 24px; padding: 16px 0; }
 .asvc-column { flex: 1; min-width: 0; }
 .asvc-column h3 { margin: 0 0 8px; }
-.asvc-row { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 4px; background: var(--field-bg); margin-bottom: 4px; border-right: 3px solid transparent; }
-.asvc-row.paid { border-right-color: var(--ok); }
-.asvc-row.unpaid { border-right-color: var(--danger); }
+.asvc-row { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 4px; background: var(--field-bg); margin-bottom: 4px; }
 .asvc-code { color: var(--muted); font-size: 12px; }
 .asvc-name { flex: 1; font-size: 13px; }
-.asvc-status { color: var(--accent); font-size: 13px; font-weight: 600; }
+.asvc-status { font-size: 13px; font-weight: 600; }
+.asvc-status.paid { color: var(--ok); }
+.asvc-status.unpaid { color: var(--danger); }
+.asvc-row.muted { color: var(--muted); font-size: 13px; }
 
 .modal-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
 .modal-table th { padding: 8px 10px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; text-align: left; white-space: nowrap; }
@@ -1165,11 +1178,11 @@ tr.pax-row-nested td { color: var(--muted); }
 .coupon-status { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 4px; }
 .coupon-status.open { background: var(--danger-soft); color: var(--danger); }
 
-.route-current td { background: var(--accent-soft); border-left: 3px solid var(--accent); }
+.route-current td { background: var(--accent-soft); }
 .route-past td { color: var(--muted); }
 .route-delayed { color: var(--danger); font-weight: 600; }
 
-.ffp-fields { display: flex; align-items: center; gap: 12px; padding-top: 4px; }
+.ffp-fields { display: flex; align-items: center; gap: 12px; padding-top: 4px; margin-bottom: 16px; }
 
 .link-text { color: var(--accent); font-weight: 600; }
 

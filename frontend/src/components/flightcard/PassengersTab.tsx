@@ -3,12 +3,14 @@ import { api, Flight, Passenger, SeatCell } from "../../api";
 import { SeatMapGrid } from "../SeatMapGrid";
 import { ArrowNestedIcon, ChildIcon, InfantIcon, SearchIcon } from "../Icon";
 import { SortTh, useSort } from "../SortTh";
-import { parsePassengerExtra } from "../../paxExtra";
+import { FlagStatus, asvcStatus, commentsStatus, etStatus, ffpStatus, parsePassengerExtra, trStatus } from "../../paxExtra";
 import { PassengerModals } from "./PassengerModals";
 
 interface Props {
   flight: Flight;
 }
+
+type ModalKind = "asvc" | "comments" | "coupon" | "ffp" | "route";
 
 interface PaxRow {
   passenger: Passenger;
@@ -80,26 +82,40 @@ function classFor(p: Passenger, seatByCode: Map<string, SeatCell>): string {
 
 type PaxSortKey = "name" | "seat" | "class" | "status" | "bag" | "age" | "gender";
 
-// TR/AUX/COM/FFP/ET are per-passenger flags with no backing fields yet
-// (transfer, auxiliary service, has-comments, frequent-flyer, e-ticket) —
-// shown as static badges (whether the flag is "on" isn't backed by real
-// data either). Each opens the modal that best matches what it stands for:
-// TR -> the passenger's route (their connections), AUX -> the ancillary
-// services breakdown, same as the ASVC button.
-const STATIC_FLAGS: { code: string; on: boolean }[] = [
-  { code: "TR", on: true },
-  { code: "AUX", on: true },
-  { code: "COM", on: false },
-  { code: "FFP", on: false },
-  { code: "ET", on: false },
-];
+// Each flag chip's color reflects real per-passenger state (paxExtra.ts)
+// and opens the modal that best matches what it stands for.
+const FLAG_STATUS: Record<string, (p: Passenger) => FlagStatus> = {
+  TR: trStatus,
+  AUX: asvcStatus,
+  COM: commentsStatus,
+  FFP: ffpStatus,
+  ET: etStatus,
+};
+const FLAG_MODAL: Record<string, ModalKind> = {
+  TR: "route",
+  AUX: "asvc",
+  COM: "comments",
+  FFP: "ffp",
+  ET: "coupon",
+};
+const FLAG_CODES = ["TR", "AUX", "COM", "FFP", "ET"];
+const STATUS_CLASS: Record<FlagStatus, string> = {
+  none: "muted",
+  ok: "ok",
+  conflict: "danger",
+};
 
 export function PassengersTab({ flight }: Props) {
   const [passengers, setPassengers] = useState<Passenger[]>([]);
   const [seats, setSeats] = useState<SeatCell[]>([]);
   const [query, setQuery] = useState("");
   const [activeId, setActiveId] = useState<number | null>(null);
-  const [modal, setModal] = useState<{ kind: "asvc" | "comments" | "coupon" | "ffp" | "route"; passenger: Passenger } | null>(null);
+  const [modal, setModal] = useState<{ kind: ModalKind; passenger: Passenger } | null>(null);
+
+  function handleUpdated(updated: Passenger) {
+    setPassengers((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+    setModal((m) => (m && m.passenger.id === updated.id ? { ...m, passenger: updated } : m));
+  }
 
   useEffect(() => {
     api.passengers(flight.id, query).then(setPassengers);
@@ -144,6 +160,7 @@ export function PassengersTab({ flight }: Props) {
               <tr>
                 <th></th>
                 <SortTh id="name" label="Name" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <th>Flags</th>
                 <SortTh id="seat" label="Seat" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
                 <SortTh id="class" label="Class" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
                 <SortTh id="status" label="Status" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
@@ -190,25 +207,23 @@ export function PassengersTab({ flight }: Props) {
                         <span>
                           {p.surname} {p.given_name}
                         </span>
-                        <span className="pax-flags">
-                          {STATIC_FLAGS.map((f) => (
-                            <span
-                              key={f.code}
-                              className={`chip small ${f.on ? "ok" : "muted"} pax-flag`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (f.code === "ET") setModal({ kind: "coupon", passenger: p });
-                                if (f.code === "FFP") setModal({ kind: "ffp", passenger: p });
-                                if (f.code === "COM") setModal({ kind: "comments", passenger: p });
-                                if (f.code === "TR") setModal({ kind: "route", passenger: p });
-                                if (f.code === "AUX") setModal({ kind: "asvc", passenger: p });
-                              }}
-                            >
-                              {f.code}
-                            </span>
-                          ))}
-                        </span>
                       </div>
+                    </td>
+                    <td className="pax-flags-cell">
+                      <span className="pax-flags">
+                        {FLAG_CODES.map((code) => (
+                          <span
+                            key={code}
+                            className={`chip middle ${STATUS_CLASS[FLAG_STATUS[code](p)]} pax-flag`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setModal({ kind: FLAG_MODAL[code], passenger: p });
+                            }}
+                          >
+                            {code}
+                          </span>
+                        ))}
+                      </span>
                     </td>
                     <td className="mono">{p.seat ?? "—"}</td>
                     <td>{cls}</td>
@@ -253,7 +268,7 @@ export function PassengersTab({ flight }: Props) {
               })}
               {passengers.length === 0 && (
                 <tr>
-                  <td colSpan={16} style={{ color: "var(--muted)" }}>
+                  <td colSpan={17} style={{ color: "var(--muted)" }}>
                     No passengers found.
                   </td>
                 </tr>
@@ -266,7 +281,15 @@ export function PassengersTab({ flight }: Props) {
         <SeatMapGrid seats={seats} selected={activeSeat} />
       </div>
 
-      {modal && <PassengerModals kind={modal.kind} passenger={modal.passenger} onClose={() => setModal(null)} />}
+      {modal && (
+        <PassengerModals
+          kind={modal.kind}
+          flightId={flight.id}
+          passenger={modal.passenger}
+          onClose={() => setModal(null)}
+          onUpdated={handleUpdated}
+        />
+      )}
     </div>
   );
 }

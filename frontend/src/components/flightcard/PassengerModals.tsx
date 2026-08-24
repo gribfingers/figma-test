@@ -1,51 +1,57 @@
 import { useState } from "react";
-import { Passenger } from "../../api";
+import { api, Passenger } from "../../api";
+import { PassengerExtra, asvcForPassenger, parsePassengerExtra } from "../../paxExtra";
+import { CloseIcon } from "../Icon";
 import { Modal } from "../Modal";
 
 interface Props {
   kind: "asvc" | "comments" | "coupon" | "ffp" | "route";
+  flightId: number;
   passenger: Passenger;
   onClose: () => void;
+  onUpdated: (p: Passenger) => void;
 }
 
-export function PassengerModals({ kind, passenger, onClose }: Props) {
+export function PassengerModals({ kind, flightId, passenger, onClose, onUpdated }: Props) {
   if (kind === "asvc") return <AsvcModal passenger={passenger} onClose={onClose} />;
-  if (kind === "comments") return <CommentsModal passenger={passenger} onClose={onClose} />;
+  if (kind === "comments") return <CommentsModal flightId={flightId} passenger={passenger} onClose={onClose} onUpdated={onUpdated} />;
   if (kind === "coupon") return <CouponModal passenger={passenger} onClose={onClose} />;
-  if (kind === "ffp") return <FfpModal onClose={onClose} />;
+  if (kind === "ffp") return <FfpModal flightId={flightId} passenger={passenger} onClose={onClose} onUpdated={onUpdated} />;
   return <RouteModal passenger={passenger} onClose={onClose} />;
+}
+
+/** Persists a partial patch into the passenger's extra JSON blob, preserving whatever other fields already live there. */
+async function saveExtra(flightId: number, passenger: Passenger, patch: Partial<PassengerExtra>): Promise<Passenger> {
+  const extra: PassengerExtra = { ...parsePassengerExtra(passenger), ...patch };
+  return api.updatePassenger(flightId, passenger.id, { extra: JSON.stringify(extra) });
 }
 
 function paxName(p: Passenger) {
   return `${p.surname} ${p.given_name}`;
 }
 
-// The paid-ancillary breakdown per leg, e-ticket coupons, and route/delay
-// data below have no backing tables yet — same scope as the flight card's
-// Counters/Transfers tabs, shown as illustrative sample content matching
-// the reference design until there's a real source for it.
-const MOCK_LEGS = ["MOW-AER", "AER-PEE", "PEE-LED"];
-const MOCK_SERVICES = [
-  { name: "Доступ в интернет", paid: true },
-  { name: "Бублики", paid: true },
-  { name: "Кофе", paid: true },
-  { name: "Кофе +", paid: false },
-];
-
+// E-ticket coupons and route/delay data below have no backing tables yet —
+// same scope as the flight card's Counters/Transfers tabs, shown as
+// illustrative sample content matching the reference design until there's
+// a real source for it. Ancillary purchases (ASVC) are generated per
+// passenger by asvcForPassenger, so the AUX chip color always matches what
+// this modal shows.
 function AsvcModal({ passenger, onClose }: { passenger: Passenger; onClose: () => void }) {
+  const legs = asvcForPassenger(passenger);
   return (
     <Modal title={paxName(passenger)} onClose={onClose} width={950} footer={<button type="button" className="tertiary" onClick={onClose}>Close</button>}>
       <div className="asvc-columns">
-        {MOCK_LEGS.map((leg) => (
+        {legs.map(({ leg, services }) => (
           <div key={leg} className="asvc-column">
             <h3>{leg}</h3>
-            {MOCK_SERVICES.map((s, i) => (
-              <div key={i} className={`asvc-row ${s.paid ? "paid" : "unpaid"}`}>
+            {services.map((s, i) => (
+              <div key={i} className="asvc-row">
                 <span className="mono asvc-code">0B5</span>
                 <span className="asvc-name">{s.name}</span>
-                <span className="asvc-status">Оплачено</span>
+                <span className={`asvc-status ${s.paid ? "paid" : "unpaid"}`}>{s.paid ? "Оплачено" : "Не оплачено"}</span>
               </div>
             ))}
+            {services.length === 0 && <div className="asvc-row muted">No ancillary services purchased.</div>}
           </div>
         ))}
       </div>
@@ -54,25 +60,52 @@ function AsvcModal({ passenger, onClose }: { passenger: Passenger; onClose: () =
 }
 
 const COMMENT_TABS = ["CHECK-IN", "BOARDING"] as const;
-// Not persisted to the backend yet — no comments table exists; kept as
-// local state per modal open so the UI can be exercised end to end.
-const SEED_COMMENTS: Record<(typeof COMMENT_TABS)[number], string[]> = {
-  "CHECK-IN": ["Проверить на посадке ручную кладь. Срочно быстрее нужно это сделать.", "Пассажир подозрительный. Задать вопросы.", "Пассажир с велосипедом."],
-  BOARDING: [],
-};
+type CommentTab = (typeof COMMENT_TABS)[number];
+const TAB_KEY: Record<CommentTab, "checkin" | "boarding"> = { "CHECK-IN": "checkin", BOARDING: "boarding" };
 
-function CommentsModal({ onClose }: { passenger: Passenger; onClose: () => void }) {
-  const [tab, setTab] = useState<(typeof COMMENT_TABS)[number]>("CHECK-IN");
-  const [comments, setComments] = useState(SEED_COMMENTS);
+function CommentsModal({
+  flightId,
+  passenger,
+  onClose,
+  onUpdated,
+}: {
+  flightId: number;
+  passenger: Passenger;
+  onClose: () => void;
+  onUpdated: (p: Passenger) => void;
+}) {
+  const [tab, setTab] = useState<CommentTab>("CHECK-IN");
+  const initial = parsePassengerExtra(passenger).comments ?? { checkin: [], boarding: [] };
+  const [comments, setComments] = useState(initial);
   const [draft, setDraft] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  function save() {
-    if (draft.trim()) {
-      setComments((c) => ({ ...c, [tab]: [...c[tab], draft.trim()] }));
-      setDraft("");
+  async function persist(next: typeof comments) {
+    setBusy(true);
+    try {
+      const updated = await saveExtra(flightId, passenger, { comments: next });
+      onUpdated(updated);
+    } finally {
+      setBusy(false);
     }
   }
 
+  function save() {
+    const key = TAB_KEY[tab];
+    const next = draft.trim() ? { ...comments, [key]: [...comments[key], draft.trim()] } : comments;
+    setComments(next);
+    setDraft("");
+    persist(next);
+  }
+
+  function remove(index: number) {
+    const key = TAB_KEY[tab];
+    const next = { ...comments, [key]: comments[key].filter((_, i) => i !== index) };
+    setComments(next);
+    persist(next);
+  }
+
+  const key = TAB_KEY[tab];
   return (
     <Modal
       title="Comments"
@@ -81,7 +114,7 @@ function CommentsModal({ onClose }: { passenger: Passenger; onClose: () => void 
       footer={
         <>
           <button type="button" className="tertiary" onClick={onClose}>Close</button>
-          <button type="button" className="tertiary" onClick={save}>Save</button>
+          <button type="button" className="tertiary" disabled={busy} onClick={save}>Save</button>
         </>
       }
     >
@@ -93,10 +126,15 @@ function CommentsModal({ onClose }: { passenger: Passenger; onClose: () => void 
         ))}
       </div>
       <div className="comment-list">
-        {comments[tab].map((c, i) => (
-          <div key={i} className="comment-card">{c}</div>
+        {comments[key].map((c, i) => (
+          <div key={i} className="comment-card">
+            <span>{c}</span>
+            <button type="button" className="comment-delete" aria-label="Delete comment" onClick={() => remove(i)}>
+              <CloseIcon size={12} />
+            </button>
+          </div>
         ))}
-        {comments[tab].length === 0 && <div className="comment-card muted">No comments yet.</div>}
+        {comments[key].length === 0 && <div className="comment-card muted">No comments yet.</div>}
       </div>
       <div className="field2 tall" style={{ marginTop: 12, marginBottom: 16 }}>
         <textarea value={draft} onChange={(e) => setDraft(e.target.value)} placeholder=" " rows={2} />
@@ -152,9 +190,32 @@ function CouponModal({ passenger, onClose }: { passenger: Passenger; onClose: ()
   );
 }
 
-function FfpModal({ onClose }: { onClose: () => void }) {
-  const [airline, setAirline] = useState("");
-  const [card, setCard] = useState("");
+function FfpModal({
+  flightId,
+  passenger,
+  onClose,
+  onUpdated,
+}: {
+  flightId: number;
+  passenger: Passenger;
+  onClose: () => void;
+  onUpdated: (p: Passenger) => void;
+}) {
+  const existing = parsePassengerExtra(passenger).ffp;
+  const [airline, setAirline] = useState(existing?.airline ?? "");
+  const [card, setCard] = useState(existing?.card ?? "");
+  const [busy, setBusy] = useState(false);
+
+  async function checkCard() {
+    setBusy(true);
+    try {
+      const updated = await saveExtra(flightId, passenger, { ffp: { airline, card } });
+      onUpdated(updated);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <Modal title="FFP" onClose={onClose} width={558} footer={<button type="button" className="tertiary" onClick={onClose}>Close</button>}>
       <div className="ffp-fields">
@@ -166,7 +227,7 @@ function FfpModal({ onClose }: { onClose: () => void }) {
           <input value={card} onChange={(e) => setCard(e.target.value)} placeholder=" " />
           <label>Card Number</label>
         </div>
-        <button type="button" className="secondary" disabled={!airline || !card} style={{ marginBottom: 16 }}>
+        <button type="button" className="secondary" disabled={!airline || !card || busy} onClick={checkCard}>
           Check card
         </button>
       </div>

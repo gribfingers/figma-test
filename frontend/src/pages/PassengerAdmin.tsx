@@ -36,7 +36,9 @@ type PaxDraft = {
   type: string;
   iapp: boolean;
   inbound: string;
+  inboundTime: string;
   outbound: string;
+  outboundTime: string;
 };
 
 const EMPTY_DRAFT: PaxDraft = {
@@ -55,7 +57,9 @@ const EMPTY_DRAFT: PaxDraft = {
   type: "",
   iapp: false,
   inbound: "",
+  inboundTime: "",
   outbound: "",
+  outboundTime: "",
 };
 
 function draftFrom(p: Passenger): PaxDraft {
@@ -76,12 +80,29 @@ function draftFrom(p: Passenger): PaxDraft {
     type: extra.type ?? "",
     iapp: extra.iapp ?? false,
     inbound: extra.inbound ?? "",
+    inboundTime: extra.inboundTime ?? "",
     outbound: extra.outbound ?? "",
+    outboundTime: extra.outboundTime ?? "",
   };
 }
 
-function draftToPayload(d: PaxDraft): Partial<Passenger> & { extra: string } {
-  const extra: PassengerExtra = { wl: d.wl, pl: d.pl, type: d.type, iapp: d.iapp, inbound: d.inbound, outbound: d.outbound };
+// Merges into the original passenger's extra blob (when editing) rather
+// than replacing it outright, so fields this form doesn't cover — comments,
+// FFP card — set from elsewhere (e.g. the flight card's TR/AUX/COM/FFP
+// chips) survive an admin save.
+function draftToPayload(d: PaxDraft, original?: Passenger): Partial<Passenger> & { extra: string } {
+  const prevExtra = original ? parsePassengerExtra(original) : {};
+  const extra: PassengerExtra = {
+    ...prevExtra,
+    wl: d.wl,
+    pl: d.pl,
+    type: d.type,
+    iapp: d.iapp,
+    inbound: d.inbound,
+    inboundTime: d.inboundTime,
+    outbound: d.outbound,
+    outboundTime: d.outboundTime,
+  };
   return {
     surname: d.surname,
     given_name: d.given_name,
@@ -183,8 +204,16 @@ function PassengerFormFields({ draft, onChange }: PassengerFormProps) {
         <Field label="Inbound flight" style={{ flex: 1 }}>
           <input value={draft.inbound} onChange={(e) => onChange({ ...draft, inbound: e.target.value.toUpperCase() })} placeholder=" " />
         </Field>
+        <Field label="Inbound arrival" style={{ flex: 1 }}>
+          <input type="datetime-local" value={draft.inboundTime} onChange={(e) => onChange({ ...draft, inboundTime: e.target.value })} />
+        </Field>
+      </div>
+      <div style={{ display: "flex", gap: 12 }}>
         <Field label="Outbound flight" style={{ flex: 1 }}>
           <input value={draft.outbound} onChange={(e) => onChange({ ...draft, outbound: e.target.value.toUpperCase() })} placeholder=" " />
+        </Field>
+        <Field label="Outbound departure" style={{ flex: 1 }}>
+          <input type="datetime-local" value={draft.outboundTime} onChange={(e) => onChange({ ...draft, outboundTime: e.target.value })} />
         </Field>
       </div>
     </div>
@@ -242,7 +271,7 @@ export function PassengerAdmin() {
     setSavingEdit(true);
     setError("");
     try {
-      await api.updatePassenger(flightId, editing.id, draftToPayload(editDraft));
+      await api.updatePassenger(flightId, editing.id, draftToPayload(editDraft, editing));
       setEditing(null);
       loadPassengers();
     } catch (e: any) {
