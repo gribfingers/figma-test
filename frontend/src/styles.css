@@ -63,10 +63,15 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--bg);
+  height: 56px;
+  background: #ffffff;
   flex-shrink: 0;
 }
-.tabs-list { display: flex; align-items: flex-end; overflow-x: auto; }
+.tabs-list { display: flex; align-items: flex-end; height: 56px; overflow-x: auto; }
+/* Carries the shared bottom border across the blank stretch between the
+   last tab and the right-side icons, so the line runs the full width of
+   the bar (only the selected tab breaks it). */
+.tabs-fill { flex: 1; align-self: stretch; border-bottom: 1px solid var(--panel-border); box-sizing: border-box; min-width: 12px; }
 .top-tab {
   position: relative;
   display: inline-flex;
@@ -111,7 +116,16 @@ body {
 .top-tab:hover .top-tab-close { display: flex; }
 .top-tab.selected .top-tab-close { background: #f4f7fa; }
 
-.tabs-actions { display: flex; align-items: center; gap: 2px; flex-shrink: 0; padding: 0 16px; }
+.tabs-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 56px;
+  flex-shrink: 0;
+  padding: 0 16px;
+  box-sizing: border-box;
+  border-bottom: 1px solid var(--panel-border);
+}
 .tabs-icon-btn {
   all: unset;
   box-sizing: border-box;

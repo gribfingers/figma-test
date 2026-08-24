@@ -31,6 +31,7 @@ export function TopTabs() {
           );
         })}
       </div>
+      <div className="tabs-fill" />
       <div className="tabs-actions">
         {/* Help, notifications, and the account panel aren't wired up yet — placeholders for now. */}
         <button type="button" className="tabs-icon-btn" title="Help">
