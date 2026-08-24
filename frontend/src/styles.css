@@ -207,7 +207,7 @@ tr.clickable:hover { background: var(--accent-soft); }
   color: var(--field-value);
 }
 .field2 input::placeholder { color: transparent; }
-.field2 input:focus, .field2 textarea:focus { outline: none; box-shadow: none; border: none; padding: 0; }
+.field2 input:focus, .field2 textarea:focus { outline: none; box-shadow: none; border: none; padding: 0; background: transparent; }
 
 /* Floating state: focused, has a value, or is a custom Select (which always shows a chosen value). */
 .field2:focus-within label,
@@ -374,7 +374,8 @@ tr.clickable:hover { background: var(--accent-soft); }
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-.dt-day:hover { background: var(--field-bg); }
+/* Extra specificity (two classes) so this beats the global button:hover rule. */
+.dt-cal-grid .dt-day:hover:not(.selected) { background: #e3ecf7; }
 .dt-day.outside { color: var(--field-placeholder); }
 .dt-day.today { font-weight: 700; color: var(--accent); }
 .dt-day.selected { background: var(--accent); color: #fff; font-weight: 600; }
@@ -445,7 +446,7 @@ tr.clickable:hover { background: var(--accent-soft); }
   font-size: 14px;
   color: var(--field-value);
 }
-.input-box input:focus { outline: none; box-shadow: none; border: none; padding: 0; }
+.input-box input:focus { outline: none; box-shadow: none; border: none; padding: 0; background: transparent; }
 .input-box input::placeholder { color: var(--field-placeholder); }
 .input-box svg { color: var(--field-placeholder); flex-shrink: 0; }
 

@@ -77,11 +77,15 @@ export function ChevronRightIcon({ size = 18, className }: IconProps) {
 
 export function CalendarIcon({ size = 18, className }: IconProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
-      <rect x="3.5" y="5" width="17" height="16" rx="2.5" />
-      <path d="M3.5 10h17" />
-      <path d="M8 3v4" />
-      <path d="M16 3v4" />
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
+      <path d="M9.5 7H7L7 9.5H9.5L9.5 7Z" fill="currentColor" />
+      <path d="M13.25 7H10.75L10.75 9.5H13.25L13.25 7Z" fill="currentColor" />
+      <path d="M17 7H14.5L14.5 9.5L17 9.5L17 7Z" fill="currentColor" />
+      <path d="M9.5 10.75H7L7 13.25H9.5L9.5 10.75Z" fill="currentColor" />
+      <path d="M13.25 10.75H10.75L10.75 13.25H13.25L13.25 10.75Z" fill="currentColor" />
+      <path d="M17 10.75L14.5 10.75L14.5 13.25H17L17 10.75Z" fill="currentColor" />
+      <path d="M9.5 14.5H7L7 17H9.5L9.5 14.5Z" fill="currentColor" />
+      <path d="M13.25 14.5H10.75L10.75 17H13.25L13.25 14.5Z" fill="currentColor" />
     </svg>
   );
 }
