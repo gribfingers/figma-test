@@ -18,3 +18,8 @@ export function alphanumericUpper(value: string, maxLen?: number): string {
 export function timeInput(value: string): string {
   return value.replace(/[^0-9:]/g, "").slice(0, 5);
 }
+
+/** Digits and hyphen only, YYYY-MM-DD length (e.g. departure/arrival date). */
+export function dateInput(value: string): string {
+  return value.replace(/[^0-9-]/g, "").slice(0, 10);
+}

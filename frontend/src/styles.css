@@ -222,6 +222,15 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 .tabs-icon-btn:hover { background: var(--field-bg); color: var(--field-value); }
+.moscow-clock {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  padding: 0 10px;
+  white-space: nowrap;
+}
 .tabs-avatar-btn {
   all: unset;
   box-sizing: border-box;

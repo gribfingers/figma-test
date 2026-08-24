@@ -65,8 +65,8 @@ export function FlightCard() {
         aircraft_version: draft.seatConfig || null,
         origin: draft.depAirport,
         destination: draft.arrAirport,
-        std: draft.depTime ? combineDateAndTime(flight.std, draft.depTime) : flight.std,
-        sta: draft.arrTime ? combineDateAndTime(flight.sta ?? flight.std, draft.arrTime) : flight.sta,
+        std: combineDateAndTime(flight.std, draft.depDate, draft.depTime),
+        sta: combineDateAndTime(flight.sta ?? flight.std, draft.arrDate, draft.arrTime),
         extra,
       });
       setFlight(updated);

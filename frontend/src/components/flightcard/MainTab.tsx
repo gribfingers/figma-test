@@ -4,9 +4,9 @@ import { Field } from "../Field";
 import { Select } from "../Select";
 import { AirportSelect } from "../AirportSelect";
 import { PlaneIcon } from "../Icon";
-import { MainDraft } from "./mainDraft";
+import { draftFromFlight, MainDraft } from "./mainDraft";
 import { AIRCRAFT_TYPES } from "../../aircraftTypes";
-import { alphanumericUpper, digitsOnly, timeInput } from "../../validation";
+import { alphanumericUpper, dateInput, digitsOnly, timeInput } from "../../validation";
 
 interface Props {
   flight: Flight;
@@ -47,9 +47,14 @@ export function MainTab({ flight, draft, onChange }: Props) {
 
   function toggleRoute() {
     if (editingRoute) {
+      const original = draftFromFlight(flight);
       onChange({
-        depAirport: flight.origin,
-        arrAirport: flight.destination,
+        depAirport: original.depAirport,
+        arrAirport: original.arrAirport,
+        depDate: original.depDate,
+        depTime: original.depTime,
+        arrDate: original.arrDate,
+        arrTime: original.arrTime,
       });
     }
     setEditingRoute((v) => !v);
@@ -67,7 +72,10 @@ export function MainTab({ flight, draft, onChange }: Props) {
                 onChange={(v) => onChange({ depAirport: v })}
                 style={{ width: 84 }}
               />
-              <Field label="Time" style={{ width: 84 }}>
+              <Field label="Date" style={{ width: 100 }}>
+                <input value={draft.depDate} onChange={(e) => onChange({ depDate: dateInput(e.target.value) })} placeholder=" " />
+              </Field>
+              <Field label="Time" style={{ width: 66 }}>
                 <input value={draft.depTime} onChange={(e) => onChange({ depTime: timeInput(e.target.value) })} placeholder=" " />
               </Field>
               <Field label="Terminal" style={{ width: 84 }}>
@@ -101,7 +109,10 @@ export function MainTab({ flight, draft, onChange }: Props) {
                 onChange={(v) => onChange({ arrAirport: v })}
                 style={{ width: 84 }}
               />
-              <Field label="Time" style={{ width: 84 }}>
+              <Field label="Date" style={{ width: 100 }}>
+                <input value={draft.arrDate} onChange={(e) => onChange({ arrDate: dateInput(e.target.value) })} placeholder=" " />
+              </Field>
+              <Field label="Time" style={{ width: 66 }}>
                 <input value={draft.arrTime} onChange={(e) => onChange({ arrTime: timeInput(e.target.value) })} placeholder=" " />
               </Field>
               <Field label="Terminal" style={{ width: 84 }}>
