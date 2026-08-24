@@ -18,8 +18,9 @@ interface Props {
 
 /**
  * Custom-rendered dropdown (not a native <select>) so the popup menu can
- * match the Figma "MenuItem" spec exactly (300px min width, 4px radius,
- * drop-shadow) — native <select> popups can't be restyled cross-browser.
+ * match the Figma "MenuItem" spec exactly (same width as the field, 4px
+ * radius, drop-shadow) — native <select> popups can't be restyled
+ * cross-browser.
  */
 export function Select({ label, value, onChange, options, disabled, error, style }: Props) {
   const [open, setOpen] = useState(false);

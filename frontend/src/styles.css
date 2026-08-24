@@ -273,6 +273,7 @@ tr.clickable:hover { background: var(--accent-soft); }
 
 /* ---- Custom DateTimePicker: same field box, but floats only with a value ---- */
 .field2.datetime-field:focus-within label,
+.field2.datetime-field.open label,
 .field2.datetime-field.has-value label {
   top: 7px;
   transform: translateY(0);
@@ -280,8 +281,25 @@ tr.clickable:hover { background: var(--accent-soft); }
   font-weight: 500;
 }
 .field2.datetime-field:focus-within .datetime-trigger,
+.field2.datetime-field.open .datetime-trigger,
 .field2.datetime-field.has-value .datetime-trigger {
   padding-top: 15px;
+}
+/* The popup counts as "focused" even if DOM focus momentarily lands on a
+   day/hour button elsewhere inside it — keep the box in its focus look. */
+.field2.datetime-field.open {
+  border: 2px solid var(--field-border-focus);
+  padding: 0 11px;
+  background: var(--field-bg-focus);
+}
+.field2.datetime-field.open label { color: var(--field-label-focus); }
+.datetime-field .select-chevron {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--field-placeholder);
+  pointer-events: none;
 }
 .datetime-field .datetime-trigger {
   all: unset;
@@ -393,7 +411,7 @@ tr.clickable:hover { background: var(--accent-soft); }
   z-index: 30;
   top: calc(100% + 4px);
   left: 0;
-  width: max(100%, 300px);
+  width: 100%;
   max-height: 320px;
   overflow-y: auto;
   margin: 0;
