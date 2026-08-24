@@ -72,7 +72,7 @@ export function MainTab({ flight, draft, onChange }: Props) {
                 onChange={(v) => onChange({ depAirport: v })}
                 style={{ width: 84 }}
               />
-              <Field label="Date" style={{ width: 100 }}>
+              <Field label="Date" style={{ width: 132 }}>
                 <input value={draft.depDate} onChange={(e) => onChange({ depDate: dateInput(e.target.value) })} placeholder=" " />
               </Field>
               <Field label="Time" style={{ width: 66 }}>
@@ -109,7 +109,7 @@ export function MainTab({ flight, draft, onChange }: Props) {
                 onChange={(v) => onChange({ arrAirport: v })}
                 style={{ width: 84 }}
               />
-              <Field label="Date" style={{ width: 100 }}>
+              <Field label="Date" style={{ width: 132 }}>
                 <input value={draft.arrDate} onChange={(e) => onChange({ arrDate: dateInput(e.target.value) })} placeholder=" " />
               </Field>
               <Field label="Time" style={{ width: 66 }}>
