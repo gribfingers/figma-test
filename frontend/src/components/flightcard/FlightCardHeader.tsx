@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { Flight } from "../../api";
-import { ChevronDownIcon } from "../Icon";
 import { FlightStatusSelect } from "./FlightStatusSelect";
+import { FlightAction, FlightActionsMenu } from "./FlightActionsMenu";
 
 interface Props {
   flight: Flight;
   activeTab: string;
+  dirty: boolean;
+  onSave: () => void;
+  onAction: (action: FlightAction) => void;
 }
 
 const PHASES = [
@@ -50,7 +53,7 @@ function defaultStatusKey(status: Flight["ops_status"]): string {
   return "active_not_open";
 }
 
-export function FlightCardHeader({ flight, activeTab }: Props) {
+export function FlightCardHeader({ flight, activeTab, dirty, onSave, onAction }: Props) {
   const activeCount = activePhaseCount(flight.ops_status);
   const [statusKey, setStatusKey] = useState(() => defaultStatusKey(flight.ops_status));
 
@@ -82,10 +85,12 @@ export function FlightCardHeader({ flight, activeTab }: Props) {
         <button type="button" className="secondary">
           Popular action
         </button>
-        <button type="button" className="secondary">
-          Actions <ChevronDownIcon size={16} />
-        </button>
-        {activeTab === "main" && <button type="button">Save</button>}
+        <FlightActionsMenu onAction={onAction} />
+        {activeTab === "main" && (
+          <button type="button" disabled={!dirty} onClick={onSave}>
+            Save
+          </button>
+        )}
       </div>
     </div>
   );

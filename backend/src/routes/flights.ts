@@ -79,12 +79,12 @@ flightsRouter.get("/:id", (req, res) => {
   res.json(flight);
 });
 
-/** Update FIDS-board fields (terminal, gate, ops status, ETD/STA/ATA, aircraft reg/version/type). */
+/** Update FIDS-board fields (route, terminal, gate, ops status, ETD/STA/ATA, aircraft reg/version/type, extra). */
 flightsRouter.patch("/:id", (req, res) => {
   const flight = db.prepare("SELECT * FROM flights WHERE id = ?").get(req.params.id) as Flight | undefined;
   if (!flight) return res.status(404).json({ error: "Flight not found" });
 
-  const { terminal, gate, aircraft_reg, aircraft_version, etd, sta, ata, ops_status, aircraft_type } = req.body;
+  const { origin, destination, terminal, gate, aircraft_reg, aircraft_version, etd, sta, ata, ops_status, aircraft_type, extra } = req.body;
 
   // Changing aircraft_type regenerates the seat map, which would orphan any
   // passenger already holding an assigned seat — refuse rather than corrupt it.
@@ -114,6 +114,8 @@ flightsRouter.patch("/:id", (req, res) => {
 
   db.prepare(
     `UPDATE flights SET
+       origin = COALESCE(?, origin),
+       destination = COALESCE(?, destination),
        terminal = COALESCE(?, terminal),
        gate = COALESCE(?, gate),
        aircraft_reg = COALESCE(?, aircraft_reg),
@@ -121,9 +123,12 @@ flightsRouter.patch("/:id", (req, res) => {
        etd = COALESCE(?, etd),
        sta = COALESCE(?, sta),
        ata = COALESCE(?, ata),
-       ops_status = COALESCE(?, ops_status)
+       ops_status = COALESCE(?, ops_status),
+       extra = COALESCE(?, extra)
      WHERE id = ?`
   ).run(
+    origin ? String(origin).toUpperCase() : null,
+    destination ? String(destination).toUpperCase() : null,
     terminal ?? null,
     gate ?? null,
     aircraft_reg ?? null,
@@ -132,6 +137,9 @@ flightsRouter.patch("/:id", (req, res) => {
     sta ?? null,
     ata ?? null,
     ops_status ?? null,
+    // Sent pre-serialized by the client (it already models `extra` as the
+    // stored JSON string) — stored verbatim, not re-stringified.
+    extra !== undefined ? extra : null,
     req.params.id
   );
 

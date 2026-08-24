@@ -44,6 +44,10 @@ export interface Flight {
   sta: string | null; // scheduled time of arrival, ISO
   ata: string | null; // actual time of arrival, ISO
   ops_status: OpsStatus;
+  // Free-form JSON blob for Main-tab fields with no dedicated column yet
+  // (comment, partner flight, agreement type, APIS, max weight, boarding
+  // checklist, arrival terminal) — see frontend mainDraft.ts.
+  extra: string | null;
 }
 
 export interface Passenger {

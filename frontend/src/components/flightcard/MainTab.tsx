@@ -3,15 +3,12 @@ import { Flight } from "../../api";
 import { Field } from "../Field";
 import { Select } from "../Select";
 import { PlaneIcon } from "../Icon";
+import { MainDraft } from "./mainDraft";
 
 interface Props {
   flight: Flight;
-}
-
-function fmtTimeValue(iso: string | null): string {
-  if (!iso) return "";
-  const d = new Date(iso);
-  return `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
+  draft: MainDraft;
+  onChange: (patch: Partial<MainDraft>) => void;
 }
 
 function fmtDuration(std: string, sta: string | null): string {
@@ -27,8 +24,8 @@ const AGREEMENT_TYPES = [
   { value: "own", label: "Own flight" },
 ];
 
-// Boarding-control checks the ops desk can require for this flight — not
-// backed by a schema field yet, kept as local UI state for now.
+// Boarding-control checks the ops desk can require for this flight — saved
+// in Flight.extra.checks until they get dedicated columns.
 const CHECKS = [
   "Mandatory boarding control",
   "Block boarding pending baggage/service payment check",
@@ -39,35 +36,18 @@ const CHECKS = [
   "iAPP",
 ];
 
-export function MainTab({ flight }: Props) {
+export function MainTab({ flight, draft, onChange }: Props) {
   // Route (airport/time) fields are shown as plain text until "Change
   // route" is used — that's the manual-entry path for small airports
   // without a preloaded schedule. "Back to initial route" discards edits.
   const [editingRoute, setEditingRoute] = useState(false);
-  const [depAirport, setDepAirport] = useState(flight.origin);
-  const [arrAirport, setArrAirport] = useState(flight.destination);
-  const [depTime, setDepTime] = useState(fmtTimeValue(flight.std));
-  const [arrTime, setArrTime] = useState(fmtTimeValue(flight.sta));
-
-  const [terminalFrom, setTerminalFrom] = useState(flight.terminal ?? "");
-  const [terminalTo, setTerminalTo] = useState("");
-  const [checkinDesk, setCheckinDesk] = useState("");
-  const [gate, setGate] = useState(flight.gate ?? "");
-  const [acReg, setAcReg] = useState(flight.aircraft_reg ?? "");
-  const [seatConfig, setSeatConfig] = useState(flight.aircraft_version ?? "");
-  const [comment, setComment] = useState("");
-  const [partnerFlight, setPartnerFlight] = useState("");
-  const [agreement, setAgreement] = useState("codeshare");
-  const [apis, setApis] = useState(false);
-  const [maxWeight, setMaxWeight] = useState("");
-  const [checks, setChecks] = useState<Record<string, boolean>>({});
 
   function toggleRoute() {
     if (editingRoute) {
-      setDepAirport(flight.origin);
-      setArrAirport(flight.destination);
-      setDepTime(fmtTimeValue(flight.std));
-      setArrTime(fmtTimeValue(flight.sta));
+      onChange({
+        depAirport: flight.origin,
+        arrAirport: flight.destination,
+      });
     }
     setEditingRoute((v) => !v);
   }
@@ -79,20 +59,33 @@ export function MainTab({ flight }: Props) {
           {editingRoute ? (
             <div className="segment-point-edit">
               <Field label="Airport" style={{ width: 84 }}>
-                <input value={depAirport} maxLength={3} onChange={(e) => setDepAirport(e.target.value.toUpperCase())} placeholder=" " />
+                <input
+                  value={draft.depAirport}
+                  maxLength={3}
+                  onChange={(e) => onChange({ depAirport: e.target.value.toUpperCase() })}
+                  placeholder=" "
+                />
               </Field>
               <Field label="Time" style={{ width: 84 }}>
-                <input value={depTime} onChange={(e) => setDepTime(e.target.value)} placeholder=" " />
+                <input value={draft.depTime} onChange={(e) => onChange({ depTime: e.target.value })} placeholder=" " />
               </Field>
               <Field label="Terminal" style={{ width: 84 }}>
-                <input value={terminalFrom} onChange={(e) => setTerminalFrom(e.target.value)} placeholder=" " />
+                <input
+                  value={draft.terminalFrom}
+                  onChange={(e) => onChange({ terminalFrom: e.target.value })}
+                  placeholder=" "
+                />
               </Field>
             </div>
           ) : (
             <div className="segment-point">
-              <div className="segment-time">{depTime || "—"}</div>
+              <div className="segment-time">{draft.depTime || "—"}</div>
               <Field label="Terminal" style={{ width: 84 }}>
-                <input value={terminalFrom} onChange={(e) => setTerminalFrom(e.target.value)} placeholder=" " />
+                <input
+                  value={draft.terminalFrom}
+                  onChange={(e) => onChange({ terminalFrom: e.target.value })}
+                  placeholder=" "
+                />
               </Field>
             </div>
           )}
@@ -102,29 +95,42 @@ export function MainTab({ flight }: Props) {
           {editingRoute ? (
             <div className="segment-point-edit">
               <Field label="Airport" style={{ width: 84 }}>
-                <input value={arrAirport} maxLength={3} onChange={(e) => setArrAirport(e.target.value.toUpperCase())} placeholder=" " />
+                <input
+                  value={draft.arrAirport}
+                  maxLength={3}
+                  onChange={(e) => onChange({ arrAirport: e.target.value.toUpperCase() })}
+                  placeholder=" "
+                />
               </Field>
               <Field label="Time" style={{ width: 84 }}>
-                <input value={arrTime} onChange={(e) => setArrTime(e.target.value)} placeholder=" " />
+                <input value={draft.arrTime} onChange={(e) => onChange({ arrTime: e.target.value })} placeholder=" " />
               </Field>
               <Field label="Terminal" style={{ width: 84 }}>
-                <input value={terminalTo} onChange={(e) => setTerminalTo(e.target.value)} placeholder=" " />
+                <input
+                  value={draft.terminalTo}
+                  onChange={(e) => onChange({ terminalTo: e.target.value })}
+                  placeholder=" "
+                />
               </Field>
             </div>
           ) : (
             <div className="segment-point right">
               <Field label="Terminal" style={{ width: 84 }}>
-                <input value={terminalTo} onChange={(e) => setTerminalTo(e.target.value)} placeholder=" " />
+                <input
+                  value={draft.terminalTo}
+                  onChange={(e) => onChange({ terminalTo: e.target.value })}
+                  placeholder=" "
+                />
               </Field>
-              <div className="segment-time">{arrTime || "—"}</div>
+              <div className="segment-time">{draft.arrTime || "—"}</div>
             </div>
           )}
         </div>
 
         {!editingRoute && (
           <div className="segment-airports">
-            <div className="segment-airport-code">{depAirport}</div>
-            <div className="segment-airport-code">{arrAirport}</div>
+            <div className="segment-airport-code">{draft.depAirport}</div>
+            <div className="segment-airport-code">{draft.arrAirport}</div>
           </div>
         )}
 
@@ -140,10 +146,10 @@ export function MainTab({ flight }: Props) {
             <input value={flight.aircraft_type} disabled placeholder=" " />
           </Field>
           <Field label="Check-in desk">
-            <input value={checkinDesk} onChange={(e) => setCheckinDesk(e.target.value)} placeholder=" " />
+            <input value={draft.checkinDesk} onChange={(e) => onChange({ checkinDesk: e.target.value })} placeholder=" " />
           </Field>
           <Field label="A/C reg">
-            <input value={acReg} onChange={(e) => setAcReg(e.target.value)} placeholder=" " />
+            <input value={draft.acReg} onChange={(e) => onChange({ acReg: e.target.value })} placeholder=" " />
           </Field>
         </div>
         <div className="grid-3" style={{ marginTop: 12 }}>
@@ -151,43 +157,42 @@ export function MainTab({ flight }: Props) {
             Flight type: <b>Scheduled</b>
           </div>
           <Field label="Gate">
-            <input value={gate} onChange={(e) => setGate(e.target.value)} placeholder=" " />
+            <input value={draft.gate} onChange={(e) => onChange({ gate: e.target.value })} placeholder=" " />
           </Field>
           <Field label="Seat config">
-            <input value={seatConfig} onChange={(e) => setSeatConfig(e.target.value)} placeholder=" " />
+            <input value={draft.seatConfig} onChange={(e) => onChange({ seatConfig: e.target.value })} placeholder=" " />
           </Field>
         </div>
       </div>
 
       <div className="main-tab-side">
         <div className="field2 tall">
-          <textarea value={comment} onChange={(e) => setComment(e.target.value)} placeholder=" " rows={3} />
+          <textarea value={draft.comment} onChange={(e) => onChange({ comment: e.target.value })} placeholder=" " rows={3} />
           <label>Flight comment</label>
         </div>
 
         <div className="grid-2" style={{ marginTop: 16 }}>
           <Field label="Partner flight">
-            <input value={partnerFlight} onChange={(e) => setPartnerFlight(e.target.value)} placeholder=" " />
+            <input value={draft.partnerFlight} onChange={(e) => onChange({ partnerFlight: e.target.value })} placeholder=" " />
           </Field>
-          <Select label="Agreement type" value={agreement} onChange={setAgreement} options={AGREEMENT_TYPES} />
+          <Select
+            label="Agreement type"
+            value={draft.agreement}
+            onChange={(v) => onChange({ agreement: v })}
+            options={AGREEMENT_TYPES}
+          />
         </div>
 
         <div className="grid-2" style={{ marginTop: 16, alignItems: "center" }}>
           <button
             type="button"
-            className={`secondary apis-toggle ${apis ? "on" : "off"}`}
-            onClick={() => setApis((v) => !v)}
+            className={`secondary apis-toggle ${draft.apis ? "on" : "off"}`}
+            onClick={() => onChange({ apis: !draft.apis })}
           >
             APIS
           </button>
           <Field label="Max KZ, kg">
-            <input
-              type="number"
-              min={0}
-              value={maxWeight}
-              onChange={(e) => setMaxWeight(e.target.value)}
-              placeholder=" "
-            />
+            <input value={draft.maxWeight} onChange={(e) => onChange({ maxWeight: e.target.value })} placeholder=" " />
           </Field>
         </div>
 
@@ -196,8 +201,8 @@ export function MainTab({ flight }: Props) {
             <label key={c} className="checkbox-row">
               <input
                 type="checkbox"
-                checked={!!checks[c]}
-                onChange={() => setChecks((prev) => ({ ...prev, [c]: !prev[c] }))}
+                checked={!!draft.checks[c]}
+                onChange={() => onChange({ checks: { ...draft.checks, [c]: !draft.checks[c] } })}
               />
               {c}
             </label>

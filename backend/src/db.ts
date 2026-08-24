@@ -78,6 +78,7 @@ const flightMigrations: [string, string][] = [
   ["sta", "ALTER TABLE flights ADD COLUMN sta TEXT"],
   ["ata", "ALTER TABLE flights ADD COLUMN ata TEXT"],
   ["ops_status", "ALTER TABLE flights ADD COLUMN ops_status TEXT NOT NULL DEFAULT 'SCHEDULED'"],
+  ["extra", "ALTER TABLE flights ADD COLUMN extra TEXT"],
 ];
 for (const [column, ddl] of flightMigrations) {
   if (!existingFlightColumns.has(column)) db.exec(ddl);

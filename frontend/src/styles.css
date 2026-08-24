@@ -876,6 +876,35 @@ a { color: var(--accent); }
 .status-menu-ru { font-size: 12px; color: var(--muted); }
 .status-menu-desc { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
 
+/* Flight Actions dropdown (the "Actions" button) */
+.actions-select { position: relative; }
+.actions-select .chevron-flip { transition: transform 0.12s ease; }
+.actions-select.open .chevron-flip { transform: rotate(180deg); }
+.actions-menu {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 220px;
+  margin: 0;
+  padding: 4px 0;
+  list-style: none;
+  background: #ffffff;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  box-shadow: 0 2px 24px -6px rgba(222, 226, 229, 1);
+}
+.actions-menu li {
+  padding: 9px 16px;
+  font-size: 14px;
+  color: var(--field-value);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.actions-menu li:hover { background: var(--accent-soft); }
+.actions-menu li.danger { color: var(--danger); }
+.actions-menu li.danger:hover { background: var(--danger-soft); }
+
 .flight-tabs {
   display: flex;
   gap: 28px;
@@ -925,7 +954,7 @@ a { color: var(--accent); }
 .field2.tall label { top: 14px; transform: none; }
 .field2.tall:focus-within label,
 .field2.tall:has(textarea:not(:placeholder-shown)) label { top: 7px; }
-.field2.tall textarea { resize: vertical; min-height: 60px; }
+.field2.tall textarea { resize: none; min-height: 60px; }
 
 .apis-toggle.off { border-color: var(--danger); color: var(--danger); }
 .apis-toggle.off:hover:not(:disabled) { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }

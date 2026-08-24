@@ -19,6 +19,7 @@ export interface Flight {
   sta: string | null;
   ata: string | null;
   ops_status: OpsStatus;
+  extra: string | null;
 }
 
 export interface Passenger {

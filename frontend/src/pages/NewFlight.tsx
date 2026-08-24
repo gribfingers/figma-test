@@ -181,13 +181,7 @@ export function NewFlight() {
                   APIS
                 </button>
                 <Field label="Max KZ, kg">
-                  <input
-                    type="number"
-                    min={0}
-                    value={maxWeight}
-                    onChange={(e) => setMaxWeight(e.target.value)}
-                    placeholder=" "
-                  />
+                  <input value={maxWeight} onChange={(e) => setMaxWeight(e.target.value)} placeholder=" " />
                 </Field>
               </div>
 
