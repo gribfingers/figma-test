@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api, Flight } from "../api";
 import { Field } from "../components/Field";
 import { Select } from "../components/Select";
@@ -34,6 +34,7 @@ const EMPTY_QUICK = { airline: "", flight: "", origin: "", destination: "", std:
 
 export function Dashboard() {
   useRegisterTab("Flights", false);
+  const navigate = useNavigate();
   const [flights, setFlights] = useState<Flight[]>([]);
   const [error, setError] = useState("");
 
@@ -173,7 +174,7 @@ export function Dashboard() {
             </thead>
             <tbody>
               {visibleFlights.map((f) => (
-                <tr key={f.id} className="row-hover">
+                <tr key={f.id} className="row-hover" onClick={() => navigate(`/flights/${f.id}`)}>
                   <td className="mono">{formatTime(f.std)}</td>
                   <td>{f.carrier_code}</td>
                   <td className="mono">{f.flight_number}</td>

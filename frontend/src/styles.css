@@ -825,6 +825,109 @@ pre.manifest {
 
 a { color: var(--accent); }
 
+/* ---- Flight Card (flight detail page: header + Main/Counters/Passengers/Transfers/Settings tabs) ---- */
+.flight-card-panel {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.flight-card-head { display: flex; align-items: center; gap: 24px; padding: 20px; flex-wrap: wrap; }
+.flight-card-id { min-width: 140px; }
+.flight-card-number { font-size: 22px; font-weight: 800; color: var(--field-value); line-height: 1.2; }
+.flight-card-route { color: var(--accent); font-weight: 600; font-size: 13px; margin-top: 2px; }
+.flight-card-date { color: var(--muted); font-size: 12px; margin-top: 2px; }
+.flight-card-actions { display: flex; gap: 8px; margin-left: auto; }
+
+.flight-status-group { display: flex; border: 1px solid var(--panel-border); border-radius: 4px; overflow: hidden; }
+.flight-status-chip { padding: 10px 18px; text-align: center; border-right: 1px solid var(--panel-border); background: #f4f7fa; }
+.flight-status-chip:last-child { border-right: none; }
+.flight-status-chip.active { background: rgba(28, 130, 236, 0.14); }
+.flight-status-label { font-size: 12px; font-weight: 700; color: var(--field-value); white-space: nowrap; }
+.flight-status-range { font-size: 11px; color: var(--muted); margin-top: 2px; white-space: nowrap; }
+
+.flight-tabs {
+  display: flex;
+  gap: 28px;
+  padding: 0 20px;
+  background: var(--bg);
+  border-top: 1px solid var(--panel-border);
+  border-bottom: 1px solid var(--panel-border);
+}
+.flight-tab {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  font-family: var(--font);
+  padding: 13px 2px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+  -webkit-tap-highlight-color: transparent;
+}
+.flight-tabs .flight-tab:hover { background: transparent; }
+.flight-tabs .flight-tab:hover:not(.selected) { color: var(--field-value); }
+.flight-tab.selected { color: var(--accent); border-bottom-color: var(--accent); }
+
+.flight-card-body { padding: 20px; }
+
+/* Main tab: single flight segment + editable fields */
+.segment-card { border: 1px solid var(--panel-border); border-radius: 4px; padding: 16px; }
+.segment-endpoints { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.segment-point { display: flex; align-items: center; gap: 10px; }
+.segment-point.right { flex-direction: row-reverse; }
+.segment-time { font-size: 20px; font-weight: 800; color: var(--field-value); white-space: nowrap; }
+.segment-duration { color: var(--muted); font-size: 12px; white-space: nowrap; align-self: center; }
+.segment-airports { display: flex; justify-content: space-between; margin-top: 4px; }
+.segment-airport-code { font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: 0.04em; }
+.segment-path { display: flex; align-items: center; margin: 10px 0 18px; }
+.segment-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+.segment-line-fill { flex: 1; height: 2px; background: var(--accent); }
+.segment-plane { color: var(--accent); margin: 0 4px; flex-shrink: 0; }
+.segment-flighttype { font-size: 13px; color: var(--field-value); display: flex; align-items: center; }
+.segment-flighttype b { margin-left: 4px; }
+
+.field2.tall { height: auto; min-height: 96px; align-items: flex-start; padding-top: 14px; }
+.field2.tall label { top: 14px; transform: none; }
+.field2.tall:focus-within label,
+.field2.tall:has(textarea:not(:placeholder-shown)) label { top: 7px; }
+.field2.tall textarea { resize: vertical; min-height: 60px; }
+
+.apis-toggle.off { border-color: var(--danger); color: var(--danger); }
+.apis-toggle.off:hover:not(:disabled) { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }
+.apis-toggle.on { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+
+.checkbox-list { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+.checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--field-value); cursor: pointer; }
+.checkbox-row input[type="checkbox"] { width: 16px; height: 16px; margin: 0; cursor: pointer; }
+
+/* Counters tab: bordered mini-tables (Seats / SSR / Pax statuses / Baggage) */
+.counters-grid { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+.counters-col { display: flex; flex-direction: column; gap: 16px; flex: 1; min-width: 220px; }
+.counters-row-2 { display: flex; gap: 16px; }
+.counters-row-2 .counter-table { flex: 1; }
+.counter-table { border: 1px solid var(--panel-border); border-radius: 4px; overflow: hidden; flex: 1; min-width: 220px; }
+.counter-table-row { display: grid; align-items: center; padding: 9px 14px; border-bottom: 1px solid var(--panel-border); gap: 4px; }
+.counter-table-row:last-child { border-bottom: none; }
+.counter-table-row.head { background: #f4f7fa; font-weight: 700; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
+.counter-table-title { font-weight: 800; font-size: 12px; color: var(--field-value); text-transform: none; letter-spacing: 0; }
+.counter-table-col { text-align: right; }
+.counter-table-label { font-size: 13px; color: var(--field-value); }
+.counter-table-value { text-align: right; font-weight: 700; color: var(--accent); font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* Passengers tab */
+.passengers-tab { display: flex; gap: 20px; align-items: flex-start; }
+.passengers-list { flex: 1; min-width: 0; }
+.passengers-seatmap { flex-shrink: 0; border: 1px solid var(--panel-border); border-radius: 4px; padding: 16px; }
+.passengers-count { font-size: 12px; color: var(--muted); font-weight: 600; }
+
+.link-text { color: var(--accent); font-weight: 600; }
+
+tr.row-hover { cursor: pointer; }
+
 @media (max-width: 640px) {
   .top-tab { padding: 18px 10px; height: 48px; font-size: 12px; }
   .tabs-actions { padding: 0 10px; }
