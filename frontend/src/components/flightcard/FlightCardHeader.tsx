@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Flight } from "../../api";
 import { FlightStatusSelect } from "./FlightStatusSelect";
 import { FlightAction, FlightActionsMenu } from "./FlightActionsMenu";
@@ -25,16 +25,22 @@ function fmtWindow(std: string, fromMin: number, toMin: number): string {
   return `${f(fromMin)} - ${f(toMin)}`;
 }
 
-// No single backend field tracks flight phase yet, so the current phase is
-// inferred from ops_status until one exists. Phases before it are "past",
-// the one at this index is "active", the rest are "future" — index 4 means
-// every phase is already past (nothing left to be "current"), -1 means
-// none reached yet.
-function currentPhaseIndex(status: Flight["ops_status"]): number {
-  if (status === "BOARDING") return 1;
-  if (status === "DEPARTED" || status === "ARRIVED") return 4;
-  if (status === "CANCELLED") return -1;
-  return 0;
+// Which phase is "current" is derived from real elapsed time against this
+// flight's own std-relative windows (the PHASES offsets above), not from
+// ops_status — otherwise editing the departure time would have no effect
+// on the highlighting at all. Phases before it are "past", the one at this
+// index is "active", the rest are "future"; PHASES.length means every phase
+// is already past, -1 means none reached yet. A cancelled flight isn't
+// progressing through phases at all, so it's always treated as none-reached.
+function currentPhaseIndex(flight: Flight, now: Date): number {
+  if (flight.ops_status === "CANCELLED") return -1;
+  const base = new Date(flight.std).getTime();
+  const nowMs = now.getTime();
+  if (nowMs < base + PHASES[0].fromMin * 60000) return -1;
+  for (let i = 0; i < PHASES.length; i++) {
+    if (nowMs < base + PHASES[i].toMin * 60000) return i;
+  }
+  return PHASES.length;
 }
 
 function fmtCardDate(std: string): string {
@@ -57,7 +63,14 @@ function defaultStatusKey(status: Flight["ops_status"]): string {
 }
 
 export function FlightCardHeader({ flight, activeTab, dirty, onSave, onAction }: Props) {
-  const currentPhase = currentPhaseIndex(flight.ops_status);
+  // Ticks so the highlighted phase keeps up with real time even if nothing
+  // else on the page changes (not just right after editing std/sta).
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(t);
+  }, []);
+  const currentPhase = currentPhaseIndex(flight, now);
   const [statusKey, setStatusKey] = useState(() => defaultStatusKey(flight.ops_status));
 
   return (
