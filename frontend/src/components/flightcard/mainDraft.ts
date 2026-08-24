@@ -7,6 +7,7 @@ import { Flight } from "../../api";
 // through the Flight record; the rest live in Flight.extra as JSON until
 // they get dedicated columns.
 export interface MainDraft {
+  aircraftType: string;
   terminalFrom: string;
   terminalTo: string;
   checkinDesk: string;
@@ -39,6 +40,7 @@ export function draftFromFlight(flight: Flight): MainDraft {
     extra = {};
   }
   return {
+    aircraftType: flight.aircraft_type,
     terminalFrom: flight.terminal ?? "",
     terminalTo: typeof extra.terminalTo === "string" ? extra.terminalTo : "",
     checkinDesk: typeof extra.checkinDesk === "string" ? extra.checkinDesk : "",

@@ -30,6 +30,7 @@ export function FlightCard() {
   const [tab, setTab] = useState<TabKey>("main");
   const [draft, setDraft] = useState<MainDraft | null>(null);
   const [manifest, setManifest] = useState<{ label: string; text: string } | null>(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     api.getFlight(fid).then((f) => {
@@ -44,6 +45,7 @@ export function FlightCard() {
 
   async function handleSave() {
     if (!flight || !draft) return;
+    setError("");
     const extra = JSON.stringify({
       terminalTo: draft.terminalTo,
       checkinDesk: draft.checkinDesk,
@@ -54,46 +56,57 @@ export function FlightCard() {
       maxWeight: draft.maxWeight,
       checks: draft.checks,
     });
-    const updated = await api.updateFlight(flight.id, {
-      terminal: draft.terminalFrom || null,
-      gate: draft.gate || null,
-      aircraft_reg: draft.acReg || null,
-      aircraft_version: draft.seatConfig || null,
-      origin: draft.depAirport,
-      destination: draft.arrAirport,
-      std: draft.depTime ? combineDateAndTime(flight.std, draft.depTime) : flight.std,
-      sta: draft.arrTime ? combineDateAndTime(flight.sta ?? flight.std, draft.arrTime) : flight.sta,
-      extra,
-    });
-    setFlight(updated);
-    setDraft(draftFromFlight(updated));
+    try {
+      const updated = await api.updateFlight(flight.id, {
+        aircraft_type: draft.aircraftType,
+        terminal: draft.terminalFrom || null,
+        gate: draft.gate || null,
+        aircraft_reg: draft.acReg || null,
+        aircraft_version: draft.seatConfig || null,
+        origin: draft.depAirport,
+        destination: draft.arrAirport,
+        std: draft.depTime ? combineDateAndTime(flight.std, draft.depTime) : flight.std,
+        sta: draft.arrTime ? combineDateAndTime(flight.sta ?? flight.std, draft.arrTime) : flight.sta,
+        extra,
+      });
+      setFlight(updated);
+      setDraft(draftFromFlight(updated));
+    } catch (e: any) {
+      setError(e.message);
+    }
   }
 
   async function handleAction(action: FlightAction) {
     if (!flight) return;
-    if (action === "checkin") return navigate(`/checkin/${flight.id}`);
-    if (action === "boarding") return navigate(`/boarding/${flight.id}`);
-    if (action === "pnl") {
-      const text = await api.pnl(flight.id);
-      setManifest({ label: "PNL (passenger name list)", text });
-      return;
-    }
-    if (action === "pfs") {
-      const text = await api.pfs(flight.id);
-      setManifest({ label: "PFS (current preliminary summary)", text });
-      return;
-    }
-    if (action === "close") {
-      if (!confirm("Close the flight? Passengers checked in but not boarded will be marked NO SHOW.")) return;
-      const { flight: updated, pfs } = await api.closeFlight(flight.id);
-      setFlight(updated);
-      setDraft(draftFromFlight(updated));
-      setManifest({ label: "PFS (final list after flight close-out)", text: pfs });
+    setError("");
+    try {
+      if (action === "checkin") return navigate(`/checkin/${flight.id}`);
+      if (action === "boarding") return navigate(`/boarding/${flight.id}`);
+      if (action === "pnl") {
+        const text = await api.pnl(flight.id);
+        setManifest({ label: "PNL (passenger name list)", text });
+        return;
+      }
+      if (action === "pfs") {
+        const text = await api.pfs(flight.id);
+        setManifest({ label: "PFS (current preliminary summary)", text });
+        return;
+      }
+      if (action === "close") {
+        if (!confirm("Close the flight? Passengers checked in but not boarded will be marked NO SHOW.")) return;
+        const { flight: updated, pfs } = await api.closeFlight(flight.id);
+        setFlight(updated);
+        setDraft(draftFromFlight(updated));
+        setManifest({ label: "PFS (final list after flight close-out)", text: pfs });
+      }
+    } catch (e: any) {
+      setError(e.message);
     }
   }
 
   return (
     <div>
+      {error && <div className="error-box">{error}</div>}
       <div className="flight-card-panel">
         <FlightCardHeader flight={flight} activeTab={tab} dirty={dirty} onSave={handleSave} onAction={handleAction} />
         <div className="flight-tabs">

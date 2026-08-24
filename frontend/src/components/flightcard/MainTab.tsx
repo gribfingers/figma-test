@@ -4,6 +4,7 @@ import { Field } from "../Field";
 import { Select } from "../Select";
 import { PlaneIcon } from "../Icon";
 import { MainDraft } from "./mainDraft";
+import { AIRCRAFT_TYPES } from "../../aircraftTypes";
 
 interface Props {
   flight: Flight;
@@ -142,9 +143,12 @@ export function MainTab({ flight, draft, onChange }: Props) {
           <span className="segment-dot" />
         </div>
         <div className="grid-3">
-          <Field label="AC type">
-            <input value={flight.aircraft_type} disabled placeholder=" " />
-          </Field>
+          <Select
+            label="AC type"
+            value={draft.aircraftType}
+            onChange={(v) => onChange({ aircraftType: v })}
+            options={AIRCRAFT_TYPES.map((t) => ({ value: t, label: t }))}
+          />
           <Field label="Check-in desk">
             <input value={draft.checkinDesk} onChange={(e) => onChange({ checkinDesk: e.target.value })} placeholder=" " />
           </Field>

@@ -25,13 +25,16 @@ function fmtWindow(std: string, fromMin: number, toMin: number): string {
   return `${f(fromMin)} - ${f(toMin)}`;
 }
 
-// No single backend field tracks flight phase yet, so the highlighted
-// window count is inferred from ops_status until one exists.
-function activePhaseCount(status: Flight["ops_status"]): number {
-  if (status === "BOARDING") return 2;
+// No single backend field tracks flight phase yet, so the current phase is
+// inferred from ops_status until one exists. Phases before it are "past",
+// the one at this index is "active", the rest are "future" — index 4 means
+// every phase is already past (nothing left to be "current"), -1 means
+// none reached yet.
+function currentPhaseIndex(status: Flight["ops_status"]): number {
+  if (status === "BOARDING") return 1;
   if (status === "DEPARTED" || status === "ARRIVED") return 4;
-  if (status === "CANCELLED") return 0;
-  return 1;
+  if (status === "CANCELLED") return -1;
+  return 0;
 }
 
 function fmtCardDate(std: string): string {
@@ -54,31 +57,36 @@ function defaultStatusKey(status: Flight["ops_status"]): string {
 }
 
 export function FlightCardHeader({ flight, activeTab, dirty, onSave, onAction }: Props) {
-  const activeCount = activePhaseCount(flight.ops_status);
+  const currentPhase = currentPhaseIndex(flight.ops_status);
   const [statusKey, setStatusKey] = useState(() => defaultStatusKey(flight.ops_status));
 
   return (
     <div className="flight-card-head">
-      <div className="flight-card-id">
-        <div className="flight-card-number">
-          {flight.carrier_code}
-          {flight.flight_number}
+      <div className="flight-card-head-start">
+        <div className="flight-card-id">
+          <div className="flight-card-number">
+            {flight.carrier_code}
+            {flight.flight_number}
+          </div>
+          <div className="flight-card-route">
+            {flight.origin} → {flight.destination}
+          </div>
+          <div className="flight-card-date">{fmtCardDate(flight.std)}</div>
         </div>
-        <div className="flight-card-route">
-          {flight.origin} → {flight.destination}
-        </div>
-        <div className="flight-card-date">{fmtCardDate(flight.std)}</div>
+
+        <FlightStatusSelect value={statusKey} onChange={setStatusKey} />
       </div>
 
-      <FlightStatusSelect value={statusKey} onChange={setStatusKey} />
-
       <div className="flight-status-group">
-        {PHASES.map((p, i) => (
-          <div key={p.key} className={`flight-status-chip ${i < activeCount ? "active" : ""}`}>
-            <div className="flight-status-label">{p.label}</div>
-            <div className="flight-status-range">{fmtWindow(flight.std, p.fromMin, p.toMin)}</div>
-          </div>
-        ))}
+        {PHASES.map((p, i) => {
+          const state = i < currentPhase ? "past" : i === currentPhase ? "active" : "";
+          return (
+            <div key={p.key} className={`flight-status-chip ${state}`}>
+              <div className="flight-status-label">{p.label}</div>
+              <div className="flight-status-range">{fmtWindow(flight.std, p.fromMin, p.toMin)}</div>
+            </div>
+          );
+        })}
       </div>
 
       <div className="flight-card-actions">

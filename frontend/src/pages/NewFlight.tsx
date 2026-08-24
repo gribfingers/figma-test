@@ -6,8 +6,7 @@ import { Select } from "../components/Select";
 import { DateTimePicker } from "../components/DateTimePicker";
 import { PlaneIcon } from "../components/Icon";
 import { useRegisterTab } from "../tabs";
-
-const AIRCRAFT_TYPES = ["A320", "B738"];
+import { AIRCRAFT_TYPES } from "../aircraftTypes";
 
 const AGREEMENT_TYPES = [
   { value: "codeshare", label: "Codeshare" },
