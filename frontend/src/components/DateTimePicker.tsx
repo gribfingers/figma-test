@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { usePopoverPosition } from "../usePopoverPosition";
 import { CalendarIcon, ChevronLeftIcon, ChevronRightIcon } from "./Icon";
 import { Select } from "./Select";
 
@@ -60,10 +62,12 @@ function startWeekday(year: number, month: number): number {
 export function DateTimePicker({ label, value, onChange, disabled, error, style }: Props) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const parsed = parseValue(value);
   const today = new Date();
   const [viewYear, setViewYear] = useState(parsed?.year ?? today.getFullYear());
   const [viewMonth, setViewMonth] = useState(parsed?.month ?? today.getMonth());
+  const rect = usePopoverPosition(rootRef, open);
 
   useEffect(() => {
     if (!open) return;
@@ -75,7 +79,10 @@ export function DateTimePicker({ label, value, onChange, disabled, error, style 
   useEffect(() => {
     if (!open) return;
     function onDocMouseDown(e: MouseEvent) {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      if (rootRef.current?.contains(target)) return;
+      if (menuRef.current?.contains(target)) return;
+      setOpen(false);
     }
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") setOpen(false);
@@ -153,8 +160,14 @@ export function DateTimePicker({ label, value, onChange, disabled, error, style 
       </button>
       <label>{label}</label>
       <CalendarIcon size={16} className="select-chevron" />
-      {open && !disabled && (
-        <div className="datetime-menu" role="dialog">
+      {open && !disabled && rect &&
+        createPortal(
+          <div
+            ref={menuRef}
+            className="datetime-menu"
+            role="dialog"
+            style={{ position: "fixed", top: rect.top, left: rect.left }}
+          >
           <div className="dt-cal-header">
             <button type="button" className="dt-nav" onClick={() => shiftMonth(-1)} aria-label="Previous month">
               <ChevronLeftIcon size={16} />
@@ -187,8 +200,9 @@ export function DateTimePicker({ label, value, onChange, disabled, error, style 
             <Select label="Hour" value={parsed ? pad(parsed.hour) : "00"} onChange={setHour} options={HOURS} />
             <Select label="Min" value={parsed ? pad(Math.floor(parsed.minute / 30) * 30) : "00"} onChange={setMinute} options={MINUTES} />
           </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

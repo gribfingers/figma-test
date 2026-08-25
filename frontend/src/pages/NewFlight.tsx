@@ -44,6 +44,7 @@ export function NewFlight() {
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
   const [std, setStd] = useState("");
+  const [sta, setSta] = useState("");
   const [terminalFrom, setTerminalFrom] = useState("");
   const [terminalTo, setTerminalTo] = useState("");
   const [checkinDesk, setCheckinDesk] = useState("");
@@ -69,6 +70,7 @@ export function NewFlight() {
         origin,
         destination,
         std: new Date(std).toISOString(),
+        sta: sta ? new Date(sta).toISOString() : undefined,
         aircraft_type: aircraftType,
       });
       navigate(`/flights/${flight.id}`);
@@ -167,7 +169,8 @@ export function NewFlight() {
                   />
                 </Field>
               </div>
-              <div className="grid-2" style={{ marginTop: 12 }}>
+              <div className="grid-3" style={{ marginTop: 12 }}>
+                <DateTimePicker label="Arrival date/time" value={sta} onChange={setSta} />
                 <Field label="Gate">
                   <input value={gate} onChange={(e) => setGate(digitsOnly(e.target.value, 3))} placeholder=" " />
                 </Field>
