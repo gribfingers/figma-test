@@ -2,6 +2,7 @@ import { useState } from "react";
 import { api, Passenger, SeatCell } from "../../api";
 import { PassengerExtra, asvcForPassenger, parsePassengerExtra } from "../../paxExtra";
 import { parseSeatExtra } from "../../seatExtra";
+import { useToast } from "../../toast";
 import { CloseIcon } from "../Icon";
 import { Modal } from "../Modal";
 import { Field } from "../Field";
@@ -57,6 +58,7 @@ function draftTrConflict(d: PaxDraft): boolean {
 export function PassengerDetailModal({ kind, flightId, passenger, seats, onSeatUpdated, onClose, onUpdated }: Props) {
   const [draft, setDraft] = useState<PaxDraft>(() => paxDraftFrom(passenger));
   const [saving, setSaving] = useState(false);
+  const { showToast } = useToast();
 
   const seatCell = passenger.seat ? seats.find((s) => s.seat === passenger.seat) ?? null : null;
   const [seatFlags, setSeatFlags] = useState(() => {
@@ -78,6 +80,7 @@ export function PassengerDetailModal({ kind, flightId, passenger, seats, onSeatU
         }
       }
       onUpdated(updated);
+      showToast("Changes saved");
       onClose();
     } finally {
       setSaving(false);

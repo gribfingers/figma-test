@@ -205,19 +205,19 @@ export function SummaryFields({ draft, onChange, seat }: FieldsProps & { seat?: 
         )}
       </div>
 
-      <div style={{ display: "flex", gap: 12 }}>
-        <label style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 16 }}>
+      <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+        <label className="checkbox-row" style={{ marginBottom: 16 }}>
           <input type="checkbox" checked={draft.wl} onChange={(e) => onChange({ ...draft, wl: e.target.checked })} />
           WL
         </label>
-        <label style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 16 }}>
+        <label className="checkbox-row" style={{ marginBottom: 16 }}>
           <input type="checkbox" checked={draft.pl} onChange={(e) => onChange({ ...draft, pl: e.target.checked })} />
           PL
         </label>
         <Field label="Type" style={{ width: 100 }}>
           <input value={draft.type} onChange={(e) => onChange({ ...draft, type: e.target.value.toUpperCase() })} placeholder=" " maxLength={3} />
         </Field>
-        <label style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 16 }}>
+        <label className="checkbox-row" style={{ marginBottom: 16 }}>
           <input type="checkbox" checked={draft.iapp} onChange={(e) => onChange({ ...draft, iapp: e.target.checked })} />
           iAPP
         </label>
@@ -313,8 +313,8 @@ export function RemarksFields({ draft, onChange }: FieldsProps) {
         <label>SSR (remarks)</label>
         <div className="ssr-tags">
           {SSR_OPTIONS.map((code) => (
-            <label key={code} style={{ display: "inline-flex", alignItems: "center", gap: 4, marginBottom: 0 }}>
-              <input type="checkbox" checked={draft.ssr.includes(code)} onChange={() => onChange(toggleSsr(draft, code))} style={{ width: "auto" }} />
+            <label key={code} className="checkbox-row" style={{ marginBottom: 0 }}>
+              <input type="checkbox" checked={draft.ssr.includes(code)} onChange={() => onChange(toggleSsr(draft, code))} />
               <span className="mono">{code}</span>
             </label>
           ))}

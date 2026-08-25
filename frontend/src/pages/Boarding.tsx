@@ -4,6 +4,7 @@ import { api, Flight, Passenger } from "../api";
 import { ArrowBackIcon } from "../components/Icon";
 import { SortTh, useSort } from "../components/SortTh";
 import { useRegisterTab } from "../tabs";
+import { useToast } from "../toast";
 
 const STATUS_BADGE: Record<string, string> = {
   BOARDED: "ok",
@@ -33,6 +34,7 @@ export function Boarding() {
   const [scanValue, setScanValue] = useState("");
   const [message, setMessage] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
   const [manifest, setManifest] = useState<{ label: string; text: string } | null>(null);
+  const { showToast } = useToast();
 
   function refresh() {
     api.getFlight(fid).then(setFlight);
@@ -81,6 +83,7 @@ export function Boarding() {
     setFlight(updated);
     setManifest({ label: "PFS (final list after flight close-out)", text: pfs });
     refresh();
+    showToast("Flight closed");
   }
 
   async function showPnl() {
@@ -164,12 +167,12 @@ export function Boarding() {
           <tbody>
             {sortedPassengers.map((p) => (
               <tr key={p.id}>
-                <td className="mono">{p.checkin_sequence ?? "—"}</td>
+                <td className="mono">{p.checkin_sequence}</td>
                 <td className="mono">{p.record_locator}</td>
                 <td>{p.surname}/{p.given_name}{p.infant ? " 👶" : ""}</td>
-                <td className="mono">{p.seat ?? "—"}</td>
+                <td className="mono">{p.seat}</td>
                 <td className="mono">{(p.ssr ?? []).join(", ")}</td>
-                <td><span className={`chip middle ${p.checkin_status === "CHECKED_IN" ? "ok" : "muted"}`}>{p.checkin_status === "CHECKED_IN" ? "OK" : "—"}</span></td>
+                <td>{p.checkin_status === "CHECKED_IN" && <span className="chip middle ok">OK</span>}</td>
                 <td><span className={`chip middle ${STATUS_BADGE[p.boarding_status]}`}>{p.boarding_status}</span></td>
                 <td style={{ display: "flex", gap: 6 }}>
                   {p.checkin_status === "CHECKED_IN" && p.boarding_status === "NOT_BOARDED" && !closed && (

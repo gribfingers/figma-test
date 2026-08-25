@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api, Flight } from "../api";
 import { useRegisterTab } from "../tabs";
+import { useToast } from "../toast";
 import { FlightCardHeader } from "../components/flightcard/FlightCardHeader";
 import { FlightAction } from "../components/flightcard/FlightActionsMenu";
 import { MainTab } from "../components/flightcard/MainTab";
@@ -31,6 +32,7 @@ export function FlightCard() {
   const [draft, setDraft] = useState<MainDraft | null>(null);
   const [manifest, setManifest] = useState<{ label: string; text: string } | null>(null);
   const [error, setError] = useState("");
+  const { showToast } = useToast();
 
   useEffect(() => {
     api.getFlight(fid).then((f) => {
@@ -71,6 +73,7 @@ export function FlightCard() {
       });
       setFlight(updated);
       setDraft(draftFromFlight(updated));
+      showToast("Changes saved");
     } catch (e: any) {
       setError(e.message);
     }
@@ -98,6 +101,7 @@ export function FlightCard() {
         setFlight(updated);
         setDraft(draftFromFlight(updated));
         setManifest({ label: "PFS (final list after flight close-out)", text: pfs });
+        showToast("Flight closed");
       }
     } catch (e: any) {
       setError(e.message);

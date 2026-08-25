@@ -16,6 +16,8 @@ interface Props {
   cabinFeatures?: CabinFeature[];
   /** Fires when an occupied seat is left-clicked — lets the caller e.g. highlight/scroll to that passenger's row. */
   onSelectOccupied?: (seat: SeatCell) => void;
+  /** Seat codes the passenger currently being assigned/swapped can't legally sit in (e.g. an infant/child in an exit row) — shown dimmed and unclickable. */
+  disabledSeats?: Set<string>;
 }
 
 const LETTER_ORDER = ["A", "B", "C", "D", "E", "F"];
@@ -76,6 +78,7 @@ export function SeatMapGrid({
   visibleLayers,
   cabinFeatures,
   onSelectOccupied,
+  disabledSeats,
 }: Props) {
   const rows = new Map<number, SeatCell[]>();
   for (const s of seats) {
@@ -136,12 +139,14 @@ export function SeatMapGrid({
                 const isChild = age != null && age < 18;
                 const attr = isChild ? null : primaryAttr(extra, visibleLayers);
                 const blocked = extra.hardBlock;
+                const ineligible = disabledSeats?.has(s.seat) ?? false;
                 const classes = [
                   "seat",
                   `seat-${state.replace("_", "-")}`,
                   s.seat === selected ? "selected" : "",
                   s.exit_row ? "exit" : "",
                   blocked ? "blocked" : "",
+                  ineligible ? "picker-disabled" : "",
                 ].filter(Boolean).join(" ");
                 const showAisle = letter === "C"; // 3-3 narrow-body layout aisle after column C
                 const Icon = isChild ? SeatChildIcon : attr?.icon;
@@ -162,7 +167,7 @@ export function SeatMapGrid({
                       }
                       onClick={() => {
                         if (s.passenger_id) onSelectOccupied?.(s);
-                        else if (!blocked) onSelect?.(s.seat);
+                        else if (!blocked && !ineligible) onSelect?.(s.seat);
                       }}
                       onContextMenu={(e) => {
                         if (!onEditSeat) return;

@@ -66,7 +66,7 @@ export function ageYears(dob: string | null): number {
 
 export function ageFromDob(dob: string | null): string {
   const age = ageYears(dob);
-  return age < 0 ? "—" : String(age);
+  return age < 0 ? "" : String(age);
 }
 
 /** IATA infant definition: under 2 years old — derived from DOB rather than a manually-set flag. */

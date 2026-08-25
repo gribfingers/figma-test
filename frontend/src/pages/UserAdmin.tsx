@@ -163,7 +163,7 @@ export function UserAdmin() {
                 <tr key={u.id}>
                   <td className="mono">{u.login}</td>
                   <td>{u.first_name} {u.last_name}</td>
-                  <td>{u.company ?? "—"}</td>
+                  <td>{u.company}</td>
                   <td>{u.role === "superadmin" ? "Superadmin" : "User"}</td>
                   <td style={{ textAlign: "center" }}>{u.role === "superadmin" || u.can_edit ? "✓" : ""}</td>
                   <td className="mono">{u.created_at.slice(0, 10)}</td>
@@ -229,7 +229,7 @@ export function UserAdmin() {
                 options={[{ value: "user", label: "User" }, { value: "superadmin", label: "Superadmin" }]}
               />
               {addDraft.role === "user" && (
-                <label style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 16 }}>
+                <label className="checkbox-row" style={{ marginBottom: 16 }}>
                   <input
                     type="checkbox"
                     checked={addDraft.can_edit}
@@ -278,7 +278,7 @@ export function UserAdmin() {
                 options={[{ value: "user", label: "User" }, { value: "superadmin", label: "Superadmin" }]}
               />
               {editDraft.role === "user" && (
-                <label style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 16 }}>
+                <label className="checkbox-row" style={{ marginBottom: 16 }}>
                   <input
                     type="checkbox"
                     checked={editDraft.can_edit}

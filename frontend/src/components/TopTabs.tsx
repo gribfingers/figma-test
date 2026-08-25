@@ -4,7 +4,7 @@ import { api } from "../api";
 import { useTabs } from "../tabs";
 import { useAuth } from "../auth";
 import { userAvatarColor, userInitials } from "../userDisplay";
-import { BellIcon, ChatIcon, CloseIcon, HelpIcon } from "./Icon";
+import { ChatIcon, CloseIcon } from "./Icon";
 import { UserPanel } from "./UserPanel";
 import { Messenger } from "./Messenger";
 
@@ -76,14 +76,7 @@ export function TopTabs() {
       </div>
       <div className="tabs-fill" />
       <div className="tabs-actions">
-        {/* Help and notifications aren't wired up yet — placeholders for now. */}
-        <button type="button" className="tabs-icon-btn" title="Help">
-          <HelpIcon size={18} />
-        </button>
         <MoscowClock />
-        <button type="button" className="tabs-icon-btn" title="Notifications">
-          <BellIcon size={18} />
-        </button>
         {user && (
           <button
             type="button"

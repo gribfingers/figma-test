@@ -155,7 +155,7 @@ body {
   justify-content: center;
   gap: 8px;
   height: 56px;
-  padding: 22px 12px;
+  padding: 22px 16px;
   box-sizing: border-box;
   background: #ffffff;
   border-right: 1px solid var(--panel-border);
@@ -188,7 +188,7 @@ body {
 .top-tab-close {
   all: unset;
   box-sizing: border-box;
-  display: none;
+  display: flex;
   align-items: center;
   justify-content: center;
   width: 20px;
@@ -198,8 +198,13 @@ body {
   color: #707d95;
   cursor: pointer;
   flex-shrink: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.1s ease;
 }
-.top-tab:hover .top-tab-close { display: flex; }
+/* Space for the close button is always reserved (opacity, not display) so
+   hovering a closable tab never changes its width. */
+.top-tab:hover .top-tab-close { opacity: 1; pointer-events: auto; }
 .top-tab.selected .top-tab-close { background: #f4f7fa; }
 /* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
 .tabs-list .top-tab-close:hover { background: var(--field-bg); color: var(--field-value); }
@@ -842,6 +847,60 @@ button.icon-button:hover { background: #fafbfc; }
   font-size: 13px;
 }
 
+/* App-wide toast stack (toast.tsx) — fixed to the viewport, so it survives
+   navigations that happen right after a toast fires (e.g. New Flight
+   redirecting to the created flight's page). */
+.toast-stack {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 8px;
+  z-index: 200;
+  pointer-events: none;
+}
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 280px;
+  max-width: 480px;
+  padding: 12px 14px 12px 16px;
+  background: #181f24;
+  color: #ffffff;
+  border-radius: 6px;
+  border-left: 3px solid var(--accent);
+  box-shadow: 0 8px 40px -12px rgba(24, 31, 36, 0.4);
+  font-size: 13px;
+  line-height: 1.4;
+  pointer-events: auto;
+  animation: toast-in 0.16s ease;
+}
+.toast span { flex: 1; }
+.toast-success { border-left-color: var(--ok); }
+.toast-error { border-left-color: var(--danger); }
+.toast-close {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.toast-close:hover { background: rgba(255, 255, 255, 0.14); color: #ffffff; }
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .login-page { height: 100%; display: flex; align-items: center; justify-content: center; background: var(--bg); }
 .login-card {
   width: 340px;
@@ -1122,6 +1181,9 @@ button.icon-button:hover { background: #fafbfc; }
 .seat-boarded { background: #6c982b; border-color: transparent; cursor: default; }
 .seat.selected { background: var(--accent); border-color: var(--accent); }
 .seat.blocked { cursor: not-allowed; }
+/* Seats the passenger currently being assigned/changed can't legally sit in
+   (see PassengersTab's disabledSeats) — dimmed and inert while picking. */
+.seat.picker-disabled { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
 
 /* Presit/Booked hold markers: 6px color bar on the seat's bottom edge (left bar rotated 90° CCW). */
 .seat-subtype-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 6px; }
@@ -1387,7 +1449,7 @@ a { color: var(--accent); }
 .apis-toggle.on { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
 
 .checkbox-list { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
-.checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--field-value); cursor: pointer; }
+.checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--field-value); cursor: pointer; }
 .checkbox-row input[type="checkbox"], .checkbox-row input[type="radio"] { width: 16px; height: 16px; margin: 0; cursor: pointer; }
 
 .main-tab-side { display: flex; flex-direction: column; }
@@ -1421,8 +1483,12 @@ a { color: var(--accent); }
 .transfer-pax-item { padding-left: 30px; }
 .transfer-pax-item:nth-child(even) { background: var(--field-bg); }
 .transfer-pax-empty { color: var(--muted); justify-content: center; }
-.transfer-pax-actions { display: flex; gap: 2px; flex-shrink: 0; }
 .transfer-detail-actions { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
+
+/* Fixed-width seat chip (Transfers tab passenger rows, Passengers tab Seat
+   column) — same box for "1A" and "30C" alike, never resizing with the
+   digit/letter count. */
+.seat-chip { box-sizing: border-box; width: 40px; justify-content: center; flex-shrink: 0; }
 
 .transfer-flight-options { border: 1px solid var(--panel-border); border-radius: 4px; overflow: hidden; margin-bottom: 4px; }
 .transfer-flight-option { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--panel-border); cursor: pointer; }
@@ -1692,7 +1758,7 @@ tr.row-hover { cursor: pointer; }
 .seatmap-zoom-wrap { transform-origin: top center; width: fit-content; }
 
 .seat-editor { display: flex; flex-direction: column; gap: 6px; padding-bottom: 4px; }
-.seat-editor-check { display: flex; align-items: center; gap: 8px; margin-bottom: 0; font-size: 13px; color: var(--field-value); }
+.seat-editor-check { display: flex; align-items: center; gap: 8px; margin-bottom: 0; font-size: 14px; color: var(--field-value); }
 .seat-editor-row { display: flex; align-items: center; gap: 16px; margin-top: 6px; }
 
 @media (max-width: 640px) {

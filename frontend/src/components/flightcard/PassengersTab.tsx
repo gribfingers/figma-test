@@ -4,8 +4,10 @@ import { cabinFeaturesFor } from "../../cabinLayout";
 import { SeatMapPanel } from "../SeatMapPanel";
 import { ArrowBackIcon, ArrowNestedIcon, ChildIcon, InfantIcon } from "../Icon";
 import { SortTh, useSort } from "../SortTh";
-import { FlagStatus, ageFromDob, ageYears, asvcForPassenger, asvcStatus, commentsStatus, etStatus, ffpStatus, parsePassengerExtra, trStatus } from "../../paxExtra";
+import { FlagStatus, ageFromDob, ageYears, asvcForPassenger, asvcStatus, commentsStatus, etStatus, ffpStatus, isInfant, parsePassengerExtra, trStatus } from "../../paxExtra";
 import { PassengerDetailModal } from "./PassengerModals";
+import { formatSeatDisplay } from "../../seatExtra";
+import { useToast } from "../../toast";
 import {
   BaggageFields,
   DocumentsFields,
@@ -70,7 +72,7 @@ function statusLabel(p: Passenger): string {
 }
 function statusChip(p: Passenger) {
   const label = statusLabel(p);
-  if (label === "—") return "—";
+  if (label === "—") return "";
   return <span className={`chip middle ${label === "Offloaded" ? "danger" : "ok"}`}>{label}</span>;
 }
 
@@ -118,6 +120,7 @@ export function PassengersTab({ flight }: Props) {
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState("");
   const contextMenuRef = useRef<HTMLUListElement>(null);
+  const { showToast } = useToast();
 
   const [quickFilter, setQuickFilter] = useState<QuickFilter>("all");
   const [serviceFilter, setServiceFilter] = useState<string[]>([]);
@@ -169,10 +172,12 @@ export function PassengersTab({ flight }: Props) {
 
   async function handleAssignSeatClick(seatCode: string) {
     if (!seatAction || seatAction.mode !== "assign") return;
+    const wasSeated = !!seatAction.passenger.seat;
     try {
       await api.changeSeat(seatAction.passenger.id, seatCode);
       refreshSeating();
       setSeatAction(null);
+      showToast(wasSeated ? `Seat changed to ${formatSeatDisplay(seatCode)}` : `Seat ${formatSeatDisplay(seatCode)} assigned`);
     } catch (e: any) {
       alert(e.message);
     }
@@ -189,6 +194,7 @@ export function PassengersTab({ flight }: Props) {
         await api.swapSeats(seatAction.passenger.id, s.passenger_id);
         refreshSeating();
         setSeatAction(null);
+        showToast("Seats swapped");
       } catch (e: any) {
         alert(e.message);
       }
@@ -203,6 +209,7 @@ export function PassengersTab({ flight }: Props) {
     try {
       await api.deletePassenger(flight.id, p.id);
       loadPassengers();
+      showToast("Passenger deleted");
     } catch (e: any) {
       alert(e.message);
     }
@@ -224,6 +231,7 @@ export function PassengersTab({ flight }: Props) {
       await api.addPassenger(flight.id, paxDraftToPayload(addDraft));
       setAddOpen(false);
       loadPassengers();
+      showToast("Passenger added");
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -265,6 +273,15 @@ export function PassengersTab({ flight }: Props) {
 
   const activeSeat = passengers.find((p) => p.id === activeId)?.seat ?? null;
   const seatByCode = new Map(seats.map((s) => [s.seat, s]));
+
+  // Exit-row seats are off-limits for infants/children (real IATA restriction) —
+  // dim and disable them while picking a seat to assign/change for one.
+  const disabledSeats = useMemo(() => {
+    if (!seatAction || seatAction.mode !== "assign") return undefined;
+    const restricted = !!seatAction.passenger.infant || isInfant(seatAction.passenger.dob) || parsePassengerExtra(seatAction.passenger).type === "CHD";
+    if (!restricted) return undefined;
+    return new Set(seats.filter((s) => s.exit_row).map((s) => s.seat));
+  }, [seatAction, seats]);
 
   // Selecting a passenger (either by clicking their row or clicking their
   // occupied seat on the map) scrolls both the row and the seat into view,
@@ -356,7 +373,7 @@ export function PassengersTab({ flight }: Props) {
             <tbody>
               {rows.map(({ passenger: p, nested, hasInfant }) => {
                 const seat = p.seat ? seatByCode.get(p.seat) : undefined;
-                const cls = seat ? (seat.cabin_class === "J" ? "C" : "Y") : "—";
+                const cls = seat ? (seat.cabin_class === "J" ? "C" : "Y") : "";
                 const ssr = p.ssr ?? [];
                 const extra = parsePassengerExtra(p);
                 return (
@@ -410,13 +427,15 @@ export function PassengersTab({ flight }: Props) {
                         </span>
                       </td>
                     )}
-                    {visibleColumns.has("seat") && <td className="mono">{p.seat ?? "—"}</td>}
+                    {visibleColumns.has("seat") && (
+                      <td>{p.seat && <span className="mono chip middle muted seat-chip">{formatSeatDisplay(p.seat)}</span>}</td>
+                    )}
                     {visibleColumns.has("class") && <td>{cls}</td>}
                     {visibleColumns.has("status") && <td>{statusChip(p)}</td>}
                     {visibleColumns.has("services") && (
                       <td>
                         {ssr.length === 0 ? (
-                          "—"
+                          ""
                         ) : (
                           <span className="pax-service-chips">
                             <span className="chip small muted mono">{ssr[0]}</span>
@@ -430,19 +449,19 @@ export function PassengersTab({ flight }: Props) {
                       </td>
                     )}
                     {visibleColumns.has("asvc") && <td className="mono" style={{ color: "var(--muted)" }}>ASVC</td>}
-                    {visibleColumns.has("wl") && <td>{extra.wl ? "✓" : "—"}</td>}
-                    {visibleColumns.has("pl") && <td>{extra.pl ? "✓" : "—"}</td>}
-                    {visibleColumns.has("type") && <td className="mono">{extra.type || "—"}</td>}
-                    {visibleColumns.has("iapp") && <td>{extra.iapp ? "✓" : "—"}</td>}
+                    {visibleColumns.has("wl") && <td>{extra.wl ? "✓" : ""}</td>}
+                    {visibleColumns.has("pl") && <td>{extra.pl ? "✓" : ""}</td>}
+                    {visibleColumns.has("type") && <td className="mono">{extra.type}</td>}
+                    {visibleColumns.has("iapp") && <td>{extra.iapp ? "✓" : ""}</td>}
                     {visibleColumns.has("inbound") && (
-                      <td className="pax-route-cell" onClick={(e) => { e.stopPropagation(); setModal({ kind: "flags", passenger: p }); }}>{extra.inbound || "—"}</td>
+                      <td className="pax-route-cell" onClick={(e) => { e.stopPropagation(); setModal({ kind: "flags", passenger: p }); }}>{extra.inbound}</td>
                     )}
                     {visibleColumns.has("outbound") && (
-                      <td className="pax-route-cell" onClick={(e) => { e.stopPropagation(); setModal({ kind: "flags", passenger: p }); }}>{extra.outbound || "—"}</td>
+                      <td className="pax-route-cell" onClick={(e) => { e.stopPropagation(); setModal({ kind: "flags", passenger: p }); }}>{extra.outbound}</td>
                     )}
-                    {visibleColumns.has("bag") && <td className="mono">{p.bag_count > 0 ? `${p.bag_count}/${p.bag_weight_kg}` : "—"}</td>}
+                    {visibleColumns.has("bag") && <td className="mono">{p.bag_count > 0 ? `${p.bag_count}/${p.bag_weight_kg}` : ""}</td>}
                     {visibleColumns.has("age") && <td>{ageFromDob(p.dob)}</td>}
-                    {visibleColumns.has("gender") && <td>{p.gender ?? "—"}</td>}
+                    {visibleColumns.has("gender") && <td>{p.gender}</td>}
                   </tr>
                 );
               })}
@@ -485,6 +504,7 @@ export function PassengersTab({ flight }: Props) {
             onHide={() => setMapHidden(true)}
             cabinFeatures={cabinFeatures}
             onSelectOccupied={handleOccupiedSeatClick}
+            disabledSeats={disabledSeats}
           />
         </div>
       )}

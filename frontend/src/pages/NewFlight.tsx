@@ -7,6 +7,7 @@ import { AirportSelect } from "../components/AirportSelect";
 import { PlaneIcon } from "../components/Icon";
 import { combineDateAndTime } from "../components/flightcard/mainDraft";
 import { useRegisterTab } from "../tabs";
+import { useToast } from "../toast";
 import { AIRCRAFT_TYPES } from "../aircraftTypes";
 import { alphanumericUpper, dateInput, digitsOnly, timeInput } from "../validation";
 
@@ -48,6 +49,7 @@ const CHECKS = [
 export function NewFlight() {
   useRegisterTab("New flight");
   const navigate = useNavigate();
+  const { showToast } = useToast();
   const [error, setError] = useState("");
 
   const [carrierCode, setCarrierCode] = useState("SU");
@@ -91,6 +93,7 @@ export function NewFlight() {
         aircraft_type: aircraftType,
       });
       navigate(`/flights/${flight.id}`);
+      showToast("Flight created");
     } catch (e: any) {
       setError(e.message);
     }

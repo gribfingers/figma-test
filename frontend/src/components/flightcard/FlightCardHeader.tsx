@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Flight } from "../../api";
+import { FLIGHT_STATUSES } from "../../flightStatuses";
+import { useToast } from "../../toast";
 import { FlightStatusSelect } from "./FlightStatusSelect";
 import { FlightAction, FlightActionsMenu } from "./FlightActionsMenu";
 
@@ -72,6 +74,15 @@ export function FlightCardHeader({ flight, activeTab, dirty, onSave, onAction }:
   }, []);
   const currentPhase = currentPhaseIndex(flight, now);
   const [statusKey, setStatusKey] = useState(() => defaultStatusKey(flight.ops_status));
+  const { showToast } = useToast();
+
+  function handleStatusChange(key: string) {
+    if (key === statusKey) return;
+    const from = FLIGHT_STATUSES.find((s) => s.key === statusKey)?.labelEn ?? statusKey;
+    const to = FLIGHT_STATUSES.find((s) => s.key === key)?.labelEn ?? key;
+    setStatusKey(key);
+    showToast(`Flight status changed from ${from} to ${to}`);
+  }
 
   return (
     <div className="flight-card-head">
@@ -87,7 +98,7 @@ export function FlightCardHeader({ flight, activeTab, dirty, onSave, onAction }:
           <div className="flight-card-date">{fmtCardDate(flight.std)}</div>
         </div>
 
-        <FlightStatusSelect value={statusKey} onChange={setStatusKey} />
+        <FlightStatusSelect value={statusKey} onChange={handleStatusChange} />
       </div>
 
       <div className="flight-status-group">

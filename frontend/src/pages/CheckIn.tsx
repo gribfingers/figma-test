@@ -9,6 +9,7 @@ import { ArrowBackIcon, SearchIcon } from "../components/Icon";
 import { SortTh, useSort } from "../components/SortTh";
 import { DOCUMENT_TYPES, SSR_OPTIONS } from "../paxExtra";
 import { useRegisterTab } from "../tabs";
+import { useToast } from "../toast";
 
 type ResultSortKey = "pnr" | "passenger" | "status" | "seat";
 const RESULT_SORT_GETTERS: Record<ResultSortKey, (p: Passenger) => string | number> = {
@@ -30,6 +31,7 @@ export function CheckIn() {
   const [seat, setSeat] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [issued, setIssued] = useState<Passenger | null>(null);
+  const { showToast } = useToast();
 
   const [doc, setDoc] = useState({ document_type: "P", document_number: "", nationality: "", dob: "", doc_expiry: "" });
   const [bags, setBags] = useState({ bag_count: 0, bag_weight_kg: 0 });
@@ -73,6 +75,7 @@ export function CheckIn() {
       setIssued(passenger);
       setSelected(passenger);
       refreshSeats();
+      showToast("Passenger checked in");
     } catch (e: any) {
       setError(e.message);
     }
@@ -139,7 +142,7 @@ export function CheckIn() {
                         {p.checkin_status === "CHECKED_IN" ? "Checked in" : "Not checked in"}
                       </span>
                     </td>
-                    <td className="mono">{p.seat ?? "—"}</td>
+                    <td className="mono">{p.seat}</td>
                   </tr>
                 ))}
                 {results.length === 0 && <tr><td colSpan={4} style={{ color: "var(--muted)" }}>No results</td></tr>}
@@ -190,13 +193,12 @@ export function CheckIn() {
                   <label>SSR (special service requests)</label>
                   <div className="ssr-tags">
                     {SSR_OPTIONS.map((code) => (
-                      <label key={code} style={{ display: "inline-flex", alignItems: "center", gap: 4, marginBottom: 0 }}>
+                      <label key={code} className="checkbox-row" style={{ marginBottom: 0 }}>
                         <input
                           type="checkbox"
                           disabled={alreadyCheckedIn}
                           checked={ssr.includes(code)}
                           onChange={() => toggleSsr(code)}
-                          style={{ width: "auto" }}
                         />
                         <span className="mono">{code}</span>
                       </label>

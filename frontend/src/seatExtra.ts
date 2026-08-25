@@ -38,6 +38,13 @@ export interface SeatExtra {
   reserved?: boolean;
 }
 
+/** Row + letter, dropping the row's zero-padding (e.g. "012A" -> "12A") — the stored/keyed code stays 3-digit, this is display-only. */
+export function formatSeatDisplay(seat: string): string {
+  const match = /^(\d+)([A-Za-z])$/.exec(seat);
+  if (!match) return seat;
+  return `${Number(match[1])}${match[2]}`;
+}
+
 export function parseSeatExtra(s: SeatCell): SeatExtra {
   if (!s.extra) return {};
   try {

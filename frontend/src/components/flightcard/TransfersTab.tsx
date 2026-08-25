@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { SortTh, useSort } from "../SortTh";
 import { Modal } from "../Modal";
-import { ArrowBackIcon, CopyIcon, TicketIcon } from "../Icon";
+import { ArrowBackIcon } from "../Icon";
+import { formatSeatDisplay } from "../../seatExtra";
+import { useToast } from "../../toast";
 
 interface TransferPax {
   id: string;
@@ -173,7 +175,7 @@ function ReaccommodateModal({
   names: string[];
   options: TransferRow[];
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: (flight: string) => void;
 }) {
   const [chosen, setChosen] = useState(options[0]?.flight ?? "");
   return (
@@ -184,7 +186,7 @@ function ReaccommodateModal({
       footer={
         <>
           <button type="button" className="tertiary" onClick={onClose}>Close</button>
-          <button type="button" className="tertiary" disabled={!chosen} onClick={onConfirm}>Reaccommodate</button>
+          <button type="button" className="tertiary" disabled={!chosen} onClick={() => onConfirm(chosen)}>Reaccommodate</button>
         </>
       }
     >
@@ -218,6 +220,7 @@ function TransferDetail({
 }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [modal, setModal] = useState<"cancel" | "reaccommodate" | null>(null);
+  const { showToast } = useToast();
   const allPax = paxOf(row);
   const allSelected = allPax.length > 0 && allPax.every((p) => selected.has(p.id));
   const selectedNames = allPax.filter((p) => selected.has(p.id)).map((p) => p.name);
@@ -242,10 +245,19 @@ function TransferDetail({
       return next;
     });
   }
-  function confirmAction() {
+  function confirmCancel() {
+    const count = selected.size;
     onRemovePax(selected);
     setSelected(new Set());
     setModal(null);
+    showToast(`Check-in cancelled for ${count} passenger${count === 1 ? "" : "s"}`);
+  }
+  function confirmReaccommodate(targetFlight: string) {
+    const count = selected.size;
+    onRemovePax(selected);
+    setSelected(new Set());
+    setModal(null);
+    showToast(`${count} passenger${count === 1 ? "" : "s"} reaccommodated to ${targetFlight}`);
   }
 
   return (
@@ -264,10 +276,6 @@ function TransferDetail({
             <input type="checkbox" checked={allSelected} onChange={toggleAll} />
             All passengers
           </label>
-          <span className="transfer-pax-actions">
-            <button type="button" className="icon-button" title="Export ticket"><TicketIcon size={16} /></button>
-            <button type="button" className="icon-button" title="Copy"><CopyIcon size={16} /></button>
-          </span>
         </div>
 
         {row.groups.map((g) => {
@@ -280,10 +288,6 @@ function TransferDetail({
                   <input type="checkbox" checked={groupSelected} onChange={() => toggleGroup(g)} />
                   PNR {g.pnr}
                 </label>
-                <span className="transfer-pax-actions">
-                  <button type="button" className="icon-button" title="Export ticket"><TicketIcon size={16} /></button>
-                  <button type="button" className="icon-button" title="Copy"><CopyIcon size={16} /></button>
-                </span>
               </div>
               {g.passengers.map((p) => (
                 <div key={p.id} className="transfer-pax-row transfer-pax-item">
@@ -291,12 +295,8 @@ function TransferDetail({
                     <input type="checkbox" checked={selected.has(p.id)} onChange={() => togglePax(p.id)} />
                     {p.name}
                   </label>
-                  <span className="mono chip middle muted">{p.seat}</span>
+                  <span className="mono chip middle muted seat-chip">{formatSeatDisplay(p.seat)}</span>
                   {p.verified && <span className="chip middle ok">VERIFIED</span>}
-                  <span className="transfer-pax-actions">
-                    <button type="button" className="icon-button" title="Export ticket"><TicketIcon size={16} /></button>
-                    <button type="button" className="icon-button" title="Copy"><CopyIcon size={16} /></button>
-                  </span>
                 </div>
               ))}
             </div>
@@ -315,10 +315,10 @@ function TransferDetail({
       </div>
 
       {modal === "cancel" && (
-        <CancelCheckinModal names={selectedNames} onClose={() => setModal(null)} onConfirm={confirmAction} />
+        <CancelCheckinModal names={selectedNames} onClose={() => setModal(null)} onConfirm={confirmCancel} />
       )}
       {modal === "reaccommodate" && (
-        <ReaccommodateModal names={selectedNames} options={otherRows} onClose={() => setModal(null)} onConfirm={confirmAction} />
+        <ReaccommodateModal names={selectedNames} options={otherRows} onClose={() => setModal(null)} onConfirm={confirmReaccommodate} />
       )}
     </div>
   );

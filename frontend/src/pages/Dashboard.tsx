@@ -26,7 +26,7 @@ const OPS_STATUS_BADGE: Record<string, string> = {
 };
 
 function formatTime(iso: string | null): string {
-  if (!iso) return "—";
+  if (!iso) return "";
   return new Date(iso).toLocaleTimeString("en-GB", { timeZone: "UTC", hour: "2-digit", minute: "2-digit" });
 }
 
@@ -210,11 +210,11 @@ export function Dashboard() {
                   <td className="mono">{formatTime(f.etd)}</td>
                   <td className="mono">{formatTime(f.sta)}</td>
                   <td className="mono">{formatTime(f.ata)}</td>
-                  <td className="mono">{f.terminal ?? "—"}</td>
-                  <td className="mono">{f.gate ?? "—"}</td>
+                  <td className="mono">{f.terminal}</td>
+                  <td className="mono">{f.gate}</td>
                   <td>{f.aircraft_type}</td>
-                  <td className="mono">{f.aircraft_reg ?? "—"}</td>
-                  <td className="mono">{f.aircraft_version ?? "—"}</td>
+                  <td className="mono">{f.aircraft_reg}</td>
+                  <td className="mono">{f.aircraft_version}</td>
                 </tr>
               ))}
               {visibleFlights.length === 0 && (
