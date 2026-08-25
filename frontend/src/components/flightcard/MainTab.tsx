@@ -62,7 +62,7 @@ export function MainTab({ flight, draft, onChange }: Props) {
   }
 
   return (
-    <div className="grid-2">
+    <div className="grid-2 flight-main-grid">
       <div className="segment-card">
         <div className="segment-endpoints">
           {editingRoute ? (

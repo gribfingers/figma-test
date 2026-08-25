@@ -135,7 +135,7 @@ export function NewFlight() {
 
         <div className="flight-card-body">
           {error && <div className="error-box">{error}</div>}
-          <div className="grid-2">
+          <div className="grid-2 flight-main-grid">
             <div className="segment-card">
               <div className="segment-endpoints">
                 <div className="segment-point-edit">

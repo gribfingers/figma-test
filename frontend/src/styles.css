@@ -1447,11 +1447,19 @@ a { color: var(--accent); }
 }
 
 /* Main tab: single flight segment + editable fields */
+/* The route card (Airport/Date/Time/Terminal ×2, fixed-width fields) needs
+   more room than a plain 50/50 split gives it — the side panel (comment,
+   partner flight, checks) can live with less. */
+.flight-main-grid { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
 .segment-card { border: 1px solid var(--panel-border); border-radius: 4px; padding: 16px; align-self: start; }
-.segment-endpoints { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.segment-endpoints { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; overflow-x: auto; }
 .segment-point { display: flex; align-items: center; gap: 10px; }
 .segment-point.right { flex-direction: row-reverse; }
 .segment-point-edit { display: flex; align-items: center; gap: 8px; }
+/* Never let the Airport/Date/Time/Terminal fields shrink below their set
+   width — .segment-endpoints scrolls horizontally instead of squeezing a
+   field's label into an ellipsis. */
+.segment-point-edit .field2 { flex-shrink: 0; }
 .segment-time { font-size: 20px; font-weight: 800; color: var(--field-value); white-space: nowrap; }
 .segment-duration { color: var(--muted); font-size: 12px; white-space: nowrap; align-self: center; }
 .segment-airports { display: flex; justify-content: space-between; margin-top: 4px; }
