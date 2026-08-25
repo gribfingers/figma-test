@@ -17,6 +17,7 @@ interface Props {
   onToggleHorizontal: () => void;
   onHide: () => void;
   cabinFeatures?: CabinFeature[];
+  onSelectOccupied?: (seat: SeatCell) => void;
 }
 
 const LEGEND_STATES: { cls: string; label: string }[] = [
@@ -52,6 +53,7 @@ export function SeatMapPanel({
   onToggleHorizontal,
   onHide,
   cabinFeatures,
+  onSelectOccupied,
 }: Props) {
   const [zoom, setZoom] = useState(100);
   const [legendOpen, setLegendOpen] = useState(false);
@@ -179,6 +181,7 @@ export function SeatMapPanel({
             onEditSeat={setEditingSeat}
             visibleLayers={visibleLayers}
             cabinFeatures={cabinFeatures}
+            onSelectOccupied={onSelectOccupied}
           />
         </div>
       </div>

@@ -15,6 +15,8 @@ interface Props {
   visibleLayers?: Set<string>;
   /** WC/galley/exit-door blocks to render as extra rows in the cabin, keyed by the seat row they follow. */
   cabinFeatures?: CabinFeature[];
+  /** Fires when an occupied seat is clicked outside edit mode — lets the caller e.g. highlight/scroll to that passenger's row. */
+  onSelectOccupied?: (seat: SeatCell) => void;
 }
 
 const LETTER_ORDER = ["A", "B", "C", "D", "E", "F"];
@@ -67,7 +69,16 @@ function FeatureRow({ type }: { type: CabinFeatureType }) {
  * they mark non-seat filler cells this app's seat map model doesn't
  * generate.
  */
-export function SeatMapGrid({ seats, selected, onSelect, editMode, onEditSeat, visibleLayers, cabinFeatures }: Props) {
+export function SeatMapGrid({
+  seats,
+  selected,
+  onSelect,
+  editMode,
+  onEditSeat,
+  visibleLayers,
+  cabinFeatures,
+  onSelectOccupied,
+}: Props) {
   const rows = new Map<number, SeatCell[]>();
   for (const s of seats) {
     const row = Number(s.seat.slice(0, 3));
@@ -143,6 +154,7 @@ export function SeatMapGrid({ seats, selected, onSelect, editMode, onEditSeat, v
                   <Fragment key={s.seat}>
                     <span
                       className={classes}
+                      data-seat={s.seat}
                       title={
                         s.passenger_id
                           ? `${s.surname}/${s.given_name} (${s.record_locator})${titleBits ? ` — ${titleBits}` : ""}`
@@ -152,7 +164,8 @@ export function SeatMapGrid({ seats, selected, onSelect, editMode, onEditSeat, v
                       }
                       onClick={() => {
                         if (editMode) onEditSeat?.(s);
-                        else if (!s.passenger_id && !blocked) onSelect?.(s.seat);
+                        else if (s.passenger_id) onSelectOccupied?.(s);
+                        else if (!blocked) onSelect?.(s.seat);
                       }}
                     >
                       {subtype !== "none" && <span className={`seat-subtype-bar seat-subtype-${subtype}`} />}

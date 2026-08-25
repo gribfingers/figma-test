@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { api, Flight, Passenger, SeatCell } from "../../api";
 import { cabinFeaturesFor } from "../../cabinLayout";
 import { SeatMapPanel } from "../SeatMapPanel";
@@ -35,7 +35,11 @@ function buildRows(passengers: Passenger[]): PaxRow[] {
   const rows: PaxRow[] = [];
   for (const p of passengers) {
     if (p.infant) continue;
-    const infants = infantsByLocator.get(p.record_locator) ?? [];
+    // Only nest an infant under the first adult on its PNR — without this
+    // filter, an infant shared by multiple adults on the same locator would
+    // be pushed once per adult, producing duplicate rows (and duplicate
+    // React keys, since rows are keyed by passenger id).
+    const infants = (infantsByLocator.get(p.record_locator) ?? []).filter((inf) => !nested.has(inf.id));
     rows.push({ passenger: p, nested: false, hasInfant: infants.length > 0 });
     for (const inf of infants) {
       rows.push({ passenger: inf, nested: true, hasInfant: false });
@@ -121,6 +125,8 @@ export function PassengersTab({ flight }: Props) {
   const [mapHorizontal, setMapHorizontal] = useState(false);
   const [mapHidden, setMapHidden] = useState(false);
   const cabinFeatures = useMemo(() => cabinFeaturesFor(flight.aircraft_type), [flight.aircraft_type]);
+  const rowRefs = useRef(new Map<number, HTMLTableRowElement>());
+  const seatmapRef = useRef<HTMLDivElement>(null);
 
   function handleSeatUpdated(updated: SeatCell) {
     setSeats((prev) => prev.map((s) => (s.seat === updated.seat ? updated : s)));
@@ -149,6 +155,20 @@ export function PassengersTab({ flight }: Props) {
 
   const activeSeat = passengers.find((p) => p.id === activeId)?.seat ?? null;
   const seatByCode = new Map(seats.map((s) => [s.seat, s]));
+
+  // Selecting a passenger (either by clicking their row or clicking their
+  // occupied seat on the map) scrolls both the row and the seat into view,
+  // whichever side wasn't already visible — scrollIntoView is a no-op when
+  // the element is already in view, so this is safe to run from both ends.
+  useEffect(() => {
+    if (activeId == null) return;
+    rowRefs.current.get(activeId)?.scrollIntoView({ block: "nearest" });
+    if (activeSeat) {
+      seatmapRef.current
+        ?.querySelector(`[data-seat="${activeSeat}"]`)
+        ?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    }
+  }, [activeId, activeSeat]);
 
   const reseatCount = passengers.filter((p) => parsePassengerExtra(p).wl).length;
   const priorityCount = passengers.filter((p) => parsePassengerExtra(p).pl).length;
@@ -231,7 +251,11 @@ export function PassengersTab({ flight }: Props) {
                 return (
                   <tr
                     key={p.id}
-                    className={`clickable ${nested ? "pax-row-nested" : ""}`}
+                    ref={(el) => {
+                      if (el) rowRefs.current.set(p.id, el);
+                      else rowRefs.current.delete(p.id);
+                    }}
+                    className={`clickable ${nested ? "pax-row-nested" : ""} ${p.id === activeId ? "pax-row-active" : ""}`}
                     onClick={() => setActiveId(p.id)}
                   >
                     <td>
@@ -322,7 +346,7 @@ export function PassengersTab({ flight }: Props) {
           Seat map
         </button>
       ) : (
-        <div className="passengers-seatmap">
+        <div className="passengers-seatmap" ref={seatmapRef}>
           <SeatMapPanel
             flightId={flight.id}
             seats={seats}
@@ -332,6 +356,9 @@ export function PassengersTab({ flight }: Props) {
             onToggleHorizontal={() => setMapHorizontal((h) => !h)}
             onHide={() => setMapHidden(true)}
             cabinFeatures={cabinFeatures}
+            onSelectOccupied={(s) => {
+              if (s.passenger_id != null) setActiveId(s.passenger_id);
+            }}
           />
         </div>
       )}

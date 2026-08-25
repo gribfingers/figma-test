@@ -105,7 +105,7 @@ export function FlightCard() {
   }
 
   return (
-    <div>
+    <div className="flight-card-page">
       {error && <div className="error-box">{error}</div>}
       <div className="flight-card-panel">
         <FlightCardHeader flight={flight} activeTab={tab} dirty={dirty} onSave={handleSave} onAction={handleAction} />
