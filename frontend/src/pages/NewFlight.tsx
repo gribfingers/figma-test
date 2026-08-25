@@ -144,7 +144,7 @@ export function NewFlight() {
                   <Field label="Time" style={{ width: 66 }}>
                     <input value={depTime} onChange={(e) => setDepTime(maskTimeInput(e.target.value))} placeholder=" " inputMode="numeric" />
                   </Field>
-                  <Field label="Terminal" style={{ width: 84 }}>
+                  <Field label="Terminal" style={{ width: 96 }}>
                     <input
                       value={terminalFrom}
                       onChange={(e) => setTerminalFrom(alphanumericUpper(e.target.value, 2))}
@@ -159,7 +159,7 @@ export function NewFlight() {
                   <Field label="Time" style={{ width: 66 }}>
                     <input value={arrTime} onChange={(e) => setArrTime(maskTimeInput(e.target.value))} placeholder=" " inputMode="numeric" />
                   </Field>
-                  <Field label="Terminal" style={{ width: 84 }}>
+                  <Field label="Terminal" style={{ width: 96 }}>
                     <input
                       value={terminalTo}
                       onChange={(e) => setTerminalTo(alphanumericUpper(e.target.value, 2))}

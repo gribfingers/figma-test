@@ -583,6 +583,9 @@ tr.row-hover:hover { background: var(--accent-soft); }
   cursor: pointer;
 }
 .date-field-toggle:disabled { cursor: not-allowed; }
+/* Extra specificity (parent-scoped) so this beats the global button:hover
+   background rule — just tint the icon, no background highlight. */
+.field2.date-field .date-field-toggle:hover:not(:disabled) { background: transparent; color: var(--accent); }
 .field2.date-field:has(input:disabled) { background: #eceff2; }
 
 .datetime-menu {

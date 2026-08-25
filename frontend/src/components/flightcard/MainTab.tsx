@@ -77,7 +77,7 @@ export function MainTab({ flight, draft, onChange }: Props) {
               <Field label="Time" style={{ width: 66 }}>
                 <input value={draft.depTime} onChange={(e) => onChange({ depTime: maskTimeInput(e.target.value) })} placeholder=" " inputMode="numeric" />
               </Field>
-              <Field label="Terminal" style={{ width: 84 }}>
+              <Field label="Terminal" style={{ width: 96 }}>
                 <input
                   value={draft.terminalFrom}
                   onChange={(e) => onChange({ terminalFrom: alphanumericUpper(e.target.value, 2) })}
@@ -88,7 +88,7 @@ export function MainTab({ flight, draft, onChange }: Props) {
           ) : (
             <div className="segment-point">
               <div className="segment-time">{draft.depTime || "—"}</div>
-              <Field label="Terminal" style={{ width: 84 }}>
+              <Field label="Terminal" style={{ width: 96 }}>
                 <input
                   value={draft.terminalFrom}
                   onChange={(e) => onChange({ terminalFrom: alphanumericUpper(e.target.value, 2) })}
@@ -112,7 +112,7 @@ export function MainTab({ flight, draft, onChange }: Props) {
               <Field label="Time" style={{ width: 66 }}>
                 <input value={draft.arrTime} onChange={(e) => onChange({ arrTime: maskTimeInput(e.target.value) })} placeholder=" " inputMode="numeric" />
               </Field>
-              <Field label="Terminal" style={{ width: 84 }}>
+              <Field label="Terminal" style={{ width: 96 }}>
                 <input
                   value={draft.terminalTo}
                   onChange={(e) => onChange({ terminalTo: alphanumericUpper(e.target.value, 2) })}
@@ -122,7 +122,7 @@ export function MainTab({ flight, draft, onChange }: Props) {
             </div>
           ) : (
             <div className="segment-point right">
-              <Field label="Terminal" style={{ width: 84 }}>
+              <Field label="Terminal" style={{ width: 96 }}>
                 <input
                   value={draft.terminalTo}
                   onChange={(e) => onChange({ terminalTo: alphanumericUpper(e.target.value, 2) })}
