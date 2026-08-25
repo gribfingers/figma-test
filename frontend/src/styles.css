@@ -174,17 +174,13 @@ body {
   border-bottom-color: transparent;
   color: #181f24;
 }
-.top-tab.selected:hover { border-bottom-color: var(--panel-border); }
-/* Tab to the left of the active tab: right border + 2px bottom-right radius. */
-.top-tab:has(+ .top-tab.selected) {
-  border-right: 1px solid var(--panel-border);
-  border-bottom-right-radius: 2px;
-}
-/* Tab to the right of the active tab: left border + 2px bottom-left radius. */
-.top-tab.selected + .top-tab {
-  border-left: 1px solid var(--panel-border);
-  border-bottom-left-radius: 2px;
-}
+/* Tab to the left of the active tab: 2px bottom-right radius (its own
+   border-right already draws the seam, so no extra border here). */
+.top-tab:has(+ .top-tab.selected) { border-bottom-right-radius: 2px; }
+/* Tab to the right of the active tab: 2px bottom-left radius. No border-left —
+   the previous tab's border-right already draws this seam; adding one here
+   would double the line. */
+.top-tab.selected + .top-tab { border-bottom-left-radius: 2px; }
 .top-tab-close {
   all: unset;
   box-sizing: border-box;
@@ -203,7 +199,9 @@ body {
   transition: opacity 0.1s ease;
 }
 /* Space for the close button is always reserved (opacity, not display) so
-   hovering a closable tab never changes its width. */
+   hovering a closable tab never changes its width. A matching spacer on the
+   opposite side keeps the label centered instead of skewed left. */
+.top-tab:has(.top-tab-close)::before { content: ""; width: 20px; flex-shrink: 0; }
 .top-tab:hover .top-tab-close { opacity: 1; pointer-events: auto; }
 .top-tab.selected .top-tab-close { background: #f4f7fa; }
 /* Extra specificity (parent-scoped) so this beats the global button:hover rule. */

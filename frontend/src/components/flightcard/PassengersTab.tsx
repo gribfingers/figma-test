@@ -274,13 +274,14 @@ export function PassengersTab({ flight }: Props) {
   const activeSeat = passengers.find((p) => p.id === activeId)?.seat ?? null;
   const seatByCode = new Map(seats.map((s) => [s.seat, s]));
 
-  // Exit-row seats are off-limits for infants/children (real IATA restriction) —
-  // dim and disable them while picking a seat to assign/change for one.
+  // While assigning/changing a seat, only free seats can be picked — already
+  // occupied ones are dimmed and disabled. Exit-row seats are additionally
+  // off-limits for infants/children (real IATA restriction).
   const disabledSeats = useMemo(() => {
     if (!seatAction || seatAction.mode !== "assign") return undefined;
     const restricted = !!seatAction.passenger.infant || isInfant(seatAction.passenger.dob) || parsePassengerExtra(seatAction.passenger).type === "CHD";
-    if (!restricted) return undefined;
-    return new Set(seats.filter((s) => s.exit_row).map((s) => s.seat));
+    const disabled = seats.filter((s) => s.passenger_id != null || (restricted && s.exit_row)).map((s) => s.seat);
+    return new Set(disabled);
   }, [seatAction, seats]);
 
   // Selecting a passenger (either by clicking their row or clicking their
