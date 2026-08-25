@@ -89,6 +89,21 @@ CREATE TABLE IF NOT EXISTS sessions (
   expires_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
+
+-- 1:1 direct messages. body/image are both nullable but never both null
+-- (enforced in the route, not here) — a message is either text, an image,
+-- or both (an image with a caption).
+CREATE TABLE IF NOT EXISTS messages (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  sender_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  recipient_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  body TEXT,
+  image TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  read_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages(sender_id, recipient_id);
+CREATE INDEX IF NOT EXISTS idx_messages_recipient ON messages(recipient_id, sender_id);
 `);
 
 // Lightweight migration for databases created before the FIDS columns existed.

@@ -12,7 +12,20 @@ export function userAvatarColor(user: Pick<User, "id">): string {
   return AVATAR_COLORS[user.id % AVATAR_COLORS.length];
 }
 
-/** Downscales an uploaded image client-side so the avatar stored as a data URL stays small. */
+function resizeImageElement(img: HTMLImageElement, maxSize: number): string {
+  const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+  const w = Math.round(img.width * scale);
+  const h = Math.round(img.height * scale);
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas not supported");
+  ctx.drawImage(img, 0, 0, w, h);
+  return canvas.toDataURL("image/jpeg", 0.85);
+}
+
+/** Downscales an uploaded image file client-side (e.g. an avatar or a messenger attachment) so the data URL stays small. */
 export function resizeImageToDataUrl(file: File, maxSize: number): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -21,19 +34,30 @@ export function resizeImageToDataUrl(file: File, maxSize: number): Promise<strin
       const img = new Image();
       img.onerror = reject;
       img.onload = () => {
-        const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
-        const w = Math.round(img.width * scale);
-        const h = Math.round(img.height * scale);
-        const canvas = document.createElement("canvas");
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return reject(new Error("Canvas not supported"));
-        ctx.drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL("image/jpeg", 0.85));
+        try {
+          resolve(resizeImageElement(img, maxSize));
+        } catch (e) {
+          reject(e);
+        }
       };
       img.src = reader.result as string;
     };
     reader.readAsDataURL(file);
+  });
+}
+
+/** Same downscale, starting from an existing data URL (e.g. a raw screen-capture frame) instead of a File. */
+export function resizeDataUrl(dataUrl: string, maxSize: number): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onerror = reject;
+    img.onload = () => {
+      try {
+        resolve(resizeImageElement(img, maxSize));
+      } catch (e) {
+        reject(e);
+      }
+    };
+    img.src = dataUrl;
   });
 }

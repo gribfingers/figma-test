@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { api } from "../api";
 import { useTabs } from "../tabs";
 import { useAuth } from "../auth";
 import { userAvatarColor, userInitials } from "../userDisplay";
-import { BellIcon, CloseIcon, HelpIcon } from "./Icon";
+import { BellIcon, ChatIcon, CloseIcon, HelpIcon } from "./Icon";
 import { UserPanel } from "./UserPanel";
+import { Messenger } from "./Messenger";
 
 // Moscow time, shown as a fixed reference point regardless of the viewer's
 // own browser timezone — flight times throughout the app are UTC wall-clock
@@ -31,6 +33,20 @@ export function TopTabs() {
   const { tabs, activePath, closeTab } = useTabs();
   const { user } = useAuth();
   const [panelOpen, setPanelOpen] = useState(false);
+  const [messengerOpen, setMessengerOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+    function poll() {
+      api.unreadMessageCount().then((r) => setUnreadCount(r.count)).catch(() => {});
+    }
+    poll();
+    // Messenger.tsx polls its own open thread/contacts much faster while it's open;
+    // this slower interval just keeps the badge fresh while the panel is closed.
+    const t = setInterval(poll, 15000);
+    return () => clearInterval(t);
+  }, [user]);
 
   return (
     <div className="tabs-bar">
@@ -71,6 +87,20 @@ export function TopTabs() {
         {user && (
           <button
             type="button"
+            className="tabs-icon-btn"
+            title="Messages"
+            onClick={() => {
+              setMessengerOpen(true);
+              setUnreadCount(0);
+            }}
+          >
+            <ChatIcon size={18} />
+            {unreadCount > 0 && <span className="tabs-badge">{unreadCount > 99 ? "99+" : unreadCount}</span>}
+          </button>
+        )}
+        {user && (
+          <button
+            type="button"
             className="tabs-avatar-btn"
             title="Account"
             style={user.avatar ? undefined : { background: userAvatarColor(user) }}
@@ -81,6 +111,7 @@ export function TopTabs() {
         )}
       </div>
       {panelOpen && <UserPanel onClose={() => setPanelOpen(false)} />}
+      {messengerOpen && <Messenger onClose={() => setMessengerOpen(false)} />}
     </div>
   );
 }

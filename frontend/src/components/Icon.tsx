@@ -402,3 +402,40 @@ export function PlusIcon({ size = 16, className }: IconProps) {
     </svg>
   );
 }
+
+/** Chat bubble — opens the messenger panel. */
+export function ChatIcon({ size = 18, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M4 5h16v11H8l-4 4V5z" />
+    </svg>
+  );
+}
+
+/** Camera — screen-capture tool in the messenger composer. */
+export function CameraIcon({ size = 18, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M4 8h3l2-2h6l2 2h3v11H4V8z" />
+      <circle cx="12" cy="13.5" r="3.2" />
+    </svg>
+  );
+}
+
+/** Paperclip — attach-image button in the messenger composer. */
+export function AttachIcon({ size = 18, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M17 8l-7.5 7.5a3 3 0 1 0 4.24 4.24L21 12.4a5 5 0 1 0-7.07-7.07L6 12.26" />
+    </svg>
+  );
+}
+
+/** Paper-plane send button. */
+export function SendIcon({ size = 18, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M4 20l17-8L4 4l0 6.5L15 12l-11 1.5L4 20z" />
+    </svg>
+  );
+}

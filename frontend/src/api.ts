@@ -75,6 +75,27 @@ export interface User {
   created_at: string;
 }
 
+export interface Message {
+  id: number;
+  sender_id: number;
+  recipient_id: number;
+  body: string | null;
+  image: string | null;
+  created_at: string;
+  read_at: string | null;
+}
+
+export interface Contact {
+  id: number;
+  first_name: string;
+  last_name: string;
+  login: string;
+  company: string | null;
+  avatar: string | null;
+  lastMessage: Message | null;
+  unreadCount: number;
+}
+
 const TOKEN_KEY = "dcs_token";
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
@@ -180,4 +201,10 @@ export const api = {
   ) => request<User>(`/users/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
   resetUserPassword: (id: number) => request<{ password: string }>(`/users/${id}/reset-password`, { method: "POST" }),
   deleteUser: (id: number) => request<{ ok: boolean }>(`/users/${id}`, { method: "DELETE" }),
+
+  listContacts: () => request<Contact[]>("/messages/contacts"),
+  unreadMessageCount: () => request<{ count: number }>("/messages/unread-count"),
+  getThread: (userId: number) => request<Message[]>(`/messages/${userId}`),
+  sendMessage: (userId: number, data: { body?: string; image?: string }) =>
+    request<Message>(`/messages/${userId}`, { method: "POST", body: JSON.stringify(data) }),
 };
