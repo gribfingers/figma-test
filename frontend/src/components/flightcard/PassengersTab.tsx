@@ -6,13 +6,15 @@ import { ArrowNestedIcon, ChildIcon, InfantIcon } from "../Icon";
 import { SortTh, useSort } from "../SortTh";
 import { FlagStatus, asvcForPassenger, asvcStatus, commentsStatus, etStatus, ffpStatus, parsePassengerExtra, trStatus } from "../../paxExtra";
 import { PassengerModals } from "./PassengerModals";
+import { EMPTY_PAX_DRAFT, PassengerFormFields, paxDraftToPayload } from "./PassengerForm";
+import { Modal } from "../Modal";
 import { PASSENGER_COLUMNS, PassengersToolbar, QuickFilter } from "./PassengersToolbar";
 
 interface Props {
   flight: Flight;
 }
 
-type ModalKind = "asvc" | "comments" | "coupon" | "ffp" | "route";
+type ModalKind = "asvc" | "comments" | "coupon" | "ffp" | "route" | "edit";
 
 interface PaxRow {
   passenger: Passenger;
@@ -117,6 +119,12 @@ export function PassengersTab({ flight }: Props) {
   const [query, setQuery] = useState("");
   const [activeId, setActiveId] = useState<number | null>(null);
   const [modal, setModal] = useState<{ kind: ModalKind; passenger: Passenger } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; passenger: Passenger } | null>(null);
+  const [addOpen, setAddOpen] = useState(false);
+  const [addDraft, setAddDraft] = useState(EMPTY_PAX_DRAFT);
+  const [adding, setAdding] = useState(false);
+  const [error, setError] = useState("");
+  const contextMenuRef = useRef<HTMLUListElement>(null);
 
   const [quickFilter, setQuickFilter] = useState<QuickFilter>("all");
   const [serviceFilter, setServiceFilter] = useState<string[]>([]);
@@ -146,8 +154,62 @@ export function PassengersTab({ flight }: Props) {
     setModal((m) => (m && m.passenger.id === updated.id ? { ...m, passenger: updated } : m));
   }
 
-  useEffect(() => {
+  function loadPassengers() {
     api.passengers(flight.id, query).then(setPassengers);
+  }
+
+  async function deletePassenger(p: Passenger) {
+    setContextMenu(null);
+    if (!window.confirm(`Delete passenger ${p.surname} ${p.given_name}?`)) return;
+    try {
+      await api.deletePassenger(flight.id, p.id);
+      loadPassengers();
+    } catch (e: any) {
+      alert(e.message);
+    }
+  }
+
+  function openAdd() {
+    setAddDraft(EMPTY_PAX_DRAFT);
+    setError("");
+    setAddOpen(true);
+  }
+  async function submitAdd() {
+    if (!addDraft.surname.trim() || !addDraft.given_name.trim() || !addDraft.ticket_number.trim()) {
+      setError("Surname, given name and ticket number are required.");
+      return;
+    }
+    setAdding(true);
+    setError("");
+    try {
+      await api.addPassenger(flight.id, paxDraftToPayload(addDraft));
+      setAddOpen(false);
+      loadPassengers();
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setAdding(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!contextMenu) return;
+    function onDocMouseDown(e: MouseEvent) {
+      if (contextMenuRef.current && !contextMenuRef.current.contains(e.target as Node)) setContextMenu(null);
+    }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setContextMenu(null);
+    }
+    document.addEventListener("mousedown", onDocMouseDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onDocMouseDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [contextMenu]);
+
+  useEffect(() => {
+    loadPassengers();
   }, [flight.id, query]);
   useEffect(() => {
     api.seatmap(flight.id).then(setSeats);
@@ -218,6 +280,7 @@ export function PassengersTab({ flight }: Props) {
           visibleColumns={visibleColumns}
           onToggleColumn={toggleColumn}
           totalCount={filteredPassengers.length}
+          onAddPassenger={openAdd}
         />
         <div className="table-scroll">
           <table className="passengers-table">
@@ -257,6 +320,11 @@ export function PassengersTab({ flight }: Props) {
                     }}
                     className={`clickable ${nested ? "pax-row-nested" : ""} ${p.id === activeId ? "pax-row-active" : ""}`}
                     onClick={() => setActiveId(p.id)}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      setActiveId(p.id);
+                      setContextMenu({ x: e.clientX, y: e.clientY, passenger: p });
+                    }}
                   >
                     <td>
                       <input type="checkbox" onClick={(e) => e.stopPropagation()} />
@@ -371,6 +439,44 @@ export function PassengersTab({ flight }: Props) {
           onClose={() => setModal(null)}
           onUpdated={handleUpdated}
         />
+      )}
+
+      {contextMenu && (
+        <ul
+          ref={contextMenuRef}
+          className="select-menu pax-context-menu"
+          style={{ left: contextMenu.x, top: contextMenu.y }}
+        >
+          <li
+            className="pax-columns-item"
+            onClick={() => {
+              setModal({ kind: "edit", passenger: contextMenu.passenger });
+              setContextMenu(null);
+            }}
+          >
+            Edit
+          </li>
+          <li className="pax-columns-item danger" onClick={() => deletePassenger(contextMenu.passenger)}>
+            Delete
+          </li>
+        </ul>
+      )}
+
+      {addOpen && (
+        <Modal
+          title="Add passenger"
+          onClose={() => setAddOpen(false)}
+          width={520}
+          footer={
+            <>
+              <button type="button" className="tertiary" onClick={() => setAddOpen(false)}>Close</button>
+              <button type="button" className="tertiary" disabled={adding} onClick={submitAdd}>Add</button>
+            </>
+          }
+        >
+          {error && <div className="error-box">{error}</div>}
+          <PassengerFormFields draft={addDraft} onChange={setAddDraft} />
+        </Modal>
       )}
     </div>
   );

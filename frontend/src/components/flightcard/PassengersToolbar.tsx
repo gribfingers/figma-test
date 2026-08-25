@@ -57,6 +57,7 @@ interface Props {
   visibleColumns: Set<string>;
   onToggleColumn: (key: string) => void;
   totalCount: number;
+  onAddPassenger: () => void;
 }
 
 export function PassengersToolbar({
@@ -74,6 +75,7 @@ export function PassengersToolbar({
   visibleColumns,
   onToggleColumn,
   totalCount,
+  onAddPassenger,
 }: Props) {
   const [servicesOpen, setServicesOpen] = useState(false);
   const [columnsOpen, setColumnsOpen] = useState(false);
@@ -169,6 +171,8 @@ export function PassengersToolbar({
         <div className="spacer" />
 
         <span className="passengers-count">{totalCount} passengers</span>
+
+        <button type="button" className="secondary" onClick={onAddPassenger}>Add passenger</button>
 
         <div className="pax-columns-menu" ref={columnsRef}>
           <button type="button" className="secondary icon-btn pax-columns-trigger" title="Columns" onClick={() => setColumnsOpen((o) => !o)}>

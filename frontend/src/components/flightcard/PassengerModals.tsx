@@ -3,9 +3,10 @@ import { api, Passenger } from "../../api";
 import { PassengerExtra, asvcForPassenger, parsePassengerExtra } from "../../paxExtra";
 import { CloseIcon } from "../Icon";
 import { Modal } from "../Modal";
+import { PassengerFormFields, paxDraftFrom, paxDraftToPayload } from "./PassengerForm";
 
 interface Props {
-  kind: "asvc" | "comments" | "coupon" | "ffp" | "route";
+  kind: "asvc" | "comments" | "coupon" | "ffp" | "route" | "edit";
   flightId: number;
   passenger: Passenger;
   onClose: () => void;
@@ -17,7 +18,50 @@ export function PassengerModals({ kind, flightId, passenger, onClose, onUpdated 
   if (kind === "comments") return <CommentsModal flightId={flightId} passenger={passenger} onClose={onClose} onUpdated={onUpdated} />;
   if (kind === "coupon") return <CouponModal passenger={passenger} onClose={onClose} />;
   if (kind === "ffp") return <FfpModal flightId={flightId} passenger={passenger} onClose={onClose} onUpdated={onUpdated} />;
+  if (kind === "edit") return <EditModal flightId={flightId} passenger={passenger} onClose={onClose} onUpdated={onUpdated} />;
   return <RouteModal passenger={passenger} onClose={onClose} />;
+}
+
+function EditModal({
+  flightId,
+  passenger,
+  onClose,
+  onUpdated,
+}: {
+  flightId: number;
+  passenger: Passenger;
+  onClose: () => void;
+  onUpdated: (p: Passenger) => void;
+}) {
+  const [draft, setDraft] = useState(() => paxDraftFrom(passenger));
+  const [saving, setSaving] = useState(false);
+
+  async function save() {
+    setSaving(true);
+    try {
+      const updated = await api.updatePassenger(flightId, passenger.id, paxDraftToPayload(draft, passenger));
+      onUpdated(updated);
+      onClose();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Modal
+      title={`Edit passenger: ${paxName(passenger)}`}
+      onClose={onClose}
+      width={520}
+      footer={
+        <>
+          <button type="button" className="tertiary" onClick={onClose}>Close</button>
+          <button type="button" className="tertiary" disabled={saving} onClick={save}>Save</button>
+        </>
+      }
+    >
+      <PassengerFormFields draft={draft} onChange={setDraft} />
+    </Modal>
+  );
 }
 
 /** Persists a partial patch into the passenger's extra JSON blob, preserving whatever other fields already live there. */

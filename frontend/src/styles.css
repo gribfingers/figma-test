@@ -1154,8 +1154,8 @@ a { color: var(--accent); }
 
 .passengers-table th, .passengers-table td { padding: 8px 10px; white-space: nowrap; }
 .passengers-table thead th { position: sticky; top: 0; background: var(--panel); z-index: 1; }
-tr.pax-row-active { background: var(--accent-soft); box-shadow: inset 3px 0 0 0 var(--accent); }
-tr.pax-row-active:hover { background: var(--accent-soft); }
+tr.pax-row-active { background: #d3e9ff; box-shadow: inset 3px 0 0 0 var(--accent); }
+tr.pax-row-active:hover { background: #d3e9ff; }
 .passengers-table th:first-child, .passengers-table td:first-child { padding-left: 16px; }
 .pax-name-cell { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
 .pax-nest-arrow, .pax-infant-icon, .pax-child-icon { color: var(--muted); flex-shrink: 0; }
@@ -1314,6 +1314,13 @@ tr.row-hover { cursor: pointer; }
 .pax-columns-list.select-menu { left: auto; right: 0; width: 200px; max-height: 320px; overflow-y: auto; }
 .pax-columns-item { display: flex; align-items: center; gap: 8px; cursor: pointer; }
 .pax-columns-item input { pointer-events: none; }
+.pax-columns-item.danger { color: var(--danger); }
+.pax-columns-item.danger:hover { background: var(--danger-soft); }
+
+/* Right-click menu on a passenger row: cursor-anchored, so it overrides the
+   base .select-menu's parent-relative positioning with position:fixed and
+   uses the caller's inline left/top (== the click coordinates). */
+.pax-context-menu { position: fixed; left: auto; top: auto; width: 160px; }
 
 /* ---- Seat map panel: toolbar (deck/zoom/legend/layers/horizontal/hide) + editor ---- */
 .passengers-tab.map-horizontal { flex-direction: column; }
