@@ -6,6 +6,7 @@ import { App } from "./App";
 import { TabsProvider } from "./tabs";
 import { AuthProvider, RequireAuth } from "./auth";
 import { ToastProvider } from "./toast";
+import { ThemeProvider } from "./theme";
 import { Login } from "./pages/Login";
 import { Dashboard } from "./pages/Dashboard";
 import { NewFlight } from "./pages/NewFlight";
@@ -17,26 +18,28 @@ import { UserAdmin } from "./pages/UserAdmin";
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter>
-      <ToastProvider>
-        <AuthProvider>
-          <TabsProvider>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route element={<RequireAuth />}>
-                <Route path="/" element={<App />}>
-                  <Route index element={<Dashboard />} />
-                  <Route path="flights/new" element={<NewFlight />} />
-                  <Route path="flights/:flightId" element={<FlightCard />} />
-                  <Route path="checkin/:flightId" element={<CheckIn />} />
-                  <Route path="boarding/:flightId" element={<Boarding />} />
-                  <Route path="users-admin" element={<UserAdmin />} />
-                  <Route path="*" element={<Navigate to="/" replace />} />
+      <ThemeProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <TabsProvider>
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route element={<RequireAuth />}>
+                  <Route path="/" element={<App />}>
+                    <Route index element={<Dashboard />} />
+                    <Route path="flights/new" element={<NewFlight />} />
+                    <Route path="flights/:flightId" element={<FlightCard />} />
+                    <Route path="checkin/:flightId" element={<CheckIn />} />
+                    <Route path="boarding/:flightId" element={<Boarding />} />
+                    <Route path="users-admin" element={<UserAdmin />} />
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                  </Route>
                 </Route>
-              </Route>
-            </Routes>
-          </TabsProvider>
-        </AuthProvider>
-      </ToastProvider>
+              </Routes>
+            </TabsProvider>
+          </AuthProvider>
+        </ToastProvider>
+      </ThemeProvider>
     </BrowserRouter>
   </React.StrictMode>
 );

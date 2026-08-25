@@ -1,15 +1,18 @@
 :root {
+  color-scheme: light;
   --bg: #f6f8fb;
   --panel: #ffffff;
   --ink: #1a1f36;
   --muted: #6b7280;
   --muted-2: #9aa1ac;
+  --muted-text: #707d95;
   --border: #e3e8ee;
   --border-strong: #c8d0da;
   --panel-border: #dee2e5;
   --accent: #1979d9;
   --accent-hover: #166ec7;
   --accent-soft: #f2f6fa;
+  --accent-selected: #d3e9ff;
   --accent-ink: #ffffff;
   --ok: #0f7a3d;
   --ok-bg: #e4f6ea;
@@ -19,6 +22,10 @@
   --danger-hover: #a81f30;
   --danger-soft: #fdecee;
   --danger-border: #f3b4bb;
+  --success-icon: #40a011;
+  --tooltip-bg: #6b7280;
+  --tooltip-ink: #ffffff;
+  --paper: #ffffff;
   --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --mono: var(--font);
   --radius: 8px;
@@ -32,6 +39,7 @@
   /* Input/select field tokens (from Figma "Input" component, id 30142:14729) */
   --field-bg: #f2f6fa;
   --field-bg-focus: #ffffff;
+  --field-bg-disabled: #eceff2;
   --field-border: #d5d8db;
   --field-border-hover: #748794;
   --field-border-focus: #1979d9;
@@ -41,7 +49,88 @@
   --field-label-focus: #1979d9;
   --field-label-error: #c21010;
   --field-radius: 4px;
+
+  /* Chip/status backgrounds (from Figma "Chip" + "Transparent" collections) */
+  --chip-grey-bg: #ebf0f3;
+  --chip-green-bg: rgba(60, 184, 0, 0.2);
+  --chip-red-bg: rgba(219, 45, 45, 0.2);
+  --chip-blue-bg: rgba(28, 130, 236, 0.2);
+  --status-past-bg: rgba(60, 184, 0, 0.16);
+  --status-active-bg: rgba(28, 130, 236, 0.14);
+
+  /* Seatmap tokens (from Figma "Seatmap" collection) */
+  --seat-free-bg: #f3f7f9;
+  --seat-border: #b5c2cb;
+  --seat-busy-bg: #8ca0b9;
+  --seat-boarded-bg: #6c982b;
+  --seat-active-bg: #1979d9;
+  --seat-active-ink: #ffffff;
+  --hover-bg: #fafbfc;
+  --ok-border: #bfe6cc;
 }
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #232833;
+  --panel: #363f52;
+  --ink: rgba(255, 255, 255, 0.92);
+  --muted: rgba(255, 255, 255, 0.7);
+  --muted-2: rgba(255, 255, 255, 0.4);
+  --muted-text: rgba(255, 255, 255, 0.64);
+  --border: #586173;
+  --border-strong: #6b7688;
+  --panel-border: #586173;
+  --accent: #60a3d8;
+  --accent-hover: #2674a6;
+  --accent-soft: rgba(96, 163, 216, 0.16);
+  --accent-selected: #495366;
+  --accent-ink: #ffffff;
+  --ok: #48b903;
+  --ok-bg: rgba(71, 218, 0, 0.2);
+  --warn: #ffc44e;
+  --warn-bg: rgba(232, 151, 0, 0.3);
+  --danger: #ff5656;
+  --danger-hover: #e04545;
+  --danger-soft: rgba(240, 47, 47, 0.2);
+  --danger-border: rgba(255, 86, 86, 0.4);
+  --success-icon: #48b903;
+  --tooltip-bg: #586173;
+  --tooltip-ink: #ffffff;
+  --paper: #353f53;
+
+  --btn-disabled-stroke: rgba(255, 255, 255, 0.15);
+  --btn-disabled-text: rgba(255, 255, 255, 0.3);
+
+  --field-bg: #384257;
+  --field-bg-focus: #353f53;
+  --field-bg-disabled: rgba(255, 255, 255, 0.12);
+  --field-border: rgba(255, 255, 255, 0.2);
+  --field-border-hover: rgba(255, 255, 255, 0.9);
+  --field-border-focus: #60a3d8;
+  --field-border-error: #ff5656;
+  --field-placeholder: rgba(255, 255, 255, 0.7);
+  --field-value: #ffffff;
+  --field-label-focus: #60a3d8;
+  --field-label-error: #ff5656;
+
+  --chip-grey-bg: rgba(255, 255, 255, 0.12);
+  --chip-green-bg: rgba(71, 218, 0, 0.2);
+  --chip-red-bg: rgba(240, 47, 47, 0.2);
+  --chip-blue-bg: rgba(59, 134, 212, 0.2);
+  --status-past-bg: rgba(71, 218, 0, 0.16);
+  --status-active-bg: rgba(59, 134, 212, 0.14);
+
+  --seat-free-bg: rgba(255, 255, 255, 0.07);
+  --seat-border: rgba(255, 255, 255, 0.4);
+  --seat-busy-bg: rgba(255, 255, 255, 0.4);
+  --seat-boarded-bg: #3f9608;
+  --seat-active-bg: #ffee92;
+  --seat-active-ink: #181f24;
+  --hover-bg: rgba(255, 255, 255, 0.06);
+  --ok-border: rgba(71, 218, 0, 0.4);
+}
+
+input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
 
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; overflow: hidden; }
@@ -68,7 +157,7 @@ body {
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  background: #ffffff;
+  background: var(--bg);
   /* Carries the divider down through the blank stretch between .side-list
      and .side-bottom (itself flex, not stretched to fill), same trick as
      .tabs-fill for the top tab bar. */
@@ -120,8 +209,8 @@ body {
   border-top-right-radius: 2px;
 }
 .side-update { flex-direction: column; gap: 2px; height: 64px; }
-.side-time { font-family: var(--font); font-weight: 700; font-size: 11px; color: #707d95; }
-.side-device-ok { color: #40a011; }
+.side-time { font-family: var(--font); font-weight: 700; font-size: 11px; color: var(--muted-text); }
+.side-device-ok { color: var(--success-icon); }
 
 .side-item[data-tooltip]:hover::after {
   content: attr(data-tooltip);
@@ -129,8 +218,8 @@ body {
   left: calc(100% + 8px);
   top: 50%;
   transform: translateY(-50%);
-  background: #181f24;
-  color: #ffffff;
+  background: var(--tooltip-bg);
+  color: var(--tooltip-ink);
   font-family: var(--font);
   font-size: 12px;
   font-weight: 500;
@@ -147,7 +236,7 @@ body {
   align-items: center;
   justify-content: space-between;
   height: 56px;
-  background: #ffffff;
+  background: var(--bg);
   flex-shrink: 0;
 }
 .tabs-list { display: flex; align-items: flex-end; height: 56px; overflow-x: auto; }
@@ -164,14 +253,14 @@ body {
   height: 56px;
   padding: 22px 16px;
   box-sizing: border-box;
-  background: #ffffff;
+  background: var(--panel);
   border-right: 1px solid var(--panel-border);
   border-bottom: 1px solid var(--panel-border);
   font-family: var(--font);
   font-weight: 600;
   font-size: 13px;
   letter-spacing: 0.1px;
-  color: #707d95;
+  color: var(--muted-text);
   text-decoration: none;
   white-space: nowrap;
   flex-shrink: 0;
@@ -179,7 +268,7 @@ body {
 .top-tab.selected {
   background: var(--bg);
   border-bottom-color: transparent;
-  color: #181f24;
+  color: var(--field-value);
 }
 /* Tab to the left of the active tab: 2px bottom-right radius (its own
    border-right already draws the seam, so no extra border here). */
@@ -197,8 +286,8 @@ body {
   width: 20px;
   height: 20px;
   border-radius: 4px;
-  background: #ffffff;
-  color: #707d95;
+  background: var(--panel);
+  color: var(--muted-text);
   cursor: pointer;
   flex-shrink: 0;
   opacity: 0;
@@ -210,7 +299,7 @@ body {
    opposite side keeps the label centered instead of skewed left. */
 .top-tab:has(.top-tab-close)::before { content: ""; width: 20px; flex-shrink: 0; }
 .top-tab:hover .top-tab-close { opacity: 1; pointer-events: auto; }
-.top-tab.selected .top-tab-close { background: #f4f7fa; }
+.top-tab.selected .top-tab-close { background: var(--bg); }
 /* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
 .tabs-list .top-tab-close:hover { background: var(--field-bg); color: var(--field-value); }
 
@@ -329,7 +418,7 @@ tbody tr:last-child td { border-bottom: none; }
 /* ---- TableHead, per Figma TableHead component set (id 30142:19188) ---- */
 th {
   padding: 7px 16px;
-  color: #707d95;
+  color: var(--muted-text);
   font-weight: 600; /* Semi Bold */
   font-size: 12px;
   line-height: 16px;
@@ -365,7 +454,7 @@ th input:focus {
   background: var(--field-bg-focus);
   box-shadow: none;
 }
-th input:disabled { background: #eceff2; color: var(--muted-2); cursor: not-allowed; }
+th input:disabled { background: var(--field-bg-disabled); color: var(--muted-2); cursor: not-allowed; }
 
 th.th-sort { cursor: pointer; user-select: none; }
 th.th-sort:hover { color: var(--accent); }
@@ -460,7 +549,7 @@ tr.row-hover:hover { background: var(--accent-soft); }
   padding-top: 15px;
 }
 
-.field2:has(input:disabled) { background: #eceff2; }
+.field2:has(input:disabled) { background: var(--field-bg-disabled); }
 .field2 input:disabled { color: var(--muted-2); }
 
 /* ---- Custom Select (dropdown), per Figma "MenuItem" spec (id 30142:16569) ---- */
@@ -474,7 +563,7 @@ tr.row-hover:hover { background: var(--accent-soft); }
   background: var(--field-bg-focus);
 }
 .field2.select-field.open label { color: var(--field-label-focus); }
-.field2.select-field:has(.select-trigger:disabled) { background: #eceff2; }
+.field2.select-field:has(.select-trigger:disabled) { background: var(--field-bg-disabled); }
 /* Extra specificity (two classes) so this beats the global button/button:hover rules. */
 .select-field .select-trigger {
   all: unset;
@@ -566,7 +655,7 @@ tr.row-hover:hover { background: var(--accent-soft); }
   color: var(--field-value);
 }
 .datetime-field .datetime-trigger:disabled { cursor: not-allowed; color: var(--muted-2); }
-.field2.datetime-field:has(.datetime-trigger:disabled) { background: #eceff2; }
+.field2.datetime-field:has(.datetime-trigger:disabled) { background: var(--field-bg-disabled); }
 
 /* ---- Custom DateField: typeable dd.mm.yyyy input + calendar dropdown ---- */
 .field2.date-field input { padding-right: 22px; }
@@ -586,7 +675,7 @@ tr.row-hover:hover { background: var(--accent-soft); }
 /* Extra specificity (parent-scoped) so this beats the global button:hover
    background rule — just tint the icon, no background highlight. */
 .field2.date-field .date-field-toggle:hover:not(:disabled) { background: transparent; color: var(--accent); }
-.field2.date-field:has(input:disabled) { background: #eceff2; }
+.field2.date-field:has(input:disabled) { background: var(--field-bg-disabled); }
 
 .datetime-menu {
   position: absolute;
@@ -598,8 +687,8 @@ tr.row-hover:hover { background: var(--accent-soft); }
   left: 0;
   width: 288px;
   padding: 12px;
-  background: #ffffff;
-  border: 1px solid #dee2e5;
+  background: var(--paper);
+  border: 1px solid var(--panel-border);
   border-radius: 4px;
   box-shadow: 0 2px 24px -6px rgba(222, 226, 229, 1);
 }
@@ -658,7 +747,7 @@ tr.row-hover:hover { background: var(--accent-soft); }
   -webkit-tap-highlight-color: transparent;
 }
 /* Extra specificity (two classes) so this beats the global button:hover rule. */
-.dt-cal-grid .dt-day:hover:not(.selected) { background: #e3ecf7; }
+.dt-cal-grid .dt-day:hover:not(.selected) { background: var(--accent-soft); }
 .dt-day.outside { color: var(--field-placeholder); }
 .dt-day.today { font-weight: 700; color: var(--accent); }
 .dt-day.selected { background: var(--accent); color: #fff; font-weight: 600; }
@@ -696,8 +785,8 @@ tr.row-hover:hover { background: var(--accent-soft); }
   margin: 0;
   padding: 4px 0;
   list-style: none;
-  background: #ffffff;
-  border: 1px solid #dee2e5;
+  background: var(--paper);
+  border: 1px solid var(--panel-border);
   border-radius: 4px;
   box-shadow: 0 2px 24px -6px rgba(222, 226, 229, 1);
 }
@@ -707,7 +796,7 @@ tr.row-hover:hover { background: var(--accent-soft); }
   font-weight: 400;
   line-height: 17px;
   letter-spacing: 0.1px;
-  color: #181f24;
+  color: var(--field-value);
   cursor: pointer;
   white-space: nowrap;
   overflow: hidden;
@@ -856,11 +945,11 @@ button.small {
   height: 38px;
   padding: 9px;
   border-radius: 999px;
-  color: #6b7280;
+  color: var(--muted);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-button.icon-button:hover { background: #fafbfc; }
+button.icon-button:hover { background: var(--hover-bg); }
 
 /* ---- Chip, per Figma <Chip> component set (id 30142:15663) ---- */
 .chip {
@@ -870,17 +959,17 @@ button.icon-button:hover { background: #fafbfc; }
   font-size: 12px;
   line-height: 18px;
   letter-spacing: 0;
-  color: #181f24;
+  color: var(--field-value);
   white-space: nowrap;
 }
 .chip.small { padding: 1px 4px; border-radius: 3px; }
 .chip.middle { padding: 3px 6px; border-radius: 4px; }
-.chip.grey, .chip.default, .chip.muted { background: #ebf0f3; }
-.chip.green, .chip.ok { background: rgba(60, 184, 0, 0.2); }
-.chip.red, .chip.danger { background: rgba(219, 45, 45, 0.2); }
+.chip.grey, .chip.default, .chip.muted { background: var(--chip-grey-bg); }
+.chip.green, .chip.ok { background: var(--chip-green-bg); }
+.chip.red, .chip.danger { background: var(--chip-red-bg); }
 /* No amber/warning color was supplied in the Chip spec (only Default/Green/Grey/Blue/Red) —
    Blue is used as the closest spec color to flag a "needs attention" state. */
-.chip.blue, .chip.warn { background: rgba(28, 130, 236, 0.2); }
+.chip.blue, .chip.warn { background: var(--chip-blue-bg); }
 
 .error-box {
   background: var(--danger-soft);
@@ -967,7 +1056,7 @@ button.icon-button:hover { background: #fafbfc; }
   width: 430px;
   max-width: 100%;
   height: 100%;
-  background: #ffffff;
+  background: var(--panel);
   box-shadow: -8px 0 40px -12px rgba(24, 31, 36, 0.25);
   display: flex;
   flex-direction: column;
@@ -1020,10 +1109,12 @@ button.icon-button:hover { background: #fafbfc; }
 .user-panel-section-body { display: flex; flex-direction: column; gap: 4px; margin-top: 16px; }
 .user-panel-section-body .field2 { margin-bottom: 0; }
 
-.user-panel-theme-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; opacity: 0.6; }
+.user-panel-theme-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
 .user-panel-theme-toggle { display: inline-flex; background: var(--field-bg); border-radius: 6px; padding: 2px; gap: 2px; }
-.user-panel-theme-toggle button { all: unset; box-sizing: border-box; padding: 4px 10px; font-size: 12px; font-weight: 600; color: var(--muted); border-radius: 4px; cursor: not-allowed; }
-.user-panel-theme-toggle button.selected { background: #ffffff; color: var(--field-value); }
+.user-panel-theme-toggle button { all: unset; box-sizing: border-box; padding: 4px 10px; font-size: 12px; font-weight: 600; color: var(--muted); border-radius: 4px; cursor: pointer; }
+/* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
+.user-panel-theme-toggle button:hover:not(.selected) { background: transparent; color: var(--field-value); }
+.user-panel-theme-toggle button.selected { background: var(--paper); color: var(--field-value); }
 
 .user-panel-footer { margin-top: auto; padding-top: 24px; text-align: center; flex-shrink: 0; }
 
@@ -1033,7 +1124,7 @@ button.icon-button:hover { background: #fafbfc; }
   width: 400px;
   max-width: 100%;
   height: 100%;
-  background: #ffffff;
+  background: var(--panel);
   box-shadow: -8px 0 40px -12px rgba(24, 31, 36, 0.25);
   display: flex;
   flex-direction: column;
@@ -1136,7 +1227,7 @@ button.icon-button:hover { background: #fafbfc; }
   width: 18px;
   height: 18px;
   border-radius: 999px;
-  background: var(--field-value);
+  background: var(--tooltip-bg);
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -1144,7 +1235,7 @@ button.icon-button:hover { background: #fafbfc; }
   cursor: pointer;
 }
 /* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
-.messenger-pending-image .messenger-pending-remove:hover { background: var(--field-value); }
+.messenger-pending-image .messenger-pending-remove:hover { background: var(--tooltip-bg); }
 .messenger-composer-row { display: flex; align-items: flex-end; gap: 4px; }
 .messenger-composer-row textarea {
   flex: 1;
@@ -1181,7 +1272,7 @@ button.icon-button:hover { background: #fafbfc; }
 .ok-box {
   background: var(--ok-bg);
   color: var(--ok);
-  border: 1px solid #bfe6cc;
+  border: 1px solid var(--ok-border);
   border-radius: var(--radius);
   padding: 10px 14px;
   margin-bottom: 12px;
@@ -1215,16 +1306,16 @@ button.icon-button:hover { background: #fafbfc; }
   align-items: center;
   justify-content: center;
   border-radius: 4px 4px 0 0;
-  background: #f3f7f9;
-  border: 1px solid #b5c2cb;
+  background: var(--seat-free-bg);
+  border: 1px solid var(--seat-border);
   cursor: pointer;
   overflow: hidden;
   transition: background-color 0.1s ease, border-color 0.1s ease;
 }
-.seat:hover:not(.seat-checked-in):not(.seat-boarded) { border-color: var(--accent); }
-.seat-checked-in { background: #8ca0b9; border-color: transparent; cursor: default; }
-.seat-boarded { background: #6c982b; border-color: transparent; cursor: default; }
-.seat.selected { background: var(--accent); border-color: var(--accent); }
+.seat:hover:not(.seat-checked-in):not(.seat-boarded) { border-color: var(--seat-active-bg); }
+.seat-checked-in { background: var(--seat-busy-bg); border-color: transparent; cursor: default; }
+.seat-boarded { background: var(--seat-boarded-bg); border-color: transparent; cursor: default; }
+.seat.selected { background: var(--seat-active-bg); border-color: var(--seat-active-bg); }
 .seat.blocked { cursor: not-allowed; }
 /* Seats the passenger currently being assigned/changed can't legally sit in
    (see PassengersTab's disabledSeats) — dimmed and inert while picking. */
@@ -1235,18 +1326,21 @@ button.icon-button:hover { background: #fafbfc; }
 .seat-subtype-presit { background: #ffaa00; }
 .seat-subtype-booked { background: #64bb3e; }
 
-.seat-content { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; color: #6b7280; }
-.seat-checked-in .seat-content, .seat-boarded .seat-content, .seat.selected .seat-content { color: #ffffff; }
+.seat-content { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; color: var(--muted); }
+.seat-checked-in .seat-content, .seat-boarded .seat-content { color: #ffffff; }
+.seat.selected .seat-content { color: var(--seat-active-ink); }
 .seat-icon-danger { color: var(--danger); }
 
 .seat-price-row { display: flex; align-items: center; gap: 1px; max-width: 28px; }
-.seat-price { font-size: 11px; font-weight: 700; line-height: 1; color: #181f24; }
+.seat-price { font-size: 11px; font-weight: 700; line-height: 1; color: var(--field-value); }
 .seat-content:has(.seat-rfisc-badge) .seat-price { font-size: 9px; }
-.seat-checked-in .seat-price, .seat-boarded .seat-price, .seat.selected .seat-price { color: #ffffff; }
-.seat-rfisc-badge { background: #8ca0b9; color: #ffffff; font-size: 7px; font-weight: 600; line-height: 1; border-radius: 2px; padding: 1.5px 2px; white-space: nowrap; }
+.seat-checked-in .seat-price, .seat-boarded .seat-price { color: #ffffff; }
+.seat.selected .seat-price { color: var(--seat-active-ink); }
+.seat-rfisc-badge { background: var(--seat-busy-bg); color: #ffffff; font-size: 7px; font-weight: 600; line-height: 1; border-radius: 2px; padding: 1.5px 2px; white-space: nowrap; }
 
-.seat-child-age { font-size: 9px; font-weight: 600; line-height: 1; color: #707d95; }
-.seat-checked-in .seat-child-age, .seat-boarded .seat-child-age, .seat.selected .seat-child-age { color: #ffffff; }
+.seat-child-age { font-size: 9px; font-weight: 600; line-height: 1; color: var(--muted-text); }
+.seat-checked-in .seat-child-age, .seat-boarded .seat-child-age { color: #ffffff; }
+.seat.selected .seat-child-age { color: var(--seat-active-ink); }
 
 .aisle { width: 28px; display: flex; align-items: center; justify-content: center; }
 .aisle-row-num { font-size: 13px; font-weight: 700; color: var(--field-value); font-family: var(--mono); }
@@ -1359,11 +1453,11 @@ a { color: var(--accent); }
 .new-flight-number-fields { display: flex; gap: 8px; }
 
 .flight-status-group { display: flex; border: 1px solid var(--panel-border); border-radius: 4px; overflow: hidden; }
-.flight-status-chip { padding: 10px 18px; text-align: center; border-right: 1px solid var(--panel-border); background: #f4f7fa; }
+.flight-status-chip { padding: 10px 18px; text-align: center; border-right: 1px solid var(--panel-border); background: var(--bg); }
 .flight-status-chip:last-child { border-right: none; }
 /* Past = light green, active = light blue, future = the default light gray above. */
-.flight-status-chip.past { background: rgba(60, 184, 0, 0.16); }
-.flight-status-chip.active { background: rgba(28, 130, 236, 0.14); }
+.flight-status-chip.past { background: var(--status-past-bg); }
+.flight-status-chip.active { background: var(--status-active-bg); }
 .flight-status-label { font-size: 12px; font-weight: 700; color: var(--field-value); white-space: nowrap; }
 .flight-status-range { font-size: 11px; color: var(--muted); margin-top: 2px; white-space: nowrap; }
 
@@ -1384,7 +1478,7 @@ a { color: var(--accent); }
   margin: 0;
   padding: 4px 0;
   list-style: none;
-  background: #ffffff;
+  background: var(--paper);
   border: 1px solid var(--panel-border);
   border-radius: 4px;
   box-shadow: 0 2px 24px -6px rgba(222, 226, 229, 1);
@@ -1410,7 +1504,7 @@ a { color: var(--accent); }
   margin: 0;
   padding: 4px 0;
   list-style: none;
-  background: #ffffff;
+  background: var(--paper);
   border: 1px solid var(--panel-border);
   border-radius: 4px;
   box-shadow: 0 2px 24px -6px rgba(222, 226, 229, 1);
@@ -1516,7 +1610,7 @@ a { color: var(--accent); }
 .counter-table { border: 1px solid var(--panel-border); border-radius: 4px; overflow: hidden; flex: 1; min-width: 220px; }
 .counter-table-row { display: grid; align-items: center; padding: 9px 14px; border-bottom: 1px solid var(--panel-border); gap: 4px; }
 .counter-table-row:last-child { border-bottom: none; }
-.counter-table-row.head { background: #f4f7fa; font-weight: 700; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
+.counter-table-row.head { background: var(--bg); font-weight: 700; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
 .counter-table-title { font-weight: 800; font-size: 12px; color: var(--field-value); text-transform: none; letter-spacing: 0; }
 .counter-table-col { text-align: right; }
 .counter-table-label { font-size: 13px; color: var(--field-value); }
@@ -1531,7 +1625,7 @@ a { color: var(--accent); }
 .transfer-pax-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--panel-border); }
 .transfer-pax-row:last-child { border-bottom: none; }
 .transfer-pax-row .checkbox-row { flex: 1; min-width: 0; }
-.transfer-pnr-head { background: #f4f7fa; font-weight: 700; }
+.transfer-pnr-head { background: var(--bg); font-weight: 700; }
 .transfer-pnr-head .checkbox-row { font-weight: 700; }
 .transfer-pax-item { padding-left: 30px; }
 .transfer-pax-item:nth-child(even) { background: var(--field-bg); }
@@ -1587,8 +1681,8 @@ a { color: var(--accent); }
 
 .passengers-table th, .passengers-table td { padding: 8px 10px; white-space: nowrap; }
 .passengers-table thead th { position: sticky; top: 0; background: var(--panel); z-index: 1; }
-tr.pax-row-active { background: #d3e9ff; box-shadow: inset 3px 0 0 0 var(--accent); }
-tr.pax-row-active:hover { background: #d3e9ff; }
+tr.pax-row-active { background: var(--accent-selected); box-shadow: inset 3px 0 0 0 var(--accent); }
+tr.pax-row-active:hover { background: var(--accent-selected); }
 .passengers-table th:first-child, .passengers-table td:first-child { padding-left: 16px; }
 .pax-name-cell { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
 .pax-nest-arrow, .pax-infant-icon, .pax-child-icon { color: var(--muted); flex-shrink: 0; }
@@ -1613,7 +1707,7 @@ tr.pax-row-nested td { color: var(--muted); }
   padding: 24px;
 }
 .modal-shell {
-  background: #ffffff;
+  background: var(--panel);
   border: 1px solid var(--panel-border);
   border-radius: 4px;
   box-shadow: 0 8px 40px -12px rgba(24, 31, 36, 0.2);
@@ -1727,8 +1821,8 @@ tr.row-hover { cursor: pointer; }
 .pax-quick-filter { all: unset; box-sizing: border-box; padding: 6px 12px; font-size: 13px; font-weight: 600; color: var(--muted); border-radius: 4px; cursor: pointer; white-space: nowrap; }
 /* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
 .pax-quick-filters .pax-quick-filter:hover { background: transparent; color: var(--field-value); }
-.pax-quick-filter.selected { background: #ffffff; color: var(--field-value); box-shadow: 0 1px 2px rgba(24, 31, 36, 0.12); }
-.pax-quick-filters .pax-quick-filter.selected:hover { background: #ffffff; }
+.pax-quick-filter.selected { background: var(--paper); color: var(--field-value); box-shadow: 0 1px 2px rgba(24, 31, 36, 0.12); }
+.pax-quick-filters .pax-quick-filter.selected:hover { background: var(--paper); }
 
 .pax-class-counts { display: inline-flex; gap: 8px; }
 .pax-class-count { display: inline-flex; align-items: center; gap: 6px; padding: 0 10px; height: 30px; border-radius: 4px; font-size: 13px; font-weight: 600; color: var(--field-value); font-family: var(--mono); }
@@ -1738,7 +1832,7 @@ tr.row-hover { cursor: pointer; }
 .pax-multiselect-box { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; min-height: 42px; width: 170px; box-sizing: border-box; border: 1px solid var(--field-border); border-radius: var(--field-radius); background: var(--field-bg); padding: 6px 10px; cursor: pointer; }
 .pax-multiselect-box:hover { border-color: var(--field-border-hover); }
 .pax-multiselect-box.open { border-color: var(--field-border-focus); }
-.pax-multiselect-tag { display: inline-flex; align-items: center; gap: 4px; background: #ffffff; border: 1px solid var(--panel-border); border-radius: 3px; padding: 2px 6px; font-size: 12px; font-family: var(--mono); }
+.pax-multiselect-tag { display: inline-flex; align-items: center; gap: 4px; background: var(--paper); border: 1px solid var(--panel-border); border-radius: 3px; padding: 2px 6px; font-size: 12px; font-family: var(--mono); }
 .pax-multiselect-tag button { all: unset; cursor: pointer; color: var(--muted); font-size: 13px; line-height: 1; }
 /* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
 .pax-multiselect-box .pax-multiselect-tag button:hover { background: transparent; color: var(--danger); }
@@ -1780,8 +1874,8 @@ tr.row-hover { cursor: pointer; }
 .seatmap-deck { all: unset; box-sizing: border-box; padding: 6px 12px; font-size: 12px; font-weight: 600; color: var(--muted); border-radius: 4px; cursor: pointer; }
 /* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
 .seatmap-decks .seatmap-deck:hover:not(:disabled) { background: transparent; color: var(--field-value); }
-.seatmap-deck.selected { background: #ffffff; color: var(--field-value); box-shadow: 0 1px 2px rgba(24, 31, 36, 0.12); }
-.seatmap-decks .seatmap-deck.selected:hover { background: #ffffff; }
+.seatmap-deck.selected { background: var(--paper); color: var(--field-value); box-shadow: 0 1px 2px rgba(24, 31, 36, 0.12); }
+.seatmap-decks .seatmap-deck.selected:hover { background: var(--paper); }
 .seatmap-deck:disabled { cursor: not-allowed; opacity: 0.5; }
 .seatmap-toolbar-actions { display: flex; align-items: center; gap: 6px; }
 
@@ -1797,12 +1891,12 @@ tr.row-hover { cursor: pointer; }
 .seatmap-tool-btn.active { background: var(--accent-soft); color: var(--accent); }
 
 .seatmap-popover-anchor { position: relative; }
-.seatmap-legend { position: absolute; z-index: 30; top: calc(100% + 6px); right: 0; width: 240px; max-height: 360px; overflow-y: auto; background: #fff; border: 1px solid var(--panel-border); border-radius: 4px; box-shadow: 0 2px 24px -6px rgba(222, 226, 229, 1); padding: 12px; }
+.seatmap-legend { position: absolute; z-index: 30; top: calc(100% + 6px); right: 0; width: 240px; max-height: 360px; overflow-y: auto; background: var(--paper); border: 1px solid var(--panel-border); border-radius: 4px; box-shadow: 0 2px 24px -6px rgba(222, 226, 229, 1); padding: 12px; }
 .seatmap-legend-states { display: flex; flex-direction: column; gap: 6px; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid var(--border); }
 .seatmap-legend-attrs { display: flex; flex-direction: column; gap: 6px; }
 .seatmap-legend-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--field-value); }
 .seatmap-legend-swatch { width: 20px; height: 18px; flex-shrink: 0; cursor: default; }
-.seat-free-swatch { position: relative; box-sizing: border-box; border-radius: 4px; background: #f3f7f9; border: 1px solid #b5c2cb; overflow: hidden; }
+.seat-free-swatch { position: relative; box-sizing: border-box; border-radius: 4px; background: var(--seat-free-bg); border: 1px solid var(--seat-border); overflow: hidden; }
 
 .seatmap-layers-list.select-menu { left: auto; right: 0; width: 240px; max-height: 360px; overflow-y: auto; }
 .seatmap-layers-list .pax-columns-item { gap: 8px; }

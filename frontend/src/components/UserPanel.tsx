@@ -1,6 +1,7 @@
 import { ChangeEvent, CSSProperties, FormEvent, useRef, useState } from "react";
 import { api } from "../api";
 import { useAuth } from "../auth";
+import { useTheme } from "../theme";
 import { resizeImageToDataUrl, userAvatarColor, userInitials } from "../userDisplay";
 import { Field } from "./Field";
 import { Select } from "./Select";
@@ -29,6 +30,7 @@ interface Props {
 
 export function UserPanel({ onClose }: Props) {
   const { user, logout, updateUser } = useAuth();
+  const { theme, setTheme } = useTheme();
   const [settingsOpen, setSettingsOpen] = useState(true);
   const [securityOpen, setSecurityOpen] = useState(false);
   const [timezone, setTimezone] = useState(user?.timezone ?? "Europe/Moscow");
@@ -119,11 +121,11 @@ export function UserPanel({ onClose }: Props) {
           </button>
           {settingsOpen && (
             <div className="user-panel-section-body">
-              <div className="user-panel-theme-row" title="Coming soon">
+              <div className="user-panel-theme-row">
                 <span>Theme</span>
                 <div className="user-panel-theme-toggle">
-                  <button type="button" className="selected" disabled>Light</button>
-                  <button type="button" disabled>Dark</button>
+                  <button type="button" className={theme === "light" ? "selected" : ""} onClick={() => setTheme("light")}>Light</button>
+                  <button type="button" className={theme === "dark" ? "selected" : ""} onClick={() => setTheme("dark")}>Dark</button>
                 </div>
               </div>
               <Select
