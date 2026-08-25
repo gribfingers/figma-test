@@ -590,7 +590,10 @@ tr.row-hover:hover { background: var(--accent-soft); }
 
 .datetime-menu {
   position: absolute;
-  z-index: 30;
+  /* Above .modal-overlay (100) — these popups are portaled to document.body,
+     so when the field lives inside a Modal (e.g. the passenger form) the
+     dropdown must outrank the modal's own backdrop or it renders behind it. */
+  z-index: 200;
   top: calc(100% + 4px);
   left: 0;
   width: 288px;
@@ -668,9 +671,23 @@ tr.row-hover:hover { background: var(--accent-soft); }
 }
 .dt-cal-time .field2 { flex: 1; }
 
+/* ---- BirthDateField's year/month grids (year → month → day drill-down) ---- */
+.dt-cal-grid-4col { grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.dt-cell-wide { aspect-ratio: auto; height: 32px; font-size: 12px; }
+.dt-cal-drill-up {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+/* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
+.dt-cal-header .dt-cal-drill-up:hover { background: var(--field-bg); }
+
 .select-menu {
   position: absolute;
-  z-index: 30;
+  /* Above .modal-overlay (100) — same reasoning as .datetime-menu above. */
+  z-index: 200;
   top: calc(100% + 4px);
   left: 0;
   width: 100%;

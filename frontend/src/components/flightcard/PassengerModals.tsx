@@ -6,6 +6,7 @@ import { useToast } from "../../toast";
 import { CloseIcon } from "../Icon";
 import { Modal } from "../Modal";
 import { Field } from "../Field";
+import { DateTimePicker } from "../DateTimePicker";
 import {
   BaggageFields,
   DocumentsFields,
@@ -150,17 +151,13 @@ function FlagsTab({
           <Field label="Inbound flight" style={{ flex: 1 }}>
             <input value={draft.inbound} onChange={(e) => onChange({ ...draft, inbound: e.target.value.toUpperCase() })} placeholder=" " />
           </Field>
-          <Field label="Inbound arrival" style={{ flex: 1 }}>
-            <input type="datetime-local" value={draft.inboundTime} onChange={(e) => onChange({ ...draft, inboundTime: e.target.value })} />
-          </Field>
+          <DateTimePicker label="Inbound arrival" value={draft.inboundTime} onChange={(v) => onChange({ ...draft, inboundTime: v })} style={{ flex: 1 }} />
         </div>
         <div style={{ display: "flex", gap: 12, marginTop: 12 }}>
           <Field label="Outbound flight" style={{ flex: 1 }}>
             <input value={draft.outbound} onChange={(e) => onChange({ ...draft, outbound: e.target.value.toUpperCase() })} placeholder=" " />
           </Field>
-          <Field label="Outbound departure" style={{ flex: 1 }}>
-            <input type="datetime-local" value={draft.outboundTime} onChange={(e) => onChange({ ...draft, outboundTime: e.target.value })} />
-          </Field>
+          <DateTimePicker label="Outbound departure" value={draft.outboundTime} onChange={(v) => onChange({ ...draft, outboundTime: v })} style={{ flex: 1 }} />
         </div>
         {conflict && (
           <div className="error-box" style={{ marginTop: 12 }}>

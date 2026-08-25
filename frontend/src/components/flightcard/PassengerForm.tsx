@@ -2,6 +2,8 @@ import { ReactNode, useState } from "react";
 import { Passenger } from "../../api";
 import { Field } from "../Field";
 import { Select } from "../Select";
+import { BirthDateField } from "../BirthDateField";
+import { DateField } from "../DateField";
 import { DOCUMENT_TYPES, PassengerDocument, PassengerExtra, SSR_OPTIONS, isInfant, parsePassengerExtra } from "../../paxExtra";
 
 export type PaxDraft = {
@@ -195,9 +197,7 @@ export function SummaryFields({ draft, onChange, seat }: FieldsProps & { seat?: 
           onChange={(v) => onChange({ ...draft, gender: v as PaxDraft["gender"] })}
           options={[{ value: "", label: "—" }, { value: "M", label: "M" }, { value: "F", label: "F" }]}
         />
-        <Field label="Date of birth" style={{ flex: 1 }}>
-          <input type="date" value={draft.dob} onChange={(e) => onChange({ ...draft, dob: e.target.value })} />
-        </Field>
+        <BirthDateField label="Date of birth" value={draft.dob} onChange={(dob) => onChange({ ...draft, dob })} style={{ flex: 1 }} />
         {infant && (
           <span className="chip middle ok" style={{ marginBottom: 16 }} title="Under 2 years old, derived from date of birth">
             Infant
@@ -293,9 +293,7 @@ export function DocumentsFields({ draft, onChange }: FieldsProps) {
             <Field label="Nationality (country code)" style={{ width: 180 }}>
               <input value={doc.nationality} maxLength={2} onChange={(e) => updateDoc(i, { nationality: e.target.value.toUpperCase() })} placeholder=" " />
             </Field>
-            <Field label="Expiry" style={{ flex: 1 }}>
-              <input type="date" value={doc.doc_expiry} onChange={(e) => updateDoc(i, { doc_expiry: e.target.value })} />
-            </Field>
+            <DateField label="Expiry" value={doc.doc_expiry} onChange={(v) => updateDoc(i, { doc_expiry: v })} style={{ flex: 1 }} />
           </div>
         </div>
       ))}
