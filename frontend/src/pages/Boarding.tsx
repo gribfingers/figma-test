@@ -76,7 +76,7 @@ export function Boarding() {
   }
 
   async function closeFlight() {
-    if (!confirm("Close the flight? Passengers checked in but not boarded will be marked NO SHOW.")) return;
+    if (!confirm("Close the flight? Pax checked in but not boarded will be marked NO SHOW.")) return;
     const { flight: updated, pfs } = await api.closeFlight(fid);
     setFlight(updated);
     setManifest({ label: "PFS (final list after flight close-out)", text: pfs });
@@ -141,7 +141,7 @@ export function Boarding() {
 
       <div className="panel panel--flush">
         <div className="toolbar panel-head">
-          <h3 style={{ margin: 0 }}>Flight passengers</h3>
+          <h3 style={{ margin: 0 }}>Flight pax</h3>
           <div className="spacer" />
           <button className="secondary" onClick={showPnl}>PNL</button>
           <button className="secondary" onClick={showPfs}>PFS (prelim.)</button>
@@ -153,7 +153,7 @@ export function Boarding() {
             <tr>
               <SortTh id="seq" label="Seq. #" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
               <SortTh id="pnr" label="PNR" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-              <SortTh id="passenger" label="Passenger" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+              <SortTh id="passenger" label="Pax" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
               <SortTh id="seat" label="Seat" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
               <SortTh id="ssr" label="SSR" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
               <SortTh id="checkin" label="Check-in" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />

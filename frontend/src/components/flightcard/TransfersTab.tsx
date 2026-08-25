@@ -42,7 +42,7 @@ function TransferTable({ title, rows }: { title: string; rows: TransferRow[] }) 
             <SortTh id="flight" label="Flight" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
             <SortTh id="route" label="Route" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
             <SortTh id="time" label="Time" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-            <SortTh id="pax" label="Passengers" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+            <SortTh id="pax" label="Pax" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
             <SortTh id="bag" label="Baggage" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
             <SortTh id="delay" label="Delay" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
           </tr>

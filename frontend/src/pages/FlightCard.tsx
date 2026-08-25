@@ -14,7 +14,7 @@ import { combineDateAndTime, draftFromFlight, draftsEqual, MainDraft } from "../
 const TABS = [
   { key: "main", label: "Main" },
   { key: "counters", label: "Counters" },
-  { key: "passengers", label: "Passengers" },
+  { key: "passengers", label: "Pax" },
   { key: "transfers", label: "Transfers" },
   { key: "settings", label: "Settings" },
 ] as const;
@@ -93,7 +93,7 @@ export function FlightCard() {
         return;
       }
       if (action === "close") {
-        if (!confirm("Close the flight? Passengers checked in but not boarded will be marked NO SHOW.")) return;
+        if (!confirm("Close the flight? Pax checked in but not boarded will be marked NO SHOW.")) return;
         const { flight: updated, pfs } = await api.closeFlight(flight.id);
         setFlight(updated);
         setDraft(draftFromFlight(updated));

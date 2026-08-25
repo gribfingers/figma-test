@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { api, Passenger } from "../../api";
-import { PassengerExtra, asvcForPassenger, parsePassengerExtra } from "../../paxExtra";
+import { PassengerExtra, asvcForPassenger, parsePassengerExtra, trStatus } from "../../paxExtra";
 import { CloseIcon } from "../Icon";
 import { Modal } from "../Modal";
 import { PassengerFormFields, paxDraftFrom, paxDraftToPayload } from "./PassengerForm";
@@ -49,7 +49,7 @@ function EditModal({
 
   return (
     <Modal
-      title={`Edit passenger: ${paxName(passenger)}`}
+      title={`Edit pax: ${paxName(passenger)}`}
       onClose={onClose}
       width={520}
       footer={
@@ -279,42 +279,62 @@ function FfpModal({
   );
 }
 
-const MOCK_ROUTE = [
-  { airline: "XX", flight: "123", date: "12APR25", from: "DME", to: "LED", cls: "Y", etd: "12:10", atd: "13:40", past: true },
-  { airline: "XY", flight: "123", date: "321", from: "LED", to: "SVX", cls: "C", etd: "Delayed (15:30)", atd: "", current: true },
-  { airline: "XY", flight: "456", date: "12APR25", from: "SVX", to: "PEE", cls: "C", etd: "16:30", atd: "", past: false },
-];
+function formatLegTime(v?: string): string {
+  if (!v) return "—";
+  const d = new Date(v);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d
+    .toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit" })
+    .replace(",", "")
+    .toUpperCase();
+}
 
+/**
+ * Inbound/outbound connections have a real backing field (Passenger.extra,
+ * set via the Edit passenger form's Inbound/Outbound fields) — unlike the
+ * illustrative mock data elsewhere in this file (ASVC/coupons), this modal
+ * must reflect exactly what's on file, not generate anything, so it agrees
+ * with the Inbound/Outbound table columns and the TR flag's status.
+ */
 function RouteModal({ passenger, onClose }: { passenger: Passenger; onClose: () => void }) {
+  const extra = parsePassengerExtra(passenger);
+  const status = trStatus(passenger);
+  const legs: { label: string; flight: string; time?: string }[] = [];
+  if (extra.inbound) legs.push({ label: "Inbound (arrival)", flight: extra.inbound, time: extra.inboundTime });
+  if (extra.outbound) legs.push({ label: "Outbound (departure)", flight: extra.outbound, time: extra.outboundTime });
+
   return (
     <Modal
-      title={`Passenger route: ${paxName(passenger)}`}
+      title={`Pax route: ${paxName(passenger)}`}
       onClose={onClose}
-      width={800}
+      width={600}
       footer={<button type="button" className="tertiary" onClick={onClose}>Close</button>}
     >
-      <table className="modal-table">
-        <thead>
-          <tr>
-            <th>Airline</th><th>Flight</th><th>Date</th><th>From</th><th>To</th><th>Class</th>
-            <th>Departure (ETD)</th><th>Arrival (ATD)</th>
-          </tr>
-        </thead>
-        <tbody>
-          {MOCK_ROUTE.map((r, i) => (
-            <tr key={i} className={r.current ? "route-current" : r.past ? "route-past" : ""}>
-              <td className="mono">{r.airline}</td>
-              <td className="mono">{r.flight}</td>
-              <td className="mono">{r.date}</td>
-              <td className="mono">{r.from}</td>
-              <td className="mono">{r.to}</td>
-              <td>{r.cls}</td>
-              <td className={r.etd.startsWith("Delayed") ? "route-delayed" : "mono"}>{r.etd}</td>
-              <td className="mono">{r.atd}</td>
+      {legs.length === 0 ? (
+        <div style={{ color: "var(--muted)" }}>No connecting flights on file — add one from Edit.</div>
+      ) : (
+        <table className="modal-table">
+          <thead>
+            <tr>
+              <th>Leg</th><th>Flight</th><th>Time</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {legs.map((leg) => (
+              <tr key={leg.label}>
+                <td>{leg.label}</td>
+                <td className="mono">{leg.flight}</td>
+                <td className={status === "conflict" ? "route-delayed" : "mono"}>{formatLegTime(leg.time)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      {status === "conflict" && (
+        <div className="error-box" style={{ marginTop: 12 }}>
+          The outbound connection departs before (or at) the inbound arrival — too tight to make.
+        </div>
+      )}
     </Modal>
   );
 }

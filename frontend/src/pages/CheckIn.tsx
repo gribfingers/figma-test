@@ -129,7 +129,7 @@ export function CheckIn() {
               <thead>
                 <tr>
                 <SortTh id="pnr" label="PNR" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                <SortTh id="passenger" label="Passenger" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="passenger" label="Pax" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
                 <SortTh id="status" label="Status" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
                 <SortTh id="seat" label="Seat" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
               </tr>
@@ -155,7 +155,7 @@ export function CheckIn() {
 
           {selected && (
             <div className="panel">
-              <h3>Passenger details {selected.surname}/{selected.given_name} · PNR {selected.record_locator}</h3>
+              <h3>Pax details {selected.surname}/{selected.given_name} · PNR {selected.record_locator}</h3>
               <form onSubmit={submitCheckin}>
                 <div className="grid-2">
                   <Select

@@ -118,7 +118,7 @@ export function PassengersToolbar({
 
         <div className="input-box" style={{ width: 190 }}>
           <SearchIcon size={16} />
-          <input placeholder="Search passengers…" value={query} onChange={(e) => onQuery(e.target.value)} />
+          <input placeholder="Search pax…" value={query} onChange={(e) => onQuery(e.target.value)} />
         </div>
 
         <div className="pax-multiselect" ref={servicesRef}>
@@ -166,9 +166,9 @@ export function PassengersToolbar({
 
         <div className="spacer" />
 
-        <span className="passengers-count">{totalCount} passengers</span>
+        <span className="passengers-count">{totalCount} pax</span>
 
-        <button type="button" className="tertiary" onClick={onAddPassenger}>Add passenger</button>
+        <button type="button" className="tertiary" onClick={onAddPassenger}>Add pax</button>
 
         <div className="pax-columns-menu" ref={columnsRef}>
           <button type="button" className="icon-button pax-columns-trigger" title="Columns" onClick={() => setColumnsOpen((o) => !o)}>

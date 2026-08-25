@@ -207,7 +207,7 @@ export function PassengersTab({ flight }: Props) {
 
   async function deletePassenger(p: Passenger) {
     setContextMenu(null);
-    if (!window.confirm(`Delete passenger ${p.surname} ${p.given_name}?`)) return;
+    if (!window.confirm(`Delete pax ${p.surname} ${p.given_name}?`)) return;
     try {
       await api.deletePassenger(flight.id, p.id);
       loadPassengers();
@@ -457,7 +457,7 @@ export function PassengersTab({ flight }: Props) {
               {rows.length === 0 && (
                 <tr>
                   <td colSpan={visibleColCount} style={{ color: "var(--muted)" }}>
-                    No passengers found.
+                    No pax found.
                   </td>
                 </tr>
               )}
@@ -474,7 +474,7 @@ export function PassengersTab({ flight }: Props) {
           {seatAction && (
             <div className="seat-pick-banner">
               <span>
-                {seatAction.mode === "assign" ? "Select a seat for " : "Select a passenger's seat to swap with "}
+                {seatAction.mode === "assign" ? "Select a seat for " : "Select a pax's seat to swap with "}
                 <b>
                   {seatAction.passenger.surname} {seatAction.passenger.given_name}
                 </b>
@@ -538,7 +538,7 @@ export function PassengersTab({ flight }: Props) {
 
       {addOpen && (
         <Modal
-          title="Add passenger"
+          title="Add pax"
           onClose={() => setAddOpen(false)}
           width={520}
           footer={
