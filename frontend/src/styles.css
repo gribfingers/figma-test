@@ -1407,6 +1407,31 @@ a { color: var(--accent); }
 .counter-table-label { font-size: 13px; color: var(--field-value); }
 .counter-table-value { text-align: right; font-weight: 700; color: var(--accent); font-family: var(--mono); font-variant-numeric: tabular-nums; }
 
+/* Transfers tab: clicking an Inbound/Outbound row swaps that side of the
+   grid for a passenger picker (checkbox per PNR/passenger), which drives
+   the Cancel check-in / Reaccommodation actions below it. */
+.transfer-detail-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.transfer-detail-title { font-size: 15px; font-weight: 700; color: var(--field-value); }
+.transfer-pax-list { border: 1px solid var(--panel-border); border-radius: 4px; overflow: hidden; }
+.transfer-pax-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--panel-border); }
+.transfer-pax-row:last-child { border-bottom: none; }
+.transfer-pax-row .checkbox-row { flex: 1; min-width: 0; }
+.transfer-pnr-head { background: #f4f7fa; font-weight: 700; }
+.transfer-pnr-head .checkbox-row { font-weight: 700; }
+.transfer-pax-item { padding-left: 30px; }
+.transfer-pax-item:nth-child(even) { background: var(--field-bg); }
+.transfer-pax-empty { color: var(--muted); justify-content: center; }
+.transfer-pax-actions { display: flex; gap: 2px; flex-shrink: 0; }
+.transfer-detail-actions { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
+
+.transfer-flight-options { border: 1px solid var(--panel-border); border-radius: 4px; overflow: hidden; margin-bottom: 4px; }
+.transfer-flight-option { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--panel-border); cursor: pointer; }
+.transfer-flight-option:last-child { border-bottom: none; }
+.transfer-flight-option:hover { background: var(--field-bg); }
+.transfer-flight-option.selected { background: var(--accent-soft); }
+.transfer-flight-option input[type="radio"] { width: 16px; height: 16px; margin: 0; flex-shrink: 0; cursor: pointer; }
+.transfer-flight-option span:nth-child(3) { flex: 1; }
+
 /* Passengers tab */
 /* The tab fills the flight card body exactly (no page-level scroll); the
    passenger list and the seat map each scroll independently inside it. */
