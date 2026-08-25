@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import "./db";
+import { ensureSuperadmin } from "./bootstrapAdmin";
 import { flightsRouter } from "./routes/flights";
 import { checkinRouter } from "./routes/checkin";
 import { boardingRouter } from "./routes/boarding";
@@ -8,6 +9,8 @@ import { manifestRouter } from "./routes/manifest";
 import { authRouter } from "./routes/auth";
 import { usersRouter } from "./routes/users";
 import { requireAuth } from "./middleware/auth";
+
+ensureSuperadmin();
 
 const app = express();
 app.use(cors());

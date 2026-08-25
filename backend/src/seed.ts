@@ -1,20 +1,11 @@
 import { db } from "./db";
 import { buildSeatMap } from "./utils/seatmap";
-import { hashPassword } from "./auth";
+import { ensureSuperadmin } from "./bootstrapAdmin";
 
-// Ensures a superadmin account exists independent of the flights/passengers
-// seed below, so re-running this script never locks you out of a database
-// that already has flight data but was created before auth existed.
-const existingSuperadmin = db.prepare("SELECT id FROM users WHERE role = 'superadmin'").get();
-if (!existingSuperadmin) {
-  const login = "admin";
-  const password = "admin123";
-  db.prepare(
-    `INSERT INTO users (login, password_hash, first_name, last_name, role, can_edit, company)
-     VALUES (?, ?, ?, ?, 'superadmin', 1, ?)`
-  ).run(login, hashPassword(password), "Admin", "Admin", "Aeroflot");
-  console.log(`Seeded superadmin account — login: ${login}  password: ${password} (change it after logging in).`);
-}
+// Also done unconditionally on every server start (index.ts) — repeated
+// here so running this script directly against a fresh database still
+// gets you a login even before the server has ever started.
+ensureSuperadmin();
 
 const existing = db.prepare("SELECT COUNT(*) as c FROM flights").get() as { c: number };
 if (existing.c > 0) {
