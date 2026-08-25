@@ -120,6 +120,7 @@ export function PassengersTab({ flight }: Props) {
   const [activeId, setActiveId] = useState<number | null>(null);
   const [modal, setModal] = useState<{ kind: ModalKind; passenger: Passenger } | null>(null);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; passenger: Passenger } | null>(null);
+  const [seatAction, setSeatAction] = useState<{ passenger: Passenger; mode: "assign" | "swap" } | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [addDraft, setAddDraft] = useState(EMPTY_PAX_DRAFT);
   const [adding, setAdding] = useState(false);
@@ -155,6 +156,53 @@ export function PassengersTab({ flight }: Props) {
 
   function loadPassengers() {
     api.passengers(flight.id, query).then(setPassengers);
+  }
+
+  function refreshSeating() {
+    loadPassengers();
+    api.seatmap(flight.id).then(setSeats);
+  }
+
+  function startAssignSeat(p: Passenger) {
+    setContextMenu(null);
+    setMapHidden(false);
+    setSeatAction({ passenger: p, mode: "assign" });
+  }
+
+  function startSwapSeat(p: Passenger) {
+    setContextMenu(null);
+    setMapHidden(false);
+    setSeatAction({ passenger: p, mode: "swap" });
+  }
+
+  async function handleAssignSeatClick(seatCode: string) {
+    if (!seatAction || seatAction.mode !== "assign") return;
+    try {
+      await api.changeSeat(seatAction.passenger.id, seatCode);
+      refreshSeating();
+      setSeatAction(null);
+    } catch (e: any) {
+      alert(e.message);
+    }
+  }
+
+  async function handleOccupiedSeatClick(s: SeatCell) {
+    if (seatAction?.mode === "swap") {
+      if (s.passenger_id == null) return;
+      if (s.passenger_id === seatAction.passenger.id) {
+        setSeatAction(null);
+        return;
+      }
+      try {
+        await api.swapSeats(seatAction.passenger.id, s.passenger_id);
+        refreshSeating();
+        setSeatAction(null);
+      } catch (e: any) {
+        alert(e.message);
+      }
+      return;
+    }
+    if (s.passenger_id != null) setActiveId(s.passenger_id);
   }
 
   async function deletePassenger(p: Passenger) {
@@ -206,6 +254,15 @@ export function PassengersTab({ flight }: Props) {
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [contextMenu]);
+
+  useEffect(() => {
+    if (!seatAction) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setSeatAction(null);
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [seatAction]);
 
   useEffect(() => {
     loadPassengers();
@@ -414,16 +471,28 @@ export function PassengersTab({ flight }: Props) {
         </button>
       ) : (
         <div className="passengers-seatmap" ref={seatmapRef}>
+          {seatAction && (
+            <div className="seat-pick-banner">
+              <span>
+                {seatAction.mode === "assign" ? "Select a seat for " : "Select a passenger's seat to swap with "}
+                <b>
+                  {seatAction.passenger.surname} {seatAction.passenger.given_name}
+                </b>
+              </span>
+              <button type="button" className="tertiary" onClick={() => setSeatAction(null)}>
+                Cancel
+              </button>
+            </div>
+          )}
           <SeatMapPanel
             flightId={flight.id}
             seats={seats}
             selected={activeSeat}
+            onSelect={handleAssignSeatClick}
             onSeatUpdated={handleSeatUpdated}
             onHide={() => setMapHidden(true)}
             cabinFeatures={cabinFeatures}
-            onSelectOccupied={(s) => {
-              if (s.passenger_id != null) setActiveId(s.passenger_id);
-            }}
+            onSelectOccupied={handleOccupiedSeatClick}
           />
         </div>
       )}
@@ -444,6 +513,14 @@ export function PassengersTab({ flight }: Props) {
           className="select-menu pax-context-menu"
           style={{ left: contextMenu.x, top: contextMenu.y }}
         >
+          <li className="pax-columns-item" onClick={() => startAssignSeat(contextMenu.passenger)}>
+            {contextMenu.passenger.seat ? "Change seat" : "Assign seat"}
+          </li>
+          {contextMenu.passenger.seat && (
+            <li className="pax-columns-item" onClick={() => startSwapSeat(contextMenu.passenger)}>
+              Swap seat…
+            </li>
+          )}
           <li
             className="pax-columns-item"
             onClick={() => {

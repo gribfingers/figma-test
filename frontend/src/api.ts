@@ -158,6 +158,11 @@ export const api = {
     }),
   changeSeat: (passengerId: number, seat: string) =>
     request<Passenger>(`/checkin/${passengerId}/seat`, { method: "POST", body: JSON.stringify({ seat }) }),
+  swapSeats: (passengerId: number, otherPassengerId: number) =>
+    request<{ a: Passenger; b: Passenger }>(`/checkin/swap-seats`, {
+      method: "POST",
+      body: JSON.stringify({ passengerId, otherPassengerId }),
+    }),
 
   boardingList: (flightId: number) =>
     request<{ passengers: Passenger[]; counts: Record<string, number> }>(`/boarding/${flightId}/passengers`),

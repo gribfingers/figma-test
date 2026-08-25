@@ -1415,6 +1415,20 @@ a { color: var(--accent); }
 .passengers-list .pax-toolbar { flex-shrink: 0; }
 .passengers-list .table-scroll { flex: 1; min-height: 0; overflow-y: auto; }
 .passengers-seatmap { flex-shrink: 0; border: 1px solid var(--panel-border); border-radius: 4px; padding: 16px; display: flex; flex-direction: column; min-height: 0; }
+.seat-pick-banner {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--field-value);
+}
 .passengers-count { font-size: 12px; color: var(--muted); font-weight: 600; }
 
 .passengers-table th, .passengers-table td { padding: 8px 10px; white-space: nowrap; }

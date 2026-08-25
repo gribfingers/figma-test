@@ -22,6 +22,35 @@ checkinRouter.get("/pnr/:recordLocator", (req, res) => {
 });
 
 /**
+ * Swap seats between two passengers on the same flight — both must already
+ * have a seat assigned. Registered ahead of POST /:passengerId so "swap-seats"
+ * isn't swallowed as a passengerId by that route.
+ */
+checkinRouter.post("/swap-seats", requireEdit, (req, res) => {
+  const { passengerId, otherPassengerId } = req.body;
+  const a = db.prepare("SELECT * FROM passengers WHERE id = ?").get(passengerId) as Passenger | undefined;
+  const b = db.prepare("SELECT * FROM passengers WHERE id = ?").get(otherPassengerId) as Passenger | undefined;
+  if (!a || !b) return res.status(404).json({ error: "Passenger not found" });
+  if (a.flight_id !== b.flight_id) return res.status(400).json({ error: "Passengers must be on the same flight" });
+  if (!a.seat || !b.seat) return res.status(400).json({ error: "Both passengers must already have a seat assigned" });
+  if (a.boarding_status === "BOARDED" || b.boarding_status === "BOARDED") {
+    return res.status(409).json({ error: "Cannot change seats after boarding" });
+  }
+
+  const tx = db.transaction(() => {
+    db.prepare("UPDATE seats SET passenger_id = ? WHERE flight_id = ? AND seat = ?").run(b.id, a.flight_id, a.seat);
+    db.prepare("UPDATE seats SET passenger_id = ? WHERE flight_id = ? AND seat = ?").run(a.id, b.flight_id, b.seat);
+    db.prepare("UPDATE passengers SET seat = ? WHERE id = ?").run(b.seat, a.id);
+    db.prepare("UPDATE passengers SET seat = ? WHERE id = ?").run(a.seat, b.id);
+  });
+  tx();
+
+  const updatedA = db.prepare("SELECT * FROM passengers WHERE id = ?").get(a.id) as Passenger;
+  const updatedB = db.prepare("SELECT * FROM passengers WHERE id = ?").get(b.id) as Passenger;
+  res.json({ a: serializePassenger(updatedA), b: serializePassenger(updatedB) });
+});
+
+/**
  * Perform check-in for a passenger: capture travel document (APIS-style
  * data), assign a seat, record baggage, issue the boarding pass (BCBP).
  */
