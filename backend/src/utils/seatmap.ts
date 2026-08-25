@@ -18,7 +18,6 @@ export interface AircraftTemplate {
   name: string;
   businessRows: number[];
   economyRows: number[];
-  exitRows: number[];
   letters: string[];
 }
 
@@ -28,7 +27,6 @@ export const AIRCRAFT_TEMPLATES: Record<string, AircraftTemplate> = {
     name: "Airbus A320",
     businessRows: [1, 2, 3],
     economyRows: Array.from({ length: 27 }, (_, i) => i + 4), // rows 4-30
-    exitRows: [12, 13],
     letters: ["A", "B", "C", "D", "E", "F"],
   },
   B738: {
@@ -36,7 +34,6 @@ export const AIRCRAFT_TEMPLATES: Record<string, AircraftTemplate> = {
     name: "Boeing 737-800",
     businessRows: [1, 2, 3, 4],
     economyRows: Array.from({ length: 28 }, (_, i) => i + 5), // rows 5-32
-    exitRows: [14, 15],
     letters: ["A", "B", "C", "D", "E", "F"],
   },
   A321: {
@@ -44,7 +41,6 @@ export const AIRCRAFT_TEMPLATES: Record<string, AircraftTemplate> = {
     name: "Airbus A321",
     businessRows: [1, 2, 3, 4],
     economyRows: Array.from({ length: 29 }, (_, i) => i + 5), // rows 5-33
-    exitRows: [15, 16],
     letters: ["A", "B", "C", "D", "E", "F"],
   },
   // A330 is a widebody (2-4-2 economy, twin aisle) — this app's seat map model
@@ -56,7 +52,6 @@ export const AIRCRAFT_TEMPLATES: Record<string, AircraftTemplate> = {
     name: "Airbus A330",
     businessRows: [1, 2, 3, 4, 5, 6],
     economyRows: Array.from({ length: 33 }, (_, i) => i + 7), // rows 7-39
-    exitRows: [20, 21],
     letters: ["A", "B", "C", "D", "E", "F"],
   },
 };
@@ -72,7 +67,11 @@ export function buildSeatMap(aircraftType: string): SeatDef[] {
         row,
         letter,
         cabinClass,
-        exitRow: tpl.exitRows.includes(row),
+        // Exit doors are drawn on the frontend as seatless structural rows
+        // (frontend/src/cabinLayout.ts) rather than derived from real seats,
+        // so no seat is auto-flagged exit here — exit_row stays a manual,
+        // per-seat, agent-editable attribute (see the seat editor).
+        exitRow: false,
       });
     }
   };

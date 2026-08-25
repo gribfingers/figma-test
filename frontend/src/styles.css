@@ -874,10 +874,10 @@ button.icon-btn {
 .seat-child-age { font-size: 9px; font-weight: 600; line-height: 1; color: #707d95; }
 .seat-checked-in .seat-child-age, .seat-boarded .seat-child-age, .seat.selected .seat-child-age { color: #ffffff; }
 
-.aisle { width: 20px; display: flex; align-items: center; justify-content: center; }
-.aisle-row-num { font-size: 9px; font-weight: 600; color: var(--muted); font-family: var(--mono); }
+.aisle { width: 28px; display: flex; align-items: center; justify-content: center; }
+.aisle-row-num { font-size: 13px; font-weight: 700; color: var(--field-value); font-family: var(--mono); }
 
-/* Fixed-width slot on each end of every row, so exit-row markers don't shift column alignment on other rows. */
+/* Fixed-width slot on each end of every row, so exit-door markers don't shift column alignment on other rows. */
 .seat-exit-slot { flex-shrink: 0; width: 14px; align-self: stretch; display: flex; align-items: center; justify-content: center; }
 .seat-exit-slot.active.left { border-left: 2px solid var(--accent); }
 .seat-exit-slot.active.right { border-right: 2px solid var(--accent); }
@@ -888,6 +888,23 @@ button.icon-btn {
   line-height: 1;
   color: var(--accent);
   text-transform: uppercase;
+}
+
+/* Exit doors are seatless gaps between two real rows — a dashed break, not a seat/WC-styled box. */
+.cabin-exit-gap { flex: 1; height: 30px; display: flex; align-items: center; }
+.cabin-exit-gap::after { content: ""; width: 100%; border-top: 1px dashed var(--panel-border); }
+
+/* Business/Economy section boundary label. */
+.cabin-section-row { margin-top: 4px; }
+.cabin-section-label {
+  flex: 1;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--field-value);
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--panel-border);
 }
 
 /* WC/galley blocks: extra rows inserted between seat rows, spanning the same width the seat columns + aisle occupy. */

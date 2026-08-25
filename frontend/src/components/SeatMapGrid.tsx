@@ -13,20 +13,59 @@ interface Props {
   onEditSeat?: (seat: SeatCell) => void;
   /** Which attribute keys the "layers" menu currently shows on the map — everything, if omitted. */
   visibleLayers?: Set<string>;
-  /** WC/galley blocks to render as extra rows in the cabin, keyed by the seat row they follow. */
+  /** WC/galley/exit-door blocks to render as extra rows in the cabin, keyed by the seat row they follow. */
   cabinFeatures?: CabinFeature[];
 }
 
 const LETTER_ORDER = ["A", "B", "C", "D", "E", "F"];
+const CABIN_CLASS_LABEL: Record<string, string> = { J: "Business", Y: "Economy" };
+
+function FeatureRow({ type }: { type: CabinFeatureType }) {
+  if (type === "exit") {
+    return (
+      <div className="seatrow cabin-feature-row">
+        <span className="seat-exit-slot active left">
+          <span className="seat-exit-label">EXIT</span>
+        </span>
+        <span className="cabin-exit-gap" />
+        <span className="seat-exit-slot active right">
+          <span className="seat-exit-label">EXIT</span>
+        </span>
+      </div>
+    );
+  }
+  if (type === "galley") {
+    return (
+      <div className="seatrow cabin-feature-row">
+        <span className="seat-exit-slot" />
+        <span className="cabin-feature-bar">
+          <GalleyIcon size={14} />
+        </span>
+        <span className="seat-exit-slot" />
+      </div>
+    );
+  }
+  // "wc" — shown as a matching pair, one on each side of the aisle.
+  return (
+    <div className="seatrow cabin-feature-row">
+      <span className="seat-exit-slot" />
+      <span className="cabin-feature-bar">WC</span>
+      <span className="aisle" />
+      <span className="cabin-feature-bar">WC</span>
+      <span className="seat-exit-slot" />
+    </div>
+  );
+}
 
 /**
  * Cell rendering follows the Figma "Seat H" component (30291:29546) —
  * fixed 30×30, fill/stroke/icon/text colors keyed by Type (Free/Checked-
  * in/Boarded), a 6px left color bar for the Presit/Booked hold markers,
  * and no letter/number glyph in the cell at all (that only lives in the
- * column headers below) — an empty seat with nothing else set renders as
- * a plain colored box. "Special" (Cradle/Text) variants are skipped: they
- * mark non-seat filler cells this app's seat map model doesn't generate.
+ * aisle row-number labels) — an empty seat with nothing else set renders
+ * as a plain colored box. "Special" (Cradle/Text) variants are skipped:
+ * they mark non-seat filler cells this app's seat map model doesn't
+ * generate.
  */
 export function SeatMapGrid({ seats, selected, onSelect, editMode, onEditSeat, visibleLayers, cabinFeatures }: Props) {
   const rows = new Map<number, SeatCell[]>();
@@ -46,11 +85,12 @@ export function SeatMapGrid({ seats, selected, onSelect, editMode, onEditSeat, v
     featuresByRow.get(f.afterRow)!.push(f.type);
   }
 
+  let prevClass: string | null = null;
+
   return (
     <div className="seatmap">
       <div className="seatrow seat-col-headers">
         <span className="seat-exit-slot" />
-        <span style={{ width: 26 }} />
         {columns.map((letter) => (
           <Fragment key={letter}>
             <span className="seat-col-label">{letter}</span>
@@ -59,16 +99,25 @@ export function SeatMapGrid({ seats, selected, onSelect, editMode, onEditSeat, v
         ))}
         <span className="seat-exit-slot" />
       </div>
+      {(featuresByRow.get(0) ?? []).map((type, i) => (
+        <FeatureRow type={type} key={`pre-${type}-${i}`} />
+      ))}
       {rowNumbers.map((row) => {
         const rowSeats = rows.get(row)!.sort((a, b) => LETTER_ORDER.indexOf(a.seat.slice(3)) - LETTER_ORDER.indexOf(b.seat.slice(3)));
-        const isExitRow = rowSeats.some((s) => s.exit_row);
+        const cls = rowSeats[0]?.cabin_class ?? null;
+        const sectionChanged = cls !== prevClass;
+        prevClass = cls;
         return (
           <Fragment key={row}>
+            {sectionChanged && cls && (
+              <div className="seatrow cabin-section-row">
+                <span className="seat-exit-slot" />
+                <span className="cabin-section-label">{CABIN_CLASS_LABEL[cls] ?? cls}</span>
+                <span className="seat-exit-slot" />
+              </div>
+            )}
             <div className="seatrow">
-              <span className={`seat-exit-slot left ${isExitRow ? "active" : ""}`}>
-                {isExitRow && <span className="seat-exit-label">EXIT</span>}
-              </span>
-              <span style={{ width: 26, color: "var(--muted)" }}>{row}</span>
+              <span className="seat-exit-slot" />
               {rowSeats.map((s) => {
                 const letter = s.seat.slice(3);
                 const extra = parseSeatExtra(s);
@@ -127,19 +176,10 @@ export function SeatMapGrid({ seats, selected, onSelect, editMode, onEditSeat, v
                   </Fragment>
                 );
               })}
-              <span className={`seat-exit-slot right ${isExitRow ? "active" : ""}`}>
-                {isExitRow && <span className="seat-exit-label">EXIT</span>}
-              </span>
+              <span className="seat-exit-slot" />
             </div>
             {(featuresByRow.get(row) ?? []).map((type, i) => (
-              <div className="seatrow cabin-feature-row" key={`${row}-${type}-${i}`}>
-                <span className="seat-exit-slot" />
-                <span style={{ width: 26 }} />
-                <span className="cabin-feature-bar">
-                  {type === "wc" ? "WC" : <GalleyIcon size={14} />}
-                </span>
-                <span className="seat-exit-slot" />
-              </div>
+              <FeatureRow type={type} key={`${row}-${type}-${i}`} />
             ))}
           </Fragment>
         );
