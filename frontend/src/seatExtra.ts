@@ -85,3 +85,38 @@ export function seatState(s: SeatCell): SeatState {
   if (s.boarding_status === "BOARDED") return "boarded";
   return "checked_in";
 }
+
+// "Subtype" in the Figma "Seat H" component (30291:29546) — the 6×30 color
+// bar on the seat's left edge for the two hold markers.
+export type SeatSubtype = "none" | "presit" | "booked";
+
+export function seatSubtype(extra: SeatExtra): SeatSubtype {
+  if (extra.preseated) return "presit";
+  if (extra.reserved) return "booked";
+  return "none";
+}
+
+function ageFromSeatDob(dob: string | null): number | null {
+  if (!dob) return null;
+  const birth = new Date(dob);
+  if (Number.isNaN(birth.getTime())) return null;
+  const now = new Date();
+  let age = now.getUTCFullYear() - birth.getUTCFullYear();
+  const beforeBirthday =
+    now.getUTCMonth() < birth.getUTCMonth() ||
+    (now.getUTCMonth() === birth.getUTCMonth() && now.getUTCDate() < birth.getUTCDate());
+  if (beforeBirthday) age -= 1;
+  return age;
+}
+
+/**
+ * The Figma component's "State=Child" — a distinct visual (narrow child
+ * icon + age badge) shown when the seat's real occupant is a minor, derived
+ * from the passenger's dob. Independent of the manually-set "child"/
+ * "infant" SEAT_ATTRS flags above, which mark a seat's general suitability
+ * rather than describe who's actually sitting in it.
+ */
+export function occupantAge(s: SeatCell): number | null {
+  if (!s.passenger_id) return null;
+  return ageFromSeatDob(s.dob);
+}

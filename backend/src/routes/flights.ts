@@ -153,7 +153,7 @@ flightsRouter.get("/:id/seatmap", (req, res) => {
   const seats = db
     .prepare(
       `SELECT s.seat, s.cabin_class, s.exit_row, s.passenger_id, s.extra,
-              p.surname, p.given_name, p.record_locator, p.boarding_status
+              p.surname, p.given_name, p.record_locator, p.boarding_status, p.dob
        FROM seats s LEFT JOIN passengers p ON p.id = s.passenger_id
        WHERE s.flight_id = ? ORDER BY s.seat`
     )

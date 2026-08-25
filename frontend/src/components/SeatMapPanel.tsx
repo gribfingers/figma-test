@@ -19,15 +19,15 @@ interface Props {
 
 const LEGEND_STATES: { cls: string; label: string }[] = [
   { cls: "", label: "Free" },
-  { cls: "occupied", label: "Checked-in" },
-  { cls: "boarded", label: "Boarded" },
+  { cls: "seat-checked-in", label: "Checked-in" },
+  { cls: "seat-boarded", label: "Boarded" },
 ];
 
 // Hold markers overlay any of the three states above (a checked-in seat can
 // also be reserved, etc.) rather than being states of their own.
 const LEGEND_HOLDS: { cls: string; label: string }[] = [
-  { cls: "preseated", label: "Предрассажен" },
-  { cls: "reserved", label: "Забронировано" },
+  { cls: "seat-subtype-presit", label: "Предрассажен" },
+  { cls: "seat-subtype-booked", label: "Забронировано" },
 ];
 
 /**
@@ -109,7 +109,9 @@ export function SeatMapPanel({ flightId, seats, selected, onSelect, onSeatUpdate
                   ))}
                   {LEGEND_HOLDS.map((s) => (
                     <div key={s.label} className="seatmap-legend-row">
-                      <span className={`seat seatmap-legend-swatch ${s.cls}`} />
+                      <span className="seatmap-legend-swatch seat-free-swatch">
+                        <span className={`seat-subtype-bar ${s.cls}`} />
+                      </span>
                       {s.label}
                     </div>
                   ))}

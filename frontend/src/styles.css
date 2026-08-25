@@ -829,37 +829,50 @@ button.icon-btn {
 .counter .num { font-size: 22px; font-weight: 800; }
 .counter .lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
 
-.seatmap { display: flex; flex-direction: column; gap: 3px; font-family: var(--mono); font-size: 13px; font-variant-numeric: tabular-nums; }
+/* ---- Seat cell: Figma "Seat H" component (30291:29546), 30x30 fixed ---- */
+.seatmap { display: flex; flex-direction: column; gap: 3px; font-family: var(--font); font-size: 13px; }
 .seatrow { display: flex; gap: 3px; align-items: center; }
+.seat-col-headers { margin-bottom: 2px; }
+.seat-col-label { width: 30px; text-align: center; font-size: 11px; font-weight: 600; color: var(--muted); font-family: var(--mono); }
+
 .seat {
   position: relative;
-  width: 34px;
+  box-sizing: border-box;
+  width: 30px;
   height: 30px;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1px;
   border-radius: 6px;
-  border: 1px solid var(--border);
-  background: #f7f8fa;
+  background: #f3f7f9;
+  border: 1px solid #b5c2cb;
   cursor: pointer;
+  overflow: hidden;
   transition: background-color 0.1s ease, border-color 0.1s ease;
 }
-.seat:hover:not(.occupied) { border-color: var(--accent); }
-.seat.occupied { background: #dbe6f8; border-color: #9db8e8; cursor: default; }
-.seat.boarded { background: var(--ok-bg); border-color: #8fd4a8; cursor: default; }
-.seat.selected { background: var(--accent); color: #fff; border-color: var(--accent); }
-.seat.exit { border-style: dashed; }
-.seat.business:not(.has-attr):not(.blocked) { background: #fff3d6; }
-.seat.has-attr:not(.blocked) { background: #f1ecfb; border-color: #cbb8f0; }
-.seat.blocked { background: var(--danger-soft); border-color: var(--danger-border); cursor: not-allowed; }
-/* Hold markers (no seat-hold subsystem yet — set by hand in the editor) sit on top of whatever the base state color is, as a top stripe. Placeholder colors pending exact spec. */
-.seat.preseated { box-shadow: inset 0 3px 0 0 #e8962e; }
-.seat.reserved { box-shadow: inset 0 3px 0 0 #4a90d9; }
-.seat.preseated.reserved { box-shadow: inset 0 3px 0 0 #e8962e, inset 0 -3px 0 0 #4a90d9; }
-.seat-price { font-size: 8px; line-height: 1; font-weight: 600; color: var(--muted); }
-.seat.selected .seat-price { color: #fff; }
+.seat:hover:not(.seat-checked-in):not(.seat-boarded) { border-color: var(--accent); }
+.seat-checked-in { background: #8ca0b9; border-color: transparent; cursor: default; }
+.seat-boarded { background: #6c982b; border-color: transparent; cursor: default; }
+.seat.selected { background: var(--accent); border-color: var(--accent); }
+.seat.blocked { cursor: not-allowed; }
+
+/* Presit/Booked hold markers: 6px color bar on the seat's left edge. */
+.seat-subtype-bar { position: absolute; left: 0; top: 0; bottom: 0; width: 6px; }
+.seat-subtype-presit { background: #ffaa00; }
+.seat-subtype-booked { background: #64bb3e; }
+
+.seat-content { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; color: #6b7280; }
+.seat-checked-in .seat-content, .seat-boarded .seat-content, .seat.selected .seat-content { color: #ffffff; }
+.seat-icon-danger { color: var(--danger); }
+
+.seat-price-row { display: flex; align-items: center; gap: 1px; max-width: 28px; }
+.seat-price { font-size: 11px; font-weight: 700; line-height: 1; color: #181f24; }
+.seat-content:has(.seat-rfisc-badge) .seat-price { font-size: 9px; }
+.seat-checked-in .seat-price, .seat-boarded .seat-price, .seat.selected .seat-price { color: #ffffff; }
+.seat-rfisc-badge { background: #8ca0b9; color: #ffffff; font-size: 7px; font-weight: 600; line-height: 1; border-radius: 2px; padding: 1.5px 2px; white-space: nowrap; }
+
+.seat-age-badge { background: #f3f7f9; color: #707d95; font-size: 9px; font-weight: 600; line-height: 1; border-radius: 2px; padding: 2px 4px; }
+
 .aisle { width: 14px; }
 
 pre.manifest {
@@ -1258,6 +1271,7 @@ tr.row-hover { cursor: pointer; }
 .seatmap-legend-attrs { display: flex; flex-direction: column; gap: 6px; }
 .seatmap-legend-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--field-value); }
 .seatmap-legend-swatch { width: 20px; height: 18px; flex-shrink: 0; cursor: default; }
+.seat-free-swatch { position: relative; box-sizing: border-box; border-radius: 4px; background: #f3f7f9; border: 1px solid #b5c2cb; overflow: hidden; }
 
 .seatmap-layers-list.select-menu { left: auto; right: 0; width: 240px; max-height: 360px; overflow-y: auto; }
 .seatmap-layers-list .pax-columns-item { gap: 8px; }

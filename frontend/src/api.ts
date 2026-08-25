@@ -57,6 +57,7 @@ export interface SeatCell {
   given_name: string | null;
   record_locator: string | null;
   boarding_status: string | null;
+  dob: string | null;
   extra: string | null;
 }
 
