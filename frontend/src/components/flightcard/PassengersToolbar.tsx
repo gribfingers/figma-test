@@ -157,7 +157,7 @@ export function PassengersToolbar({
           )}
         </div>
 
-        <div className="pax-search-field" style={{ width: 150 }}>
+        <div className="pax-search-field" style={{ width: 190 }}>
           <div className="input-box">
             <SearchIcon size={16} />
             <input placeholder="Search ancillary…" value={asvcFilter} onChange={(e) => onAsvcFilter(e.target.value)} />

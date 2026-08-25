@@ -225,21 +225,25 @@ flightsRouter.post("/:id/passengers", requireEdit, (req, res) => {
   const flight = db.prepare("SELECT * FROM flights WHERE id = ?").get(req.params.id) as Flight | undefined;
   if (!flight) return res.status(404).json({ error: "Flight not found" });
 
-  const { surname, given_name, ticket_number, ssr, infant, gender, dob, record_locator, bag_count, bag_weight_kg, extra } = req.body;
+  const {
+    surname, given_name, middle_name, ticket_number, ssr, infant, gender, dob, record_locator,
+    bag_count, bag_weight_kg, extra, document_type, document_number, nationality, doc_expiry,
+  } = req.body;
   if (!surname || !given_name || !ticket_number) {
     return res.status(400).json({ error: "surname, given_name, ticket_number are required" });
   }
 
   const info = db
     .prepare(
-      `INSERT INTO passengers (record_locator, flight_id, surname, given_name, ticket_number, ssr, infant, gender, dob, bag_count, bag_weight_kg, extra)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO passengers (record_locator, flight_id, surname, given_name, middle_name, ticket_number, ssr, infant, gender, dob, bag_count, bag_weight_kg, extra, document_type, document_number, nationality, doc_expiry)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .run(
       (record_locator || randomLocator()).toUpperCase(),
       flight.id,
       surname.toUpperCase(),
       given_name.toUpperCase(),
+      middle_name || null,
       ticket_number,
       JSON.stringify(ssr ?? []),
       infant ? 1 : 0,
@@ -247,25 +251,40 @@ flightsRouter.post("/:id/passengers", requireEdit, (req, res) => {
       dob || null,
       bag_count ?? 0,
       bag_weight_kg ?? 0,
-      extra !== undefined ? extra : null
+      extra !== undefined ? extra : null,
+      document_type || null,
+      document_number || null,
+      nationality || null,
+      doc_expiry || null
     );
 
   const passenger = db.prepare("SELECT * FROM passengers WHERE id = ?").get(info.lastInsertRowid) as Passenger;
   res.status(201).json(serializePassenger(passenger));
 });
 
-/** General passenger-record edit (surname/given_name/gender/dob/infant/ssr/record_locator) — for the passenger admin page, distinct from the seat/document fields the check-in flow (routes/checkin.ts) owns. */
+/**
+ * General passenger-record edit — surname/given/middle name, gender, dob,
+ * infant, ssr, record locator, baggage, extra, ticket number, and now the
+ * primary travel document too (the check-in flow's own seat/document POST
+ * in routes/checkin.ts still owns setting these the first time a passenger
+ * actually checks in; this lets the passenger-details modal edit them
+ * afterwards without re-running check-in).
+ */
 flightsRouter.patch("/:flightId/passengers/:passengerId", requireEdit, (req, res) => {
   const passenger = db
     .prepare("SELECT * FROM passengers WHERE id = ? AND flight_id = ?")
     .get(req.params.passengerId, req.params.flightId) as Passenger | undefined;
   if (!passenger) return res.status(404).json({ error: "Passenger not found" });
 
-  const { surname, given_name, record_locator, gender, dob, infant, ssr, bag_count, bag_weight_kg, extra, ticket_number } = req.body;
+  const {
+    surname, given_name, middle_name, record_locator, gender, dob, infant, ssr, bag_count, bag_weight_kg,
+    extra, ticket_number, document_type, document_number, nationality, doc_expiry,
+  } = req.body;
   db.prepare(
     `UPDATE passengers SET
        surname = COALESCE(?, surname),
        given_name = COALESCE(?, given_name),
+       middle_name = COALESCE(?, middle_name),
        record_locator = COALESCE(?, record_locator),
        gender = COALESCE(?, gender),
        dob = COALESCE(?, dob),
@@ -274,11 +293,16 @@ flightsRouter.patch("/:flightId/passengers/:passengerId", requireEdit, (req, res
        bag_count = COALESCE(?, bag_count),
        bag_weight_kg = COALESCE(?, bag_weight_kg),
        extra = COALESCE(?, extra),
-       ticket_number = COALESCE(?, ticket_number)
+       ticket_number = COALESCE(?, ticket_number),
+       document_type = COALESCE(?, document_type),
+       document_number = COALESCE(?, document_number),
+       nationality = COALESCE(?, nationality),
+       doc_expiry = COALESCE(?, doc_expiry)
      WHERE id = ?`
   ).run(
     surname ? surname.toUpperCase() : null,
     given_name ? given_name.toUpperCase() : null,
+    middle_name ?? null,
     record_locator ? record_locator.toUpperCase() : null,
     gender === "M" || gender === "F" ? gender : null,
     dob ?? null,
@@ -288,6 +312,10 @@ flightsRouter.patch("/:flightId/passengers/:passengerId", requireEdit, (req, res
     bag_weight_kg !== undefined ? bag_weight_kg : null,
     extra !== undefined ? extra : null,
     ticket_number || null,
+    document_type ?? null,
+    document_number ?? null,
+    nationality ?? null,
+    doc_expiry ?? null,
     req.params.passengerId
   );
 

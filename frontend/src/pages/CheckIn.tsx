@@ -7,7 +7,7 @@ import { Field } from "../components/Field";
 import { Select } from "../components/Select";
 import { ArrowBackIcon, SearchIcon } from "../components/Icon";
 import { SortTh, useSort } from "../components/SortTh";
-import { SSR_OPTIONS } from "../paxExtra";
+import { DOCUMENT_TYPES, SSR_OPTIONS } from "../paxExtra";
 import { useRegisterTab } from "../tabs";
 
 type ResultSortKey = "pnr" | "passenger" | "status" | "seat";
@@ -17,11 +17,6 @@ const RESULT_SORT_GETTERS: Record<ResultSortKey, (p: Passenger) => string | numb
   status: (p) => p.checkin_status,
   seat: (p) => p.seat ?? "",
 };
-const DOCUMENT_TYPES = [
-  { value: "P", label: "Passport (P)" },
-  { value: "V", label: "Visa (V)" },
-  { value: "ID", label: "ID card (ID)" },
-];
 
 export function CheckIn() {
   const { flightId } = useParams();

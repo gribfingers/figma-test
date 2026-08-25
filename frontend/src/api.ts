@@ -28,6 +28,7 @@ export interface Passenger {
   flight_id: number;
   surname: string;
   given_name: string;
+  middle_name: string | null;
   ticket_number: string;
   document_type: string | null;
   document_number: string | null;

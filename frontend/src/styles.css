@@ -1388,7 +1388,7 @@ a { color: var(--accent); }
 
 .checkbox-list { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
 .checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--field-value); cursor: pointer; }
-.checkbox-row input[type="checkbox"] { width: 16px; height: 16px; margin: 0; cursor: pointer; }
+.checkbox-row input[type="checkbox"], .checkbox-row input[type="radio"] { width: 16px; height: 16px; margin: 0; cursor: pointer; }
 
 .main-tab-side { display: flex; flex-direction: column; }
 .route-toggle-row { display: flex; justify-content: flex-end; margin-top: auto; padding-top: 24px; }
@@ -1472,7 +1472,7 @@ tr.pax-row-nested td { color: var(--muted); }
   background: #ffffff;
   border: 1px solid var(--panel-border);
   border-radius: 4px;
-  box-shadow: 0 2px 24px -6px rgba(222, 226, 229, 1);
+  box-shadow: 0 8px 40px -12px rgba(24, 31, 36, 0.2);
   width: 427px;
   max-width: 100%;
   max-height: calc(100vh - 48px);
@@ -1545,11 +1545,10 @@ tr.pax-row-nested td { color: var(--muted); }
 .comment-card:hover .comment-delete { opacity: 1; }
 .comment-card .comment-delete:hover { background: var(--danger-soft); color: var(--danger); }
 
-.asvc-columns { display: flex; gap: 24px; padding: 16px 0; }
+.asvc-columns { display: flex; gap: 24px; padding-top: 8px; }
 .asvc-column { flex: 1; min-width: 0; }
-.asvc-column h3 { margin: 0 0 8px; }
+.asvc-column h3 { margin: 0 0 8px; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
 .asvc-row { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 4px; background: var(--field-bg); margin-bottom: 4px; }
-.asvc-code { color: var(--muted); font-size: 12px; }
 .asvc-name { flex: 1; font-size: 13px; }
 .asvc-status { font-size: 13px; font-weight: 600; }
 .asvc-status.paid { color: var(--ok); }
@@ -1565,6 +1564,12 @@ tr.pax-row-nested td { color: var(--muted); }
 .route-delayed { color: var(--danger); font-weight: 600; }
 
 .ffp-fields { display: flex; align-items: center; gap: 12px; padding-top: 4px; margin-bottom: 16px; }
+
+/* Pax details modal: a bordered card per Documents-tab entry or Flags-tab
+   section (TR/AUX/COM/FFP/ET), each with its own small uppercase heading. */
+.document-card { border: 1px solid var(--panel-border); border-radius: 4px; padding: 14px 16px; }
+.document-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.modal-section-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
 
 .link-text { color: var(--accent); font-weight: 600; }
 

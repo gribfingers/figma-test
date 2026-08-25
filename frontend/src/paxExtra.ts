@@ -3,11 +3,27 @@ import { Passenger } from "./api";
 /** Same list the check-in flow offers (routes/checkin.ts has no dedicated enum on the wire, just free-form SSR codes). */
 export const SSR_OPTIONS = ["WCHR", "WCHS", "UMNR", "BLND", "DEAF", "VGML", "PETC", "EXST"];
 
+/** Same options the check-in flow offers for a travel document's type. */
+export const DOCUMENT_TYPES = [
+  { value: "P", label: "Passport (P)" },
+  { value: "V", label: "Visa (V)" },
+  { value: "ID", label: "ID card (ID)" },
+];
+
+/** A secondary travel document — the primary one lives in the real document_* columns (see PassengerDraft). */
+export interface PassengerDocument {
+  document_type: string;
+  document_number: string;
+  nationality: string;
+  doc_expiry: string;
+}
+
 /**
  * Fields with no dedicated column yet — waitlisted/priority-list flags,
- * passenger type, iAPP (checked in via mobile app), and the connecting
- * inbound/outbound flight number — stored as JSON in Passenger.extra,
- * same pattern as Flight.extra.
+ * passenger type, iAPP (checked in via mobile app), the connecting
+ * inbound/outbound flight number, and any travel documents beyond the
+ * primary one (which lives in the real document_* columns) — stored as
+ * JSON in Passenger.extra, same pattern as Flight.extra.
  */
 export interface PassengerExtra {
   wl?: boolean;
@@ -20,6 +36,9 @@ export interface PassengerExtra {
   outboundTime?: string; // "YYYY-MM-DDTHH:mm", when the outbound connection leaves
   comments?: { checkin: string[]; boarding: string[] };
   ffp?: { airline: string; card: string };
+  documents?: PassengerDocument[];
+  cabinBagCount?: number;
+  cabinBagWeight?: number;
 }
 
 export function parsePassengerExtra(p: Passenger): PassengerExtra {
@@ -29,6 +48,31 @@ export function parsePassengerExtra(p: Passenger): PassengerExtra {
   } catch {
     return {};
   }
+}
+
+/** Age in whole years as of today (UTC calendar), or -1 if dob is missing/invalid. */
+export function ageYears(dob: string | null): number {
+  if (!dob) return -1;
+  const birth = new Date(dob);
+  if (Number.isNaN(birth.getTime())) return -1;
+  const now = new Date();
+  let age = now.getUTCFullYear() - birth.getUTCFullYear();
+  const beforeBirthday =
+    now.getUTCMonth() < birth.getUTCMonth() ||
+    (now.getUTCMonth() === birth.getUTCMonth() && now.getUTCDate() < birth.getUTCDate());
+  if (beforeBirthday) age -= 1;
+  return age;
+}
+
+export function ageFromDob(dob: string | null): string {
+  const age = ageYears(dob);
+  return age < 0 ? "—" : String(age);
+}
+
+/** IATA infant definition: under 2 years old — derived from DOB rather than a manually-set flag. */
+export function isInfant(dob: string | null): boolean {
+  const age = ageYears(dob);
+  return age >= 0 && age < 2;
 }
 
 export type TrStatus = "none" | "ok" | "conflict";

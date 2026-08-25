@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS passengers (
   flight_id INTEGER NOT NULL REFERENCES flights(id) ON DELETE CASCADE,
   surname TEXT NOT NULL,
   given_name TEXT NOT NULL,
+  middle_name TEXT,
   ticket_number TEXT NOT NULL,
   document_type TEXT,
   document_number TEXT,
@@ -131,6 +132,7 @@ const existingPassengerColumns = new Set(
 const passengerMigrations: [string, string][] = [
   ["gender", "ALTER TABLE passengers ADD COLUMN gender TEXT"],
   ["extra", "ALTER TABLE passengers ADD COLUMN extra TEXT"],
+  ["middle_name", "ALTER TABLE passengers ADD COLUMN middle_name TEXT"],
 ];
 for (const [column, ddl] of passengerMigrations) {
   if (!existingPassengerColumns.has(column)) db.exec(ddl);

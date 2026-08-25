@@ -4,9 +4,17 @@ import { cabinFeaturesFor } from "../../cabinLayout";
 import { SeatMapPanel } from "../SeatMapPanel";
 import { ArrowBackIcon, ArrowNestedIcon, ChildIcon, InfantIcon } from "../Icon";
 import { SortTh, useSort } from "../SortTh";
-import { FlagStatus, asvcForPassenger, asvcStatus, commentsStatus, etStatus, ffpStatus, parsePassengerExtra, trStatus } from "../../paxExtra";
-import { PassengerModals } from "./PassengerModals";
-import { EMPTY_PAX_DRAFT, PassengerFormFields, paxDraftToPayload } from "./PassengerForm";
+import { FlagStatus, ageFromDob, ageYears, asvcForPassenger, asvcStatus, commentsStatus, etStatus, ffpStatus, parsePassengerExtra, trStatus } from "../../paxExtra";
+import { PassengerDetailModal } from "./PassengerModals";
+import {
+  BaggageFields,
+  DocumentsFields,
+  EMPTY_PAX_DRAFT,
+  PaxTabbedFields,
+  RemarksFields,
+  SummaryFields,
+  paxDraftToPayload,
+} from "./PassengerForm";
 import { Modal } from "../Modal";
 import { PASSENGER_COLUMNS, PassengersToolbar, QuickFilter } from "./PassengersToolbar";
 
@@ -14,7 +22,7 @@ interface Props {
   flight: Flight;
 }
 
-type ModalKind = "asvc" | "comments" | "coupon" | "ffp" | "route" | "edit";
+type ModalKind = "summary" | "documents" | "remarks" | "baggage" | "flags";
 
 interface PaxRow {
   passenger: Passenger;
@@ -66,23 +74,6 @@ function statusChip(p: Passenger) {
   return <span className={`chip middle ${label === "Offloaded" ? "danger" : "ok"}`}>{label}</span>;
 }
 
-function ageYears(dob: string | null): number {
-  if (!dob) return -1;
-  const birth = new Date(dob);
-  if (Number.isNaN(birth.getTime())) return -1;
-  const now = new Date();
-  let age = now.getUTCFullYear() - birth.getUTCFullYear();
-  const beforeBirthday =
-    now.getUTCMonth() < birth.getUTCMonth() ||
-    (now.getUTCMonth() === birth.getUTCMonth() && now.getUTCDate() < birth.getUTCDate());
-  if (beforeBirthday) age -= 1;
-  return age;
-}
-function ageFromDob(dob: string | null): string {
-  const age = ageYears(dob);
-  return age < 0 ? "—" : String(age);
-}
-
 function classFor(p: Passenger, seatByCode: Map<string, SeatCell>): string {
   const seat = p.seat ? seatByCode.get(p.seat) : undefined;
   return seat ? (seat.cabin_class === "J" ? "C" : "Y") : "—";
@@ -99,12 +90,13 @@ const FLAG_STATUS: Record<string, (p: Passenger) => FlagStatus> = {
   FFP: ffpStatus,
   ET: etStatus,
 };
+// All five flag chips now live as sections inside the modal's single Flags tab.
 const FLAG_MODAL: Record<string, ModalKind> = {
-  TR: "route",
-  AUX: "asvc",
-  COM: "comments",
-  FFP: "ffp",
-  ET: "coupon",
+  TR: "flags",
+  AUX: "flags",
+  COM: "flags",
+  FFP: "flags",
+  ET: "flags",
 };
 const FLAG_CODES = ["TR", "AUX", "COM", "FFP", "ET"];
 const STATUS_CLASS: Record<FlagStatus, string> = {
@@ -443,10 +435,10 @@ export function PassengersTab({ flight }: Props) {
                     {visibleColumns.has("type") && <td className="mono">{extra.type || "—"}</td>}
                     {visibleColumns.has("iapp") && <td>{extra.iapp ? "✓" : "—"}</td>}
                     {visibleColumns.has("inbound") && (
-                      <td className="pax-route-cell" onClick={(e) => { e.stopPropagation(); setModal({ kind: "route", passenger: p }); }}>{extra.inbound || "—"}</td>
+                      <td className="pax-route-cell" onClick={(e) => { e.stopPropagation(); setModal({ kind: "flags", passenger: p }); }}>{extra.inbound || "—"}</td>
                     )}
                     {visibleColumns.has("outbound") && (
-                      <td className="pax-route-cell" onClick={(e) => { e.stopPropagation(); setModal({ kind: "route", passenger: p }); }}>{extra.outbound || "—"}</td>
+                      <td className="pax-route-cell" onClick={(e) => { e.stopPropagation(); setModal({ kind: "flags", passenger: p }); }}>{extra.outbound || "—"}</td>
                     )}
                     {visibleColumns.has("bag") && <td className="mono">{p.bag_count > 0 ? `${p.bag_count}/${p.bag_weight_kg}` : "—"}</td>}
                     {visibleColumns.has("age") && <td>{ageFromDob(p.dob)}</td>}
@@ -498,10 +490,12 @@ export function PassengersTab({ flight }: Props) {
       )}
 
       {modal && (
-        <PassengerModals
+        <PassengerDetailModal
           kind={modal.kind}
           flightId={flight.id}
           passenger={modal.passenger}
+          seats={seats}
+          onSeatUpdated={handleSeatUpdated}
           onClose={() => setModal(null)}
           onUpdated={handleUpdated}
         />
@@ -524,7 +518,7 @@ export function PassengersTab({ flight }: Props) {
           <li
             className="pax-columns-item"
             onClick={() => {
-              setModal({ kind: "edit", passenger: contextMenu.passenger });
+              setModal({ kind: "summary", passenger: contextMenu.passenger });
               setContextMenu(null);
             }}
           >
@@ -540,7 +534,7 @@ export function PassengersTab({ flight }: Props) {
         <Modal
           title="Add pax"
           onClose={() => setAddOpen(false)}
-          width={520}
+          width={720}
           footer={
             <>
               <button type="button" className="tertiary" onClick={() => setAddOpen(false)}>Close</button>
@@ -549,7 +543,14 @@ export function PassengersTab({ flight }: Props) {
           }
         >
           {error && <div className="error-box">{error}</div>}
-          <PassengerFormFields draft={addDraft} onChange={setAddDraft} />
+          <PaxTabbedFields
+            tabs={[
+              { key: "summary", label: "Summary", content: <SummaryFields draft={addDraft} onChange={setAddDraft} /> },
+              { key: "documents", label: "Documents", content: <DocumentsFields draft={addDraft} onChange={setAddDraft} /> },
+              { key: "remarks", label: "Remarks", content: <RemarksFields draft={addDraft} onChange={setAddDraft} /> },
+              { key: "baggage", label: "Baggage", content: <BaggageFields draft={addDraft} onChange={setAddDraft} /> },
+            ]}
+          />
         </Modal>
       )}
     </div>
