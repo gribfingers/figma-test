@@ -3,10 +3,11 @@ import { Flight } from "../../api";
 import { Field } from "../Field";
 import { Select } from "../Select";
 import { AirportSelect } from "../AirportSelect";
+import { DateField } from "../DateField";
 import { PlaneIcon } from "../Icon";
 import { draftFromFlight, MainDraft } from "./mainDraft";
 import { AIRCRAFT_TYPES } from "../../aircraftTypes";
-import { alphanumericUpper, dateInput, digitsOnly, timeInput } from "../../validation";
+import { alphanumericUpper, digitsOnly, maskTimeInput } from "../../validation";
 
 interface Props {
   flight: Flight;
@@ -72,11 +73,9 @@ export function MainTab({ flight, draft, onChange }: Props) {
                 onChange={(v) => onChange({ depAirport: v })}
                 style={{ width: 84 }}
               />
-              <Field label="Date" style={{ width: 132 }}>
-                <input value={draft.depDate} onChange={(e) => onChange({ depDate: dateInput(e.target.value) })} placeholder=" " />
-              </Field>
+              <DateField label="Date" value={draft.depDate} onChange={(v) => onChange({ depDate: v })} style={{ width: 132 }} />
               <Field label="Time" style={{ width: 66 }}>
-                <input value={draft.depTime} onChange={(e) => onChange({ depTime: timeInput(e.target.value) })} placeholder=" " />
+                <input value={draft.depTime} onChange={(e) => onChange({ depTime: maskTimeInput(e.target.value) })} placeholder=" " inputMode="numeric" />
               </Field>
               <Field label="Terminal" style={{ width: 84 }}>
                 <input
@@ -109,11 +108,9 @@ export function MainTab({ flight, draft, onChange }: Props) {
                 onChange={(v) => onChange({ arrAirport: v })}
                 style={{ width: 84 }}
               />
-              <Field label="Date" style={{ width: 132 }}>
-                <input value={draft.arrDate} onChange={(e) => onChange({ arrDate: dateInput(e.target.value) })} placeholder=" " />
-              </Field>
+              <DateField label="Date" value={draft.arrDate} onChange={(v) => onChange({ arrDate: v })} style={{ width: 132 }} />
               <Field label="Time" style={{ width: 66 }}>
-                <input value={draft.arrTime} onChange={(e) => onChange({ arrTime: timeInput(e.target.value) })} placeholder=" " />
+                <input value={draft.arrTime} onChange={(e) => onChange({ arrTime: maskTimeInput(e.target.value) })} placeholder=" " inputMode="numeric" />
               </Field>
               <Field label="Terminal" style={{ width: 84 }}>
                 <input

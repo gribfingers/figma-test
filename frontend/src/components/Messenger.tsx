@@ -171,7 +171,7 @@ export function Messenger({ onClose }: Props) {
         {!activeContact ? (
           <>
             <div className="messenger-header">
-              <div className="messenger-title">Messages</div>
+              <div className="messenger-title" style={{ flex: 1 }}>Messages</div>
               <button type="button" className="icon-button" onClick={onClose} aria-label="Close">
                 <CloseIcon size={16} />
               </button>

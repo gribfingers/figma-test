@@ -69,6 +69,10 @@ body {
   display: flex;
   flex-direction: column;
   background: #ffffff;
+  /* Carries the divider down through the blank stretch between .side-list
+     and .side-bottom (itself flex, not stretched to fill), same trick as
+     .tabs-fill for the top tab bar. */
+  border-right: 1px solid var(--panel-border);
 }
 .side-item {
   all: unset;
@@ -86,15 +90,18 @@ body {
   flex-shrink: 0;
   -webkit-tap-highlight-color: transparent;
 }
-/* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
-.side-drawer .side-item:hover { background: var(--field-bg); }
+/* Just the icon tinting blue on hover — no background highlight. Excludes
+   the Connected Devices status button, which shouldn't change look on
+   hover at all (only its tooltip appears — see .side-static below). Extra
+   specificity so this beats the global button:hover background rule. */
+.side-drawer .side-item:not(.side-static):hover { background: transparent; color: var(--accent); }
+.side-drawer .side-item.side-static:hover { background: transparent; color: var(--muted); }
 .side-item.selected { border-right-color: transparent; color: var(--field-value); background: var(--bg); }
 .side-list { display: flex; flex-direction: column; }
 .side-bottom {
   margin-top: auto;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid var(--panel-border);
 }
 .side-bottom .side-item { border-right: none; }
 
@@ -430,11 +437,14 @@ tr.row-hover:hover { background: var(--accent-soft); }
 .field2 input::placeholder { color: transparent; }
 .field2 input:focus, .field2 textarea:focus { outline: none; box-shadow: none; border: none; padding: 0; background: transparent; }
 
-/* Floating state: focused, has a value, or is a custom Select (which always shows a chosen value). */
+/* Floating state: focused, has a value, or is a custom Select with a value chosen —
+   an unselected AirportSelect has no value yet, so its label stays centered like
+   a placeholder instead of floating over an empty trigger. */
 .field2:focus-within label,
 .field2:has(input:not(:placeholder-shown)) label,
 .field2:has(textarea:not(:placeholder-shown)) label,
-.field2.select-field label {
+.field2.select-field.open label,
+.field2.select-field.has-value label {
   top: 7px;
   transform: translateY(0);
   font-size: 11px;
@@ -557,6 +567,23 @@ tr.row-hover:hover { background: var(--accent-soft); }
 }
 .datetime-field .datetime-trigger:disabled { cursor: not-allowed; color: var(--muted-2); }
 .field2.datetime-field:has(.datetime-trigger:disabled) { background: #eceff2; }
+
+/* ---- Custom DateField: typeable dd.mm.yyyy input + calendar dropdown ---- */
+.field2.date-field input { padding-right: 22px; }
+.date-field-toggle {
+  all: unset;
+  box-sizing: border-box;
+  position: absolute;
+  z-index: 2;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  color: var(--field-placeholder);
+  cursor: pointer;
+}
+.date-field-toggle:disabled { cursor: not-allowed; }
+.field2.date-field:has(input:disabled) { background: #eceff2; }
 
 .datetime-menu {
   position: absolute;

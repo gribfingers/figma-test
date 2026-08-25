@@ -4,12 +4,13 @@ import { api } from "../api";
 import { Field } from "../components/Field";
 import { Select } from "../components/Select";
 import { AirportSelect } from "../components/AirportSelect";
+import { DateField } from "../components/DateField";
 import { PlaneIcon } from "../components/Icon";
 import { combineDateAndTime } from "../components/flightcard/mainDraft";
 import { useRegisterTab } from "../tabs";
 import { useToast } from "../toast";
 import { AIRCRAFT_TYPES } from "../aircraftTypes";
-import { alphanumericUpper, dateInput, digitsOnly, timeInput } from "../validation";
+import { alphanumericUpper, digitsOnly, maskTimeInput } from "../validation";
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^\d{2}:\d{2}$/;
@@ -110,10 +111,11 @@ export function NewFlight() {
                   value={carrierCode}
                   required
                   onChange={(e) => setCarrierCode(alphanumericUpper(e.target.value, 3))}
+                  onFocus={(e) => e.target.select()}
                   placeholder=" "
                 />
               </Field>
-              <Field label="Flight number" style={{ width: 108 }}>
+              <Field label="Flight number" style={{ width: 124 }}>
                 <input
                   value={flightNumber}
                   required
@@ -137,11 +139,9 @@ export function NewFlight() {
               <div className="segment-endpoints">
                 <div className="segment-point-edit">
                   <AirportSelect label="Airport" value={origin} onChange={setOrigin} style={{ width: 84 }} />
-                  <Field label="Date" style={{ width: 132 }}>
-                    <input value={depDate} onChange={(e) => setDepDate(dateInput(e.target.value))} placeholder=" " />
-                  </Field>
+                  <DateField label="Date" value={depDate} onChange={setDepDate} style={{ width: 132 }} />
                   <Field label="Time" style={{ width: 66 }}>
-                    <input value={depTime} onChange={(e) => setDepTime(timeInput(e.target.value))} placeholder=" " />
+                    <input value={depTime} onChange={(e) => setDepTime(maskTimeInput(e.target.value))} placeholder=" " inputMode="numeric" />
                   </Field>
                   <Field label="Terminal" style={{ width: 84 }}>
                     <input
@@ -154,11 +154,9 @@ export function NewFlight() {
                 <div className="segment-duration">{fmtDuration(depDate, depTime, arrDate, arrTime)}</div>
                 <div className="segment-point-edit">
                   <AirportSelect label="Airport" value={destination} onChange={setDestination} style={{ width: 84 }} />
-                  <Field label="Date" style={{ width: 132 }}>
-                    <input value={arrDate} onChange={(e) => setArrDate(dateInput(e.target.value))} placeholder=" " />
-                  </Field>
+                  <DateField label="Date" value={arrDate} onChange={setArrDate} style={{ width: 132 }} />
                   <Field label="Time" style={{ width: 66 }}>
-                    <input value={arrTime} onChange={(e) => setArrTime(timeInput(e.target.value))} placeholder=" " />
+                    <input value={arrTime} onChange={(e) => setArrTime(maskTimeInput(e.target.value))} placeholder=" " inputMode="numeric" />
                   </Field>
                   <Field label="Terminal" style={{ width: 84 }}>
                     <input

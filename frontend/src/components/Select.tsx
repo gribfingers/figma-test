@@ -56,7 +56,7 @@ export function Select({ label, value, onChange, options, disabled, error, style
   return (
     <div
       ref={rootRef}
-      className={`field2 select-field ${error ? "error" : ""} ${open ? "open" : ""}`}
+      className={`field2 select-field ${error ? "error" : ""} ${open ? "open" : ""} ${selected ? "has-value" : ""}`}
       style={style}
     >
       <button

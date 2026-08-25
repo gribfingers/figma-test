@@ -43,13 +43,13 @@ export function SideDrawer() {
         <button
           type="button"
           className="side-item side-update"
-          data-tooltip="Refresh"
+          title="Refresh"
           onClick={() => setLastUpdated(new Date())}
         >
           <RefreshIcon size={18} />
           <span className="side-time">{formatClock(lastUpdated)}</span>
         </button>
-        <button type="button" className="side-item" data-tooltip="Connected devices: OK">
+        <button type="button" className="side-item side-static" data-tooltip="Connected devices: OK">
           <DeviceIcon size={18} className="side-device-ok" />
         </button>
       </div>

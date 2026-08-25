@@ -110,7 +110,6 @@ export function Dashboard() {
   return (
     <div>
       <h1>Flight board</h1>
-      <p className="subtitle">Ops desk: search the schedule and jump to agent workstations.</p>
 
       {error && <div className="error-box">{error}</div>}
 

@@ -50,7 +50,7 @@ export function AirportSelect({ label, value, onChange, style }: Props) {
   }, [open]);
 
   return (
-    <div ref={rootRef} className={`field2 select-field ${open ? "open" : ""}`} style={style}>
+    <div ref={rootRef} className={`field2 select-field ${open ? "open" : ""} ${selected ? "has-value" : ""}`} style={style}>
       <button
         type="button"
         className="select-trigger"
