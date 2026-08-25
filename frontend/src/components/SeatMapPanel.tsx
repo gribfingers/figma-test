@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { api, SeatCell } from "../api";
+import { CabinFeature } from "../cabinLayout";
 import { SEAT_ATTRS, SeatExtra, parseSeatExtra } from "../seatExtra";
 import { SeatMapGrid } from "./SeatMapGrid";
 import { Modal } from "./Modal";
@@ -15,6 +16,7 @@ interface Props {
   horizontal: boolean;
   onToggleHorizontal: () => void;
   onHide: () => void;
+  cabinFeatures?: CabinFeature[];
 }
 
 const LEGEND_STATES: { cls: string; label: string }[] = [
@@ -40,7 +42,17 @@ const LEGEND_HOLDS: { cls: string; label: string }[] = [
  * request asked for: click any seat while it's active to assign exit-row/
  * blocking/service/pricing attributes to it.
  */
-export function SeatMapPanel({ flightId, seats, selected, onSelect, onSeatUpdated, horizontal, onToggleHorizontal, onHide }: Props) {
+export function SeatMapPanel({
+  flightId,
+  seats,
+  selected,
+  onSelect,
+  onSeatUpdated,
+  horizontal,
+  onToggleHorizontal,
+  onHide,
+  cabinFeatures,
+}: Props) {
   const [zoom, setZoom] = useState(100);
   const [legendOpen, setLegendOpen] = useState(false);
   const [layersOpen, setLayersOpen] = useState(false);
@@ -166,6 +178,7 @@ export function SeatMapPanel({ flightId, seats, selected, onSelect, onSeatUpdate
             editMode={editMode}
             onEditSeat={setEditingSeat}
             visibleLayers={visibleLayers}
+            cabinFeatures={cabinFeatures}
           />
         </div>
       </div>

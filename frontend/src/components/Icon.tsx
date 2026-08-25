@@ -214,6 +214,18 @@ export function SeatChildIcon({ size = 8, className }: IconProps) {
   );
 }
 
+/** Coffee cup — marks a galley block on the seat map. */
+export function GalleyIcon({ size = 14, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M5 9h11v6a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4V9z" />
+      <path d="M16 10.5h1.5a2.5 2.5 0 0 1 0 5H16" />
+      <path d="M8 6c0-.8.4-1.2.6-1.7.2-.4.2-.9 0-1.3" />
+      <path d="M11.5 6c0-.8.4-1.2.6-1.7.2-.4.2-.9 0-1.3" />
+    </svg>
+  );
+}
+
 export function MoreIcon({ size = 18, className }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" className={className} fill="currentColor" stroke="none">

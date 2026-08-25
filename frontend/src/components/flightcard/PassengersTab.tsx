@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { api, Flight, Passenger, SeatCell } from "../../api";
+import { cabinFeaturesFor } from "../../cabinLayout";
 import { SeatMapPanel } from "../SeatMapPanel";
 import { ArrowNestedIcon, ChildIcon, InfantIcon } from "../Icon";
 import { SortTh, useSort } from "../SortTh";
@@ -119,6 +120,7 @@ export function PassengersTab({ flight }: Props) {
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(() => new Set(PASSENGER_COLUMNS.map((c) => c.key)));
   const [mapHorizontal, setMapHorizontal] = useState(false);
   const [mapHidden, setMapHidden] = useState(false);
+  const cabinFeatures = useMemo(() => cabinFeaturesFor(flight.aircraft_type), [flight.aircraft_type]);
 
   function handleSeatUpdated(updated: SeatCell) {
     setSeats((prev) => prev.map((s) => (s.seat === updated.seat ? updated : s)));
@@ -329,6 +331,7 @@ export function PassengersTab({ flight }: Props) {
             horizontal={mapHorizontal}
             onToggleHorizontal={() => setMapHorizontal((h) => !h)}
             onHide={() => setMapHidden(true)}
+            cabinFeatures={cabinFeatures}
           />
         </div>
       )}
