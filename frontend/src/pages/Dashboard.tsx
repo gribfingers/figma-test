@@ -156,8 +156,8 @@ export function Dashboard() {
             <button type="submit" disabled={searchIsUnchanged}>Search</button>
             <div className="spacer" />
             <Link to="/flights/new"><button type="button" className="secondary">New flight</button></Link>
-            <button type="button" className="secondary icon-btn" onClick={load} title="Refresh">
-              <RefreshIcon />
+            <button type="button" className="icon-button" onClick={load} title="Refresh">
+              <RefreshIcon size={20} />
             </button>
           </div>
         </form>

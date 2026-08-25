@@ -5,7 +5,7 @@ import { SEAT_ATTRS, SeatExtra, parseSeatExtra } from "../seatExtra";
 import { SeatMapGrid } from "./SeatMapGrid";
 import { Modal } from "./Modal";
 import { Field } from "./Field";
-import { ExpandIcon, HideIcon, LayersIcon, MinusIcon, PencilIcon, PlusIcon, RowsIcon } from "./Icon";
+import { HideIcon, LayersIcon, MinusIcon, PencilIcon, PlusIcon, RowsIcon } from "./Icon";
 
 interface Props {
   flightId: number;
@@ -13,8 +13,6 @@ interface Props {
   selected?: string | null;
   onSelect?: (seat: string) => void;
   onSeatUpdated: (seat: SeatCell) => void;
-  horizontal: boolean;
-  onToggleHorizontal: () => void;
   onHide: () => void;
   cabinFeatures?: CabinFeature[];
   onSelectOccupied?: (seat: SeatCell) => void;
@@ -37,11 +35,11 @@ const LEGEND_HOLDS: { cls: string; label: string }[] = [
  * Seat map with the reference toolbar: deck switcher (this app's aircraft
  * are all single-deck, so "Upper Deck" is a disabled placeholder), zoom
  * (CSS transform: scale), a legend popover, a layers menu that toggles
- * which attribute icons render on the map, horizontal-layout toggle, and
- * hide. The pencil button is this app's addition (not in the reference
- * toolbar) — it's the entry point into the seat attribute editor the
- * request asked for: click any seat while it's active to assign exit-row/
- * blocking/service/pricing attributes to it.
+ * which attribute icons render on the map, and hide. The pencil button is
+ * this app's addition (not in the reference toolbar) — it's the entry
+ * point into the seat attribute editor the request asked for: click any
+ * seat while it's active to assign exit-row/blocking/service/pricing
+ * attributes to it.
  */
 export function SeatMapPanel({
   flightId,
@@ -49,8 +47,6 @@ export function SeatMapPanel({
   selected,
   onSelect,
   onSeatUpdated,
-  horizontal,
-  onToggleHorizontal,
   onHide,
   cabinFeatures,
   onSelectOccupied,
@@ -157,14 +153,6 @@ export function SeatMapPanel({
               </ul>
             )}
           </div>
-          <button
-            type="button"
-            className={`seatmap-tool-btn ${horizontal ? "active" : ""}`}
-            title="Horizontal view"
-            onClick={onToggleHorizontal}
-          >
-            <ExpandIcon size={16} />
-          </button>
           <button type="button" className="seatmap-tool-btn" title="Hide seat map" onClick={onHide}>
             <HideIcon size={16} />
           </button>

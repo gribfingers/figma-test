@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { api, Flight, Passenger, SeatCell } from "../../api";
 import { cabinFeaturesFor } from "../../cabinLayout";
 import { SeatMapPanel } from "../SeatMapPanel";
-import { ArrowNestedIcon, ChildIcon, InfantIcon } from "../Icon";
+import { ArrowBackIcon, ArrowNestedIcon, ChildIcon, InfantIcon } from "../Icon";
 import { SortTh, useSort } from "../SortTh";
 import { FlagStatus, asvcForPassenger, asvcStatus, commentsStatus, etStatus, ffpStatus, parsePassengerExtra, trStatus } from "../../paxExtra";
 import { PassengerModals } from "./PassengerModals";
@@ -130,7 +130,6 @@ export function PassengersTab({ flight }: Props) {
   const [serviceFilter, setServiceFilter] = useState<string[]>([]);
   const [asvcFilter, setAsvcFilter] = useState("");
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(() => new Set(PASSENGER_COLUMNS.map((c) => c.key)));
-  const [mapHorizontal, setMapHorizontal] = useState(false);
   const [mapHidden, setMapHidden] = useState(false);
   const cabinFeatures = useMemo(() => cabinFeaturesFor(flight.aircraft_type), [flight.aircraft_type]);
   const rowRefs = useRef(new Map<number, HTMLTableRowElement>());
@@ -263,7 +262,7 @@ export function PassengersTab({ flight }: Props) {
   const visibleColCount = 2 + visibleColumns.size;
 
   return (
-    <div className={`passengers-tab ${mapHorizontal ? "map-horizontal" : ""} ${mapHidden ? "map-hidden" : ""}`}>
+    <div className={`passengers-tab ${mapHidden ? "map-hidden" : ""}`}>
       <div className="passengers-list">
         <PassengersToolbar
           seats={seats}
@@ -411,7 +410,7 @@ export function PassengersTab({ flight }: Props) {
       </div>
       {mapHidden ? (
         <button type="button" className="passengers-seatmap-collapsed" onClick={() => setMapHidden(false)} title="Show seat map">
-          Seat map
+          <ArrowBackIcon size={18} />
         </button>
       ) : (
         <div className="passengers-seatmap" ref={seatmapRef}>
@@ -420,8 +419,6 @@ export function PassengersTab({ flight }: Props) {
             seats={seats}
             selected={activeSeat}
             onSeatUpdated={handleSeatUpdated}
-            horizontal={mapHorizontal}
-            onToggleHorizontal={() => setMapHorizontal((h) => !h)}
             onHide={() => setMapHidden(true)}
             cabinFeatures={cabinFeatures}
             onSelectOccupied={(s) => {

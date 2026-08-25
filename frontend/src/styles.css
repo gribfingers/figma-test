@@ -774,12 +774,22 @@ button.small {
   letter-spacing: 0;
 }
 
-button.icon-btn {
-  padding: 9px;
-  width: 42px;
-  height: 42px;
+/* Figma "IconButton" component (id 30434:28718): circular, no border, transparent by default. */
+.icon-button {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
   justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 9px;
+  border-radius: 999px;
+  color: #6b7280;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
+button.icon-button:hover { background: #fafbfc; }
 
 /* ---- Chip, per Figma <Chip> component set (id 30142:15663) ---- */
 .chip {
@@ -1322,13 +1332,19 @@ tr.row-hover { cursor: pointer; }
    uses the caller's inline left/top (== the click coordinates). */
 .pax-context-menu { position: fixed; left: auto; top: auto; width: 160px; }
 
-/* ---- Seat map panel: toolbar (deck/zoom/legend/layers/horizontal/hide) + editor ---- */
-.passengers-tab.map-horizontal { flex-direction: column; }
-.passengers-tab.map-horizontal .passengers-seatmap { width: 100%; flex: 1; min-height: 0; }
+/* ---- Seat map panel: toolbar (deck/zoom/legend/layers/hide) + editor ---- */
 .passengers-seatmap-collapsed {
-  all: unset; box-sizing: border-box; flex-shrink: 0; writing-mode: vertical-rl; text-orientation: mixed;
-  padding: 16px 8px; border: 1px solid var(--panel-border); border-radius: 4px; cursor: pointer;
-  color: var(--muted); font-size: 13px; font-weight: 600;
+  all: unset;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  width: 32px;
+  display: flex;
+  justify-content: center;
+  padding-top: 16px;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--muted);
 }
 .passengers-seatmap-collapsed:hover { color: var(--field-value); border-color: var(--field-border-hover); }
 

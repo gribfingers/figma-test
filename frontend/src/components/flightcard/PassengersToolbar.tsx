@@ -175,8 +175,8 @@ export function PassengersToolbar({
         <button type="button" className="secondary" onClick={onAddPassenger}>Add passenger</button>
 
         <div className="pax-columns-menu" ref={columnsRef}>
-          <button type="button" className="secondary icon-btn pax-columns-trigger" title="Columns" onClick={() => setColumnsOpen((o) => !o)}>
-            <MoreIcon size={18} />
+          <button type="button" className="icon-button pax-columns-trigger" title="Columns" onClick={() => setColumnsOpen((o) => !o)}>
+            <MoreIcon size={20} />
           </button>
           {columnsOpen && (
             <ul className="select-menu pax-columns-list">
