@@ -198,6 +198,18 @@ export function ChildIcon({ size = 14, className }: IconProps) {
   );
 }
 
+/** Filled child glyph from the Figma "Seat H" component's Child-state icon — used only for the seat-map cell, not the stroke-style ChildIcon above. */
+export function SeatChildIcon({ size = 16, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" className={className}>
+      <path
+        d="M8 1.74846e-07C7.44747 1.50694e-07 6.91756 0.210714 6.52686 0.585787C6.13616 0.960859 5.91667 1.46957 5.91667 2C5.91667 2.53043 6.13616 3.03914 6.52686 3.41421C6.91756 3.78929 7.44747 4 8 4C8.27359 4 8.5445 3.94827 8.79726 3.84776C9.05002 3.74725 9.27968 3.59993 9.47314 3.41421C9.6666 3.2285 9.82005 3.00802 9.92475 2.76537C10.0294 2.52272 10.0833 2.26264 10.0833 2C10.0833 1.46957 9.86384 0.96086 9.47314 0.585787C9.08244 0.210714 8.55254 1.98998e-07 8 1.74846e-07ZM6 4.8C4.895 4.8 4 5.516 4 6.4L4 12.8L5 12.8L5 16L7 16L7 12.8L9 12.8L9 16L11 16L11 12.8L12 12.8L12 6.4C12 5.516 11.105 4.8 10 4.8L6 4.8ZM5.33333 6.4L10.6667 6.4L10.6667 11.2L5.33333 11.2L5.33333 6.4Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
 export function MoreIcon({ size = 18, className }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" className={className} fill="currentColor" stroke="none">

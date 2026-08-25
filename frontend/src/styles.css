@@ -830,8 +830,8 @@ button.icon-btn {
 .counter .lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
 
 /* ---- Seat cell: Figma "Seat H" component (30291:29546), 30x30 fixed ---- */
-.seatmap { display: flex; flex-direction: column; gap: 3px; font-family: var(--font); font-size: 13px; }
-.seatrow { display: flex; gap: 3px; align-items: center; }
+.seatmap { display: flex; flex-direction: column; gap: 16px; font-family: var(--font); font-size: 13px; }
+.seatrow { display: flex; gap: 16px; align-items: center; }
 .seat-col-headers { margin-bottom: 2px; }
 .seat-col-label { width: 30px; text-align: center; font-size: 11px; font-weight: 600; color: var(--muted); font-family: var(--mono); }
 
@@ -843,7 +843,7 @@ button.icon-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
+  border-radius: 4px 4px 0 0;
   background: #f3f7f9;
   border: 1px solid #b5c2cb;
   cursor: pointer;
@@ -871,7 +871,22 @@ button.icon-btn {
 .seat-checked-in .seat-price, .seat-boarded .seat-price, .seat.selected .seat-price { color: #ffffff; }
 .seat-rfisc-badge { background: #8ca0b9; color: #ffffff; font-size: 7px; font-weight: 600; line-height: 1; border-radius: 2px; padding: 1.5px 2px; white-space: nowrap; }
 
-.seat-age-badge { background: #f3f7f9; color: #707d95; font-size: 9px; font-weight: 600; line-height: 1; border-radius: 2px; padding: 2px 4px; }
+.seat-age-badge {
+  position: absolute;
+  left: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  box-sizing: border-box;
+  min-width: 11px;
+  background: #f3f7f9;
+  color: #707d95;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1;
+  text-align: center;
+  border-radius: 2px;
+  padding: 3px 0;
+}
 
 .aisle { width: 14px; }
 
@@ -1276,8 +1291,8 @@ tr.row-hover { cursor: pointer; }
 .seatmap-layers-list.select-menu { left: auto; right: 0; width: 240px; max-height: 360px; overflow-y: auto; }
 .seatmap-layers-list .pax-columns-item { gap: 8px; }
 
-.seatmap-scroll { overflow: auto; }
-.seatmap-zoom-wrap { transform-origin: top left; width: fit-content; }
+.seatmap-scroll { overflow: auto; display: flex; justify-content: safe center; }
+.seatmap-zoom-wrap { transform-origin: top center; width: fit-content; }
 
 .seat-editor { display: flex; flex-direction: column; gap: 6px; padding-bottom: 4px; }
 .seat-editor-check { display: flex; align-items: center; gap: 8px; margin-bottom: 0; font-size: 13px; color: var(--field-value); }

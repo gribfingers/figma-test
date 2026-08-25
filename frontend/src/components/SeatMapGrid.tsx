@@ -1,6 +1,6 @@
 import { Fragment } from "react";
 import { SeatCell } from "../api";
-import { ChildIcon } from "./Icon";
+import { SeatChildIcon } from "./Icon";
 import { occupantAge, parseSeatExtra, primaryAttr, seatState, seatSubtype } from "../seatExtra";
 
 interface Props {
@@ -70,7 +70,7 @@ export function SeatMapGrid({ seats, selected, onSelect, editMode, onEditSeat, v
                 blocked ? "blocked" : "",
               ].filter(Boolean).join(" ");
               const showAisle = letter === "C"; // 3-3 narrow-body layout aisle after column C
-              const Icon = isChild ? ChildIcon : attr?.icon;
+              const Icon = isChild ? SeatChildIcon : attr?.icon;
               const holdLabel = subtype === "presit" ? "Pre-seated" : subtype === "booked" ? "Reserved" : "";
               const priceLabel = extra.price != null ? `${extra.price}` : "";
               const titleBits = [isChild ? "Child" : attr?.label, holdLabel, extra.rfisc, priceLabel].filter(Boolean).join(", ");
@@ -94,11 +94,10 @@ export function SeatMapGrid({ seats, selected, onSelect, editMode, onEditSeat, v
                     <span className="seat-content">
                       {Icon && (
                         <Icon
-                          size={isChild ? 12 : extra.price != null || extra.rfisc ? 11 : 13}
+                          size={isChild ? 16 : extra.price != null || extra.rfisc ? 11 : 13}
                           className={attr?.key === "hardBlock" || attr?.key === "softBlock" ? "seat-icon-danger" : undefined}
                         />
                       )}
-                      {isChild && age != null && <span className="seat-age-badge">{age}</span>}
                       {!isChild && (extra.price != null || extra.rfisc) && (
                         <span className="seat-price-row">
                           {extra.rfisc && <span className="seat-rfisc-badge">{extra.rfisc}</span>}
@@ -106,6 +105,7 @@ export function SeatMapGrid({ seats, selected, onSelect, editMode, onEditSeat, v
                         </span>
                       )}
                     </span>
+                    {isChild && age != null && <span className="seat-age-badge">{age}</span>}
                   </span>
                   {showAisle && <span className="aisle" />}
                 </Fragment>
