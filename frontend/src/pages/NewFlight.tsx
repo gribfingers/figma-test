@@ -4,11 +4,23 @@ import { api } from "../api";
 import { Field } from "../components/Field";
 import { Select } from "../components/Select";
 import { AirportSelect } from "../components/AirportSelect";
-import { DateTimePicker } from "../components/DateTimePicker";
 import { PlaneIcon } from "../components/Icon";
+import { combineDateAndTime } from "../components/flightcard/mainDraft";
 import { useRegisterTab } from "../tabs";
 import { AIRCRAFT_TYPES } from "../aircraftTypes";
-import { alphanumericUpper, digitsOnly } from "../validation";
+import { alphanumericUpper, dateInput, digitsOnly, timeInput } from "../validation";
+
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const TIME_RE = /^\d{2}:\d{2}$/;
+
+function fmtDuration(depDate: string, depTime: string, arrDate: string, arrTime: string): string {
+  if (!DATE_RE.test(depDate) || !TIME_RE.test(depTime) || !DATE_RE.test(arrDate) || !TIME_RE.test(arrTime)) return "";
+  const dep = new Date(`${depDate}T${depTime}:00Z`).getTime();
+  const arr = new Date(`${arrDate}T${arrTime}:00Z`).getTime();
+  const mins = Math.round((arr - dep) / 60000);
+  if (mins <= 0) return "";
+  return `${Math.floor(mins / 60)}h ${mins % 60}min`;
+}
 
 const AGREEMENT_TYPES = [
   { value: "codeshare", label: "Codeshare" },
@@ -43,8 +55,10 @@ export function NewFlight() {
   const [aircraftType, setAircraftType] = useState("A320");
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
-  const [std, setStd] = useState("");
-  const [sta, setSta] = useState("");
+  const [depDate, setDepDate] = useState("");
+  const [depTime, setDepTime] = useState("");
+  const [arrDate, setArrDate] = useState("");
+  const [arrTime, setArrTime] = useState("");
   const [terminalFrom, setTerminalFrom] = useState("");
   const [terminalTo, setTerminalTo] = useState("");
   const [checkinDesk, setCheckinDesk] = useState("");
@@ -62,15 +76,18 @@ export function NewFlight() {
     e.preventDefault();
     setError("");
     if (!origin || !destination) return setError("Origin and destination airports are required");
-    if (!std) return setError("Departure date/time is required");
+    if (!DATE_RE.test(depDate) || !TIME_RE.test(depTime)) return setError("Departure date/time is required");
+    const std = combineDateAndTime(new Date().toISOString(), depDate, depTime);
+    const sta =
+      DATE_RE.test(arrDate) && TIME_RE.test(arrTime) ? combineDateAndTime(new Date().toISOString(), arrDate, arrTime) : undefined;
     try {
       const flight = await api.createFlight({
         carrier_code: carrierCode,
         flight_number: flightNumber,
         origin,
         destination,
-        std: new Date(std).toISOString(),
-        sta: sta ? new Date(sta).toISOString() : undefined,
+        std,
+        sta,
         aircraft_type: aircraftType,
       });
       navigate(`/flights/${flight.id}`);
@@ -84,9 +101,27 @@ export function NewFlight() {
       <div className="flight-card-panel">
         <div className="flight-card-head">
           <div className="flight-card-id">
-            <div className="flight-card-number">New flight</div>
+            <div className="new-flight-number-fields">
+              <Field label="Airline (IATA)" style={{ width: 108 }}>
+                <input
+                  value={carrierCode}
+                  required
+                  onChange={(e) => setCarrierCode(alphanumericUpper(e.target.value, 3))}
+                  placeholder=" "
+                />
+              </Field>
+              <Field label="Flight number" style={{ width: 108 }}>
+                <input
+                  value={flightNumber}
+                  required
+                  onChange={(e) => setFlightNumber(alphanumericUpper(e.target.value, 5))}
+                  placeholder=" "
+                />
+              </Field>
+            </div>
             <div className="flight-card-date">Manual entry — for flights without a preloaded schedule</div>
           </div>
+          <div />
           <div className="flight-card-actions">
             <button type="submit">Create flight</button>
           </div>
@@ -96,34 +131,15 @@ export function NewFlight() {
           {error && <div className="error-box">{error}</div>}
           <div className="grid-2">
             <div className="segment-card">
-              <div className="grid-3">
-                <Field label="Airline (IATA)">
-                  <input
-                    value={carrierCode}
-                    required
-                    onChange={(e) => setCarrierCode(alphanumericUpper(e.target.value, 3))}
-                    placeholder=" "
-                  />
-                </Field>
-                <Field label="Flight number">
-                  <input
-                    value={flightNumber}
-                    required
-                    onChange={(e) => setFlightNumber(alphanumericUpper(e.target.value, 5))}
-                    placeholder=" "
-                  />
-                </Field>
-                <Select
-                  label="Aircraft type"
-                  value={aircraftType}
-                  onChange={setAircraftType}
-                  options={AIRCRAFT_TYPES.map((t) => ({ value: t, label: t }))}
-                />
-              </div>
-
-              <div className="segment-endpoints" style={{ marginTop: 16 }}>
+              <div className="segment-endpoints">
                 <div className="segment-point-edit">
                   <AirportSelect label="Airport" value={origin} onChange={setOrigin} style={{ width: 84 }} />
+                  <Field label="Date" style={{ width: 132 }}>
+                    <input value={depDate} onChange={(e) => setDepDate(dateInput(e.target.value))} placeholder=" " />
+                  </Field>
+                  <Field label="Time" style={{ width: 66 }}>
+                    <input value={depTime} onChange={(e) => setDepTime(timeInput(e.target.value))} placeholder=" " />
+                  </Field>
                   <Field label="Terminal" style={{ width: 84 }}>
                     <input
                       value={terminalFrom}
@@ -132,9 +148,15 @@ export function NewFlight() {
                     />
                   </Field>
                 </div>
-                <div className="segment-duration" />
+                <div className="segment-duration">{fmtDuration(depDate, depTime, arrDate, arrTime)}</div>
                 <div className="segment-point-edit">
                   <AirportSelect label="Airport" value={destination} onChange={setDestination} style={{ width: 84 }} />
+                  <Field label="Date" style={{ width: 132 }}>
+                    <input value={arrDate} onChange={(e) => setArrDate(dateInput(e.target.value))} placeholder=" " />
+                  </Field>
+                  <Field label="Time" style={{ width: 66 }}>
+                    <input value={arrTime} onChange={(e) => setArrTime(timeInput(e.target.value))} placeholder=" " />
+                  </Field>
                   <Field label="Terminal" style={{ width: 84 }}>
                     <input
                       value={terminalTo}
@@ -153,7 +175,12 @@ export function NewFlight() {
               </div>
 
               <div className="grid-3">
-                <DateTimePicker label="Departure date/time" value={std} onChange={setStd} />
+                <Select
+                  label="AC type"
+                  value={aircraftType}
+                  onChange={setAircraftType}
+                  options={AIRCRAFT_TYPES.map((t) => ({ value: t, label: t }))}
+                />
                 <Field label="Check-in desk">
                   <input
                     value={checkinDesk}
@@ -170,7 +197,9 @@ export function NewFlight() {
                 </Field>
               </div>
               <div className="grid-3" style={{ marginTop: 12 }}>
-                <DateTimePicker label="Arrival date/time" value={sta} onChange={setSta} />
+                <div className="segment-flighttype">
+                  Flight type: <b>Scheduled</b>
+                </div>
                 <Field label="Gate">
                   <input value={gate} onChange={(e) => setGate(digitsOnly(e.target.value, 3))} placeholder=" " />
                 </Field>

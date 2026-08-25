@@ -1249,6 +1249,7 @@ a { color: var(--accent); }
 .flight-card-route { color: var(--accent); font-weight: 600; font-size: 13px; margin-top: 2px; }
 .flight-card-date { color: var(--muted); font-size: 12px; margin-top: 2px; }
 .flight-card-actions { display: flex; gap: 8px; justify-self: end; }
+.new-flight-number-fields { display: flex; gap: 8px; }
 
 .flight-status-group { display: flex; border: 1px solid var(--panel-border); border-radius: 4px; overflow: hidden; }
 .flight-status-chip { padding: 10px 18px; text-align: center; border-right: 1px solid var(--panel-border); background: #f4f7fa; }
