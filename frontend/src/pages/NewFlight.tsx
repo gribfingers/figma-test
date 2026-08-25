@@ -112,6 +112,7 @@ export function NewFlight() {
                   required
                   onChange={(e) => setCarrierCode(alphanumericUpper(e.target.value, 3))}
                   onFocus={(e) => e.target.select()}
+                  onMouseUp={(e) => e.preventDefault()}
                   placeholder=" "
                 />
               </Field>
