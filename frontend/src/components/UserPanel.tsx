@@ -1,4 +1,4 @@
-import { ChangeEvent, FormEvent, useRef, useState } from "react";
+import { ChangeEvent, CSSProperties, FormEvent, useRef, useState } from "react";
 import { api } from "../api";
 import { useAuth } from "../auth";
 import { resizeImageToDataUrl, userAvatarColor, userInitials } from "../userDisplay";
@@ -103,7 +103,7 @@ export function UserPanel({ onClose }: Props) {
           <button
             type="button"
             className="user-panel-avatar"
-            style={user.avatar ? undefined : { background: userAvatarColor(user) }}
+            style={user.avatar ? undefined : ({ "--avatar-color": userAvatarColor(user) } as CSSProperties)}
             onClick={() => fileRef.current?.click()}
             title="Change photo"
           >

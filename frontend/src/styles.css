@@ -870,11 +870,15 @@ button.icon-button:hover { background: #fafbfc; }
   display: flex;
   align-items: center;
   justify-content: center;
+  background: var(--avatar-color, var(--accent));
   color: #ffffff;
   font-size: 36px;
   font-weight: 700;
 }
 .user-panel-avatar img { width: 100%; height: 100%; object-fit: cover; }
+/* Extra specificity (parent-scoped) so this beats the global button:hover rule — re-asserts the
+   same per-user color (or the avatar image showing through) instead of the global accent-hover blue. */
+.user-panel-avatar-wrap .user-panel-avatar:hover { background: var(--avatar-color, var(--accent)); filter: brightness(0.93); }
 
 .user-panel-section { border-top: 1px solid var(--border); padding: 16px 0; flex-shrink: 0; }
 .user-panel-section-head {
@@ -889,6 +893,8 @@ button.icon-button:hover { background: #fafbfc; }
   font-weight: 700;
   color: var(--field-value);
 }
+/* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
+.user-panel .user-panel-section-head:hover { background: transparent; color: var(--field-value); }
 .user-panel-section-head .chevron-rotated { transform: rotate(180deg); }
 .user-panel-section-body { display: flex; flex-direction: column; gap: 4px; margin-top: 16px; }
 .user-panel-section-body .field2 { margin-bottom: 0; }
