@@ -23,6 +23,13 @@ const LEGEND_STATES: { cls: string; label: string }[] = [
   { cls: "boarded", label: "Boarded" },
 ];
 
+// Hold markers overlay any of the three states above (a checked-in seat can
+// also be reserved, etc.) rather than being states of their own.
+const LEGEND_HOLDS: { cls: string; label: string }[] = [
+  { cls: "preseated", label: "Предрассажен" },
+  { cls: "reserved", label: "Забронировано" },
+];
+
 /**
  * Seat map with the reference toolbar: deck switcher (this app's aircraft
  * are all single-deck, so "Upper Deck" is a disabled placeholder), zoom
@@ -95,6 +102,12 @@ export function SeatMapPanel({ flightId, seats, selected, onSelect, onSeatUpdate
               <div className="seatmap-legend">
                 <div className="seatmap-legend-states">
                   {LEGEND_STATES.map((s) => (
+                    <div key={s.label} className="seatmap-legend-row">
+                      <span className={`seat seatmap-legend-swatch ${s.cls}`} />
+                      {s.label}
+                    </div>
+                  ))}
+                  {LEGEND_HOLDS.map((s) => (
                     <div key={s.label} className="seatmap-legend-row">
                       <span className={`seat seatmap-legend-swatch ${s.cls}`} />
                       {s.label}
@@ -224,6 +237,14 @@ function SeatEditorModal({
             {a.label}
           </label>
         ))}
+        <label className="seat-editor-check">
+          <input type="checkbox" checked={!!extra.preseated} onChange={() => toggle("preseated")} />
+          Предрассажен
+        </label>
+        <label className="seat-editor-check">
+          <input type="checkbox" checked={!!extra.reserved} onChange={() => toggle("reserved")} />
+          Забронировано
+        </label>
         <div className="seat-editor-row">
           <Field label="Price" style={{ width: 100 }}>
             <input

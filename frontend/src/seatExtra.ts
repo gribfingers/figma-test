@@ -29,6 +29,13 @@ export interface SeatExtra {
   price?: number;
   priceIcon?: boolean; // show a star alongside the price
   rfisc?: string;
+  // Hold markers — independent of passenger assignment (a free seat can be
+  // pre-seated or reserved before anyone actually checks in), so they're
+  // overlay flags on top of the free/checked-in/boarded state rather than
+  // states of their own. No seat-hold subsystem exists yet to set these
+  // automatically; for now they're only set by hand via the seat editor.
+  preseated?: boolean;
+  reserved?: boolean;
 }
 
 export function parseSeatExtra(s: SeatCell): SeatExtra {

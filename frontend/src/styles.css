@@ -854,6 +854,10 @@ button.icon-btn {
 .seat.business:not(.has-attr):not(.blocked) { background: #fff3d6; }
 .seat.has-attr:not(.blocked) { background: #f1ecfb; border-color: #cbb8f0; }
 .seat.blocked { background: var(--danger-soft); border-color: var(--danger-border); cursor: not-allowed; }
+/* Hold markers (no seat-hold subsystem yet — set by hand in the editor) sit on top of whatever the base state color is, as a top stripe. Placeholder colors pending exact spec. */
+.seat.preseated { box-shadow: inset 0 3px 0 0 #e8962e; }
+.seat.reserved { box-shadow: inset 0 3px 0 0 #4a90d9; }
+.seat.preseated.reserved { box-shadow: inset 0 3px 0 0 #e8962e, inset 0 -3px 0 0 #4a90d9; }
 .seat-price { font-size: 8px; line-height: 1; font-weight: 600; color: var(--muted); }
 .seat.selected .seat-price { color: #fff; }
 .aisle { width: 14px; }

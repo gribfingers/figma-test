@@ -46,18 +46,22 @@ export function SeatMapGrid({ seats, selected, onSelect, editMode, onEditSeat, v
                 s.cabin_class === "J" ? "business" : "",
                 blocked ? "blocked" : "",
                 attr ? "has-attr" : "",
+                extra.preseated ? "preseated" : "",
+                extra.reserved ? "reserved" : "",
               ].filter(Boolean).join(" ");
               const showAisle = letter === "C"; // 3-3 narrow-body layout aisle after column C
               const Icon = attr?.icon;
+              const holdLabel = extra.preseated ? "Pre-seated" : extra.reserved ? "Reserved" : "";
+              const titleBits = [attr?.label, holdLabel].filter(Boolean).join(", ");
               return (
                 <Fragment key={s.seat}>
                   <span
                     className={classes}
                     title={
                       s.passenger_id
-                        ? `${s.surname}/${s.given_name} (${s.record_locator})${attr ? ` — ${attr.label}` : ""}`
-                        : attr
-                        ? `${s.seat} — ${attr.label}`
+                        ? `${s.surname}/${s.given_name} (${s.record_locator})${titleBits ? ` — ${titleBits}` : ""}`
+                        : titleBits
+                        ? `${s.seat} — ${titleBits}`
                         : s.seat
                     }
                     onClick={() => {
@@ -66,7 +70,9 @@ export function SeatMapGrid({ seats, selected, onSelect, editMode, onEditSeat, v
                     }}
                   >
                     {Icon ? <Icon size={13} /> : letter}
-                    {extra.price != null && <span className="seat-price">{extra.price}</span>}
+                    {(extra.price != null || extra.rfisc) && (
+                      <span className="seat-price">{[extra.rfisc, extra.price].filter((v) => v != null && v !== "").join(" ")}</span>
+                    )}
                   </span>
                   {showAisle && <span className="aisle" />}
                 </Fragment>
