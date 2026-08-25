@@ -8,14 +8,13 @@ interface Props {
   seats: SeatCell[];
   selected?: string | null;
   onSelect?: (seat: string) => void;
-  /** Edit mode: every seat (occupied or not) is clickable, to open the attribute editor. */
-  editMode?: boolean;
+  /** Right-clicking any seat opens the attribute editor for it. */
   onEditSeat?: (seat: SeatCell) => void;
   /** Which attribute keys the "layers" menu currently shows on the map — everything, if omitted. */
   visibleLayers?: Set<string>;
   /** WC/galley/exit-door blocks to render as extra rows in the cabin, keyed by the seat row they follow. */
   cabinFeatures?: CabinFeature[];
-  /** Fires when an occupied seat is clicked outside edit mode — lets the caller e.g. highlight/scroll to that passenger's row. */
+  /** Fires when an occupied seat is left-clicked — lets the caller e.g. highlight/scroll to that passenger's row. */
   onSelectOccupied?: (seat: SeatCell) => void;
 }
 
@@ -73,7 +72,6 @@ export function SeatMapGrid({
   seats,
   selected,
   onSelect,
-  editMode,
   onEditSeat,
   visibleLayers,
   cabinFeatures,
@@ -163,9 +161,13 @@ export function SeatMapGrid({
                           : s.seat
                       }
                       onClick={() => {
-                        if (editMode) onEditSeat?.(s);
-                        else if (s.passenger_id) onSelectOccupied?.(s);
+                        if (s.passenger_id) onSelectOccupied?.(s);
                         else if (!blocked) onSelect?.(s.seat);
+                      }}
+                      onContextMenu={(e) => {
+                        if (!onEditSeat) return;
+                        e.preventDefault();
+                        onEditSeat(s);
                       }}
                     >
                       {subtype !== "none" && <span className={`seat-subtype-bar seat-subtype-${subtype}`} />}

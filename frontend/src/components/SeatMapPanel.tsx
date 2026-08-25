@@ -5,7 +5,7 @@ import { SEAT_ATTRS, SeatExtra, parseSeatExtra } from "../seatExtra";
 import { SeatMapGrid } from "./SeatMapGrid";
 import { Modal } from "./Modal";
 import { Field } from "./Field";
-import { HideIcon, LayersIcon, MinusIcon, PencilIcon, PlusIcon, RowsIcon } from "./Icon";
+import { HideIcon, LayersIcon, MinusIcon, PlusIcon, RowsIcon } from "./Icon";
 
 interface Props {
   flightId: number;
@@ -35,11 +35,9 @@ const LEGEND_HOLDS: { cls: string; label: string }[] = [
  * Seat map with the reference toolbar: deck switcher (this app's aircraft
  * are all single-deck, so "Upper Deck" is a disabled placeholder), zoom
  * (CSS transform: scale), a legend popover, a layers menu that toggles
- * which attribute icons render on the map, and hide. The pencil button is
- * this app's addition (not in the reference toolbar) — it's the entry
- * point into the seat attribute editor the request asked for: click any
- * seat while it's active to assign exit-row/blocking/service/pricing
- * attributes to it.
+ * which attribute icons render on the map, and hide. Right-clicking any
+ * seat opens the attribute editor (exit-row/blocking/service/pricing) —
+ * this app's addition, not in the reference toolbar.
  */
 export function SeatMapPanel({
   flightId,
@@ -54,7 +52,6 @@ export function SeatMapPanel({
   const [zoom, setZoom] = useState(100);
   const [legendOpen, setLegendOpen] = useState(false);
   const [layersOpen, setLayersOpen] = useState(false);
-  const [editMode, setEditMode] = useState(false);
   const [editingSeat, setEditingSeat] = useState<SeatCell | null>(null);
   const [visibleLayers, setVisibleLayers] = useState<Set<string>>(() => new Set(SEAT_ATTRS.map((a) => a.key)));
 
@@ -96,14 +93,6 @@ export function SeatMapPanel({
               <PlusIcon size={14} />
             </button>
           </div>
-          <button
-            type="button"
-            className={`seatmap-tool-btn ${editMode ? "active" : ""}`}
-            title="Edit seat attributes"
-            onClick={() => setEditMode((e) => !e)}
-          >
-            <PencilIcon size={16} />
-          </button>
           <div className="seatmap-popover-anchor" ref={legendRef}>
             <button type="button" className="seatmap-tool-btn" title="Legend" onClick={() => setLegendOpen((o) => !o)}>
               <RowsIcon size={16} />
@@ -165,7 +154,6 @@ export function SeatMapPanel({
             seats={seats}
             selected={selected}
             onSelect={onSelect}
-            editMode={editMode}
             onEditSeat={setEditingSeat}
             visibleLayers={visibleLayers}
             cabinFeatures={cabinFeatures}
