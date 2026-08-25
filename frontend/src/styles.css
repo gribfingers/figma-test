@@ -871,22 +871,8 @@ button.icon-btn {
 .seat-checked-in .seat-price, .seat-boarded .seat-price, .seat.selected .seat-price { color: #ffffff; }
 .seat-rfisc-badge { background: #8ca0b9; color: #ffffff; font-size: 7px; font-weight: 600; line-height: 1; border-radius: 2px; padding: 1.5px 2px; white-space: nowrap; }
 
-.seat-age-badge {
-  position: absolute;
-  left: 2px;
-  top: 50%;
-  transform: translateY(-50%);
-  box-sizing: border-box;
-  min-width: 11px;
-  background: #f3f7f9;
-  color: #707d95;
-  font-size: 9px;
-  font-weight: 600;
-  line-height: 1;
-  text-align: center;
-  border-radius: 2px;
-  padding: 3px 0;
-}
+.seat-child-age { font-size: 9px; font-weight: 600; line-height: 1; color: #707d95; }
+.seat-checked-in .seat-child-age, .seat-boarded .seat-child-age, .seat.selected .seat-child-age { color: #ffffff; }
 
 .aisle { width: 14px; }
 

@@ -94,10 +94,11 @@ export function SeatMapGrid({ seats, selected, onSelect, editMode, onEditSeat, v
                     <span className="seat-content">
                       {Icon && (
                         <Icon
-                          size={isChild ? 16 : extra.price != null || extra.rfisc ? 11 : 13}
+                          size={isChild ? 8 : extra.price != null || extra.rfisc ? 11 : 13}
                           className={attr?.key === "hardBlock" || attr?.key === "softBlock" ? "seat-icon-danger" : undefined}
                         />
                       )}
+                      {isChild && age != null && <span className="seat-child-age">{age}</span>}
                       {!isChild && (extra.price != null || extra.rfisc) && (
                         <span className="seat-price-row">
                           {extra.rfisc && <span className="seat-rfisc-badge">{extra.rfisc}</span>}
@@ -105,7 +106,6 @@ export function SeatMapGrid({ seats, selected, onSelect, editMode, onEditSeat, v
                         </span>
                       )}
                     </span>
-                    {isChild && age != null && <span className="seat-age-badge">{age}</span>}
                   </span>
                   {showAisle && <span className="aisle" />}
                 </Fragment>

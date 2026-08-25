@@ -198,12 +198,16 @@ export function ChildIcon({ size = 14, className }: IconProps) {
   );
 }
 
-/** Filled child glyph from the Figma "Seat H" component's Child-state icon — used only for the seat-map cell, not the stroke-style ChildIcon above. */
-export function SeatChildIcon({ size = 16, className }: IconProps) {
+/** Filled child glyph from the Figma "Seat H" component's Child-state icon — used only for the seat-map cell, not the stroke-style ChildIcon above. Age renders as text underneath it (see .seat-child-age). */
+export function SeatChildIcon({ size = 8, className }: IconProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" className={className}>
+    <svg width={size} height={(size * 7) / 8} viewBox="0 0 8 7" fill="none" className={className}>
       <path
-        d="M8 1.74846e-07C7.44747 1.50694e-07 6.91756 0.210714 6.52686 0.585787C6.13616 0.960859 5.91667 1.46957 5.91667 2C5.91667 2.53043 6.13616 3.03914 6.52686 3.41421C6.91756 3.78929 7.44747 4 8 4C8.27359 4 8.5445 3.94827 8.79726 3.84776C9.05002 3.74725 9.27968 3.59993 9.47314 3.41421C9.6666 3.2285 9.82005 3.00802 9.92475 2.76537C10.0294 2.52272 10.0833 2.26264 10.0833 2C10.0833 1.46957 9.86384 0.96086 9.47314 0.585787C9.08244 0.210714 8.55254 1.98998e-07 8 1.74846e-07ZM6 4.8C4.895 4.8 4 5.516 4 6.4L4 12.8L5 12.8L5 16L7 16L7 12.8L9 12.8L9 16L11 16L11 12.8L12 12.8L12 6.4C12 5.516 11.105 4.8 10 4.8L6 4.8ZM5.33333 6.4L10.6667 6.4L10.6667 11.2L5.33333 11.2L5.33333 6.4Z"
+        d="M6 4.7998C7.105 4.7998 8 5.51639 8 6.40039V7H6.66699V6.40039H1.33301V7H0L2.62098e-08 6.40039C6.48507e-08 5.51639 0.895 4.7998 2 4.7998H6Z"
+        fill="currentColor"
+      />
+      <path
+        d="M4 0C4.55245 2.41484e-08 5.08197 0.21097 5.47266 0.585938C5.86336 0.96101 6.08301 1.46957 6.08301 2C6.08301 2.26264 6.0295 2.52297 5.9248 2.76562C5.82011 3.0082 5.66606 3.2284 5.47266 3.41406C5.27924 3.5997 5.04956 3.74718 4.79688 3.84766C4.5442 3.94809 4.27348 4 4 4C3.44755 4 2.91803 3.78903 2.52734 3.41406C2.13664 3.03899 1.91699 2.53043 1.91699 2C1.91699 1.46957 2.13664 0.96101 2.52734 0.585937C2.91803 0.21097 3.44755 6.1547e-09 4 0Z"
         fill="currentColor"
       />
     </svg>
