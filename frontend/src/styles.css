@@ -856,8 +856,8 @@ button.icon-btn {
 .seat.selected { background: var(--accent); border-color: var(--accent); }
 .seat.blocked { cursor: not-allowed; }
 
-/* Presit/Booked hold markers: 6px color bar on the seat's left edge. */
-.seat-subtype-bar { position: absolute; left: 0; top: 0; bottom: 0; width: 6px; }
+/* Presit/Booked hold markers: 6px color bar on the seat's bottom edge (left bar rotated 90° CCW). */
+.seat-subtype-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 6px; }
 .seat-subtype-presit { background: #ffaa00; }
 .seat-subtype-booked { background: #64bb3e; }
 
@@ -1279,7 +1279,7 @@ tr.row-hover { cursor: pointer; }
 .seatmap-scroll { overflow: auto; }
 .seatmap-zoom-wrap { transform-origin: top left; width: fit-content; }
 
-.seat-editor { display: flex; flex-direction: column; gap: 6px; max-height: 400px; overflow-y: auto; padding-bottom: 4px; }
+.seat-editor { display: flex; flex-direction: column; gap: 6px; padding-bottom: 4px; }
 .seat-editor-check { display: flex; align-items: center; gap: 8px; margin-bottom: 0; font-size: 13px; color: var(--field-value); }
 .seat-editor-row { display: flex; align-items: center; gap: 16px; margin-top: 6px; }
 
