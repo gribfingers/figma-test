@@ -470,7 +470,7 @@ export function PassengersTab({ flight }: Props) {
           <ArrowBackIcon size={18} />
         </button>
       ) : (
-        <div className="passengers-seatmap" ref={seatmapRef}>
+        <div className={`passengers-seatmap ${seatAction ? "picking" : ""}`} ref={seatmapRef}>
           {seatAction && (
             <div className="seat-pick-banner">
               <span>

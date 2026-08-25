@@ -101,10 +101,10 @@ export function PassengersToolbar({
             All
           </button>
           <button type="button" className={`pax-quick-filter ${quickFilter === "reseat" ? "selected" : ""}`} onClick={() => onQuickFilter("reseat")}>
-            Reseat ({reseatCount})
+            WL ({reseatCount})
           </button>
           <button type="button" className={`pax-quick-filter ${quickFilter === "priority" ? "selected" : ""}`} onClick={() => onQuickFilter("priority")}>
-            Priority List ({priorityCount})
+            PL ({priorityCount})
           </button>
         </div>
         <div className="pax-class-counts">
@@ -115,16 +115,13 @@ export function PassengersToolbar({
             </span>
           ))}
         </div>
-      </div>
 
-      <div className="pax-toolbar-row">
-        <div className="input-box" style={{ flex: 1, maxWidth: 240 }}>
+        <div className="input-box" style={{ width: 190 }}>
           <SearchIcon size={16} />
           <input placeholder="Search passengers…" value={query} onChange={(e) => onQuery(e.target.value)} />
         </div>
 
         <div className="pax-multiselect" ref={servicesRef}>
-          <label>Services</label>
           <div className={`pax-multiselect-box ${servicesOpen ? "open" : ""}`} onClick={() => setServicesOpen((o) => !o)}>
             {serviceFilter.map((code) => (
               <span key={code} className="pax-multiselect-tag">
@@ -140,7 +137,7 @@ export function PassengersToolbar({
                 </button>
               </span>
             ))}
-            {serviceFilter.length === 0 && <span className="pax-multiselect-placeholder">Any</span>}
+            {serviceFilter.length === 0 && <span className="pax-multiselect-placeholder">Any services</span>}
             <ChevronDownIcon size={14} className="pax-multiselect-chevron" />
           </div>
           {servicesOpen && (
@@ -160,8 +157,7 @@ export function PassengersToolbar({
           )}
         </div>
 
-        <div className="pax-search-field" style={{ width: 180 }}>
-          <label>ASVC</label>
+        <div className="pax-search-field" style={{ width: 150 }}>
           <div className="input-box">
             <SearchIcon size={16} />
             <input placeholder="Search ancillary…" value={asvcFilter} onChange={(e) => onAsvcFilter(e.target.value)} />
@@ -172,7 +168,7 @@ export function PassengersToolbar({
 
         <span className="passengers-count">{totalCount} passengers</span>
 
-        <button type="button" className="secondary" onClick={onAddPassenger}>Add passenger</button>
+        <button type="button" className="tertiary" onClick={onAddPassenger}>Add passenger</button>
 
         <div className="pax-columns-menu" ref={columnsRef}>
           <button type="button" className="icon-button pax-columns-trigger" title="Columns" onClick={() => setColumnsOpen((o) => !o)}>

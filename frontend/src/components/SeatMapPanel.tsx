@@ -88,7 +88,7 @@ export function SeatMapPanel({
             <button type="button" className="seatmap-zoom-btn" onClick={() => setZoom((z) => Math.max(50, z - 10))} aria-label="Zoom out">
               <MinusIcon size={14} />
             </button>
-            <span>{zoom}%</span>
+            <span className="seatmap-zoom-value">{zoom}%</span>
             <button type="button" className="seatmap-zoom-btn" onClick={() => setZoom((z) => Math.min(150, z + 10))} aria-label="Zoom in">
               <PlusIcon size={14} />
             </button>

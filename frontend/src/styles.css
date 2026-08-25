@@ -1414,15 +1414,25 @@ a { color: var(--accent); }
 .passengers-list { flex: 1; min-width: 0; display: flex; flex-direction: column; min-height: 0; }
 .passengers-list .pax-toolbar { flex-shrink: 0; }
 .passengers-list .table-scroll { flex: 1; min-height: 0; overflow-y: auto; }
-.passengers-seatmap { flex-shrink: 0; border: 1px solid var(--panel-border); border-radius: 4px; padding: 16px; display: flex; flex-direction: column; min-height: 0; }
+/* position:relative + the banner's own position:absolute below is deliberate:
+   an absolutely positioned element is removed from normal flow and doesn't
+   feed into its containing block's intrinsic width, so a long passenger
+   name in the banner can never widen this panel (and with it the seat grid)
+   the way an in-flow banner would. .picking reserves the vertical space the
+   banner overlays instead, so it doesn't cover the toolbar underneath it. */
+.passengers-seatmap { position: relative; flex-shrink: 0; border: 1px solid var(--panel-border); border-radius: 4px; padding: 16px; display: flex; flex-direction: column; min-height: 0; }
+.passengers-seatmap.picking { padding-top: 68px; }
 .seat-pick-banner {
-  flex-shrink: 0;
+  position: absolute;
+  z-index: 2;
+  top: 16px;
+  left: 16px;
+  right: 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   padding: 8px 12px;
-  margin-bottom: 12px;
   background: var(--accent-soft);
   border: 1px solid var(--accent);
   border-radius: 4px;
@@ -1563,9 +1573,8 @@ tr.pax-row-nested td { color: var(--muted); }
 tr.row-hover { cursor: pointer; }
 
 /* ---- Passengers-tab toolbar: quick filters, class counters, search/filters, column visibility ---- */
-.pax-toolbar { display: flex; flex-direction: column; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--panel-border); }
-.pax-toolbar-row { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
-.pax-toolbar-row:first-child { align-items: center; justify-content: space-between; }
+.pax-toolbar { display: flex; flex-direction: column; padding: 12px 16px; border-bottom: 1px solid var(--panel-border); }
+.pax-toolbar-row { display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; }
 
 .pax-quick-filters { display: inline-flex; background: var(--field-bg); border-radius: 6px; padding: 2px; gap: 2px; }
 .pax-quick-filter { all: unset; box-sizing: border-box; padding: 6px 12px; font-size: 13px; font-weight: 600; color: var(--muted); border-radius: 4px; cursor: pointer; white-space: nowrap; }
@@ -1575,12 +1584,11 @@ tr.row-hover { cursor: pointer; }
 .pax-quick-filters .pax-quick-filter.selected:hover { background: #ffffff; }
 
 .pax-class-counts { display: inline-flex; gap: 8px; }
-.pax-class-count { display: inline-flex; align-items: center; gap: 6px; padding: 0 10px; height: 30px; border: 1px solid var(--panel-border); border-radius: 4px; font-size: 13px; font-weight: 600; color: var(--field-value); font-family: var(--mono); }
+.pax-class-count { display: inline-flex; align-items: center; gap: 6px; padding: 0 10px; height: 30px; border-radius: 4px; font-size: 13px; font-weight: 600; color: var(--field-value); font-family: var(--mono); }
 .pax-class-count-label { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border: 1px solid var(--field-border); border-radius: 3px; font-size: 11px; color: var(--muted); font-family: var(--font); }
 
 .pax-multiselect { position: relative; }
-.pax-multiselect > label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
-.pax-multiselect-box { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; min-height: 42px; width: 220px; box-sizing: border-box; border: 1px solid var(--field-border); border-radius: var(--field-radius); background: var(--field-bg); padding: 6px 10px; cursor: pointer; }
+.pax-multiselect-box { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; min-height: 42px; width: 170px; box-sizing: border-box; border: 1px solid var(--field-border); border-radius: var(--field-radius); background: var(--field-bg); padding: 6px 10px; cursor: pointer; }
 .pax-multiselect-box:hover { border-color: var(--field-border-hover); }
 .pax-multiselect-box.open { border-color: var(--field-border-focus); }
 .pax-multiselect-tag { display: inline-flex; align-items: center; gap: 4px; background: #ffffff; border: 1px solid var(--panel-border); border-radius: 3px; padding: 2px 6px; font-size: 12px; font-family: var(--mono); }
@@ -1589,8 +1597,6 @@ tr.row-hover { cursor: pointer; }
 .pax-multiselect-box .pax-multiselect-tag button:hover { background: transparent; color: var(--danger); }
 .pax-multiselect-placeholder { color: var(--field-placeholder); font-size: 14px; }
 .pax-multiselect-chevron { margin-left: auto; color: var(--muted); flex-shrink: 0; }
-
-.pax-search-field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
 
 .pax-columns-menu { position: relative; }
 .pax-columns-list.select-menu { left: auto; right: 0; width: 200px; max-height: 320px; overflow-y: auto; }
@@ -1633,6 +1639,8 @@ tr.row-hover { cursor: pointer; }
 .seatmap-toolbar-actions { display: flex; align-items: center; gap: 6px; }
 
 .seatmap-zoom { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--field-border); border-radius: 4px; padding: 4px 8px; font-size: 12px; font-weight: 600; color: var(--field-value); font-family: var(--mono); }
+/* Fixed width so 50%/150% (3 digits) vs 100% (3 digits) vs 90% (2 digits) never resize this box as the user zooms. */
+.seatmap-zoom-value { display: inline-block; width: 30px; text-align: center; }
 .seatmap-zoom-btn { all: unset; box-sizing: border-box; display: flex; align-items: center; justify-content: center; width: 18px; height: 18px; color: var(--muted); cursor: pointer; }
 /* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
 .seatmap-zoom .seatmap-zoom-btn:hover { background: transparent; color: var(--field-value); }
