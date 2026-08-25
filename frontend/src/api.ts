@@ -61,11 +61,43 @@ export interface SeatCell {
   extra: string | null;
 }
 
+export interface User {
+  id: number;
+  login: string;
+  first_name: string;
+  last_name: string;
+  role: "superadmin" | "user";
+  can_edit: number;
+  company: string | null;
+  avatar: string | null;
+  timezone: string;
+  bio: string | null;
+  created_at: string;
+}
+
+const TOKEN_KEY = "dcs_token";
+export function getToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY);
+}
+export function setToken(token: string | null) {
+  if (token) localStorage.setItem(TOKEN_KEY, token);
+  else localStorage.removeItem(TOKEN_KEY);
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = getToken();
   const res = await fetch(`/api${path}`, {
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     ...init,
   });
+  if (res.status === 401) {
+    setToken(null);
+    // App.tsx listens for this to drop back to the login screen without a full page reload.
+    window.dispatchEvent(new Event("dcs-unauthorized"));
+  }
   const isText = res.headers.get("content-type")?.includes("text/plain");
   const body = res.status === 204 ? undefined : isText ? await res.text() : await res.json();
   if (!res.ok) {
@@ -120,4 +152,32 @@ export const api = {
 
   pnl: (flightId: number) => request<string>(`/manifest/${flightId}/pnl`),
   pfs: (flightId: number) => request<string>(`/manifest/${flightId}/pfs`),
+
+  login: (login: string, password: string) =>
+    request<{ token: string; user: User }>("/auth/login", { method: "POST", body: JSON.stringify({ login, password }) }),
+  logout: () => request<{ ok: boolean }>("/auth/logout", { method: "POST" }),
+  me: () => request<User>("/auth/me"),
+  updateMe: (data: { avatar?: string; timezone?: string; bio?: string }) =>
+    request<User>("/auth/me", { method: "PATCH", body: JSON.stringify(data) }),
+  changePassword: (currentPassword: string, newPassword: string) =>
+    request<{ ok: boolean }>("/auth/change-password", {
+      method: "POST",
+      body: JSON.stringify({ currentPassword, newPassword }),
+    }),
+
+  listUsers: () => request<User[]>("/users"),
+  createUser: (data: {
+    login: string;
+    first_name: string;
+    last_name: string;
+    role?: "superadmin" | "user";
+    can_edit?: boolean;
+    company?: string;
+  }) => request<{ user: User; password: string }>("/users", { method: "POST", body: JSON.stringify(data) }),
+  updateUser: (
+    id: number,
+    data: Partial<{ first_name: string; last_name: string; role: "superadmin" | "user"; can_edit: boolean; company: string }>
+  ) => request<User>(`/users/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+  resetUserPassword: (id: number) => request<{ password: string }>(`/users/${id}/reset-password`, { method: "POST" }),
+  deleteUser: (id: number) => request<{ ok: boolean }>(`/users/${id}`, { method: "DELETE" }),
 };

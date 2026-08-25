@@ -4,6 +4,7 @@ import { Flight, Passenger } from "../types";
 import { serializePassenger } from "../serialize";
 import { encodeBcbp, PAX_STATUS } from "../bcbp";
 import { toJulianDayOfYear } from "../utils/julian";
+import { requireEdit } from "../middleware/auth";
 
 export const checkinRouter = Router();
 
@@ -24,7 +25,7 @@ checkinRouter.get("/pnr/:recordLocator", (req, res) => {
  * Perform check-in for a passenger: capture travel document (APIS-style
  * data), assign a seat, record baggage, issue the boarding pass (BCBP).
  */
-checkinRouter.post("/:passengerId", (req, res) => {
+checkinRouter.post("/:passengerId", requireEdit, (req, res) => {
   const passenger = db.prepare("SELECT * FROM passengers WHERE id = ?").get(req.params.passengerId) as Passenger | undefined;
   if (!passenger) return res.status(404).json({ error: "Passenger not found" });
 
@@ -98,7 +99,7 @@ checkinRouter.post("/:passengerId", (req, res) => {
 });
 
 /** Change seat assignment for an already checked-in passenger (before boarding). */
-checkinRouter.post("/:passengerId/seat", (req, res) => {
+checkinRouter.post("/:passengerId/seat", requireEdit, (req, res) => {
   const passenger = db.prepare("SELECT * FROM passengers WHERE id = ?").get(req.params.passengerId) as Passenger | undefined;
   if (!passenger) return res.status(404).json({ error: "Passenger not found" });
   if (passenger.boarding_status === "BOARDED") return res.status(409).json({ error: "Passenger already boarded" });

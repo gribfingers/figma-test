@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTabs } from "../tabs";
-import { BellIcon, CloseIcon, HelpIcon, UserIcon } from "./Icon";
+import { useAuth } from "../auth";
+import { userAvatarColor, userInitials } from "../userDisplay";
+import { BellIcon, CloseIcon, HelpIcon } from "./Icon";
+import { UserPanel } from "./UserPanel";
 
 // Moscow time, shown as a fixed reference point regardless of the viewer's
 // own browser timezone — flight times throughout the app are UTC wall-clock
@@ -26,6 +29,8 @@ function MoscowClock() {
 
 export function TopTabs() {
   const { tabs, activePath, closeTab } = useTabs();
+  const { user } = useAuth();
+  const [panelOpen, setPanelOpen] = useState(false);
 
   return (
     <div className="tabs-bar">
@@ -55,7 +60,7 @@ export function TopTabs() {
       </div>
       <div className="tabs-fill" />
       <div className="tabs-actions">
-        {/* Help, notifications, and the account panel aren't wired up yet — placeholders for now. */}
+        {/* Help and notifications aren't wired up yet — placeholders for now. */}
         <button type="button" className="tabs-icon-btn" title="Help">
           <HelpIcon size={18} />
         </button>
@@ -63,10 +68,19 @@ export function TopTabs() {
         <button type="button" className="tabs-icon-btn" title="Notifications">
           <BellIcon size={18} />
         </button>
-        <button type="button" className="tabs-avatar-btn" title="Account">
-          <UserIcon size={16} />
-        </button>
+        {user && (
+          <button
+            type="button"
+            className="tabs-avatar-btn"
+            title="Account"
+            style={user.avatar ? undefined : { background: userAvatarColor(user) }}
+            onClick={() => setPanelOpen(true)}
+          >
+            {user.avatar ? <img src={user.avatar} alt="" /> : userInitials(user)}
+          </button>
+        )}
       </div>
+      {panelOpen && <UserPanel onClose={() => setPanelOpen(false)} />}
     </div>
   );
 }

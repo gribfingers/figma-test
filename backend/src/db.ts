@@ -66,6 +66,29 @@ CREATE TABLE IF NOT EXISTS passengers (
 
 CREATE INDEX IF NOT EXISTS idx_passengers_flight ON passengers(flight_id);
 CREATE INDEX IF NOT EXISTS idx_passengers_locator ON passengers(record_locator);
+
+CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  login TEXT NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  first_name TEXT NOT NULL,
+  last_name TEXT NOT NULL,
+  role TEXT NOT NULL DEFAULT 'user',
+  can_edit INTEGER NOT NULL DEFAULT 0,
+  company TEXT,
+  avatar TEXT,
+  timezone TEXT NOT NULL DEFAULT 'Europe/Moscow',
+  bio TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS sessions (
+  token TEXT PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  expires_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
 `);
 
 // Lightweight migration for databases created before the FIDS columns existed.

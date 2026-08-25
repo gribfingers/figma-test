@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../auth";
 import { BurgerIcon, DeviceIcon, PlaneIcon, RefreshIcon, SettingsIcon } from "./Icon";
 
 function formatClock(d: Date): string {
@@ -8,6 +9,7 @@ function formatClock(d: Date): string {
 
 export function SideDrawer() {
   const { pathname } = useLocation();
+  const { user } = useAuth();
   const [lastUpdated, setLastUpdated] = useState(() => new Date());
 
   useEffect(() => {
@@ -26,10 +28,15 @@ export function SideDrawer() {
         <Link to="/" className={`side-item ${pathname === "/" ? "selected" : ""}`} data-tooltip="Flight schedule">
           <PlaneIcon size={20} />
         </Link>
-        {/* Placeholder section — no page behind this yet. */}
-        <button type="button" className="side-item" data-tooltip="Settings">
-          <SettingsIcon size={20} />
-        </button>
+        {user?.role === "superadmin" && (
+          <Link
+            to="/users-admin"
+            className={`side-item ${pathname === "/users-admin" ? "selected" : ""}`}
+            data-tooltip="User administration"
+          >
+            <SettingsIcon size={20} />
+          </Link>
+        )}
       </div>
 
       <div className="side-bottom">

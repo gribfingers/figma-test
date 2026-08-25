@@ -248,11 +248,15 @@ body {
   height: 32px;
   margin-left: 6px;
   border-radius: 999px;
+  overflow: hidden;
   background: var(--accent);
   color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
+.tabs-avatar-btn img { width: 100%; height: 100%; object-fit: cover; }
 /* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
 .tabs-bar .tabs-avatar-btn:hover { background: var(--field-bg); color: var(--field-value); }
 
@@ -820,6 +824,81 @@ button.icon-button:hover { background: #fafbfc; }
   margin-bottom: 12px;
   font-size: 13px;
 }
+
+.login-page { height: 100%; display: flex; align-items: center; justify-content: center; background: var(--bg); }
+.login-card {
+  width: 340px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 40px -12px rgba(24, 31, 36, 0.2);
+}
+.login-brand { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 800; color: var(--field-value); margin-bottom: 20px; }
+.login-card .field2 { margin-bottom: 16px; }
+.login-card button[type="submit"] { margin-top: 4px; }
+
+/* ---- Account panel (avatar click) ---- */
+.user-panel-overlay { position: fixed; inset: 0; background: rgba(24, 31, 36, 0.32); z-index: 100; display: flex; justify-content: flex-end; }
+.user-panel {
+  width: 430px;
+  max-width: 100%;
+  height: 100%;
+  background: #ffffff;
+  box-shadow: -8px 0 40px -12px rgba(24, 31, 36, 0.25);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 24px;
+  box-sizing: border-box;
+}
+.user-panel-header { display: flex; align-items: flex-start; justify-content: space-between; flex-shrink: 0; }
+.user-panel-name { font-size: 20px; font-weight: 800; color: var(--field-value); }
+.user-panel-company { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+.user-panel-avatar-wrap { display: flex; justify-content: center; margin: 24px 0; flex-shrink: 0; }
+.user-panel-avatar {
+  all: unset;
+  box-sizing: border-box;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 36px;
+  font-weight: 700;
+}
+.user-panel-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.user-panel-section { border-top: 1px solid var(--border); padding: 16px 0; flex-shrink: 0; }
+.user-panel-section-head {
+  all: unset;
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--field-value);
+}
+.user-panel-section-head .chevron-rotated { transform: rotate(180deg); }
+.user-panel-section-body { display: flex; flex-direction: column; gap: 4px; margin-top: 16px; }
+.user-panel-section-body .field2 { margin-bottom: 0; }
+
+.user-panel-theme-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; opacity: 0.6; }
+.user-panel-theme-toggle { display: inline-flex; background: var(--field-bg); border-radius: 6px; padding: 2px; gap: 2px; }
+.user-panel-theme-toggle button { all: unset; box-sizing: border-box; padding: 4px 10px; font-size: 12px; font-weight: 600; color: var(--muted); border-radius: 4px; cursor: not-allowed; }
+.user-panel-theme-toggle button.selected { background: #ffffff; color: var(--field-value); }
+
+.user-panel-footer { margin-top: auto; padding-top: 24px; text-align: center; flex-shrink: 0; }
 .ok-box {
   background: var(--ok-bg);
   color: var(--ok);

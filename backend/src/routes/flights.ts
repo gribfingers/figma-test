@@ -3,6 +3,7 @@ import { db } from "../db";
 import { buildSeatMap } from "../utils/seatmap";
 import { Flight, Passenger } from "../types";
 import { serializePassenger } from "../serialize";
+import { requireEdit } from "../middleware/auth";
 
 export const flightsRouter = Router();
 
@@ -11,7 +12,7 @@ flightsRouter.get("/", (_req, res) => {
   res.json(flights);
 });
 
-flightsRouter.post("/", (req, res) => {
+flightsRouter.post("/", requireEdit, (req, res) => {
   const {
     flight_number,
     carrier_code,
@@ -80,7 +81,7 @@ flightsRouter.get("/:id", (req, res) => {
 });
 
 /** Update FIDS-board fields (route, terminal, gate, ops status, ETD/STA/ATA, aircraft reg/version/type, extra). */
-flightsRouter.patch("/:id", (req, res) => {
+flightsRouter.patch("/:id", requireEdit, (req, res) => {
   const flight = db.prepare("SELECT * FROM flights WHERE id = ?").get(req.params.id) as Flight | undefined;
   if (!flight) return res.status(404).json({ error: "Flight not found" });
 
@@ -162,7 +163,7 @@ flightsRouter.get("/:id/seatmap", (req, res) => {
 });
 
 /** Seat-map editor: assign exit-row/blocking/service/pricing attributes to one seat (seatExtra.ts on the frontend defines the shape). */
-flightsRouter.patch("/:flightId/seats/:seat", (req, res) => {
+flightsRouter.patch("/:flightId/seats/:seat", requireEdit, (req, res) => {
   const row = db
     .prepare("SELECT * FROM seats WHERE flight_id = ? AND seat = ?")
     .get(req.params.flightId, req.params.seat);
@@ -220,7 +221,7 @@ function randomLocator(): string {
   return out;
 }
 
-flightsRouter.post("/:id/passengers", (req, res) => {
+flightsRouter.post("/:id/passengers", requireEdit, (req, res) => {
   const flight = db.prepare("SELECT * FROM flights WHERE id = ?").get(req.params.id) as Flight | undefined;
   if (!flight) return res.status(404).json({ error: "Flight not found" });
 
@@ -254,7 +255,7 @@ flightsRouter.post("/:id/passengers", (req, res) => {
 });
 
 /** General passenger-record edit (surname/given_name/gender/dob/infant/ssr/record_locator) — for the passenger admin page, distinct from the seat/document fields the check-in flow (routes/checkin.ts) owns. */
-flightsRouter.patch("/:flightId/passengers/:passengerId", (req, res) => {
+flightsRouter.patch("/:flightId/passengers/:passengerId", requireEdit, (req, res) => {
   const passenger = db
     .prepare("SELECT * FROM passengers WHERE id = ? AND flight_id = ?")
     .get(req.params.passengerId, req.params.flightId) as Passenger | undefined;
@@ -294,7 +295,7 @@ flightsRouter.patch("/:flightId/passengers/:passengerId", (req, res) => {
   res.json(serializePassenger(updated));
 });
 
-flightsRouter.delete("/:flightId/passengers/:passengerId", (req, res) => {
+flightsRouter.delete("/:flightId/passengers/:passengerId", requireEdit, (req, res) => {
   const passenger = db
     .prepare("SELECT * FROM passengers WHERE id = ? AND flight_id = ?")
     .get(req.params.passengerId, req.params.flightId) as Passenger | undefined;

@@ -4,6 +4,7 @@ import { Flight, Passenger } from "../types";
 import { serializePassenger } from "../serialize";
 import { decodeBcbp, PAX_STATUS } from "../bcbp";
 import { buildPfs } from "../edifact";
+import { requireEdit } from "../middleware/auth";
 
 export const boardingRouter = Router();
 
@@ -29,7 +30,7 @@ boardingRouter.get("/:flightId/passengers", (req, res) => {
  * reader decodes a printed/mobile 2D barcode) and the DCS cross-checks it
  * against the passenger/seat/flight record before admitting the passenger.
  */
-boardingRouter.post("/scan", (req, res) => {
+boardingRouter.post("/scan", requireEdit, (req, res) => {
   const { bcbp: raw } = req.body;
   if (!raw) return res.status(400).json({ error: "bcbp is required" });
 
@@ -62,7 +63,7 @@ boardingRouter.post("/scan", (req, res) => {
   res.json({ passenger: serializePassenger(updated), decoded });
 });
 
-boardingRouter.post("/:flightId/offload/:passengerId", (req, res) => {
+boardingRouter.post("/:flightId/offload/:passengerId", requireEdit, (req, res) => {
   const passenger = db.prepare("SELECT * FROM passengers WHERE id = ? AND flight_id = ?").get(req.params.passengerId, req.params.flightId) as Passenger | undefined;
   if (!passenger) return res.status(404).json({ error: "Passenger not found on this flight" });
   if (passenger.boarding_status === "BOARDED") return res.status(409).json({ error: "Cannot offload a passenger already boarded — deboard first" });
@@ -73,7 +74,7 @@ boardingRouter.post("/:flightId/offload/:passengerId", (req, res) => {
 });
 
 /** Flight close-out: lock boarding, mark remaining checked-in pax as no-show, emit the PFS. */
-boardingRouter.post("/:flightId/close", (req, res) => {
+boardingRouter.post("/:flightId/close", requireEdit, (req, res) => {
   const flight = db.prepare("SELECT * FROM flights WHERE id = ?").get(req.params.flightId) as Flight | undefined;
   if (!flight) return res.status(404).json({ error: "Flight not found" });
   if (flight.status === "CLOSED" || flight.status === "DEPARTED") {
