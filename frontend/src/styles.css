@@ -2055,7 +2055,7 @@ tr.row-hover { cursor: pointer; }
 .pnr-flow-roster-row { padding: 10px 16px; cursor: pointer; border-bottom: 1px solid var(--panel-border); background: transparent; }
 .pnr-flow-roster-row:last-child { border-bottom: none; }
 .pnr-flow-roster-row:hover { background: var(--field-bg); }
-.pnr-flow-roster-row.selected { background: var(--accent-selected); box-shadow: inset 3px 0 0 0 var(--accent); }
+.pnr-flow-roster-row.selected { background: var(--panel); box-shadow: inset 3px 0 0 0 var(--accent); }
 
 .pnr-flow-roster-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
 .pnr-flow-roster-name { font-weight: 700; font-size: 14px; color: var(--field-value); }
@@ -2087,7 +2087,8 @@ tr.row-hover { cursor: pointer; }
   font-weight: 700;
   color: var(--field-value);
 }
-.pnr-flow-flag-btn:hover { border-color: var(--accent); color: var(--accent); }
+/* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
+.pnr-flow-roster-flags .pnr-flow-flag-btn:hover { background: transparent; border-color: var(--accent); color: var(--accent); }
 
 .pnr-flow-roster-bottom { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
 .pnr-flow-info-btn {
@@ -2101,7 +2102,8 @@ tr.row-hover { cursor: pointer; }
   font-size: 13px;
   font-weight: 700;
 }
-.pnr-flow-info-btn:hover { color: var(--accent); }
+/* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
+.pnr-flow-roster-bottom .pnr-flow-info-btn:hover { background: transparent; color: var(--accent); }
 
 .pnr-flow-panel { flex: 1; min-width: 0; padding: 20px; border-left: 1px solid var(--panel-border); }
 .pnr-flow-placeholder { color: var(--muted); font-size: 14px; }
