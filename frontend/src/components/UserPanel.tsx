@@ -34,9 +34,6 @@ export function UserPanel({ onClose }: Props) {
   const [settingsOpen, setSettingsOpen] = useState(true);
   const [securityOpen, setSecurityOpen] = useState(false);
   const [timezone, setTimezone] = useState(user?.timezone ?? "Europe/Moscow");
-  const [bio, setBio] = useState(user?.bio ?? "");
-  const [savingSettings, setSavingSettings] = useState(false);
-  const [settingsSaved, setSettingsSaved] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const timezones = useState(timezoneOptions)[0];
 
@@ -57,16 +54,10 @@ export function UserPanel({ onClose }: Props) {
     updateUser(updated);
   }
 
-  async function saveSettings() {
-    setSavingSettings(true);
-    setSettingsSaved(false);
-    try {
-      const updated = await api.updateMe({ timezone, bio });
-      updateUser(updated);
-      setSettingsSaved(true);
-    } finally {
-      setSavingSettings(false);
-    }
+  async function changeTimezone(tz: string) {
+    setTimezone(tz);
+    const updated = await api.updateMe({ timezone: tz });
+    updateUser(updated);
   }
 
   async function submitPasswordChange(e: FormEvent) {
@@ -131,17 +122,9 @@ export function UserPanel({ onClose }: Props) {
               <Select
                 label="Timezone"
                 value={timezone}
-                onChange={setTimezone}
+                onChange={changeTimezone}
                 options={timezones.map((tz) => ({ value: tz, label: tz }))}
               />
-              <div className="field2 tall">
-                <textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder=" " rows={3} />
-                <label>About</label>
-              </div>
-              {settingsSaved && <div className="ok-box">Saved.</div>}
-              <button type="button" className="secondary" disabled={savingSettings} onClick={saveSettings}>
-                Save
-              </button>
             </div>
           )}
         </div>

@@ -1092,7 +1092,7 @@ button.icon-button:hover { background: var(--hover-bg); }
    same per-user color (or the avatar image showing through) instead of the global accent-hover blue. */
 .user-panel-avatar-wrap .user-panel-avatar:hover { background: var(--avatar-color, var(--accent)); filter: brightness(0.93); }
 
-.user-panel-section { border-top: 1px solid var(--border); padding: 16px 0; flex-shrink: 0; }
+.user-panel-section { padding: 16px 0; flex-shrink: 0; }
 .user-panel-section-head {
   all: unset;
   box-sizing: border-box;
