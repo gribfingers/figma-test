@@ -1,10 +1,23 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../auth";
-import { BurgerIcon, DeviceIcon, PlaneIcon, RefreshIcon, SearchIcon, SettingsIcon } from "./Icon";
+import { BurgerIcon, CheckInIcon, DeviceIcon, PlaneIcon, RefreshIcon, SettingsIcon } from "./Icon";
 
 function formatClock(d: Date): string {
   return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+}
+
+// Flight board itself, creating/editing a flight, and the gate/boarding
+// screen (reached from a flight card's Actions menu) — all about a
+// flight's own record and operations, not a specific passenger's check-in.
+function isFlightPage(pathname: string): boolean {
+  return pathname === "/" || pathname.startsWith("/flights/") || pathname.startsWith("/boarding/");
+}
+
+// Passenger search, the PNR view it opens into, and the legacy PNR-lookup
+// check-in screen — the check-in agent's own workflow.
+function isCheckinPage(pathname: string): boolean {
+  return pathname.startsWith("/search") || pathname.startsWith("/checkin/");
 }
 
 export function SideDrawer() {
@@ -25,15 +38,19 @@ export function SideDrawer() {
       </button>
 
       <div className="side-list">
-        <Link to="/" className={`side-item ${pathname === "/" ? "selected" : ""}`} data-tooltip="Flight schedule">
+        <Link
+          to="/"
+          className={`side-item ${isFlightPage(pathname) ? "selected" : ""}`}
+          data-tooltip="Flight schedule"
+        >
           <PlaneIcon size={20} />
         </Link>
         <Link
           to="/search"
-          className={`side-item ${pathname === "/search" ? "selected" : ""}`}
-          data-tooltip="Check-in agent workstation"
+          className={`side-item ${isCheckinPage(pathname) ? "selected" : ""}`}
+          data-tooltip="Check-in"
         >
-          <SearchIcon size={20} />
+          <CheckInIcon size={20} />
         </Link>
         {user?.role === "superadmin" && (
           <Link

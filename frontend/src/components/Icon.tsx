@@ -468,3 +468,14 @@ export function InfoIcon({ size = 16, className }: IconProps) {
     </svg>
   );
 }
+
+/** Boarding pass with a checkmark — the check-in workstation nav item. */
+export function CheckInIcon({ size = 18, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <rect x="3" y="5.5" width="18" height="13" rx="2" />
+      <path d="M9 5.5v13" strokeDasharray="2 2.2" />
+      <path d="M12.5 12l2 2 3.5-4" />
+    </svg>
+  );
+}
