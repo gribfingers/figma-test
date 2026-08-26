@@ -8,7 +8,6 @@ import { EMPTY_SEGMENT, SegmentDraft, combineDateAndTime } from "../components/f
 import { SegmentCard } from "../components/flightcard/SegmentCard";
 import { useRegisterTab } from "../tabs";
 import { useToast } from "../toast";
-import { AIRCRAFT_TYPES } from "../aircraftTypes";
 import { MAX_SEGMENTS } from "../flightSegments";
 import { alphanumericUpper, digitsOnly } from "../validation";
 
@@ -48,12 +47,7 @@ export function NewFlight() {
 
   const [carrierCode, setCarrierCode] = useState("SU");
   const [flightNumber, setFlightNumber] = useState("");
-  const [aircraftType, setAircraftType] = useState("A320");
   const [segments, setSegments] = useState<SegmentDraft[]>([{ ...EMPTY_SEGMENT }]);
-  const [checkinDesk, setCheckinDesk] = useState("");
-  const [gate, setGate] = useState("");
-  const [acReg, setAcReg] = useState("");
-  const [seatConfig, setSeatConfig] = useState("");
   const [comment, setComment] = useState("");
   const [partnerFlight, setPartnerFlight] = useState("");
   const [agreement, setAgreement] = useState("codeshare");
@@ -67,7 +61,10 @@ export function NewFlight() {
   function addSegment() {
     setSegments((prev) => {
       const last = prev[prev.length - 1];
-      return [...prev, { ...EMPTY_SEGMENT, depAirport: last?.arrAirport ?? "" }];
+      return [
+        ...prev,
+        { ...EMPTY_SEGMENT, depAirport: last?.arrAirport ?? "", aircraftType: last?.aircraftType ?? EMPTY_SEGMENT.aircraftType, acReg: last?.acReg ?? "", seatConfig: last?.seatConfig ?? "" },
+      ];
     });
   }
   function removeSegment(i: number) {
@@ -84,7 +81,6 @@ export function NewFlight() {
     const std = combineDateAndTime(now, first.depDate, first.depTime);
     const sta = DATE_RE.test(first.arrDate) && TIME_RE.test(first.arrTime) ? combineDateAndTime(now, first.arrDate, first.arrTime) : undefined;
     const extra = JSON.stringify({
-      checkinDesk,
       comment,
       partnerFlight,
       agreement,
@@ -92,7 +88,7 @@ export function NewFlight() {
       maxWeight,
       checks,
       segments: [
-        { terminalTo: first.terminalTo },
+        { terminalTo: first.terminalTo, checkinDesk: first.checkinDesk },
         ...segments.slice(1).map((s) => ({
           origin: s.depAirport,
           destination: s.arrAirport,
@@ -100,6 +96,11 @@ export function NewFlight() {
           sta: combineDateAndTime(sta ?? std, s.arrDate, s.arrTime),
           terminalFrom: s.terminalFrom,
           terminalTo: s.terminalTo,
+          aircraftType: s.aircraftType,
+          checkinDesk: s.checkinDesk,
+          gate: s.gate,
+          acReg: s.acReg,
+          seatConfig: s.seatConfig,
         })),
       ],
     });
@@ -112,10 +113,10 @@ export function NewFlight() {
         std,
         sta,
         terminal: first.terminalFrom || null,
-        gate: gate || null,
-        aircraft_reg: acReg || null,
-        aircraft_version: seatConfig || null,
-        aircraft_type: aircraftType,
+        gate: first.gate || null,
+        aircraft_reg: first.acReg || null,
+        aircraft_version: first.seatConfig || null,
+        aircraft_type: first.aircraftType,
         extra,
       });
       navigate(`/flights/${flight.id}`);
@@ -177,44 +178,6 @@ export function NewFlight() {
                   <PlusIcon size={14} /> Add segment
                 </button>
               )}
-
-              <div className="grid-3">
-                <Select
-                  label="AC type"
-                  value={aircraftType}
-                  onChange={setAircraftType}
-                  options={AIRCRAFT_TYPES.map((t) => ({ value: t, label: t }))}
-                />
-                <Field label="Check-in desk">
-                  <input
-                    value={checkinDesk}
-                    onChange={(e) => setCheckinDesk(digitsOnly(e.target.value, 4))}
-                    placeholder=" "
-                  />
-                </Field>
-                <Field label="A/C reg">
-                  <input
-                    value={acReg}
-                    onChange={(e) => setAcReg(alphanumericUpper(e.target.value, 10))}
-                    placeholder=" "
-                  />
-                </Field>
-              </div>
-              <div className="grid-3" style={{ marginTop: 12 }}>
-                <div className="segment-flighttype">
-                  Flight type: <b>Scheduled</b>
-                </div>
-                <Field label="Gate">
-                  <input value={gate} onChange={(e) => setGate(digitsOnly(e.target.value, 3))} placeholder=" " />
-                </Field>
-                <Field label="Seat config">
-                  <input
-                    value={seatConfig}
-                    onChange={(e) => setSeatConfig(alphanumericUpper(e.target.value, 12))}
-                    placeholder=" "
-                  />
-                </Field>
-              </div>
             </div>
 
             <div className="main-tab-side">

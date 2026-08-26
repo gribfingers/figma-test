@@ -5,7 +5,6 @@ import { Select } from "../Select";
 import { PlusIcon } from "../Icon";
 import { draftFromFlight, EMPTY_SEGMENT, MainDraft, SegmentDraft } from "./mainDraft";
 import { SegmentCard } from "./SegmentCard";
-import { AIRCRAFT_TYPES } from "../../aircraftTypes";
 import { MAX_SEGMENTS } from "../../flightSegments";
 import { alphanumericUpper, digitsOnly } from "../../validation";
 
@@ -53,7 +52,16 @@ export function MainTab({ flight, draft, onChange }: Props) {
   function addSegment() {
     const last = draft.segments[draft.segments.length - 1];
     onChange({
-      segments: [...draft.segments, { ...EMPTY_SEGMENT, depAirport: last?.arrAirport ?? "" }],
+      segments: [
+        ...draft.segments,
+        {
+          ...EMPTY_SEGMENT,
+          depAirport: last?.arrAirport ?? "",
+          aircraftType: last?.aircraftType ?? EMPTY_SEGMENT.aircraftType,
+          acReg: last?.acReg ?? "",
+          seatConfig: last?.seatConfig ?? "",
+        },
+      ],
     });
   }
 
@@ -79,44 +87,6 @@ export function MainTab({ flight, draft, onChange }: Props) {
             <PlusIcon size={14} /> Add segment
           </button>
         )}
-
-        <div className="grid-3">
-          <Select
-            label="AC type"
-            value={draft.aircraftType}
-            onChange={(v) => onChange({ aircraftType: v })}
-            options={AIRCRAFT_TYPES.map((t) => ({ value: t, label: t }))}
-          />
-          <Field label="Check-in desk">
-            <input
-              value={draft.checkinDesk}
-              onChange={(e) => onChange({ checkinDesk: digitsOnly(e.target.value, 4) })}
-              placeholder=" "
-            />
-          </Field>
-          <Field label="A/C reg">
-            <input
-              value={draft.acReg}
-              onChange={(e) => onChange({ acReg: alphanumericUpper(e.target.value, 10) })}
-              placeholder=" "
-            />
-          </Field>
-        </div>
-        <div className="grid-3" style={{ marginTop: 12 }}>
-          <div className="segment-flighttype">
-            Flight type: <b>Scheduled</b>
-          </div>
-          <Field label="Gate">
-            <input value={draft.gate} onChange={(e) => onChange({ gate: digitsOnly(e.target.value, 3) })} placeholder=" " />
-          </Field>
-          <Field label="Seat config">
-            <input
-              value={draft.seatConfig}
-              onChange={(e) => onChange({ seatConfig: alphanumericUpper(e.target.value, 12) })}
-              placeholder=" "
-            />
-          </Field>
-        </div>
       </div>
 
       <div className="main-tab-side">

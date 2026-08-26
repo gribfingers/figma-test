@@ -2,10 +2,13 @@ import { Flight } from "../../api";
 import { MAX_SEGMENTS, segmentsForFlight } from "../../flightSegments";
 
 // One leg of the flight's routing, as edited on the Main tab — one
-// segment-card per entry. Segment 1 round-trips through the real Flight
-// columns (origin/destination/std/sta/terminal) on save; any further
-// segments live only in Flight.extra.segments until they get dedicated
-// columns, same as the rest of the ad-hoc Main-tab fields below.
+// segment-card per entry, including the aircraft/gate/desk fields that
+// belong to that specific leg (a multi-stop flight can change aircraft or
+// gate between legs). Segment 1 round-trips through the real Flight
+// columns (origin/destination/std/sta/terminal/aircraft_type/gate/
+// aircraft_reg/aircraft_version) on save; any further segments live only
+// in Flight.extra.segments until they get dedicated columns, same as the
+// rest of the ad-hoc Main-tab fields below.
 export interface SegmentDraft {
   depAirport: string;
   arrAirport: string;
@@ -15,20 +18,17 @@ export interface SegmentDraft {
   arrTime: string;
   terminalFrom: string;
   terminalTo: string;
-}
-
-// The Main tab's editable fields, lifted out of the tab so the Save button
-// in the header (a sibling) can tell whether anything changed and trigger
-// the save. Fields with a real column (terminal, gate, aircraft_reg,
-// aircraft_version, origin/destination, std/sta) round-trip through the
-// Flight record; the rest live in Flight.extra as JSON until they get
-// dedicated columns.
-export interface MainDraft {
   aircraftType: string;
   checkinDesk: string;
   gate: string;
   acReg: string;
   seatConfig: string;
+}
+
+// The Main tab's editable fields, lifted out of the tab so the Save button
+// in the header (a sibling) can tell whether anything changed and trigger
+// the save.
+export interface MainDraft {
   segments: SegmentDraft[];
   comment: string;
   partnerFlight: string;
@@ -62,6 +62,11 @@ export const EMPTY_SEGMENT: SegmentDraft = {
   arrTime: "",
   terminalFrom: "",
   terminalTo: "",
+  aircraftType: "A320",
+  checkinDesk: "",
+  gate: "",
+  acReg: "",
+  seatConfig: "",
 };
 
 export function draftFromFlight(flight: Flight): MainDraft {
@@ -72,11 +77,6 @@ export function draftFromFlight(flight: Flight): MainDraft {
     extra = {};
   }
   return {
-    aircraftType: flight.aircraft_type,
-    checkinDesk: typeof extra.checkinDesk === "string" ? extra.checkinDesk : "",
-    gate: flight.gate ?? "",
-    acReg: flight.aircraft_reg ?? "",
-    seatConfig: flight.aircraft_version ?? "",
     segments: segmentsForFlight(flight).map((s) => ({
       depAirport: s.origin,
       arrAirport: s.destination,
@@ -86,6 +86,11 @@ export function draftFromFlight(flight: Flight): MainDraft {
       arrTime: fmtTimeValue(s.sta),
       terminalFrom: s.terminalFrom,
       terminalTo: s.terminalTo,
+      aircraftType: s.aircraftType,
+      checkinDesk: s.checkinDesk,
+      gate: s.gate,
+      acReg: s.acReg,
+      seatConfig: s.seatConfig,
     })),
     comment: typeof extra.comment === "string" ? extra.comment : "",
     partnerFlight: typeof extra.partnerFlight === "string" ? extra.partnerFlight : "",

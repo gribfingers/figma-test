@@ -1,6 +1,6 @@
 import { Flight } from "./api";
 
-/** One leg of a (possibly multi-stop) flight's routing. std/sta are full ISO instants, same UTC-wall-clock convention as Flight.std/sta. */
+/** One leg of a (possibly multi-stop) flight's routing, including the aircraft/gate/desk fields specific to that leg. std/sta are full ISO instants, same UTC-wall-clock convention as Flight.std/sta. */
 export interface FlightSegment {
   origin: string;
   destination: string;
@@ -8,6 +8,11 @@ export interface FlightSegment {
   sta: string | null;
   terminalFrom: string;
   terminalTo: string;
+  aircraftType: string;
+  checkinDesk: string;
+  gate: string;
+  acReg: string;
+  seatConfig: string;
 }
 
 /** Up to 4 legs per flight (e.g. SVX-LED-PEE-VVO is 3 stops). */
@@ -15,10 +20,11 @@ export const MAX_SEGMENTS = 4;
 
 /**
  * Segment 1 always mirrors the flight's real origin/destination/std/sta/
- * terminal columns (so search, the seatmap, PNL/PFS, and the flights board
- * keep working unchanged); segments 2-4, when present, live only in
- * Flight.extra.segments until they get dedicated columns — same pattern as
- * the rest of the ad-hoc Main-tab fields (see mainDraft.ts).
+ * terminal/aircraft_type/gate/aircraft_reg/aircraft_version columns (so
+ * search, the seatmap, PNL/PFS, and the flights board keep working
+ * unchanged); segments 2-4, when present, live only in Flight.extra.segments
+ * until they get dedicated columns — same pattern as the rest of the ad-hoc
+ * Main-tab fields (see mainDraft.ts).
  */
 export function segmentsForFlight(flight: Flight): FlightSegment[] {
   const first: FlightSegment = {
@@ -28,6 +34,11 @@ export function segmentsForFlight(flight: Flight): FlightSegment[] {
     sta: flight.sta,
     terminalFrom: flight.terminal ?? "",
     terminalTo: "",
+    aircraftType: flight.aircraft_type,
+    checkinDesk: "",
+    gate: flight.gate ?? "",
+    acReg: flight.aircraft_reg ?? "",
+    seatConfig: flight.aircraft_version ?? "",
   };
   if (!flight.extra) return [first];
   try {
@@ -35,6 +46,7 @@ export function segmentsForFlight(flight: Flight): FlightSegment[] {
     const stored = parsed.segments;
     if (!Array.isArray(stored) || stored.length === 0) return [first];
     first.terminalTo = typeof stored[0]?.terminalTo === "string" ? stored[0].terminalTo : "";
+    first.checkinDesk = typeof stored[0]?.checkinDesk === "string" ? stored[0].checkinDesk : "";
     const rest: FlightSegment[] = stored
       .slice(1, MAX_SEGMENTS)
       .filter((s): s is FlightSegment => s && typeof s.origin === "string" && typeof s.destination === "string")
@@ -45,6 +57,11 @@ export function segmentsForFlight(flight: Flight): FlightSegment[] {
         sta: typeof s.sta === "string" ? s.sta : null,
         terminalFrom: typeof s.terminalFrom === "string" ? s.terminalFrom : "",
         terminalTo: typeof s.terminalTo === "string" ? s.terminalTo : "",
+        aircraftType: typeof s.aircraftType === "string" ? s.aircraftType : first.aircraftType,
+        checkinDesk: typeof s.checkinDesk === "string" ? s.checkinDesk : "",
+        gate: typeof s.gate === "string" ? s.gate : "",
+        acReg: typeof s.acReg === "string" ? s.acReg : "",
+        seatConfig: typeof s.seatConfig === "string" ? s.seatConfig : "",
       }));
     return [first, ...rest];
   } catch {

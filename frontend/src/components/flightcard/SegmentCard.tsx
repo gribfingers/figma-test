@@ -1,9 +1,11 @@
 import { Field } from "../Field";
+import { Select } from "../Select";
 import { AirportSelect } from "../AirportSelect";
 import { DateField } from "../DateField";
 import { CloseIcon, PlaneIcon } from "../Icon";
 import { SegmentDraft } from "./mainDraft";
-import { alphanumericUpper, maskTimeInput } from "../../validation";
+import { AIRCRAFT_TYPES } from "../../aircraftTypes";
+import { alphanumericUpper, digitsOnly, maskTimeInput } from "../../validation";
 
 export function fmtSegmentDuration(depDate: string, depTime: string, arrDate: string, arrTime: string): string {
   if (!depDate || !depTime || !arrDate || !arrTime) return "";
@@ -88,6 +90,32 @@ export function SegmentCard({ segment, editing, removable, onChange, onRemove }:
         <PlaneIcon size={16} className="segment-plane" />
         <span className="segment-line-fill" />
         <span className="segment-dot" />
+      </div>
+
+      <div className="grid-3">
+        <Select
+          label="AC type"
+          value={segment.aircraftType}
+          onChange={(v) => onChange({ aircraftType: v })}
+          options={AIRCRAFT_TYPES.map((t) => ({ value: t, label: t }))}
+        />
+        <Field label="Check-in desk">
+          <input value={segment.checkinDesk} onChange={(e) => onChange({ checkinDesk: digitsOnly(e.target.value, 4) })} placeholder=" " />
+        </Field>
+        <Field label="A/C reg">
+          <input value={segment.acReg} onChange={(e) => onChange({ acReg: alphanumericUpper(e.target.value, 10) })} placeholder=" " />
+        </Field>
+      </div>
+      <div className="grid-3" style={{ marginTop: 12 }}>
+        <div className="segment-flighttype">
+          Flight type: <b>Scheduled</b>
+        </div>
+        <Field label="Gate">
+          <input value={segment.gate} onChange={(e) => onChange({ gate: digitsOnly(e.target.value, 3) })} placeholder=" " />
+        </Field>
+        <Field label="Seat config">
+          <input value={segment.seatConfig} onChange={(e) => onChange({ seatConfig: alphanumericUpper(e.target.value, 12) })} placeholder=" " />
+        </Field>
       </div>
     </div>
   );
