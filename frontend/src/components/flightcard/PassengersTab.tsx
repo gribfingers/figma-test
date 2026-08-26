@@ -81,7 +81,7 @@ function classFor(p: Passenger, seatByCode: Map<string, SeatCell>): string {
   return seat ? (seat.cabin_class === "J" ? "C" : "Y") : "—";
 }
 
-type PaxSortKey = "name" | "seat" | "class" | "status" | "bag" | "age" | "gender";
+type PaxSortKey = "name" | "pnr" | "seat" | "class" | "status" | "bag" | "age" | "gender";
 
 // Each flag chip's color reflects real per-passenger state (paxExtra.ts)
 // and opens the modal that best matches what it stands for.
@@ -317,6 +317,7 @@ export function PassengersTab({ flight }: Props) {
   // where either ended up, so the nesting survives any sort.
   const paxSortGetters: Record<PaxSortKey, (p: Passenger) => string | number> = {
     name: (p) => `${p.surname} ${p.given_name}`,
+    pnr: (p) => p.record_locator,
     seat: (p) => p.seat ?? "",
     class: (p) => classFor(p, seatByCode),
     status: (p) => statusLabel(p),
@@ -354,6 +355,7 @@ export function PassengersTab({ flight }: Props) {
               <tr>
                 <th></th>
                 <SortTh id="name" label="Name" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                {visibleColumns.has("pnr") && <SortTh id="pnr" label="PNR" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />}
                 {visibleColumns.has("flags") && <th>Flags</th>}
                 {visibleColumns.has("seat") && <SortTh id="seat" label="Seat" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />}
                 {visibleColumns.has("class") && <SortTh id="class" label="Class" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />}
@@ -410,6 +412,7 @@ export function PassengersTab({ flight }: Props) {
                         </span>
                       </div>
                     </td>
+                    {visibleColumns.has("pnr") && <td className="mono">{p.record_locator}</td>}
                     {visibleColumns.has("flags") && (
                       <td className="pax-flags-cell">
                         <span className="pax-flags">

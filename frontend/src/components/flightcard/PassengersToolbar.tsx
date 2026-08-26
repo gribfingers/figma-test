@@ -11,6 +11,7 @@ export interface ColumnDef {
 }
 
 export const PASSENGER_COLUMNS: ColumnDef[] = [
+  { key: "pnr", label: "PNR" },
   { key: "flags", label: "Flags" },
   { key: "seat", label: "Seat" },
   { key: "class", label: "Class" },
