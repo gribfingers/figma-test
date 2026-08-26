@@ -3,26 +3,17 @@ import { useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { Field } from "../components/Field";
 import { Select } from "../components/Select";
-import { AirportSelect } from "../components/AirportSelect";
-import { DateField } from "../components/DateField";
-import { PlaneIcon } from "../components/Icon";
-import { combineDateAndTime } from "../components/flightcard/mainDraft";
+import { PlusIcon } from "../components/Icon";
+import { EMPTY_SEGMENT, SegmentDraft, combineDateAndTime } from "../components/flightcard/mainDraft";
+import { SegmentCard } from "../components/flightcard/SegmentCard";
 import { useRegisterTab } from "../tabs";
 import { useToast } from "../toast";
 import { AIRCRAFT_TYPES } from "../aircraftTypes";
-import { alphanumericUpper, digitsOnly, maskTimeInput } from "../validation";
+import { MAX_SEGMENTS } from "../flightSegments";
+import { alphanumericUpper, digitsOnly } from "../validation";
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^\d{2}:\d{2}$/;
-
-function fmtDuration(depDate: string, depTime: string, arrDate: string, arrTime: string): string {
-  if (!DATE_RE.test(depDate) || !TIME_RE.test(depTime) || !DATE_RE.test(arrDate) || !TIME_RE.test(arrTime)) return "";
-  const dep = new Date(`${depDate}T${depTime}:00Z`).getTime();
-  const arr = new Date(`${arrDate}T${arrTime}:00Z`).getTime();
-  const mins = Math.round((arr - dep) / 60000);
-  if (mins <= 0) return "";
-  return `${Math.floor(mins / 60)}h ${mins % 60}min`;
-}
 
 const AGREEMENT_TYPES = [
   { value: "codeshare", label: "Codeshare" },
@@ -46,7 +37,9 @@ const CHECKS = [
 // (Airport/Terminal fields, opened there via "Change route") is exactly
 // what small airports without a preloaded schedule need to enter a flight
 // by hand, so the creation form is that same screen instead of a
-// separate one.
+// separate one. Segment cards are always in edit mode here (there's
+// nothing to "view" yet) and support the same Add/Remove segment flow as
+// the flight card, up to MAX_SEGMENTS legs.
 export function NewFlight() {
   useRegisterTab("New flight");
   const navigate = useNavigate();
@@ -56,14 +49,7 @@ export function NewFlight() {
   const [carrierCode, setCarrierCode] = useState("SU");
   const [flightNumber, setFlightNumber] = useState("");
   const [aircraftType, setAircraftType] = useState("A320");
-  const [origin, setOrigin] = useState("");
-  const [destination, setDestination] = useState("");
-  const [depDate, setDepDate] = useState("");
-  const [depTime, setDepTime] = useState("");
-  const [arrDate, setArrDate] = useState("");
-  const [arrTime, setArrTime] = useState("");
-  const [terminalFrom, setTerminalFrom] = useState("");
-  const [terminalTo, setTerminalTo] = useState("");
+  const [segments, setSegments] = useState<SegmentDraft[]>([{ ...EMPTY_SEGMENT }]);
   const [checkinDesk, setCheckinDesk] = useState("");
   const [gate, setGate] = useState("");
   const [acReg, setAcReg] = useState("");
@@ -75,23 +61,62 @@ export function NewFlight() {
   const [maxWeight, setMaxWeight] = useState("");
   const [checks, setChecks] = useState<Record<string, boolean>>({});
 
+  function updateSegment(i: number, patch: Partial<SegmentDraft>) {
+    setSegments((prev) => prev.map((s, idx) => (idx === i ? { ...s, ...patch } : s)));
+  }
+  function addSegment() {
+    setSegments((prev) => {
+      const last = prev[prev.length - 1];
+      return [...prev, { ...EMPTY_SEGMENT, depAirport: last?.arrAirport ?? "" }];
+    });
+  }
+  function removeSegment(i: number) {
+    setSegments((prev) => prev.filter((_, idx) => idx !== i));
+  }
+
   async function createFlight(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (!origin || !destination) return setError("Origin and destination airports are required");
-    if (!DATE_RE.test(depDate) || !TIME_RE.test(depTime)) return setError("Departure date/time is required");
-    const std = combineDateAndTime(new Date().toISOString(), depDate, depTime);
-    const sta =
-      DATE_RE.test(arrDate) && TIME_RE.test(arrTime) ? combineDateAndTime(new Date().toISOString(), arrDate, arrTime) : undefined;
+    const first = segments[0];
+    if (!first.depAirport || !first.arrAirport) return setError("Origin and destination airports are required");
+    if (!DATE_RE.test(first.depDate) || !TIME_RE.test(first.depTime)) return setError("Departure date/time is required");
+    const now = new Date().toISOString();
+    const std = combineDateAndTime(now, first.depDate, first.depTime);
+    const sta = DATE_RE.test(first.arrDate) && TIME_RE.test(first.arrTime) ? combineDateAndTime(now, first.arrDate, first.arrTime) : undefined;
+    const extra = JSON.stringify({
+      checkinDesk,
+      comment,
+      partnerFlight,
+      agreement,
+      apis,
+      maxWeight,
+      checks,
+      segments: [
+        { terminalTo: first.terminalTo },
+        ...segments.slice(1).map((s) => ({
+          origin: s.depAirport,
+          destination: s.arrAirport,
+          std: combineDateAndTime(std, s.depDate, s.depTime),
+          sta: combineDateAndTime(sta ?? std, s.arrDate, s.arrTime),
+          terminalFrom: s.terminalFrom,
+          terminalTo: s.terminalTo,
+        })),
+      ],
+    });
     try {
       const flight = await api.createFlight({
         carrier_code: carrierCode,
         flight_number: flightNumber,
-        origin,
-        destination,
+        origin: first.depAirport,
+        destination: first.arrAirport,
         std,
         sta,
+        terminal: first.terminalFrom || null,
+        gate: gate || null,
+        aircraft_reg: acReg || null,
+        aircraft_version: seatConfig || null,
         aircraft_type: aircraftType,
+        extra,
       });
       navigate(`/flights/${flight.id}`);
       showToast("Flight created");
@@ -136,45 +161,22 @@ export function NewFlight() {
         <div className="flight-card-body">
           {error && <div className="error-box">{error}</div>}
           <div className="grid-2 flight-main-grid">
-            <div className="segment-card">
-              <div className="segment-endpoints">
-                <div className="segment-point-edit">
-                  <AirportSelect label="Airport" value={origin} onChange={setOrigin} style={{ width: 84 }} />
-                  <DateField label="Date" value={depDate} onChange={setDepDate} style={{ width: 132 }} />
-                  <Field label="Time" style={{ width: 66 }}>
-                    <input value={depTime} onChange={(e) => setDepTime(maskTimeInput(e.target.value))} placeholder=" " inputMode="numeric" />
-                  </Field>
-                  <Field label="Terminal" style={{ width: 96 }}>
-                    <input
-                      value={terminalFrom}
-                      onChange={(e) => setTerminalFrom(alphanumericUpper(e.target.value, 2))}
-                      placeholder=" "
-                    />
-                  </Field>
-                </div>
-                <div className="segment-duration">{fmtDuration(depDate, depTime, arrDate, arrTime)}</div>
-                <div className="segment-point-edit">
-                  <AirportSelect label="Airport" value={destination} onChange={setDestination} style={{ width: 84 }} />
-                  <DateField label="Date" value={arrDate} onChange={setArrDate} style={{ width: 132 }} />
-                  <Field label="Time" style={{ width: 66 }}>
-                    <input value={arrTime} onChange={(e) => setArrTime(maskTimeInput(e.target.value))} placeholder=" " inputMode="numeric" />
-                  </Field>
-                  <Field label="Terminal" style={{ width: 96 }}>
-                    <input
-                      value={terminalTo}
-                      onChange={(e) => setTerminalTo(alphanumericUpper(e.target.value, 2))}
-                      placeholder=" "
-                    />
-                  </Field>
-                </div>
-              </div>
-              <div className="segment-path">
-                <span className="segment-dot" />
-                <span className="segment-line-fill" />
-                <PlaneIcon size={16} className="segment-plane" />
-                <span className="segment-line-fill" />
-                <span className="segment-dot" />
-              </div>
+            <div className="segment-cards">
+              {segments.map((segment, i) => (
+                <SegmentCard
+                  key={i}
+                  segment={segment}
+                  editing
+                  removable={segments.length > 1}
+                  onChange={(patch) => updateSegment(i, patch)}
+                  onRemove={() => removeSegment(i)}
+                />
+              ))}
+              {segments.length < MAX_SEGMENTS && (
+                <button type="button" className="secondary segment-add" onClick={addSegment}>
+                  <PlusIcon size={14} /> Add segment
+                </button>
+              )}
 
               <div className="grid-3">
                 <Select

@@ -2106,6 +2106,9 @@ tr.row-hover { cursor: pointer; }
 .doc-card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
 .doc-card-actions { display: flex; align-items: center; justify-content: flex-end; gap: 16px; margin-left: auto; }
 
+.doc-card-editing .doc-card-grid { align-items: end; row-gap: 20px; }
+.doc-card-edit-footer { display: flex; align-items: center; justify-content: flex-end; gap: 16px; margin-top: 16px; }
+
 @media (max-width: 640px) {
   .top-tab { padding: 18px 10px; height: 48px; font-size: 12px; }
   .tabs-actions { padding: 0 10px; }

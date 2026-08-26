@@ -28,6 +28,7 @@ flightsRouter.post("/", requireEdit, (req, res) => {
     sta,
     ata,
     ops_status,
+    extra,
   } = req.body;
   if (!flight_number || !carrier_code || !origin || !destination || !std || !aircraft_type) {
     return res.status(400).json({ error: "flight_number, carrier_code, origin, destination, std, aircraft_type are required" });
@@ -41,8 +42,8 @@ flightsRouter.post("/", requireEdit, (req, res) => {
 
   const insertFlight = db.prepare(
     `INSERT INTO flights (flight_number, carrier_code, origin, destination, std, aircraft_type, status,
-       terminal, gate, aircraft_reg, aircraft_version, etd, sta, ata, ops_status)
-     VALUES (?, ?, ?, ?, ?, ?, 'CHECKIN_OPEN', ?, ?, ?, ?, ?, ?, ?, ?)`
+       terminal, gate, aircraft_reg, aircraft_version, etd, sta, ata, ops_status, extra)
+     VALUES (?, ?, ?, ?, ?, ?, 'CHECKIN_OPEN', ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
   const info = insertFlight.run(
     flight_number,
@@ -58,7 +59,8 @@ flightsRouter.post("/", requireEdit, (req, res) => {
     etd ?? std,
     sta ?? null,
     ata ?? null,
-    ops_status ?? "SCHEDULED"
+    ops_status ?? "SCHEDULED",
+    extra ?? null
   );
   const flightId = info.lastInsertRowid as number;
 
