@@ -14,7 +14,7 @@ import { FaresInfoModal } from "../components/checkin/FaresInfoModal";
 import { FlightInfoPanel } from "../components/checkin/FlightInfoPanel";
 import { PassengerDetailModal } from "../components/flightcard/PassengerModals";
 import { Modal } from "../components/Modal";
-import { FLOW_STEPS, FLOW_STEP_LABEL, useCheckinFlow } from "../checkinFlow";
+import { FLOW_STEPS, FLOW_STEP_LABEL, FlowStep, useCheckinFlow } from "../checkinFlow";
 
 // Last-fetched flight/passengers per flight, kept outside component state so
 // it survives this component unmounting when the agent switches to another
@@ -25,6 +25,13 @@ const passengersCache = new Map<number, Passenger[]>();
 // id (each opened PNR tab has its own) — otherwise they'd vanish the moment
 // the tab remounts, same underlying issue as the flight/passengers caches.
 const extraPassengersCache = new Map<number, Passenger[]>();
+// Which roster passengers are checked, and which one the flow has open —
+// same remount problem: the check-in flow's step now lives in a context so
+// it survives switching tabs and back, but without caching these too the
+// flow would resume on an empty roster (no one "checked") once the tab
+// remounts, leaving its panel blank.
+const checkedCache = new Map<number, Set<number>>();
+const flowActiveIdCache = new Map<number, number>();
 
 // Same fixed windows (relative to std) FlightCardHeader uses for its phase chips.
 const CHECKIN_FROM_MIN = -180;
@@ -214,10 +221,14 @@ export function PnrView() {
   const [flight, setFlight] = useState<Flight | null>(() => flightCache.get(fid) ?? null);
   const [seats, setSeats] = useState<SeatCell[]>([]);
   const [passengers, setPassengers] = useState<Passenger[]>(() => passengersCache.get(fid) ?? []);
-  const [checked, setChecked] = useState<Set<number>>(() => new Set());
+  const [checked, setChecked] = useState<Set<number>>(() => checkedCache.get(pid) ?? new Set());
   const [extraPassengers, setExtraPassengers] = useState<Passenger[]>(() => extraPassengersCache.get(pid) ?? []);
-  const { flowStep, setFlowStep, flightInfoOpen, setFlightInfoOpen } = useCheckinFlow();
-  const [flowActiveId, setFlowActiveId] = useState<number | null>(null);
+  const { flowStepFor, setFlowStep: setFlowStepFor, flightInfoOpenFor, setFlightInfoOpen: setFlightInfoOpenFor } = useCheckinFlow();
+  const flowStep = flowStepFor(pid);
+  const flightInfoOpen = flightInfoOpenFor(pid);
+  const setFlowStep = (step: FlowStep | null) => setFlowStepFor(pid, step);
+  const setFlightInfoOpen = (open: boolean) => setFlightInfoOpenFor(pid, open);
+  const [flowActiveId, setFlowActiveId] = useState<number | null>(() => flowActiveIdCache.get(pid) ?? null);
   const [flagsModalPax, setFlagsModalPax] = useState<Passenger | null>(null);
   const [infoModalOpen, setInfoModalOpen] = useState(false);
   const [finishConfirmOpen, setFinishConfirmOpen] = useState(false);
@@ -233,6 +244,14 @@ export function PnrView() {
       setPassengers(ps);
     });
   }, [fid]);
+
+  useEffect(() => {
+    checkedCache.set(pid, checked);
+  }, [pid, checked]);
+  useEffect(() => {
+    if (flowActiveId === null) flowActiveIdCache.delete(pid);
+    else flowActiveIdCache.set(pid, flowActiveId);
+  }, [pid, flowActiveId]);
 
   const clicked = passengers.find((p) => p.id === pid);
   useRegisterTab(

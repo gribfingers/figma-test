@@ -10,10 +10,10 @@ export const FLOW_STEP_LABEL: Record<FlowStep, string> = {
 };
 
 interface CheckinFlowState {
-  flowStep: FlowStep | null;
-  setFlowStep: (step: FlowStep | null) => void;
-  flightInfoOpen: boolean;
-  setFlightInfoOpen: (open: boolean) => void;
+  flowStepFor: (pid: number) => FlowStep | null;
+  setFlowStep: (pid: number, step: FlowStep | null) => void;
+  flightInfoOpenFor: (pid: number) => boolean;
+  setFlightInfoOpen: (pid: number, open: boolean) => void;
 }
 
 // PnrView owns the flow (it has the flight/passenger data), but the flow's
@@ -21,27 +21,34 @@ interface CheckinFlowState {
 // PnrView's subtree, so it can't read PnrView's local state directly. This
 // context is the shared channel between the two, mirroring the TabsProvider
 // pattern used for the same kind of cross-component sharing.
+//
+// Keyed by the PNR view's own passenger id (same key AddPaxButton's cache
+// uses) rather than a single shared value — each open PNR tab has its own
+// flow, so switching to a different tab must not leak one tab's step into
+// another's.
 const CheckinFlowContext = createContext<CheckinFlowState | null>(null);
 
 export function CheckinFlowProvider({ children }: { children: ReactNode }) {
-  const [flowStep, setFlowStep] = useState<FlowStep | null>(null);
-  const [flightInfoOpen, setFlightInfoOpen] = useState(false);
+  const [stepByPid, setStepByPid] = useState<Record<number, FlowStep>>({});
+  const [infoOpenByPid, setInfoOpenByPid] = useState<Record<number, boolean>>({});
 
-  return (
-    <CheckinFlowContext.Provider
-      value={{
-        flowStep,
-        setFlowStep: (step) => {
-          setFlowStep(step);
-          if (step === null) setFlightInfoOpen(false);
-        },
-        flightInfoOpen,
-        setFlightInfoOpen,
-      }}
-    >
-      {children}
-    </CheckinFlowContext.Provider>
-  );
+  const value: CheckinFlowState = {
+    flowStepFor: (pid) => stepByPid[pid] ?? null,
+    setFlowStep: (pid, step) => {
+      setStepByPid((prev) => {
+        if (step === null) {
+          const { [pid]: _omit, ...rest } = prev;
+          return rest;
+        }
+        return { ...prev, [pid]: step };
+      });
+      if (step === null) setInfoOpenByPid((prev) => ({ ...prev, [pid]: false }));
+    },
+    flightInfoOpenFor: (pid) => infoOpenByPid[pid] ?? false,
+    setFlightInfoOpen: (pid, open) => setInfoOpenByPid((prev) => ({ ...prev, [pid]: open })),
+  };
+
+  return <CheckinFlowContext.Provider value={value}>{children}</CheckinFlowContext.Provider>;
 }
 
 export function useCheckinFlow(): CheckinFlowState {

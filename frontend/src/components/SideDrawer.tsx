@@ -25,10 +25,13 @@ const FLOW_STEP_ICON: Record<FlowStep, (size: number) => JSX.Element> = {
 };
 
 // The check-in flow's own route (checkin/:flightId/pnr/:passengerId) — the
-// only page the flow's step icons make sense on. isCheckinPage above also
-// matches the legacy PNR-lookup screen, which never has a flow open.
-function isPnrFlowPage(pathname: string): boolean {
-  return /^\/checkin\/\d+\/pnr\/\d+$/.test(pathname);
+// only page the flow's step icons make sense on. Extracts the PNR view's
+// passenger id so the flow state (keyed by that same id) can be looked up —
+// each open PNR tab has its own flow, so this must not fall back to some
+// shared value that would leak one tab's step into another's.
+function pnrFlowPidFromPath(pathname: string): number | null {
+  const m = /^\/checkin\/\d+\/pnr\/(\d+)$/.exec(pathname);
+  return m ? Number(m[1]) : null;
 }
 
 function formatClock(d: Date): string {
@@ -51,8 +54,11 @@ function isCheckinPage(pathname: string): boolean {
 export function SideDrawer() {
   const { pathname } = useLocation();
   const { user } = useAuth();
-  const { flowStep, setFlowStep, flightInfoOpen, setFlightInfoOpen } = useCheckinFlow();
-  const showFlowIcons = flowStep !== null && isPnrFlowPage(pathname);
+  const { flowStepFor, setFlowStep, flightInfoOpenFor, setFlightInfoOpen } = useCheckinFlow();
+  const pnrPid = pnrFlowPidFromPath(pathname);
+  const flowStep = pnrPid !== null ? flowStepFor(pnrPid) : null;
+  const flightInfoOpen = pnrPid !== null && flightInfoOpenFor(pnrPid);
+  const showFlowIcons = pnrPid !== null && flowStep !== null;
   const [lastUpdated, setLastUpdated] = useState(() => new Date());
 
   useEffect(() => {
@@ -91,7 +97,7 @@ export function SideDrawer() {
                 type="button"
                 className={`side-item ${flowStep === step ? "selected" : ""}`}
                 data-tooltip={FLOW_STEP_LABEL[step]}
-                onClick={() => setFlowStep(step)}
+                onClick={() => setFlowStep(pnrPid!, step)}
               >
                 {FLOW_STEP_ICON[step](20)}
               </button>
@@ -105,7 +111,7 @@ export function SideDrawer() {
               type="button"
               className={`side-item ${flightInfoOpen ? "selected" : ""}`}
               data-tooltip="Flight information"
-              onClick={() => setFlightInfoOpen(true)}
+              onClick={() => setFlightInfoOpen(pnrPid!, true)}
             >
               <InfoIcon size={20} />
             </button>
