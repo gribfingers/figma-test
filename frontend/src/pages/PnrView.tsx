@@ -8,6 +8,12 @@ import { DocScannedIcon, DocVerifiedIcon, SearchIcon } from "../components/Icon"
 import { useRegisterTab } from "../tabs";
 import { usePopoverPosition } from "../usePopoverPosition";
 
+// Last-fetched flight/passengers per flight, kept outside component state so
+// it survives this component unmounting when the agent switches to another
+// tab and back (see the comment in PnrView for why that matters).
+const flightCache = new Map<number, Flight>();
+const passengersCache = new Map<number, Passenger[]>();
+
 // Same fixed windows (relative to std) FlightCardHeader uses for its phase chips.
 const CHECKIN_FROM_MIN = -180;
 const BOARDING_FROM_MIN = -45;
@@ -187,16 +193,28 @@ export function PnrView() {
   const fid = Number(flightId);
   const pid = Number(passengerId);
 
-  const [flight, setFlight] = useState<Flight | null>(null);
+  // Re-visiting a tab that's already open remounts this component from
+  // scratch (React Router only keeps the matched route mounted), which
+  // would otherwise reset the tab label to "PNR" and back on every switch —
+  // a visible width jump in the tab strip. Seeding state from what was
+  // last fetched for this flight keeps the label (and the page) stable
+  // while a fresh copy loads quietly in the background.
+  const [flight, setFlight] = useState<Flight | null>(() => flightCache.get(fid) ?? null);
   const [seats, setSeats] = useState<SeatCell[]>([]);
-  const [passengers, setPassengers] = useState<Passenger[]>([]);
+  const [passengers, setPassengers] = useState<Passenger[]>(() => passengersCache.get(fid) ?? []);
   const [checked, setChecked] = useState<Set<number>>(() => new Set());
   const [extraPassengers, setExtraPassengers] = useState<Passenger[]>([]);
 
   useEffect(() => {
-    api.getFlight(fid).then(setFlight);
+    api.getFlight(fid).then((f) => {
+      flightCache.set(fid, f);
+      setFlight(f);
+    });
     api.seatmap(fid).then(setSeats);
-    api.passengers(fid).then(setPassengers);
+    api.passengers(fid).then((ps) => {
+      passengersCache.set(fid, ps);
+      setPassengers(ps);
+    });
   }, [fid]);
 
   const clicked = passengers.find((p) => p.id === pid);
