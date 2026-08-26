@@ -13,10 +13,12 @@ interface Props {
   selected?: string | null;
   onSelect?: (seat: string) => void;
   onSeatUpdated: (seat: SeatCell) => void;
-  onHide: () => void;
+  onHide?: () => void;
   cabinFeatures?: CabinFeature[];
   onSelectOccupied?: (seat: SeatCell) => void;
   disabledSeats?: Set<string>;
+  /** Right-click seat attribute editing (exit-row/blocking/service/pricing) — a flight-config action, not appropriate everywhere the map is embedded (e.g. the check-in flow). Defaults to on. */
+  allowSeatEdit?: boolean;
 }
 
 const LEGEND_STATES: { cls: string; label: string }[] = [
@@ -50,6 +52,7 @@ export function SeatMapPanel({
   cabinFeatures,
   onSelectOccupied,
   disabledSeats,
+  allowSeatEdit = true,
 }: Props) {
   const [zoom, setZoom] = useState(100);
   const [legendOpen, setLegendOpen] = useState(false);
@@ -144,9 +147,11 @@ export function SeatMapPanel({
               </ul>
             )}
           </div>
-          <button type="button" className="seatmap-tool-btn" title="Hide seat map" onClick={onHide}>
-            <HideIcon size={16} />
-          </button>
+          {onHide && (
+            <button type="button" className="seatmap-tool-btn" title="Hide seat map" onClick={onHide}>
+              <HideIcon size={16} />
+            </button>
+          )}
         </div>
       </div>
 
@@ -156,7 +161,7 @@ export function SeatMapPanel({
             seats={seats}
             selected={selected}
             onSelect={onSelect}
-            onEditSeat={setEditingSeat}
+            onEditSeat={allowSeatEdit ? setEditingSeat : undefined}
             visibleLayers={visibleLayers}
             cabinFeatures={cabinFeatures}
             onSelectOccupied={onSelectOccupied}

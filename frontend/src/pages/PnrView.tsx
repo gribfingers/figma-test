@@ -359,12 +359,14 @@ export function PnrView() {
 
   if (flowStep) {
     return (
-      <div className="pnr-view">
+      <div className="pnr-view pnr-view-flow">
         <div className="pnr-head pnr-head-flow">
           <div className="pnr-head-id">
             <div className="pnr-flight-number">{flight.carrier_code}{flight.flight_number}</div>
-            <div className="pnr-route">{flight.origin} → {flight.destination}</div>
-            <div className="pnr-date">{fmtCardDate(flight.std)}</div>
+            <div className="pnr-head-id-meta">
+              <div className="pnr-route">{flight.origin} → {flight.destination}</div>
+              <div className="pnr-date">{fmtCardDate(flight.std)}</div>
+            </div>
           </div>
           <div className="spacer" />
           <div className="pnr-flow-actions">
@@ -386,6 +388,7 @@ export function PnrView() {
                 passenger={p}
                 active={p.id === flowActive?.id}
                 classLetter={classFor(p, seatByCode)}
+                showSeat={flowStep === "seats"}
                 onSelect={() => setFlowActiveId(p.id)}
                 onOpenFlags={() => setFlagsModalPax(p)}
                 onOpenInfo={() => setInfoModalOpen(true)}
@@ -476,8 +479,10 @@ export function PnrView() {
       <div className="pnr-head">
         <div className="pnr-head-id">
           <div className="pnr-flight-number">{flight.carrier_code}{flight.flight_number}</div>
-          <div className="pnr-route">{flight.origin} → {flight.destination}</div>
-          <div className="pnr-date">{fmtCardDate(flight.std)}</div>
+          <div className="pnr-head-id-meta">
+            <div className="pnr-route">{flight.origin} → {flight.destination}</div>
+            <div className="pnr-date">{fmtCardDate(flight.std)}</div>
+          </div>
         </div>
 
         <div className="pnr-stats">

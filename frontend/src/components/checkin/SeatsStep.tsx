@@ -54,9 +54,9 @@ export function SeatsStep({ flightId, aircraftType, passenger, seats, onSeatsRel
           selected={passenger.seat}
           onSelect={assignSeat}
           onSeatUpdated={(updated) => onSeatsReloaded(seats.map((s) => (s.seat === updated.seat ? updated : s)))}
-          onHide={() => {}}
           cabinFeatures={cabinFeatures}
           disabledSeats={disabledSeats}
+          allowSeatEdit={false}
         />
       </div>
     </div>

@@ -14,6 +14,8 @@ interface Props {
   passenger: Passenger;
   active: boolean;
   classLetter: "C" | "Y" | null;
+  /** Only relevant (and only shown) on the Seats step — irrelevant clutter on the other steps. */
+  showSeat: boolean;
   onSelect: () => void;
   onOpenFlags: () => void;
   onOpenInfo: () => void;
@@ -25,7 +27,7 @@ interface Props {
  * card's passengers table); only the currently active one additionally
  * shows the fares-info icon, class, and Reprint BP.
  */
-export function FlowRosterRow({ passenger: p, active, classLetter, onSelect, onOpenFlags, onOpenInfo }: Props) {
+export function FlowRosterRow({ passenger: p, active, classLetter, showSeat, onSelect, onOpenFlags, onOpenInfo }: Props) {
   const ssr = p.ssr ?? [];
   const age = ageFromDob(p.dob);
   const hasRemarks = ssr.length > 0;
@@ -53,9 +55,11 @@ export function FlowRosterRow({ passenger: p, active, classLetter, onSelect, onO
       <div className="pnr-flow-roster-mid">
         <div className="pnr-flow-roster-meta">
           {fmtDobShort(p.dob)}{age && ` (${age})`}{p.gender ? `, ${p.gender}` : ""}
-          {p.seat && <span className="pnr-flow-seat-box mono">{formatSeatDisplay(p.seat)}</span>}
         </div>
-        {hasRemarks && flagButtons}
+        <div className="pnr-flow-roster-mid-right">
+          {showSeat && p.seat && <span className="pnr-flow-seat-box mono">{formatSeatDisplay(p.seat)}</span>}
+          {hasRemarks && flagButtons}
+        </div>
       </div>
       {active && (
         <div className="pnr-flow-roster-bottom">
