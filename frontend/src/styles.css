@@ -2326,6 +2326,40 @@ tr.row-hover { cursor: pointer; }
 
 .mco-confirm-box { background: var(--field-bg); border-radius: 4px; padding: 12px 14px; font-size: 13px; color: var(--field-value); line-height: 1.5; }
 
+/* ---- Extra services step ---- */
+.extra-services-form { display: flex; align-items: center; gap: 10px; }
+.extra-services-form .select-field { flex: 1; min-width: 0; }
+
+.qty-stepper { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--field-border); border-radius: var(--field-radius); height: 42px; padding: 0 8px; flex-shrink: 0; }
+.qty-stepper-value { display: inline-block; width: 20px; text-align: center; font-size: 14px; font-family: var(--mono); color: var(--field-value); }
+.qty-stepper-btn { all: unset; box-sizing: border-box; display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 4px; color: var(--muted); cursor: pointer; }
+.qty-stepper-btn:disabled { color: var(--muted-2); cursor: not-allowed; }
+/* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
+.qty-stepper .qty-stepper-btn:hover:not(:disabled) { background: transparent; color: var(--field-value); }
+
+.extra-services-list { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+.extra-service-item { display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: var(--field-bg); border-radius: 4px; }
+.extra-service-item-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; }
+.extra-service-item-name { font-size: 13px; font-weight: 600; color: var(--field-value); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Decorative progress-style graphic only — not a real load/completion indicator. */
+.extra-service-item-progress { display: flex; align-items: center; gap: 3px; flex-shrink: 0; }
+.extra-service-item-progress span { display: block; width: 14px; height: 4px; border-radius: 2px; background: var(--ok); }
+.extra-service-item-price {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.extra-service-item-price.paid { color: var(--ok); }
+.extra-service-item-price.unpaid { color: var(--danger); }
+/* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
+.extra-services-list .extra-service-item-price:hover { background: transparent; text-decoration: underline; }
+.extra-service-item-remove { all: unset; box-sizing: border-box; display: flex; cursor: pointer; color: var(--muted); flex-shrink: 0; }
+/* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
+.extra-services-list .extra-service-item-remove:hover { background: transparent; color: var(--danger); }
+
 .pnr-flow-panel {
   flex: 1;
   min-width: 0;

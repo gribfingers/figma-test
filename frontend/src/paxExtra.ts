@@ -196,6 +196,24 @@ export function seatServicesForPassenger(p: Passenger, segmentCount: number): Se
   });
 }
 
+const EXTRA_SERVICE_LABELS = ["Бублики", "Доступ в интернет", "Чай", "Кофе", "Питание экипажа"];
+
+/**
+ * Same shape/approach as seatServicesForPassenger/baggageServicesForPassenger
+ * above, but flat (not per-segment) and drawn with replacement — the Extra
+ * services step's roster-card chips, which can repeat the same service.
+ */
+export function extraServicesForPassenger(p: Passenger): SeatServiceItem[] {
+  const rand = seededRandom(p.id * 8191 + 37);
+  const count = 4 + Math.floor(rand() * 4); // 4-7 items
+  const items: SeatServiceItem[] = [];
+  for (let i = 0; i < count; i++) {
+    const label = EXTRA_SERVICE_LABELS[Math.floor(rand() * EXTRA_SERVICE_LABELS.length)];
+    items.push({ rfisc: "0B5", label, price: 12500, paid: rand() < 0.7 });
+  }
+  return items;
+}
+
 const BAGGAGE_SERVICE_LABELS = ["23 kg", "32 kg", "Excess 5 kg"];
 
 /** Same shape/approach as seatServicesForPassenger above, but for the Baggage step's roster-card chips. */
