@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../auth";
-import { useCheckinFlow, FLOW_STEPS, FLOW_STEP_LABEL, FlowStep } from "../checkinFlow";
+import { useCheckinFlow, FLOW_STEPS, FLOW_STEP_LABEL, FlowStep, pnrFlowPidFromPath } from "../checkinFlow";
 import {
   BaggageFlowIcon,
   BurgerIcon,
@@ -24,15 +24,6 @@ const FLOW_STEP_ICON: Record<FlowStep, (size: number) => JSX.Element> = {
   services: (size) => <ServicesFlowIcon size={size} />,
 };
 
-// The check-in flow's own route (checkin/:flightId/pnr/:passengerId) — the
-// only page the flow's step icons make sense on. Extracts the PNR view's
-// passenger id so the flow state (keyed by that same id) can be looked up —
-// each open PNR tab has its own flow, so this must not fall back to some
-// shared value that would leak one tab's step into another's.
-function pnrFlowPidFromPath(pathname: string): number | null {
-  const m = /^\/checkin\/\d+\/pnr\/(\d+)$/.exec(pathname);
-  return m ? Number(m[1]) : null;
-}
 
 function formatClock(d: Date): string {
   return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });

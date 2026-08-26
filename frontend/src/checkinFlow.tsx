@@ -79,3 +79,11 @@ export function useCheckinFlow(): CheckinFlowState {
   if (!ctx) throw new Error("useCheckinFlow must be used within a CheckinFlowProvider");
   return ctx;
 }
+
+// The check-in flow's own route (checkin/:flightId/pnr/:passengerId) — shared
+// by SideDrawer (to look up the current page's flow state) and TopTabs (to
+// look up a given tab's, which may not be the current page).
+export function pnrFlowPidFromPath(pathname: string): number | null {
+  const m = /^\/checkin\/\d+\/pnr\/(\d+)$/.exec(pathname);
+  return m ? Number(m[1]) : null;
+}

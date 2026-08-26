@@ -3,10 +3,12 @@ import { Link } from "react-router-dom";
 import { api } from "../api";
 import { useTabs } from "../tabs";
 import { useAuth } from "../auth";
+import { useCheckinFlow, pnrFlowPidFromPath } from "../checkinFlow";
 import { userAvatarColor, userInitials } from "../userDisplay";
 import { ChatIcon, CloseIcon } from "./Icon";
 import { UserPanel } from "./UserPanel";
 import { Messenger } from "./Messenger";
+import { Modal } from "./Modal";
 
 // Moscow time, shown as a fixed reference point regardless of the viewer's
 // own browser timezone — flight times throughout the app are UTC wall-clock
@@ -32,9 +34,21 @@ function MoscowClock() {
 export function TopTabs() {
   const { tabs, activePath, closeTab } = useTabs();
   const { user } = useAuth();
+  const { flowStepFor, setFlowStep } = useCheckinFlow();
   const [panelOpen, setPanelOpen] = useState(false);
   const [messengerOpen, setMessengerOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  // Path of a tab pending confirmation before it's closed (mid check-in flow).
+  const [closeConfirmPath, setCloseConfirmPath] = useState<string | null>(null);
+
+  function requestCloseTab(path: string) {
+    const pid = pnrFlowPidFromPath(path);
+    if (pid !== null && flowStepFor(pid) !== null) {
+      setCloseConfirmPath(path);
+    } else {
+      closeTab(path);
+    }
+  }
 
   useEffect(() => {
     if (!user) return;
@@ -64,7 +78,7 @@ export function TopTabs() {
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    closeTab(tab.path);
+                    requestCloseTab(tab.path);
                   }}
                 >
                   <CloseIcon size={11} />
@@ -105,6 +119,31 @@ export function TopTabs() {
       </div>
       {panelOpen && <UserPanel onClose={() => setPanelOpen(false)} />}
       {messengerOpen && <Messenger onClose={() => setMessengerOpen(false)} />}
+      {closeConfirmPath && (
+        <Modal
+          title="Exit check-in"
+          onClose={() => setCloseConfirmPath(null)}
+          footer={
+            <>
+              <button type="button" className="tertiary" onClick={() => setCloseConfirmPath(null)}>Cancel</button>
+              <button
+                type="button"
+                className="tertiary"
+                onClick={() => {
+                  const pid = pnrFlowPidFromPath(closeConfirmPath);
+                  if (pid !== null) setFlowStep(pid, null);
+                  closeTab(closeConfirmPath);
+                  setCloseConfirmPath(null);
+                }}
+              >
+                OK
+              </button>
+            </>
+          }
+        >
+          You are about to exit the check-in process. Unsaved progress on the current step will be lost.
+        </Modal>
+      )}
     </div>
   );
 }

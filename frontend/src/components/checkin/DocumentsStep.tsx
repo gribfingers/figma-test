@@ -156,7 +156,7 @@ export function DocumentsStep({ flightId, passenger, segments, onUpdated }: Prop
           DOCS
         </button>
         <button type="button" className={`docs-tab ${tab === "doco" ? "selected" : ""}`} onClick={() => setTab("doco")}>
-          DOCO {visas.length === 0 && <span className="docs-tab-warn">!</span>}
+          DOCO
         </button>
         <button type="button" className={`docs-tab ${tab === "doca" ? "selected" : ""}`} onClick={() => setTab("doca")}>
           DOCA

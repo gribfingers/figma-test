@@ -256,6 +256,21 @@ export function PnrView() {
     flight && clicked ? `${flight.carrier_code}${flight.flight_number}/${clicked.id} ${clicked.surname.toUpperCase()}` : "PNR"
   );
 
+  // A flow step can persist (on purpose — see above) past the point its
+  // roster still makes sense: the tab was closed mid-flow, or the checked
+  // set otherwise ended up empty. Resuming into a step with no one to show
+  // would render a blank panel, so treat that combination as stale and drop
+  // back to the normal roster view instead of getting stuck on it forever.
+  useEffect(() => {
+    if (!clicked || !flowStep) return;
+    const pnrPassengersNow = passengers.filter((p) => p.record_locator === clicked.record_locator);
+    const pnrIdsNow = new Set(pnrPassengersNow.map((p) => p.id));
+    const rosterNow = [...pnrPassengersNow, ...extraPassengers.filter((p) => !pnrIdsNow.has(p.id))];
+    const checkedSet = new Set(checkedArr);
+    const hasAnyChecked = rosterNow.some((p) => checkedSet.has(p.id));
+    if (!hasAnyChecked) setFlowStep(null);
+  }, [clicked, flowStep, passengers, extraPassengers, checkedArr]);
+
   if (!flight || !clicked) return <div className="content">Loading…</div>;
 
   const seatByCode = new Map(seats.map((s) => [s.seat, s]));
