@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useLocation, Link } from "react-router-dom";
 import { api, Flight, Passenger, SeatCell } from "../api";
 import { SeatMapGrid } from "../components/SeatMapGrid";
 import { BoardingPassCard } from "../components/BoardingPassCard";
@@ -21,10 +21,14 @@ const RESULT_SORT_GETTERS: Record<ResultSortKey, (p: Passenger) => string | numb
 
 export function CheckIn() {
   const { flightId } = useParams();
+  const location = useLocation();
   const fid = Number(flightId);
   const [flight, setFlight] = useState<Flight | null>(null);
   useRegisterTab(flight ? `Check-in ${flight.carrier_code}${flight.flight_number}` : "Check-in");
-  const [query, setQuery] = useState("");
+  // Arriving from the Search screen's "found this passenger" flow (they
+  // already typed a surname/PNR/etc. there) — start this screen's own PNR
+  // lookup pre-filled with it instead of making them retype it.
+  const [query, setQuery] = useState(() => (location.state as { presetQuery?: string } | null)?.presetQuery ?? "");
   const [results, setResults] = useState<Passenger[]>([]);
   const [selected, setSelected] = useState<Passenger | null>(null);
   const [seats, setSeats] = useState<SeatCell[]>([]);

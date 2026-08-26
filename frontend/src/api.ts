@@ -49,6 +49,17 @@ export interface Passenger {
   extra: string | null;
 }
 
+export type PassengerSearchMode = "surname" | "pnr" | "eticket" | "doc";
+
+export interface PassengerSearchResult extends Passenger {
+  flight_number: string;
+  carrier_code: string;
+  origin: string;
+  destination: string;
+  std: string;
+  flight_status: string;
+}
+
 export interface SeatCell {
   seat: string;
   cabin_class: "J" | "Y";
@@ -148,10 +159,8 @@ export const api = {
   deletePassenger: (flightId: number, passengerId: number) =>
     request<void>(`/flights/${flightId}/passengers/${passengerId}`, { method: "DELETE" }),
 
-  findByLocator: (locator: string) =>
-    request<(Passenger & { flight_number: string; carrier_code: string; origin: string; destination: string; std: string; flight_status: string })[]>(
-      `/checkin/pnr/${encodeURIComponent(locator)}`
-    ),
+  searchPassengers: (by: PassengerSearchMode, q: string) =>
+    request<PassengerSearchResult[]>(`/checkin/search?by=${by}&q=${encodeURIComponent(q)}`),
   checkin: (passengerId: number, data: Record<string, unknown>) =>
     request<{ passenger: Passenger; bcbp: string }>(`/checkin/${passengerId}`, {
       method: "POST",

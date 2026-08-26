@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../auth";
-import { BurgerIcon, DeviceIcon, PlaneIcon, RefreshIcon, SettingsIcon } from "./Icon";
+import { BurgerIcon, DeviceIcon, PlaneIcon, RefreshIcon, SearchIcon, SettingsIcon } from "./Icon";
 
 function formatClock(d: Date): string {
   return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
@@ -27,6 +27,13 @@ export function SideDrawer() {
       <div className="side-list">
         <Link to="/" className={`side-item ${pathname === "/" ? "selected" : ""}`} data-tooltip="Flight schedule">
           <PlaneIcon size={20} />
+        </Link>
+        <Link
+          to="/search"
+          className={`side-item ${pathname === "/search" ? "selected" : ""}`}
+          data-tooltip="Check-in agent workstation"
+        >
+          <SearchIcon size={20} />
         </Link>
         {user?.role === "superadmin" && (
           <Link

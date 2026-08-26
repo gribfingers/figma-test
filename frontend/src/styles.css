@@ -851,6 +851,48 @@ tr.row-hover:hover { background: var(--accent-soft); }
 .input-box input::placeholder { color: var(--field-placeholder); }
 .input-box svg { color: var(--field-placeholder); flex-shrink: 0; }
 
+/* ---- Search screen's passenger-lookup mode bar (Last Name/PNR/E-ticket/Doc + query) ---- */
+.search-mode-bar {
+  display: flex;
+  align-items: stretch;
+  height: 42px;
+  border: 1px solid var(--field-border);
+  border-radius: var(--field-radius);
+  background: var(--field-bg);
+  overflow: hidden;
+}
+.search-mode-tabs { display: flex; flex-shrink: 0; }
+.search-mode-tab {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  height: 100%;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  border-right: 1px solid var(--field-border);
+  white-space: nowrap;
+}
+/* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
+.search-mode-tabs .search-mode-tab:hover { background: var(--hover-bg); color: var(--field-value); }
+.search-mode-tab.selected { background: var(--accent-selected); color: var(--field-value); }
+.search-mode-tabs .search-mode-tab.selected:hover { background: var(--accent-selected); }
+.search-mode-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  padding: 0 16px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--field-value);
+}
+.search-mode-input:focus { outline: none; box-shadow: none; }
+.search-mode-input::placeholder { color: var(--field-placeholder); }
+
 /* Plain (unboxed) inputs — fallback for any input outside .field2/.input-box, kept on the same tokens. */
 input, select {
   font: inherit;

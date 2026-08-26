@@ -9,6 +9,7 @@ import { ToastProvider } from "./toast";
 import { ThemeProvider } from "./theme";
 import { Login } from "./pages/Login";
 import { Dashboard } from "./pages/Dashboard";
+import { Search } from "./pages/Search";
 import { NewFlight } from "./pages/NewFlight";
 import { FlightCard } from "./pages/FlightCard";
 import { CheckIn } from "./pages/CheckIn";
@@ -27,6 +28,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
                 <Route element={<RequireAuth />}>
                   <Route path="/" element={<App />}>
                     <Route index element={<Dashboard />} />
+                    <Route path="search" element={<Search />} />
                     <Route path="flights/new" element={<NewFlight />} />
                     <Route path="flights/:flightId" element={<FlightCard />} />
                     <Route path="checkin/:flightId" element={<CheckIn />} />

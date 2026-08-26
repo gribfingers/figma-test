@@ -8,16 +8,37 @@ import { requireEdit } from "../middleware/auth";
 
 export const checkinRouter = Router();
 
-/** Lookup by record locator, across open flights — the classic check-in-desk PNR retrieval. */
-checkinRouter.get("/pnr/:recordLocator", (req, res) => {
+const SEARCH_COLUMN: Record<string, string> = {
+  surname: "p.surname",
+  pnr: "p.record_locator",
+  eticket: "p.ticket_number",
+  doc: "p.document_number",
+};
+
+/**
+ * Passenger lookup across ALL flights, by last name / PNR / e-ticket / doc
+ * number — the check-in agent workstation's search screen, for when the
+ * agent doesn't already know which flight a passenger is on. Surname and
+ * doc number match as a substring (a desk agent rarely has the exact full
+ * value); PNR and e-ticket match exactly, same as a real PNR retrieval.
+ */
+checkinRouter.get("/search", (req, res) => {
+  const by = String(req.query.by ?? "surname");
+  const q = String(req.query.q ?? "").trim();
+  const column = SEARCH_COLUMN[by];
+  if (!column) return res.status(400).json({ error: `Unknown search field: ${by}` });
+  if (!q) return res.json([]);
+
+  const exact = by === "pnr" || by === "eticket";
   const rows = db
     .prepare(
       `SELECT p.*, f.flight_number, f.carrier_code, f.origin, f.destination, f.std, f.status as flight_status
        FROM passengers p JOIN flights f ON f.id = p.flight_id
-       WHERE UPPER(p.record_locator) = ?`
+       WHERE UPPER(${column}) ${exact ? "= UPPER(?)" : "LIKE UPPER(?)"}
+       ORDER BY f.std DESC
+       LIMIT 50`
     )
-    .all(req.params.recordLocator.toUpperCase());
-  if (rows.length === 0) return res.status(404).json({ error: "No PNR found for that record locator" });
+    .all(exact ? q : `%${q}%`);
   res.json(rows.map((r: any) => ({ ...serializePassenger(r), flight_number: r.flight_number, carrier_code: r.carrier_code, origin: r.origin, destination: r.destination, std: r.std, flight_status: r.flight_status })));
 });
 
