@@ -458,7 +458,7 @@ th input:focus {
 }
 th input:disabled { background: var(--field-bg-disabled); color: var(--muted-2); cursor: not-allowed; }
 /* The generic th-filter-input sizing above shouldn't stretch a plain select-all checkbox into a giant pill. */
-th input[type="checkbox"] { min-width: 0; width: 16px; height: 16px; padding: 0; border: none; background: transparent; }
+th input[type="checkbox"] { min-width: 0; width: auto; height: auto; padding: 0; border: none; background: transparent; }
 
 th.th-sort { cursor: pointer; user-select: none; }
 th.th-sort:hover { color: var(--accent); }

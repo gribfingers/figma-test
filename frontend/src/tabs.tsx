@@ -15,6 +15,20 @@ interface TabsContextValue {
 }
 
 const HOME_TAB: TabInfo = { path: "/", label: "Flights", closable: false };
+const STORAGE_KEY = "dcs_tabs";
+
+function loadStoredTabs(): TabInfo[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    const restored: TabInfo[] = Array.isArray(parsed)
+      ? parsed.filter((t): t is TabInfo => t && typeof t.path === "string" && typeof t.label === "string")
+      : [];
+    return [HOME_TAB, ...restored.filter((t) => t.path !== HOME_TAB.path)];
+  } catch {
+    return [HOME_TAB];
+  }
+}
 
 const TabsContext = createContext<TabsContextValue | null>(null);
 
@@ -23,12 +37,22 @@ const TabsContext = createContext<TabsContextValue | null>(null);
  * registers itself as an open tab via useRegisterTab. "Selected" is derived
  * from the router's current location, not tracked separately, so following
  * a plain <Link> (e.g. a page's own "Flight board" back-link) still updates
- * the tab strip correctly.
+ * the tab strip correctly. The open tab list is mirrored to localStorage so
+ * a page reload (which resets all in-memory React state) doesn't wipe out
+ * every tab but the one just reloaded.
  */
 export function TabsProvider({ children }: { children: ReactNode }) {
-  const [tabs, setTabs] = useState<TabInfo[]>([HOME_TAB]);
+  const [tabs, setTabs] = useState<TabInfo[]>(loadStoredTabs);
   const location = useLocation();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(tabs.filter((t) => t.path !== HOME_TAB.path)));
+    } catch {
+      // Storage full or unavailable (private browsing) — tabs just won't survive a reload.
+    }
+  }, [tabs]);
 
   const openTab = useCallback((tab: TabInfo) => {
     setTabs((prev) => {

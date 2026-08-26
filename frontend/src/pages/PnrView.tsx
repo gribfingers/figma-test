@@ -13,6 +13,10 @@ import { usePopoverPosition } from "../usePopoverPosition";
 // tab and back (see the comment in PnrView for why that matters).
 const flightCache = new Map<number, Flight>();
 const passengersCache = new Map<number, Passenger[]>();
+// Passengers pulled in via "Add pax", keyed by the PNR view's own passenger
+// id (each opened PNR tab has its own) — otherwise they'd vanish the moment
+// the tab remounts, same underlying issue as the flight/passengers caches.
+const extraPassengersCache = new Map<number, Passenger[]>();
 
 // Same fixed windows (relative to std) FlightCardHeader uses for its phase chips.
 const CHECKIN_FROM_MIN = -180;
@@ -203,7 +207,7 @@ export function PnrView() {
   const [seats, setSeats] = useState<SeatCell[]>([]);
   const [passengers, setPassengers] = useState<Passenger[]>(() => passengersCache.get(fid) ?? []);
   const [checked, setChecked] = useState<Set<number>>(() => new Set());
-  const [extraPassengers, setExtraPassengers] = useState<Passenger[]>([]);
+  const [extraPassengers, setExtraPassengers] = useState<Passenger[]>(() => extraPassengersCache.get(pid) ?? []);
 
   useEffect(() => {
     api.getFlight(fid).then((f) => {
@@ -306,8 +310,12 @@ export function PnrView() {
           flightId={fid}
           excludeIds={rosterIds}
           onAdd={(p) => {
-            setExtraPassengers((prev) => (prev.some((x) => x.id === p.id) ? prev : [...prev, p]));
-            setChecked((prev) => new Set(prev).add(p.id));
+            setExtraPassengers((prev) => {
+              if (prev.some((x) => x.id === p.id)) return prev;
+              const next = [...prev, p];
+              extraPassengersCache.set(pid, next);
+              return next;
+            });
           }}
         />
         <div className="spacer" />
