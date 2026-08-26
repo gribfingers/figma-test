@@ -2089,11 +2089,17 @@ tr.row-hover { cursor: pointer; }
 .pnr-flow-actions { display: flex; align-items: center; gap: 12px; }
 
 .pnr-flow-body { display: flex; gap: 0; align-items: flex-start; min-height: 0; }
-.pnr-flow-roster { flex: 0 0 320px; padding: 4px 0; background: transparent; }
-.pnr-flow-roster-row { padding: 10px 16px; cursor: pointer; border-bottom: 1px solid var(--panel-border); background: transparent; }
-.pnr-flow-roster-row:last-child { border-bottom: none; }
+.pnr-flow-roster {
+  flex: 0 0 320px;
+  background: transparent;
+  border-right: none;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.pnr-flow-roster-row { padding: 10px 16px; cursor: pointer; background: transparent; }
 .pnr-flow-roster-row:hover { background: var(--field-bg); }
-.pnr-flow-roster-row.selected { background: var(--panel); box-shadow: inset 3px 0 0 0 var(--accent); }
+.pnr-flow-roster-row.selected { background: var(--panel); box-shadow: inset 3px 0 0 0 var(--accent); border-bottom: 1px solid var(--panel-border); }
+.pnr-flow-roster-row.selected:last-child { border-bottom: none; }
 
 .pnr-flow-roster-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
 .pnr-flow-roster-name { font-weight: 700; font-size: 14px; color: var(--field-value); }
@@ -2143,13 +2149,21 @@ tr.row-hover { cursor: pointer; }
 /* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
 .pnr-flow-roster-bottom .pnr-flow-info-btn:hover { background: transparent; color: var(--accent); }
 
-.pnr-flow-panel { flex: 1; min-width: 0; padding: 20px; border-left: 1px solid var(--panel-border); }
+.pnr-flow-panel {
+  flex: 1;
+  min-width: 0;
+  padding: 20px;
+  border-left: 1px solid var(--panel-border);
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
 .pnr-flow-placeholder { color: var(--muted); font-size: 14px; }
 
 .fares-info-text { font-family: var(--mono); font-size: 12px; line-height: 1.6; color: var(--field-value); white-space: pre; overflow-x: auto; }
 
 .docs-step-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
 .docs-verify-link { margin-left: auto; }
+.docs-verify-done { font-size: 13px; font-weight: 600; letter-spacing: 0.1px; text-transform: uppercase; color: var(--ok); }
 
 .docs-tabs { display: flex; gap: 24px; border-bottom: 1px solid var(--panel-border); }
 .docs-tab {

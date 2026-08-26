@@ -44,7 +44,7 @@ export function FlowRosterRow({ passenger: p, active, classLetter, onSelect, onO
       <div className="pnr-flow-roster-mid">
         <div className="pnr-flow-roster-meta">
           {fmtDobShort(p.dob)}{age && ` (${age})`}{p.gender ? `, ${p.gender}` : ""}
-          <span className="pnr-flow-seat-box mono">{p.seat ? formatSeatDisplay(p.seat) : ""}</span>
+          {p.seat && <span className="pnr-flow-seat-box mono">{formatSeatDisplay(p.seat)}</span>}
         </div>
         <div className="pnr-flow-roster-flags">
           <button type="button" className="pnr-flow-flag-btn" onClick={(e) => { e.stopPropagation(); onOpenFlags(); }}>COM</button>
@@ -54,7 +54,7 @@ export function FlowRosterRow({ passenger: p, active, classLetter, onSelect, onO
       {active && (
         <div className="pnr-flow-roster-bottom">
           <button type="button" className="pnr-flow-info-btn" onClick={(e) => { e.stopPropagation(); onOpenInfo(); }}>
-            <InfoIcon size={16} /> {classLetter ?? "—"}
+            <InfoIcon size={16} /> {classLetter}
           </button>
           {/* No boarding-pass printer wired up — present for layout, no action yet. */}
           <button type="button" className="tertiary" onClick={(e) => e.stopPropagation()}>Reprint BP</button>

@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import { api, Flight, Passenger, SeatCell } from "../api";
 import { formatSeatDisplay } from "../seatExtra";
 import { parsePassengerExtra } from "../paxExtra";
-import { DocScannedIcon, DocVerifiedIcon, SearchIcon } from "../components/Icon";
+import { DocScannedIcon, DocVerifiedIcon, RefreshIcon, SearchIcon } from "../components/Icon";
 import { useRegisterTab } from "../tabs";
 import { usePopoverPosition } from "../usePopoverPosition";
 import { segmentsForFlight } from "../flightSegments";
@@ -13,6 +13,7 @@ import { FlowRosterRow } from "../components/checkin/FlowRosterRow";
 import { FaresInfoModal } from "../components/checkin/FaresInfoModal";
 import { FlightInfoPanel } from "../components/checkin/FlightInfoPanel";
 import { PassengerDetailModal } from "../components/flightcard/PassengerModals";
+import { Modal } from "../components/Modal";
 import { FLOW_STEPS, FLOW_STEP_LABEL, useCheckinFlow } from "../checkinFlow";
 
 // Last-fetched flight/passengers per flight, kept outside component state so
@@ -219,6 +220,7 @@ export function PnrView() {
   const [flowActiveId, setFlowActiveId] = useState<number | null>(null);
   const [flagsModalPax, setFlagsModalPax] = useState<Passenger | null>(null);
   const [infoModalOpen, setInfoModalOpen] = useState(false);
+  const [finishConfirmOpen, setFinishConfirmOpen] = useState(false);
 
   useEffect(() => {
     api.getFlight(fid).then((f) => {
@@ -333,9 +335,13 @@ export function PnrView() {
           </div>
           <div className="spacer" />
           <div className="pnr-flow-actions">
-            <button type="button" className="tertiary" onClick={finishFlow}>Finish</button>
-            <button type="button" className="secondary" disabled>Check-in</button>
-            <button type="button" className="secondary" disabled={flowStep === "services"} onClick={nextFlowStep}>Next</button>
+            {/* No action wired up yet — present for layout. */}
+            <button type="button" className="icon-button" aria-label="Refresh">
+              <RefreshIcon size={18} />
+            </button>
+            <button type="button" className="tertiary" onClick={() => setFinishConfirmOpen(true)}>Finish</button>
+            <button type="button" className="secondary">Check-in</button>
+            <button type="button" className="tertiary" disabled={flowStep === "services"} onClick={nextFlowStep}>Next</button>
           </div>
         </div>
 
@@ -394,6 +400,29 @@ export function PnrView() {
             passengerTotal={passengers.length}
             onClose={() => setFlightInfoOpen(false)}
           />
+        )}
+        {finishConfirmOpen && (
+          <Modal
+            title="Exit check-in"
+            onClose={() => setFinishConfirmOpen(false)}
+            footer={
+              <>
+                <button type="button" className="tertiary" onClick={() => setFinishConfirmOpen(false)}>Cancel</button>
+                <button
+                  type="button"
+                  className="tertiary"
+                  onClick={() => {
+                    setFinishConfirmOpen(false);
+                    finishFlow();
+                  }}
+                >
+                  OK
+                </button>
+              </>
+            }
+          >
+            You are about to exit the check-in process. Unsaved progress on the current step will be lost.
+          </Modal>
         )}
       </div>
     );

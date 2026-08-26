@@ -142,9 +142,13 @@ export function DocumentsStep({ flightId, passenger, segments, onUpdated }: Prop
     <div className="docs-step">
       <div className="docs-step-top">
         <SegmentToggle segments={segments} selected={segment} onSelect={setSegment} />
-        <button type="button" className="tertiary docs-verify-link" onClick={() => saveExtraPatch({ docVerified: true })} disabled={saving}>
-          Verify docs on all segments
-        </button>
+        {extra.docVerified ? (
+          <span className="docs-verify-link docs-verify-done">Docs on all segments are verified</span>
+        ) : (
+          <button type="button" className="tertiary docs-verify-link" onClick={() => saveExtraPatch({ docVerified: true })} disabled={saving}>
+            Verify docs on all segments
+          </button>
+        )}
       </div>
 
       <div className="docs-tabs">
