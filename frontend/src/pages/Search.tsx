@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, PassengerSearchMode, PassengerSearchResult } from "../api";
-import { SearchIcon } from "../components/Icon";
 import { useRegisterTab } from "../tabs";
 
 const MODES: { key: PassengerSearchMode; label: string }[] = [
@@ -37,8 +36,8 @@ function fmtStd(iso: string): string {
  * doc — across every flight, since the agent doesn't necessarily know which
  * one yet). Finding a flight's whole passenger list instead still goes
  * through Flight Schedule → the flight card's Pax tab, same as before this
- * screen existed. The search block at the top swaps for a results-filter
- * bar until the search icon brings it back, all within this one tab.
+ * screen existed. The search bar stays put; a status quick-filter bar
+ * appears above the results once a search comes back.
  */
 export function Search() {
   useRegisterTab("Search", false);
@@ -74,11 +73,6 @@ export function Search() {
     return results.filter(test);
   }, [results, paxQuickFilter]);
 
-  function backToSearch() {
-    setResults(null);
-    setError("");
-  }
-
   function openPassenger(flightId: number, presetQuery?: string) {
     navigate(`/checkin/${flightId}`, { state: presetQuery ? { presetQuery } : undefined });
   }
@@ -88,9 +82,9 @@ export function Search() {
       <h1>Check-in agent workstation</h1>
 
       <div className="panel">
-        {results === null ? (
-          <form onSubmit={runSearch}>
-            <div className="search-mode-bar">
+        <form onSubmit={runSearch}>
+          <div className="toolbar" style={{ margin: 0 }}>
+            <div className="search-mode-bar" style={{ flex: 1 }}>
               <div className="search-mode-tabs">
                 {MODES.map((m) => (
                   <button
@@ -113,12 +107,16 @@ export function Search() {
                 autoFocus
               />
             </div>
-          </form>
-        ) : (
-          <div className="pax-search-results-head">
-            <button type="button" className="icon-button" onClick={backToSearch} title="New search">
-              <SearchIcon size={18} />
-            </button>
+            <button type="submit" disabled={searching}>Search</button>
+          </div>
+        </form>
+      </div>
+
+      {error && <div className="error-box">{error}</div>}
+
+      {results && (
+        <div className="panel panel--flush">
+          <div className="pax-search-results-head panel-head">
             <div className="pax-quick-filters">
               {PAX_QUICK_FILTERS.map((f) => (
                 <button
@@ -133,13 +131,6 @@ export function Search() {
             </div>
             <span className="passengers-count">{filteredResults.length} results</span>
           </div>
-        )}
-      </div>
-
-      {error && <div className="error-box">{error}</div>}
-
-      {results && (
-        <div className="panel panel--flush">
           <div className="table-scroll">
             <table>
               <thead>
