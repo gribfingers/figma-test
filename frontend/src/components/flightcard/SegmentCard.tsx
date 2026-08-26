@@ -2,7 +2,7 @@ import { Field } from "../Field";
 import { Select } from "../Select";
 import { AirportSelect } from "../AirportSelect";
 import { DateField } from "../DateField";
-import { CloseIcon, PlaneIcon } from "../Icon";
+import { PlaneIcon } from "../Icon";
 import { SegmentDraft } from "./mainDraft";
 import { AIRCRAFT_TYPES } from "../../aircraftTypes";
 import { alphanumericUpper, digitsOnly, maskTimeInput } from "../../validation";
@@ -28,15 +28,10 @@ interface SegmentCardProps {
 export function SegmentCard({ segment, editing, removable, onChange, onRemove }: SegmentCardProps) {
   return (
     <div className="segment-card">
-      {editing && removable && (
-        <button type="button" className="icon-button segment-remove" onClick={onRemove} aria-label="Remove segment">
-          <CloseIcon size={14} />
-        </button>
-      )}
       <div className="segment-endpoints">
         {editing ? (
           <div className="segment-point-edit">
-            <AirportSelect label="Airport" value={segment.depAirport} onChange={(v) => onChange({ depAirport: v })} style={{ width: 84 }} />
+            <AirportSelect label="Airport" value={segment.depAirport} onChange={(v) => onChange({ depAirport: v })} style={{ width: 108 }} />
             <DateField label="Date" value={segment.depDate} onChange={(v) => onChange({ depDate: v })} style={{ width: 132 }} />
             <Field label="Time" style={{ width: 66 }}>
               <input value={segment.depTime} onChange={(e) => onChange({ depTime: maskTimeInput(e.target.value) })} placeholder=" " inputMode="numeric" />
@@ -58,7 +53,7 @@ export function SegmentCard({ segment, editing, removable, onChange, onRemove }:
 
         {editing ? (
           <div className="segment-point-edit">
-            <AirportSelect label="Airport" value={segment.arrAirport} onChange={(v) => onChange({ arrAirport: v })} style={{ width: 84 }} />
+            <AirportSelect label="Airport" value={segment.arrAirport} onChange={(v) => onChange({ arrAirport: v })} style={{ width: 108 }} />
             <DateField label="Date" value={segment.arrDate} onChange={(v) => onChange({ arrDate: v })} style={{ width: 132 }} />
             <Field label="Time" style={{ width: 66 }}>
               <input value={segment.arrTime} onChange={(e) => onChange({ arrTime: maskTimeInput(e.target.value) })} placeholder=" " inputMode="numeric" />
@@ -117,6 +112,12 @@ export function SegmentCard({ segment, editing, removable, onChange, onRemove }:
           <input value={segment.seatConfig} onChange={(e) => onChange({ seatConfig: alphanumericUpper(e.target.value, 12) })} placeholder=" " />
         </Field>
       </div>
+
+      {editing && removable && (
+        <button type="button" className="tertiary segment-remove" onClick={onRemove}>
+          Remove segment
+        </button>
+      )}
     </div>
   );
 }
