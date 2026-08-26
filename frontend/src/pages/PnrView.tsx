@@ -190,7 +190,7 @@ export function PnrView() {
   const [flight, setFlight] = useState<Flight | null>(null);
   const [seats, setSeats] = useState<SeatCell[]>([]);
   const [passengers, setPassengers] = useState<Passenger[]>([]);
-  const [checked, setChecked] = useState<Set<number>>(() => new Set([pid]));
+  const [checked, setChecked] = useState<Set<number>>(() => new Set());
   const [extraPassengers, setExtraPassengers] = useState<Passenger[]>([]);
 
   useEffect(() => {
@@ -232,6 +232,12 @@ export function PnrView() {
       else next.add(id);
       return next;
     });
+  }
+
+  const allChecked = rosterPassengers.length > 0 && rosterPassengers.every((p) => checked.has(p.id));
+  const someChecked = rosterPassengers.some((p) => checked.has(p.id));
+  function toggleAllChecked() {
+    setChecked(allChecked ? new Set() : new Set(rosterPassengers.map((p) => p.id)));
   }
 
   return (
@@ -296,7 +302,16 @@ export function PnrView() {
           <table>
             <thead>
               <tr>
-                <th></th>
+                <th>
+                  <input
+                    type="checkbox"
+                    checked={allChecked}
+                    ref={(el) => {
+                      if (el) el.indeterminate = someChecked && !allChecked;
+                    }}
+                    onChange={toggleAllChecked}
+                  />
+                </th>
                 <th>Name</th>
                 <th>Remarks</th>
                 <th>Route</th>
@@ -315,7 +330,7 @@ export function PnrView() {
                 const extra = parsePassengerExtra(p);
                 const cls = classFor(p, seatByCode);
                 return (
-                  <tr key={p.id} className={`clickable ${p.id === pid ? "pax-row-active" : ""}`} onClick={() => toggleChecked(p.id)}>
+                  <tr key={p.id} className={`clickable ${checked.has(p.id) ? "pax-row-active" : ""}`} onClick={() => toggleChecked(p.id)}>
                     <td>
                       <input
                         type="checkbox"
