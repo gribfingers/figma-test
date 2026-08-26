@@ -1973,20 +1973,20 @@ tr.row-hover { cursor: pointer; }
 .pnr-route { color: var(--accent); font-weight: 600; font-size: 13px; margin-top: 2px; }
 .pnr-date { color: var(--muted); font-size: 12px; margin-top: 2px; }
 
-.pnr-stats { flex: 1; display: flex; gap: 32px; min-width: 0; }
-.pnr-stat-col { flex: 1; min-width: 0; }
+.pnr-stats { flex: none; display: flex; gap: 40px; min-width: 0; }
+.pnr-stat-col { flex: none; min-width: 0; }
 .pnr-stat-col-title { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px; }
 .pnr-stat-row { display: flex; align-items: center; gap: 8px; height: 20px; }
 .pnr-stat-row + .pnr-stat-row { margin-top: 4px; }
 .pnr-stat-cls { width: 12px; flex-shrink: 0; font-size: 12px; font-weight: 700; color: var(--muted); }
-.pnr-bar { flex: 1; height: 6px; border-radius: 3px; background: var(--field-bg); overflow: hidden; }
+.pnr-bar { flex: none; width: 96px; height: 6px; border-radius: 3px; background: var(--field-bg); overflow: hidden; }
 .pnr-bar-fill { height: 100%; border-radius: 3px; }
 .pnr-bar-fill-C { background: var(--accent); }
 .pnr-bar-fill-Y { background: var(--ok); }
 .pnr-stat-frac { flex-shrink: 0; width: 48px; text-align: right; font-size: 12px; color: var(--field-value); }
 
-.pnr-side { flex-shrink: 0; display: flex; align-items: center; gap: 20px; }
-.pnr-chips { display: flex; flex-direction: column; gap: 6px; }
+.pnr-side { flex-shrink: 0; display: flex; align-items: center; gap: 20px; margin-left: auto; }
+.pnr-chips { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
 .pnr-gate { display: flex; flex-direction: column; align-items: center; }
 .pnr-gate-num { font-size: 28px; font-weight: 800; color: var(--field-value); line-height: 1; }
 .pnr-gate-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
@@ -1999,6 +1999,31 @@ tr.row-hover { cursor: pointer; }
 .pnr-doc-icon-on { color: var(--ok); }
 .pnr-doc-icon-off { color: var(--muted-2); }
 .pnr-cabin-bag { color: var(--ok); }
+
+/* "Add pax" search popover — pulls in passengers from another PNR on the same flight. */
+.pnr-add-pax-popover {
+  z-index: 200;
+  background: var(--paper);
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  box-shadow: 0 2px 24px -6px var(--shadow-popover);
+  padding: 8px;
+}
+.pnr-add-pax-results { list-style: none; margin: 6px 0 0; padding: 0; max-height: 240px; overflow-y: auto; }
+.pnr-add-pax-results li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 4px;
+  font-size: 14px;
+  color: var(--field-value);
+  cursor: pointer;
+}
+.pnr-add-pax-results li:hover { background: var(--field-bg); }
+.pnr-add-pax-empty { color: var(--muted); cursor: default; }
+.pnr-add-pax-empty:hover { background: transparent; }
 
 @media (max-width: 640px) {
   .top-tab { padding: 18px 10px; height: 48px; font-size: 12px; }

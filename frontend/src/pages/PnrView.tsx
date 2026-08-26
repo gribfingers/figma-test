@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useParams } from "react-router-dom";
 import { api, Flight, Passenger, SeatCell } from "../api";
 import { formatSeatDisplay } from "../seatExtra";
 import { parsePassengerExtra } from "../paxExtra";
-import { DocScannedIcon, DocVerifiedIcon } from "../components/Icon";
+import { DocScannedIcon, DocVerifiedIcon, SearchIcon } from "../components/Icon";
 import { useRegisterTab } from "../tabs";
+import { usePopoverPosition } from "../usePopoverPosition";
 
 // Same fixed windows (relative to std) FlightCardHeader uses for its phase chips.
 const CHECKIN_FROM_MIN = -180;
@@ -70,6 +72,110 @@ function StatBar({ label, count, total }: StatBarProps) {
   );
 }
 
+interface AddPaxButtonProps {
+  flightId: number;
+  excludeIds: Set<number>;
+  onAdd: (p: Passenger) => void;
+}
+
+/**
+ * "Add pax" opens a search popover so the agent can pull in passengers
+ * from a different PNR on the same flight — the case where several
+ * parties reach the desk together and get checked in as one batch.
+ */
+function AddPaxButton({ flightId, excludeIds, onAdd }: AddPaxButtonProps) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<Passenger[]>([]);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const popRef = useRef<HTMLDivElement>(null);
+  const rect = usePopoverPosition(btnRef, open);
+
+  useEffect(() => {
+    if (!open || !query.trim()) {
+      setResults([]);
+      return;
+    }
+    let cancelled = false;
+    const t = setTimeout(() => {
+      api.passengers(flightId, query.trim()).then((found) => {
+        if (!cancelled) setResults(found);
+      });
+    }, 200);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [open, query, flightId]);
+
+  useEffect(() => {
+    if (!open) return;
+    function onDocMouseDown(e: MouseEvent) {
+      const target = e.target as Node;
+      if (btnRef.current?.contains(target)) return;
+      if (popRef.current?.contains(target)) return;
+      setOpen(false);
+    }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", onDocMouseDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onDocMouseDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
+  const shown = results.filter((p) => !excludeIds.has(p.id));
+
+  return (
+    <>
+      <button type="button" className="secondary" ref={btnRef} onClick={() => setOpen((o) => !o)}>
+        Add pax
+      </button>
+      {open &&
+        rect &&
+        createPortal(
+          <div
+            ref={popRef}
+            className="pnr-add-pax-popover"
+            style={{ position: "fixed", top: rect.top, left: rect.left, width: Math.max(rect.width, 300) }}
+          >
+            <div className="input-box">
+              <SearchIcon size={16} />
+              <input
+                autoFocus
+                placeholder="Last name or PNR"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            </div>
+            {query.trim() && (
+              <ul className="pnr-add-pax-results">
+                {shown.map((p) => (
+                  <li
+                    key={p.id}
+                    onClick={() => {
+                      onAdd(p);
+                      setQuery("");
+                      setResults([]);
+                    }}
+                  >
+                    <span>{p.surname} {p.given_name}</span>
+                    <span className="mono">{p.record_locator}</span>
+                  </li>
+                ))}
+                {shown.length === 0 && <li className="pnr-add-pax-empty">No matches</li>}
+              </ul>
+            )}
+          </div>,
+          document.body
+        )}
+    </>
+  );
+}
+
 /**
  * Opens in its own tab when an agent clicks a passenger from a search
  * match — everyone sharing that passenger's PNR, so the whole party can be
@@ -85,6 +191,7 @@ export function PnrView() {
   const [seats, setSeats] = useState<SeatCell[]>([]);
   const [passengers, setPassengers] = useState<Passenger[]>([]);
   const [checked, setChecked] = useState<Set<number>>(() => new Set([pid]));
+  const [extraPassengers, setExtraPassengers] = useState<Passenger[]>([]);
 
   useEffect(() => {
     api.getFlight(fid).then(setFlight);
@@ -101,6 +208,9 @@ export function PnrView() {
 
   const seatByCode = new Map(seats.map((s) => [s.seat, s]));
   const pnrPassengers = passengers.filter((p) => p.record_locator === clicked.record_locator);
+  const pnrIds = new Set(pnrPassengers.map((p) => p.id));
+  const rosterPassengers = [...pnrPassengers, ...extraPassengers.filter((p) => !pnrIds.has(p.id))];
+  const rosterIds = new Set(rosterPassengers.map((p) => p.id));
 
   const capacity = parseVersion(flight.aircraft_version);
   const totalCapacity = capacity.C + capacity.Y;
@@ -153,8 +263,8 @@ export function PnrView() {
 
         <div className="pnr-side">
           <div className="pnr-chips">
-            <span className="chip middle blue">RESEAT: {reseatCount}</span>
-            <span className="chip middle blue">PRIORITY: {priorityCount}</span>
+            <button type="button" className="tertiary">RESEAT: {reseatCount}</button>
+            <button type="button" className="tertiary">PRIORITY: {priorityCount}</button>
           </div>
           <div className="pnr-gate">
             <span className="pnr-gate-num">{flight.gate ?? "—"}</span>
@@ -168,10 +278,17 @@ export function PnrView() {
       </div>
 
       <div className="pnr-actions">
-        <button type="button" className="secondary">Add passengers</button>
+        <AddPaxButton
+          flightId={fid}
+          excludeIds={rosterIds}
+          onAdd={(p) => {
+            setExtraPassengers((prev) => (prev.some((x) => x.id === p.id) ? prev : [...prev, p]));
+            setChecked((prev) => new Set(prev).add(p.id));
+          }}
+        />
         <div className="spacer" />
-        <button type="button" className="secondary">Check-in</button>
-        <button type="button" className="secondary">Actions</button>
+        <button type="button" className="secondary" disabled={checked.size === 0}>Check-in</button>
+        <button type="button" className="secondary" disabled={checked.size === 0}>Actions</button>
       </div>
 
       <div className="panel panel--flush">
@@ -193,7 +310,7 @@ export function PnrView() {
               </tr>
             </thead>
             <tbody>
-              {pnrPassengers.map((p) => {
+              {rosterPassengers.map((p) => {
                 const ssr = p.ssr ?? [];
                 const extra = parsePassengerExtra(p);
                 const cls = classFor(p, seatByCode);

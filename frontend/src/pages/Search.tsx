@@ -40,7 +40,7 @@ function fmtStd(iso: string): string {
  * appears above the results once a search comes back.
  */
 export function Search() {
-  useRegisterTab("Search", false);
+  useRegisterTab("Search");
   const navigate = useNavigate();
 
   const [mode, setMode] = useState<PassengerSearchMode>("surname");
