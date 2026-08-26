@@ -1,8 +1,10 @@
-import { Passenger } from "../../api";
+import { useState } from "react";
+import { Flight, Passenger } from "../../api";
 import { ageFromDob, SeatServiceItem, seatServicesForPassenger } from "../../paxExtra";
 import { formatSeatDisplay } from "../../seatExtra";
 import { FlightSegment } from "../../flightSegments";
 import { InfantIcon, InfoIcon } from "../Icon";
+import { EmdModal } from "./EmdModal";
 
 /** "1980-12-22" -> "22.12.1980"; blank input stays blank. */
 function fmtDobShort(dob: string | null): string {
@@ -20,27 +22,32 @@ function SeatBadge({ seat }: { seat: string }) {
 }
 
 /** One paid seat-selection extra, full detail — the active card's per-segment breakdown. */
-function SeatServiceRow({ item }: { item: SeatServiceItem }) {
+function SeatServiceRow({ item, onOpenEmd }: { item: SeatServiceItem; onOpenEmd: (item: SeatServiceItem) => void }) {
   return (
     <div className={`seat-service-row ${item.paid ? "paid" : "unpaid"}`}>
       <span className="seat-service-code mono">{item.rfisc}</span>
       <span className="seat-service-label">{item.label}</span>
-      <span className="seat-service-price">{fmtPrice(item.price)}</span>
+      <button type="button" className="seat-service-price" onClick={(e) => { e.stopPropagation(); onOpenEmd(item); }}>
+        {fmtPrice(item.price)}
+      </button>
     </div>
   );
 }
 
 /** Same extra, condensed to a small pill — the inactive card's one-line summary. */
-function SeatServiceChip({ item }: { item: SeatServiceItem }) {
+function SeatServiceChip({ item, onOpenEmd }: { item: SeatServiceItem; onOpenEmd: (item: SeatServiceItem) => void }) {
   return (
     <span className={`seat-service-chip ${item.paid ? "paid" : "unpaid"}`}>
       <span className="mono">{item.rfisc}</span>
-      {fmtPrice(item.price)}
+      <button type="button" className="seat-service-chip-price" onClick={(e) => { e.stopPropagation(); onOpenEmd(item); }}>
+        {fmtPrice(item.price)}
+      </button>
     </span>
   );
 }
 
 interface Props {
+  flight: Flight;
   passenger: Passenger;
   active: boolean;
   /** Nested under its guardian's card (an infant sharing the guardian's PNR) — no index number, no seat detail of its own. */
@@ -66,6 +73,7 @@ interface Props {
  * one-line summary instead.
  */
 export function FlowRosterRow({
+  flight,
   passenger: p,
   active,
   nested,
@@ -80,6 +88,7 @@ export function FlowRosterRow({
   const ssr = p.ssr ?? [];
   const age = ageFromDob(p.dob);
   const hasRemarks = ssr.length > 0;
+  const [emdItem, setEmdItem] = useState<SeatServiceItem | null>(null);
   const flagButtons = (
     <div className="pnr-flow-roster-flags">
       <button type="button" className="pnr-flow-flag-btn" onClick={(e) => { e.stopPropagation(); onOpenFlags(); }}>COM</button>
@@ -123,7 +132,7 @@ export function FlowRosterRow({
                     <span>{seg.origin} - {seg.destination}</span>
                     {i === 0 && <SeatBadge seat={p.seat!} />}
                   </div>
-                  {(servicesBySegment[i] ?? []).map((item, j) => <SeatServiceRow key={j} item={item} />)}
+                  {(servicesBySegment[i] ?? []).map((item, j) => <SeatServiceRow key={j} item={item} onOpenEmd={setEmdItem} />)}
                 </div>
               ))
             ) : (
@@ -131,13 +140,13 @@ export function FlowRosterRow({
                 <div className="pnr-flow-seat-segment-head pnr-flow-seat-segment-head-plain">
                   <SeatBadge seat={p.seat} />
                 </div>
-                {(servicesBySegment[0] ?? []).map((item, j) => <SeatServiceRow key={j} item={item} />)}
+                {(servicesBySegment[0] ?? []).map((item, j) => <SeatServiceRow key={j} item={item} onOpenEmd={setEmdItem} />)}
               </div>
             )}
           </div>
         ) : (
           <div className="pnr-flow-seat-compact" onClick={(e) => e.stopPropagation()}>
-            {(servicesBySegment[0] ?? []).map((item, i) => <SeatServiceChip key={i} item={item} />)}
+            {(servicesBySegment[0] ?? []).map((item, i) => <SeatServiceChip key={i} item={item} onOpenEmd={setEmdItem} />)}
             <SeatBadge seat={p.seat} />
           </div>
         )
@@ -150,6 +159,12 @@ export function FlowRosterRow({
           </button>
           {/* No boarding-pass printer wired up — present for layout, no action yet. */}
           <button type="button" className="tertiary" onClick={(e) => e.stopPropagation()}>Reprint BP</button>
+        </div>
+      )}
+
+      {emdItem && (
+        <div onClick={(e) => e.stopPropagation()}>
+          <EmdModal flight={flight} passenger={p} item={emdItem} onClose={() => setEmdItem(null)} />
         </div>
       )}
     </div>

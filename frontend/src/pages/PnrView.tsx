@@ -423,6 +423,7 @@ export function PnrView() {
             {buildFlowRows(flowPassengers).map((row) => (
               <FlowRosterRow
                 key={row.passenger.id}
+                flight={flight}
                 passenger={row.passenger}
                 nested={row.nested}
                 index={row.index}

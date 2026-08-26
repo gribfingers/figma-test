@@ -2183,7 +2183,15 @@ tr.row-hover { cursor: pointer; }
 .seat-service-row + .seat-service-row { margin-top: 4px; }
 .seat-service-code { font-weight: 700; color: var(--field-value); }
 .seat-service-label { flex: 1; color: var(--field-value); }
-.seat-service-price { color: var(--accent); font-weight: 600; }
+.seat-service-price {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 13px;
+}
+.seat-service-price:hover { text-decoration: underline; }
 .seat-service-row::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; width: 3px; border-radius: 0 4px 4px 0; background: var(--danger); }
 .seat-service-row.paid::after { background: var(--ok); }
 
@@ -2203,6 +2211,15 @@ tr.row-hover { cursor: pointer; }
 }
 .seat-service-chip::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; width: 3px; background: var(--danger); }
 .seat-service-chip.paid::after { background: var(--ok); }
+.seat-service-chip-price {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--field-value);
+}
+.seat-service-chip-price:hover { text-decoration: underline; }
 
 .pnr-flow-panel {
   flex: 1;
