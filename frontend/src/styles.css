@@ -157,7 +157,7 @@ body {
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  background: var(--bg);
+  background: var(--panel);
   /* Carries the divider down through the blank stretch between .side-list
      and .side-bottom (itself flex, not stretched to fill), same trick as
      .tabs-fill for the top tab bar. */
@@ -236,7 +236,7 @@ body {
   align-items: center;
   justify-content: space-between;
   height: 56px;
-  background: var(--bg);
+  background: var(--panel);
   flex-shrink: 0;
 }
 .tabs-list { display: flex; align-items: flex-end; height: 56px; overflow-x: auto; }
