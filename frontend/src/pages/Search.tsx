@@ -1,8 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api, Flight, PassengerSearchMode, PassengerSearchResult } from "../api";
-import { Field } from "../components/Field";
-import { DateTimePicker } from "../components/DateTimePicker";
+import { api, PassengerSearchMode, PassengerSearchResult } from "../api";
+import { SearchIcon } from "../components/Icon";
 import { useRegisterTab } from "../tabs";
 
 const MODES: { key: PassengerSearchMode; label: string }[] = [
@@ -11,8 +10,6 @@ const MODES: { key: PassengerSearchMode; label: string }[] = [
   { key: "eticket", label: "E-ticket" },
   { key: "doc", label: "Doc" },
 ];
-
-const EMPTY_FLIGHT_FILTER = { airline: "", flight: "", destination: "", dateFrom: "", dateTo: "", checkinOpen: false };
 
 type PaxQuickFilterKey = "all" | "checked_in" | "not_checked_in" | "boarded" | "unknown";
 const PAX_QUICK_FILTERS: { key: PaxQuickFilterKey; label: string; test: (p: PassengerSearchResult) => boolean }[] = [
@@ -36,10 +33,12 @@ function fmtStd(iso: string): string {
 
 /**
  * Check-in agent workstation, landing screen: a passenger walks up to the
- * desk and the agent looks them up either by personal data (last name/PNR/
- * e-ticket/doc — across every flight, since the agent doesn't necessarily
- * know which one yet) or by the flight itself. Either search opens the
- * matching flight's existing check-in screen (see CheckIn.tsx).
+ * desk and the agent looks them up by personal data (last name/PNR/e-ticket/
+ * doc — across every flight, since the agent doesn't necessarily know which
+ * one yet). Finding a flight's whole passenger list instead still goes
+ * through Flight Schedule → the flight card's Pax tab, same as before this
+ * screen existed. The search block at the top swaps for a results-filter
+ * bar until the search icon brings it back, all within this one tab.
  */
 export function Search() {
   useRegisterTab("Search", false);
@@ -47,59 +46,40 @@ export function Search() {
 
   const [mode, setMode] = useState<PassengerSearchMode>("surname");
   const [query, setQuery] = useState("");
-  const [paxResults, setPaxResults] = useState<PassengerSearchResult[] | null>(null);
-  const [paxError, setPaxError] = useState("");
-  const [searchingPax, setSearchingPax] = useState(false);
+
+  const [results, setResults] = useState<PassengerSearchResult[] | null>(null);
+  const [error, setError] = useState("");
+  const [searching, setSearching] = useState(false);
   const [paxQuickFilter, setPaxQuickFilter] = useState<PaxQuickFilterKey>("all");
 
-  const [filter, setFilter] = useState(EMPTY_FLIGHT_FILTER);
-  const [flightResults, setFlightResults] = useState<Flight[] | null>(null);
-  const [searchingFlights, setSearchingFlights] = useState(false);
-
-  async function runPaxSearch(e: React.FormEvent) {
+  async function runSearch(e: React.FormEvent) {
     e.preventDefault();
     if (!query.trim()) return;
-    setSearchingPax(true);
-    setPaxError("");
-    setFlightResults(null);
-    setPaxQuickFilter("all");
+    setSearching(true);
+    setError("");
     try {
-      const results = await api.searchPassengers(mode, query.trim());
-      setPaxResults(results);
+      const found = await api.searchPassengers(mode, query.trim());
+      setResults(found);
+      setPaxQuickFilter("all");
     } catch (err: any) {
-      setPaxError(err.message);
+      setError(err.message);
     } finally {
-      setSearchingPax(false);
+      setSearching(false);
     }
   }
 
-  async function runFlightSearch() {
-    setSearchingFlights(true);
-    setPaxResults(null);
-    try {
-      const flights = await api.listFlights();
-      const filtered = flights.filter((f) => {
-        if (filter.airline && !f.carrier_code.toLowerCase().includes(filter.airline.toLowerCase())) return false;
-        if (filter.flight && !f.flight_number.toLowerCase().includes(filter.flight.toLowerCase())) return false;
-        if (filter.destination && !f.destination.toLowerCase().includes(filter.destination.toLowerCase())) return false;
-        if (filter.dateFrom && new Date(f.std) < new Date(filter.dateFrom)) return false;
-        if (filter.dateTo && new Date(f.std) > new Date(filter.dateTo)) return false;
-        if (filter.checkinOpen && (f.status === "CLOSED" || f.status === "DEPARTED")) return false;
-        return true;
-      });
-      setFlightResults(filtered);
-    } finally {
-      setSearchingFlights(false);
-    }
-  }
-
-  const filteredPaxResults = useMemo(() => {
-    if (!paxResults) return [];
+  const filteredResults = useMemo(() => {
+    if (!results) return [];
     const test = PAX_QUICK_FILTERS.find((f) => f.key === paxQuickFilter)?.test ?? (() => true);
-    return paxResults.filter(test);
-  }, [paxResults, paxQuickFilter]);
+    return results.filter(test);
+  }, [results, paxQuickFilter]);
 
-  function openFlight(flightId: number, presetQuery?: string) {
+  function backToSearch() {
+    setResults(null);
+    setError("");
+  }
+
+  function openPassenger(flightId: number, presetQuery?: string) {
     navigate(`/checkin/${flightId}`, { state: presetQuery ? { presetQuery } : undefined });
   }
 
@@ -108,58 +88,37 @@ export function Search() {
       <h1>Check-in agent workstation</h1>
 
       <div className="panel">
-        <form onSubmit={runPaxSearch}>
-          <div className="search-mode-bar">
-            <div className="search-mode-tabs">
-              {MODES.map((m) => (
-                <button
-                  key={m.key}
-                  type="button"
-                  className={`search-mode-tab ${mode === m.key ? "selected" : ""}`}
-                  onClick={() => setMode(m.key)}
-                >
-                  {m.label}
-                </button>
-              ))}
+        {results === null ? (
+          <form onSubmit={runSearch}>
+            <div className="search-mode-bar">
+              <div className="search-mode-tabs">
+                {MODES.map((m) => (
+                  <button
+                    key={m.key}
+                    type="button"
+                    className={`search-mode-tab ${mode === m.key ? "selected" : ""}`}
+                    disabled={searching}
+                    onClick={() => setMode(m.key)}
+                  >
+                    {m.label}
+                  </button>
+                ))}
+              </div>
+              <input
+                className="search-mode-input"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search"
+                disabled={searching}
+                autoFocus
+              />
             </div>
-            <input
-              className="search-mode-input"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search"
-            />
-          </div>
-        </form>
-
-        <div className="toolbar" style={{ marginTop: 16, flexWrap: "wrap", alignItems: "flex-end" }}>
-          <Field label="Airline" style={{ minWidth: 110 }}>
-            <input value={filter.airline} onChange={(e) => setFilter({ ...filter, airline: e.target.value.toUpperCase() })} placeholder=" " />
-          </Field>
-          <Field label="Flight" style={{ minWidth: 100 }}>
-            <input value={filter.flight} onChange={(e) => setFilter({ ...filter, flight: e.target.value })} placeholder=" " />
-          </Field>
-          <Field label="Destination" style={{ minWidth: 120 }}>
-            <input value={filter.destination} onChange={(e) => setFilter({ ...filter, destination: e.target.value.toUpperCase() })} placeholder=" " />
-          </Field>
-          <DateTimePicker label="Date/Time from" style={{ minWidth: 170 }} value={filter.dateFrom} onChange={(v) => setFilter({ ...filter, dateFrom: v })} />
-          <DateTimePicker label="Date/Time to" style={{ minWidth: 170 }} value={filter.dateTo} onChange={(v) => setFilter({ ...filter, dateTo: v })} />
-          <label className="checkbox-row" style={{ marginBottom: 16 }}>
-            <input
-              type="checkbox"
-              checked={filter.checkinOpen}
-              onChange={(e) => setFilter({ ...filter, checkinOpen: e.target.checked })}
-            />
-            Check-in is open
-          </label>
-          <button type="button" onClick={runFlightSearch} disabled={searchingFlights}>Search</button>
-        </div>
-      </div>
-
-      {paxError && <div className="error-box">{paxError}</div>}
-
-      {paxResults && (
-        <div className="panel panel--flush">
-          <div className="panel-head pax-search-results-head">
+          </form>
+        ) : (
+          <div className="pax-search-results-head">
+            <button type="button" className="icon-button" onClick={backToSearch} title="New search">
+              <SearchIcon size={18} />
+            </button>
             <div className="pax-quick-filters">
               {PAX_QUICK_FILTERS.map((f) => (
                 <button
@@ -168,12 +127,19 @@ export function Search() {
                   className={`pax-quick-filter ${paxQuickFilter === f.key ? "selected" : ""}`}
                   onClick={() => setPaxQuickFilter(f.key)}
                 >
-                  {f.label} ({paxResults.filter(f.test).length})
+                  {f.label} ({results.filter(f.test).length})
                 </button>
               ))}
             </div>
-            <span className="passengers-count">{filteredPaxResults.length} results</span>
+            <span className="passengers-count">{filteredResults.length} results</span>
           </div>
+        )}
+      </div>
+
+      {error && <div className="error-box">{error}</div>}
+
+      {results && (
+        <div className="panel panel--flush">
           <div className="table-scroll">
             <table>
               <thead>
@@ -187,8 +153,8 @@ export function Search() {
                 </tr>
               </thead>
               <tbody>
-                {filteredPaxResults.map((p) => (
-                  <tr key={p.id} className="row-hover" onClick={() => openFlight(p.flight_id, p.record_locator)}>
+                {filteredResults.map((p) => (
+                  <tr key={p.id} className="row-hover" onClick={() => openPassenger(p.flight_id, p.record_locator)}>
                     <td>{p.surname}/{p.given_name}</td>
                     <td className="mono">{p.destination}</td>
                     <td className="mono">{p.carrier_code}{p.flight_number}</td>
@@ -201,45 +167,8 @@ export function Search() {
                     </td>
                   </tr>
                 ))}
-                {filteredPaxResults.length === 0 && (
+                {filteredResults.length === 0 && (
                   <tr><td colSpan={6} style={{ color: "var(--muted)" }}>No passengers match.</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {flightResults && (
-        <div className="panel panel--flush">
-          <h3 className="panel-head">Flights ({flightResults.length})</h3>
-          <div className="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>STD</th>
-                  <th>Airline</th>
-                  <th>Flight</th>
-                  <th>Route</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {flightResults.map((f) => (
-                  <tr key={f.id} className="row-hover" onClick={() => openFlight(f.id)}>
-                    <td className="mono">{fmtStd(f.std)}</td>
-                    <td>{f.carrier_code}</td>
-                    <td className="mono">{f.flight_number}</td>
-                    <td className="mono">{f.origin} → {f.destination}</td>
-                    <td>
-                      <span className={`chip middle ${f.status === "CLOSED" || f.status === "DEPARTED" ? "danger" : "ok"}`}>
-                        {f.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-                {flightResults.length === 0 && (
-                  <tr><td colSpan={5} style={{ color: "var(--muted)" }}>No flights match.</td></tr>
                 )}
               </tbody>
             </table>

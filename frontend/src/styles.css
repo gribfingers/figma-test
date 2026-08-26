@@ -1723,8 +1723,11 @@ a { color: var(--accent); }
 }
 .passengers-count { font-size: 12px; color: var(--muted); font-weight: 600; }
 
-/* Search screen's passenger-results header: status quick-filters + result count. */
-.pax-search-results-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-top: 16px; padding-bottom: 12px; }
+/* Search screen's passenger-results header: replaces the search-input block
+   in place (same panel) once results come back — a "new search" icon
+   button, status quick-filters, and the result count. */
+.pax-search-results-head { display: flex; align-items: center; gap: 16px; }
+.pax-search-results-head .passengers-count { margin-left: auto; }
 
 .passengers-table th, .passengers-table td { padding: 8px 10px; white-space: nowrap; }
 .passengers-table thead th { position: sticky; top: 0; background: var(--panel); z-index: 1; }
