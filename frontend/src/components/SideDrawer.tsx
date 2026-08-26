@@ -45,10 +45,11 @@ function isFlightPage(pathname: string): boolean {
   return pathname === "/" || pathname.startsWith("/flights/") || pathname.startsWith("/boarding/");
 }
 
-// Only the passenger search & selection page — the check-in flow it opens
-// into (PnrView) and the legacy PNR-lookup screen are not part of this.
+// Passenger search, the PNR view it opens into (roster selection and the
+// check-in flow itself), and the legacy PNR-lookup screen — the check-in
+// agent's whole workflow.
 function isCheckinPage(pathname: string): boolean {
-  return pathname.startsWith("/search");
+  return pathname.startsWith("/search") || pathname.startsWith("/checkin/");
 }
 
 export function SideDrawer() {
