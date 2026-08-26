@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, Flight, PassengerSearchMode, PassengerSearchResult } from "../api";
 import { Field } from "../components/Field";
@@ -14,8 +14,24 @@ const MODES: { key: PassengerSearchMode; label: string }[] = [
 
 const EMPTY_FLIGHT_FILTER = { airline: "", flight: "", destination: "", dateFrom: "", dateTo: "", checkinOpen: false };
 
+type PaxQuickFilterKey = "all" | "checked_in" | "not_checked_in" | "boarded" | "unknown";
+const PAX_QUICK_FILTERS: { key: PaxQuickFilterKey; label: string; test: (p: PassengerSearchResult) => boolean }[] = [
+  { key: "all", label: "All", test: () => true },
+  { key: "checked_in", label: "Checked in", test: (p) => p.checkin_status === "CHECKED_IN" },
+  { key: "not_checked_in", label: "Not Checked In", test: (p) => p.checkin_status === "NOT_CHECKED_IN" },
+  { key: "boarded", label: "Boarded", test: (p) => p.boarding_status === "BOARDED" },
+  { key: "unknown", label: "Unknown", test: (p) => p.boarding_status === "OFFLOADED" || p.boarding_status === "NO_SHOW" },
+];
+
+// Matches FlightCardHeader's fmtCardDate style (DDMMMYY HH:mm), same UTC
+// wall-clock convention as the rest of the app.
 function fmtStd(iso: string): string {
-  return new Date(iso).toLocaleString("en-GB", { timeZone: "UTC", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  const d = new Date(iso);
+  const day = d.toLocaleDateString("en-GB", { timeZone: "UTC", day: "2-digit" });
+  const month = d.toLocaleDateString("en-GB", { timeZone: "UTC", month: "short" }).toUpperCase();
+  const year = d.toLocaleDateString("en-GB", { timeZone: "UTC", year: "2-digit" });
+  const time = d.toLocaleTimeString("en-GB", { timeZone: "UTC", hour: "2-digit", minute: "2-digit" });
+  return `${day}${month}${year} ${time}`;
 }
 
 /**
@@ -34,6 +50,7 @@ export function Search() {
   const [paxResults, setPaxResults] = useState<PassengerSearchResult[] | null>(null);
   const [paxError, setPaxError] = useState("");
   const [searchingPax, setSearchingPax] = useState(false);
+  const [paxQuickFilter, setPaxQuickFilter] = useState<PaxQuickFilterKey>("all");
 
   const [filter, setFilter] = useState(EMPTY_FLIGHT_FILTER);
   const [flightResults, setFlightResults] = useState<Flight[] | null>(null);
@@ -45,6 +62,7 @@ export function Search() {
     setSearchingPax(true);
     setPaxError("");
     setFlightResults(null);
+    setPaxQuickFilter("all");
     try {
       const results = await api.searchPassengers(mode, query.trim());
       setPaxResults(results);
@@ -74,6 +92,12 @@ export function Search() {
       setSearchingFlights(false);
     }
   }
+
+  const filteredPaxResults = useMemo(() => {
+    if (!paxResults) return [];
+    const test = PAX_QUICK_FILTERS.find((f) => f.key === paxQuickFilter)?.test ?? (() => true);
+    return paxResults.filter(test);
+  }, [paxResults, paxQuickFilter]);
 
   function openFlight(flightId: number, presetQuery?: string) {
     navigate(`/checkin/${flightId}`, { state: presetQuery ? { presetQuery } : undefined });
@@ -135,27 +159,41 @@ export function Search() {
 
       {paxResults && (
         <div className="panel panel--flush">
-          <h3 className="panel-head">Passengers ({paxResults.length})</h3>
+          <div className="panel-head pax-search-results-head">
+            <div className="pax-quick-filters">
+              {PAX_QUICK_FILTERS.map((f) => (
+                <button
+                  key={f.key}
+                  type="button"
+                  className={`pax-quick-filter ${paxQuickFilter === f.key ? "selected" : ""}`}
+                  onClick={() => setPaxQuickFilter(f.key)}
+                >
+                  {f.label} ({paxResults.filter(f.test).length})
+                </button>
+              ))}
+            </div>
+            <span className="passengers-count">{filteredPaxResults.length} results</span>
+          </div>
           <div className="table-scroll">
             <table>
               <thead>
                 <tr>
                   <th>Name</th>
-                  <th>PNR</th>
+                  <th>Destination</th>
                   <th>Flight</th>
-                  <th>Route</th>
-                  <th>STD</th>
+                  <th>Date&amp;Time</th>
+                  <th>PNR</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                {paxResults.map((p) => (
+                {filteredPaxResults.map((p) => (
                   <tr key={p.id} className="row-hover" onClick={() => openFlight(p.flight_id, p.record_locator)}>
                     <td>{p.surname}/{p.given_name}</td>
-                    <td className="mono">{p.record_locator}</td>
+                    <td className="mono">{p.destination}</td>
                     <td className="mono">{p.carrier_code}{p.flight_number}</td>
-                    <td className="mono">{p.origin} → {p.destination}</td>
                     <td className="mono">{fmtStd(p.std)}</td>
+                    <td className="mono">{p.record_locator}</td>
                     <td>
                       <span className={`chip middle ${p.checkin_status === "CHECKED_IN" ? "ok" : "muted"}`}>
                         {p.checkin_status === "CHECKED_IN" ? "Checked in" : "Not checked in"}
@@ -163,7 +201,7 @@ export function Search() {
                     </td>
                   </tr>
                 ))}
-                {paxResults.length === 0 && (
+                {filteredPaxResults.length === 0 && (
                   <tr><td colSpan={6} style={{ color: "var(--muted)" }}>No passengers match.</td></tr>
                 )}
               </tbody>
