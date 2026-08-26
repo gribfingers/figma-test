@@ -196,6 +196,24 @@ export function seatServicesForPassenger(p: Passenger, segmentCount: number): Se
   });
 }
 
+const BAGGAGE_SERVICE_LABELS = ["23 kg", "32 kg", "Excess 5 kg"];
+
+/** Same shape/approach as seatServicesForPassenger above, but for the Baggage step's roster-card chips. */
+export function baggageServicesForPassenger(p: Passenger, segmentCount: number): SeatServiceItem[][] {
+  const rand = seededRandom(p.id * 48611 + 71);
+  return Array.from({ length: Math.max(segmentCount, 1) }, () => {
+    const count = 1 + Math.floor(rand() * 2); // 1-2 per segment
+    const pool = [...BAGGAGE_SERVICE_LABELS];
+    const items: SeatServiceItem[] = [];
+    for (let i = 0; i < count; i++) {
+      const idx = Math.floor(rand() * pool.length);
+      const label = pool.splice(idx, 1)[0];
+      items.push({ rfisc: "0B5", label, price: 12500, paid: rand() < 0.7 });
+    }
+    return items;
+  });
+}
+
 export type AsvcStatus = "none" | "ok" | "conflict";
 
 /** AUX chip color: gray with no ancillary purchases, green if all paid, red if any are unpaid. */

@@ -2221,6 +2221,111 @@ tr.row-hover { cursor: pointer; }
 }
 .seat-service-chip-price:hover { text-decoration: underline; }
 
+/* ---- Baggage step ---- */
+.baggage-step-actions { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+.baggage-rows { display: flex; flex-direction: column; gap: 8px; }
+.baggage-carryon-add { display: block; margin-top: 24px; margin-bottom: 12px; }
+
+.baggage-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+}
+.baggage-row.expanded { border-color: var(--warning, #e08a2e); }
+.baggage-row-chevron { all: unset; box-sizing: border-box; display: flex; cursor: pointer; color: var(--muted); flex-shrink: 0; transition: transform 0.12s ease; }
+.baggage-row-chevron.open { transform: rotate(90deg); }
+/* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
+.baggage-rows .baggage-row-chevron:hover { background: transparent; color: var(--field-value); }
+.baggage-row-origin { color: var(--muted); font-size: 13px; flex-shrink: 0; }
+.baggage-row-dest {
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  background: var(--field-bg);
+  color: var(--field-value);
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.baggage-row-tag {
+  all: unset;
+  box-sizing: border-box;
+  width: 44px;
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  background: var(--field-bg);
+  color: var(--field-value);
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.baggage-row-static { flex: 1; color: var(--muted); font-size: 13px; }
+.baggage-row-static-tag { flex: 0 0 44px; }
+.baggage-row-static-type { flex: 1; }
+
+.baggage-row-print {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--btn-disabled-text);
+  flex-shrink: 0;
+}
+.baggage-row-print:not(:disabled) { background: var(--accent); color: var(--accent-ink); }
+.baggage-row-print:disabled { cursor: default; }
+.baggage-row-print.printed { background: transparent; color: var(--ok); border: 1.5px solid var(--ok); }
+.baggage-row-print.error { background: var(--danger); color: #ffffff; }
+/* Extra specificity (parent-scoped) so these beat the global button:hover rule. */
+.baggage-rows .baggage-row-print:hover:not(:disabled) { background: var(--accent); color: var(--accent-ink); }
+.baggage-rows .baggage-row-print.printed:hover { background: transparent; color: var(--ok); }
+.baggage-rows .baggage-row-print.error:hover { background: var(--danger); color: #ffffff; }
+.baggage-row-undo, .baggage-row-remove {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  cursor: pointer;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+/* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
+.baggage-rows .baggage-row-undo:hover, .baggage-rows .baggage-row-remove:hover { background: transparent; color: var(--field-value); }
+
+.baggage-row-detail { padding: 6px 10px 10px 34px; }
+.baggage-mco-ref { font-size: 13px; color: var(--muted); }
+
+.baggage-type-select { position: relative; flex: 1; display: flex; align-items: center; }
+.baggage-type-trigger {
+  all: unset;
+  box-sizing: border-box;
+  width: 100%;
+  height: 30px;
+  padding: 0 28px 0 10px;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  background: var(--field-bg);
+  color: var(--field-value);
+  font-size: 13px;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.baggage-type-trigger-paid { color: var(--ok); }
+.baggage-type-trigger-unpaid { color: var(--danger); }
+.baggage-type-select .select-chevron { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--muted); }
+
+.mco-confirm-box { background: var(--field-bg); border-radius: 4px; padding: 12px 14px; font-size: 13px; color: var(--field-value); line-height: 1.5; }
+
 .pnr-flow-panel {
   flex: 1;
   min-width: 0;

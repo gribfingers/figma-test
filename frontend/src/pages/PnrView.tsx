@@ -10,6 +10,7 @@ import { usePopoverPosition } from "../usePopoverPosition";
 import { segmentsForFlight } from "../flightSegments";
 import { DocumentsStep } from "../components/checkin/DocumentsStep";
 import { SeatsStep } from "../components/checkin/SeatsStep";
+import { BaggageStep } from "../components/checkin/BaggageStep";
 import { FlowRosterRow } from "../components/checkin/FlowRosterRow";
 import { FaresInfoModal } from "../components/checkin/FaresInfoModal";
 import { FlightInfoPanel } from "../components/checkin/FlightInfoPanel";
@@ -277,6 +278,9 @@ export function PnrView() {
   const [flagsModalPax, setFlagsModalPax] = useState<Passenger | null>(null);
   const [infoModalOpen, setInfoModalOpen] = useState(false);
   const [finishConfirmOpen, setFinishConfirmOpen] = useState(false);
+  // Baggage prices only show on the roster card once the agent has actually
+  // run Calculate for that passenger — not just from opening the Baggage step.
+  const [baggageCalculated, setBaggageCalculated] = useState<Set<number>>(() => new Set());
 
   useEffect(() => {
     api.getFlight(fid).then((f) => {
@@ -430,6 +434,8 @@ export function PnrView() {
                 active={row.passenger.id === flowActive?.id}
                 classLetter={classFor(row.passenger, seatByCode)}
                 showSeat={flowStep === "seats"}
+                showBaggage={flowStep === "baggage"}
+                baggageCalculated={baggageCalculated.has(row.passenger.id)}
                 segments={segmentsForFlight(flight)}
                 onSelect={() => setFlowActiveId(row.passenger.id)}
                 onOpenFlags={() => setFlagsModalPax(row.passenger)}
@@ -457,7 +463,14 @@ export function PnrView() {
                 onPassengerUpdated={handlePassengerUpdated}
               />
             )}
-            {flowStep !== "docs" && flowStep !== "seats" && (
+            {flowStep === "baggage" && flowActive && (
+              <BaggageStep
+                flight={flight}
+                passenger={flowActive}
+                onCalculate={() => setBaggageCalculated((prev) => new Set(prev).add(flowActive.id))}
+              />
+            )}
+            {flowStep !== "docs" && flowStep !== "seats" && flowStep !== "baggage" && (
               <div className="pnr-flow-placeholder">{FLOW_STEP_LABEL[flowStep]} step is coming soon.</div>
             )}
           </div>

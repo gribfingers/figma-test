@@ -537,3 +537,34 @@ export function CartFlowIcon({ size = 18, className }: IconProps) {
     </svg>
   );
 }
+
+/** Bag-tag print button on a Baggage step row. */
+export function PrinterIcon({ size = 18, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M7 8.5V4h10v4.5" />
+      <rect x="4" y="8.5" width="16" height="8" rx="1.5" />
+      <rect x="7" y="13.5" width="10" height="6.5" />
+    </svg>
+  );
+}
+
+/** Luggage tag — the Baggage step header's tag-info action. */
+export function TagIcon({ size = 18, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M11 4h6a2 2 0 0 1 2 2v6l-8.5 8.5a1.5 1.5 0 0 1-2.1 0l-5.9-5.9a1.5 1.5 0 0 1 0-2.1L11 4z" />
+      <circle cx="15.5" cy="8.5" r="1.2" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+/** Ruble currency mark — a bag/carry-on row's inert price indicator. */
+export function RubleIcon({ size = 18, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M8 20V4h4.5a4 4 0 0 1 0 8H8" />
+      <path d="M6 13h7.5M6 16h7.5" />
+    </svg>
+  );
+}

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Flight, Passenger } from "../../api";
-import { ageFromDob, SeatServiceItem, seatServicesForPassenger } from "../../paxExtra";
+import { ageFromDob, baggageServicesForPassenger, SeatServiceItem, seatServicesForPassenger } from "../../paxExtra";
 import { formatSeatDisplay } from "../../seatExtra";
 import { FlightSegment } from "../../flightSegments";
 import { InfantIcon, InfoIcon } from "../Icon";
@@ -55,8 +55,12 @@ interface Props {
   /** 1-based position among the top-level (non-nested) cards; unused when nested. */
   index: number | null;
   classLetter: "C" | "Y" | null;
-  /** Seat + paid-extras detail is only relevant (and only shown) on the Seats step — irrelevant clutter on the other steps. */
+  /** Seat badge + paid seat extras — only shown on the Seats step. */
   showSeat: boolean;
+  /** Paid baggage extras (same layout, different mock data) — only shown on the Baggage step. */
+  showBaggage: boolean;
+  /** Prices only appear on the card once Calculate has actually been run for this passenger. */
+  baggageCalculated: boolean;
   segments: FlightSegment[];
   onSelect: () => void;
   onOpenFlags: () => void;
@@ -80,6 +84,8 @@ export function FlowRosterRow({
   index,
   classLetter,
   showSeat,
+  showBaggage,
+  baggageCalculated,
   segments,
   onSelect,
   onOpenFlags,
@@ -97,6 +103,8 @@ export function FlowRosterRow({
   );
 
   const servicesBySegment = showSeat && !nested ? seatServicesForPassenger(p, segments.length) : [];
+  // Baggage extras aren't broken out per segment (no "SVX-DME" grouping) — just a flat list, full rows on the active card and compact chips otherwise, same as seats.
+  const baggageItems = showBaggage && baggageCalculated && !nested ? baggageServicesForPassenger(p, segments.length).flat() : [];
 
   return (
     <div className={`pnr-flow-roster-row ${active ? "selected" : ""} ${nested ? "nested" : ""}`} onClick={onSelect}>
@@ -148,6 +156,18 @@ export function FlowRosterRow({
           <div className="pnr-flow-seat-compact" onClick={(e) => e.stopPropagation()}>
             {(servicesBySegment[0] ?? []).map((item, i) => <SeatServiceChip key={i} item={item} onOpenEmd={setEmdItem} />)}
             <SeatBadge seat={p.seat} />
+          </div>
+        )
+      )}
+
+      {showBaggage && !nested && baggageItems.length > 0 && (
+        active ? (
+          <div className="pnr-flow-seat-detail" onClick={(e) => e.stopPropagation()}>
+            {baggageItems.map((item, j) => <SeatServiceRow key={j} item={item} onOpenEmd={setEmdItem} />)}
+          </div>
+        ) : (
+          <div className="pnr-flow-seat-compact" onClick={(e) => e.stopPropagation()}>
+            {baggageItems.map((item, i) => <SeatServiceChip key={i} item={item} onOpenEmd={setEmdItem} />)}
           </div>
         )
       )}
