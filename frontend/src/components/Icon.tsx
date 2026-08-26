@@ -437,3 +437,23 @@ export function SendIcon({ size = 18, className }: IconProps) {
     </svg>
   );
 }
+
+/** Checkmark in a circle — a passenger's documents checked against the booking. */
+export function DocVerifiedIcon({ size = 16, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M8 12.5l2.5 2.5 5.5-6" />
+    </svg>
+  );
+}
+
+/** Document with a scan line through it — a passenger's document has been scanned (passport reader/camera). */
+export function DocScannedIcon({ size = 16, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <rect x="5" y="3.5" width="14" height="17" rx="1.5" />
+      <path d="M4 12h16" />
+    </svg>
+  );
+}

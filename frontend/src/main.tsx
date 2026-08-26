@@ -10,6 +10,7 @@ import { ThemeProvider } from "./theme";
 import { Login } from "./pages/Login";
 import { Dashboard } from "./pages/Dashboard";
 import { Search } from "./pages/Search";
+import { PnrView } from "./pages/PnrView";
 import { NewFlight } from "./pages/NewFlight";
 import { FlightCard } from "./pages/FlightCard";
 import { CheckIn } from "./pages/CheckIn";
@@ -29,6 +30,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
                   <Route path="/" element={<App />}>
                     <Route index element={<Dashboard />} />
                     <Route path="search" element={<Search />} />
+                    <Route path="checkin/:flightId/pnr/:passengerId" element={<PnrView />} />
                     <Route path="flights/new" element={<NewFlight />} />
                     <Route path="flights/:flightId" element={<FlightCard />} />
                     <Route path="checkin/:flightId" element={<CheckIn />} />

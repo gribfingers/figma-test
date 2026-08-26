@@ -73,8 +73,8 @@ export function Search() {
     return results.filter(test);
   }, [results, paxQuickFilter]);
 
-  function openPassenger(flightId: number, presetQuery?: string) {
-    navigate(`/checkin/${flightId}`, { state: presetQuery ? { presetQuery } : undefined });
+  function openPassenger(p: PassengerSearchResult) {
+    navigate(`/checkin/${p.flight_id}/pnr/${p.id}`);
   }
 
   return (
@@ -145,7 +145,7 @@ export function Search() {
               </thead>
               <tbody>
                 {filteredResults.map((p) => (
-                  <tr key={p.id} className="row-hover" onClick={() => openPassenger(p.flight_id, p.record_locator)}>
+                  <tr key={p.id} className="row-hover" onClick={() => openPassenger(p)}>
                     <td>{p.surname}/{p.given_name}</td>
                     <td className="mono">{p.destination}</td>
                     <td className="mono">{p.carrier_code}{p.flight_number}</td>

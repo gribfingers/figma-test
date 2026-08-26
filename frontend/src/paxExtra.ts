@@ -39,6 +39,10 @@ export interface PassengerExtra {
   documents?: PassengerDocument[];
   cabinBagCount?: number;
   cabinBagWeight?: number;
+  /** Set by the agent once they've checked the physical document against the booking. */
+  docVerified?: boolean;
+  /** Set once the document has been scanned (passport reader / camera). */
+  docScanned?: boolean;
 }
 
 export function parsePassengerExtra(p: Passenger): PassengerExtra {
