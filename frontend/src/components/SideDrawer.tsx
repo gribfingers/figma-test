@@ -1,7 +1,35 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../auth";
-import { BurgerIcon, CheckInIcon, DeviceIcon, PlaneIcon, RefreshIcon, SettingsIcon } from "./Icon";
+import { useCheckinFlow, FLOW_STEPS, FLOW_STEP_LABEL, FlowStep } from "../checkinFlow";
+import {
+  BaggageFlowIcon,
+  BurgerIcon,
+  CartFlowIcon,
+  CheckInIcon,
+  DeviceIcon,
+  DocumentsFlowIcon,
+  InfoIcon,
+  PlaneIcon,
+  RefreshIcon,
+  SeatsFlowIcon,
+  ServicesFlowIcon,
+  SettingsIcon,
+} from "./Icon";
+
+const FLOW_STEP_ICON: Record<FlowStep, (size: number) => JSX.Element> = {
+  docs: (size) => <DocumentsFlowIcon size={size} />,
+  seats: (size) => <SeatsFlowIcon size={size} />,
+  baggage: (size) => <BaggageFlowIcon size={size} />,
+  services: (size) => <ServicesFlowIcon size={size} />,
+};
+
+// The check-in flow's own route (checkin/:flightId/pnr/:passengerId) — the
+// only page the flow's step icons make sense on. isCheckinPage above also
+// matches the legacy PNR-lookup screen, which never has a flow open.
+function isPnrFlowPage(pathname: string): boolean {
+  return /^\/checkin\/\d+\/pnr\/\d+$/.test(pathname);
+}
 
 function formatClock(d: Date): string {
   return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
@@ -23,6 +51,8 @@ function isCheckinPage(pathname: string): boolean {
 export function SideDrawer() {
   const { pathname } = useLocation();
   const { user } = useAuth();
+  const { flowStep, setFlowStep, flightInfoOpen, setFlightInfoOpen } = useCheckinFlow();
+  const showFlowIcons = flowStep !== null && isPnrFlowPage(pathname);
   const [lastUpdated, setLastUpdated] = useState(() => new Date());
 
   useEffect(() => {
@@ -52,6 +82,35 @@ export function SideDrawer() {
         >
           <CheckInIcon size={20} />
         </Link>
+        {showFlowIcons && (
+          <>
+            <div className="side-divider" />
+            {FLOW_STEPS.map((step) => (
+              <button
+                key={step}
+                type="button"
+                className={`side-item ${flowStep === step ? "selected" : ""}`}
+                data-tooltip={FLOW_STEP_LABEL[step]}
+                onClick={() => setFlowStep(step)}
+              >
+                {FLOW_STEP_ICON[step](20)}
+              </button>
+            ))}
+            <div className="side-divider" />
+            {/* Placeholder — cart functionality isn't built yet. */}
+            <button type="button" className="side-item" data-tooltip="Cart">
+              <CartFlowIcon size={20} />
+            </button>
+            <button
+              type="button"
+              className={`side-item ${flightInfoOpen ? "selected" : ""}`}
+              data-tooltip="Flight information"
+              onClick={() => setFlightInfoOpen(true)}
+            >
+              <InfoIcon size={20} />
+            </button>
+          </>
+        )}
         {user?.role === "superadmin" && (
           <Link
             to="/users-admin"

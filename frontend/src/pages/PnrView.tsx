@@ -11,16 +11,9 @@ import { segmentsForFlight } from "../flightSegments";
 import { DocumentsStep } from "../components/checkin/DocumentsStep";
 import { FlowRosterRow } from "../components/checkin/FlowRosterRow";
 import { FaresInfoModal } from "../components/checkin/FaresInfoModal";
+import { FlightInfoPanel } from "../components/checkin/FlightInfoPanel";
 import { PassengerDetailModal } from "../components/flightcard/PassengerModals";
-
-const FLOW_STEPS = ["docs", "seats", "baggage", "services"] as const;
-type FlowStep = (typeof FLOW_STEPS)[number];
-const FLOW_STEP_LABEL: Record<FlowStep, string> = {
-  docs: "Documents",
-  seats: "Seats",
-  baggage: "Baggage",
-  services: "Extra services",
-};
+import { FLOW_STEPS, FLOW_STEP_LABEL, useCheckinFlow } from "../checkinFlow";
 
 // Last-fetched flight/passengers per flight, kept outside component state so
 // it survives this component unmounting when the agent switches to another
@@ -222,7 +215,7 @@ export function PnrView() {
   const [passengers, setPassengers] = useState<Passenger[]>(() => passengersCache.get(fid) ?? []);
   const [checked, setChecked] = useState<Set<number>>(() => new Set());
   const [extraPassengers, setExtraPassengers] = useState<Passenger[]>(() => extraPassengersCache.get(pid) ?? []);
-  const [flowStep, setFlowStep] = useState<FlowStep | null>(null);
+  const { flowStep, setFlowStep, flightInfoOpen, setFlightInfoOpen } = useCheckinFlow();
   const [flowActiveId, setFlowActiveId] = useState<number | null>(null);
   const [flagsModalPax, setFlagsModalPax] = useState<Passenger | null>(null);
   const [infoModalOpen, setInfoModalOpen] = useState(false);
@@ -264,6 +257,24 @@ export function PnrView() {
   }
   const reseatCount = passengers.filter((p) => parsePassengerExtra(p).wl).length;
   const priorityCount = passengers.filter((p) => parsePassengerExtra(p).pl).length;
+
+  // "Pass booked" (Flight Information panel) also counts lap infants, attributed
+  // to whichever cabin a seated passenger sharing their PNR was assigned to.
+  const seatedClassByLocator = new Map<string, "C" | "Y">();
+  for (const p of passengers) {
+    const cls = classFor(p, seatByCode);
+    if (cls && !seatedClassByLocator.has(p.record_locator)) seatedClassByLocator.set(p.record_locator, cls);
+  }
+  const passBooked = { ...booked };
+  for (const p of passengers) {
+    if (p.infant && !p.seat) {
+      const cls = seatedClassByLocator.get(p.record_locator);
+      if (cls) passBooked[cls]++;
+    }
+  }
+  const checkedInTotal = passengers.filter((p) => p.checkin_status === "CHECKED_IN").length;
+  const webCheckedInTotal = passengers.filter((p) => p.checkin_status === "CHECKED_IN" && parsePassengerExtra(p).iapp).length;
+  const boardedTotal = passengers.filter((p) => p.boarding_status === "BOARDED").length;
 
   function toggleChecked(id: number) {
     setChecked((prev) => {
@@ -370,6 +381,20 @@ export function PnrView() {
           />
         )}
         {infoModalOpen && <FaresInfoModal carrierCode={flight.carrier_code} onClose={() => setInfoModalOpen(false)} />}
+        {flightInfoOpen && (
+          <FlightInfoPanel
+            flight={flight}
+            checkinTill={fmtOffsetTime(flight.std, BOARDING_FROM_MIN)}
+            capacity={capacity}
+            booked={booked}
+            passBooked={passBooked}
+            checkedInTotal={checkedInTotal}
+            webCheckedInTotal={webCheckedInTotal}
+            boardedTotal={boardedTotal}
+            passengerTotal={passengers.length}
+            onClose={() => setFlightInfoOpen(false)}
+          />
+        )}
       </div>
     );
   }

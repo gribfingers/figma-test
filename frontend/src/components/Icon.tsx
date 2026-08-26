@@ -479,3 +479,61 @@ export function CheckInIcon({ size = 18, className }: IconProps) {
     </svg>
   );
 }
+
+/** ID card with a portrait — the check-in flow's Documents step. */
+export function DocumentsFlowIcon({ size = 18, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <circle cx="9" cy="11" r="2" />
+      <path d="M6 16c0.5-1.8 1.8-2.7 3-2.7s2.5 0.9 3 2.7" />
+      <path d="M14.5 10h4M14.5 13h4" />
+    </svg>
+  );
+}
+
+/** A single reclined seat — the check-in flow's Seats step. */
+export function SeatsFlowIcon({ size = 18, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M7 12V6.5a2 2 0 0 1 4 0V12" />
+      <path d="M7 12h6a2 2 0 0 1 2 2v3.5" />
+      <path d="M7 12a2 2 0 0 0-2 2v2.5" />
+      <path d="M5 16.5h14" />
+      <path d="M17.5 16.5V14" />
+    </svg>
+  );
+}
+
+/** A suitcase — the check-in flow's Baggage step. */
+export function BaggageFlowIcon({ size = 18, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <rect x="4" y="8" width="16" height="11" rx="2" />
+      <path d="M9 8V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" />
+      <path d="M4 13h16" />
+    </svg>
+  );
+}
+
+/** A cup with steam — the check-in flow's Extra services step. */
+export function ServicesFlowIcon({ size = 18, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M5 9h11v6a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4V9z" />
+      <path d="M16 10.5h1.5a2 2 0 0 1 0 4H16" />
+      <path d="M8.5 5c0-0.7 0.5-0.9 0.5-1.6S8.5 2 8.5 2M12 5c0-0.7 0.5-0.9 0.5-1.6S12 2 12 2" />
+    </svg>
+  );
+}
+
+/** Shopping cart — the check-in flow's Cart nav item (placeholder, no action yet). */
+export function CartFlowIcon({ size = 18, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h7.1a2 2 0 0 0 2-1.6L20 8H6" />
+      <circle cx="10" cy="20" r="1.3" fill="currentColor" stroke="none" />
+      <circle cx="17" cy="20" r="1.3" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
