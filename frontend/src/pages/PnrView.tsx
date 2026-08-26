@@ -9,6 +9,7 @@ import { useRegisterTab } from "../tabs";
 import { usePopoverPosition } from "../usePopoverPosition";
 import { segmentsForFlight } from "../flightSegments";
 import { DocumentsStep } from "../components/checkin/DocumentsStep";
+import { SeatsStep } from "../components/checkin/SeatsStep";
 import { FlowRosterRow } from "../components/checkin/FlowRosterRow";
 import { FaresInfoModal } from "../components/checkin/FaresInfoModal";
 import { FlightInfoPanel } from "../components/checkin/FlightInfoPanel";
@@ -401,7 +402,17 @@ export function PnrView() {
                 onUpdated={handlePassengerUpdated}
               />
             )}
-            {flowStep !== "docs" && (
+            {flowStep === "seats" && flowActive && (
+              <SeatsStep
+                flightId={fid}
+                aircraftType={flight.aircraft_type}
+                passenger={flowActive}
+                seats={seats}
+                onSeatsReloaded={setSeats}
+                onPassengerUpdated={handlePassengerUpdated}
+              />
+            )}
+            {flowStep !== "docs" && flowStep !== "seats" && (
               <div className="pnr-flow-placeholder">{FLOW_STEP_LABEL[flowStep]} step is coming soon.</div>
             )}
           </div>
