@@ -457,6 +457,8 @@ th input:focus {
   box-shadow: none;
 }
 th input:disabled { background: var(--field-bg-disabled); color: var(--muted-2); cursor: not-allowed; }
+/* The generic th-filter-input sizing above shouldn't stretch a plain select-all checkbox into a giant pill. */
+th input[type="checkbox"] { min-width: 0; width: 16px; height: 16px; padding: 0; border: none; background: transparent; }
 
 th.th-sort { cursor: pointer; user-select: none; }
 th.th-sort:hover { color: var(--accent); }
@@ -1995,6 +1997,8 @@ tr.row-hover { cursor: pointer; }
 .pnr-times div + div { margin-top: 4px; }
 
 .pnr-actions { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+
+.pnr-view table th:first-child, .pnr-view table td:first-child { width: 1px; white-space: nowrap; padding-right: 8px; }
 
 .pnr-doc-icons { display: inline-flex; gap: 6px; }
 .pnr-doc-icon-on { color: var(--ok); }
