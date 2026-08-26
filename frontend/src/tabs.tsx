@@ -14,7 +14,10 @@ interface TabsContextValue {
   closeTab: (path: string) => void;
 }
 
-const HOME_TAB: TabInfo = { path: "/", label: "Flights", closable: false };
+// Flights is a normal, closable tab like any other now — this is just the
+// bootstrap entry for a brand-new session (or one where every tab has been
+// closed), not a permanent fixture.
+const HOME_TAB: TabInfo = { path: "/", label: "Flights", closable: true };
 const STORAGE_KEY = "dcs_tabs";
 
 function loadStoredTabs(): TabInfo[] {
@@ -24,7 +27,7 @@ function loadStoredTabs(): TabInfo[] {
     const restored: TabInfo[] = Array.isArray(parsed)
       ? parsed.filter((t): t is TabInfo => t && typeof t.path === "string" && typeof t.label === "string")
       : [];
-    return [HOME_TAB, ...restored.filter((t) => t.path !== HOME_TAB.path)];
+    return restored.length > 0 ? restored : [HOME_TAB];
   } catch {
     return [HOME_TAB];
   }
@@ -48,7 +51,7 @@ export function TabsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(tabs.filter((t) => t.path !== HOME_TAB.path)));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(tabs));
     } catch {
       // Storage full or unavailable (private browsing) — tabs just won't survive a reload.
     }

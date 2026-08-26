@@ -9,6 +9,9 @@ import { useRegisterTab } from "../tabs";
 import { usePopoverPosition } from "../usePopoverPosition";
 import { segmentsForFlight } from "../flightSegments";
 import { DocumentsStep } from "../components/checkin/DocumentsStep";
+import { FlowRosterRow } from "../components/checkin/FlowRosterRow";
+import { FaresInfoModal } from "../components/checkin/FaresInfoModal";
+import { PassengerDetailModal } from "../components/flightcard/PassengerModals";
 
 const FLOW_STEPS = ["docs", "seats", "baggage", "services"] as const;
 type FlowStep = (typeof FLOW_STEPS)[number];
@@ -221,6 +224,8 @@ export function PnrView() {
   const [extraPassengers, setExtraPassengers] = useState<Passenger[]>(() => extraPassengersCache.get(pid) ?? []);
   const [flowStep, setFlowStep] = useState<FlowStep | null>(null);
   const [flowActiveId, setFlowActiveId] = useState<number | null>(null);
+  const [flagsModalPax, setFlagsModalPax] = useState<Passenger | null>(null);
+  const [infoModalOpen, setInfoModalOpen] = useState(false);
 
   useEffect(() => {
     api.getFlight(fid).then((f) => {
@@ -282,6 +287,11 @@ export function PnrView() {
       return next;
     });
     setExtraPassengers((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+    setFlagsModalPax((prev) => (prev && prev.id === updated.id ? updated : prev));
+  }
+
+  function handleSeatUpdated(updated: SeatCell) {
+    setSeats((prev) => prev.map((s) => (s.seat === updated.seat ? updated : s)));
   }
 
   const flowPassengers = rosterPassengers.filter((p) => checked.has(p.id));
@@ -321,17 +331,15 @@ export function PnrView() {
         <div className="pnr-flow-body">
           <div className="panel panel--flush pnr-flow-roster">
             {flowPassengers.map((p) => (
-              <div
+              <FlowRosterRow
                 key={p.id}
-                className={`pnr-flow-roster-row ${p.id === flowActive?.id ? "selected" : ""}`}
-                onClick={() => setFlowActiveId(p.id)}
-              >
-                <div className="pnr-flow-roster-name">{p.surname} {p.given_name}</div>
-                <div className="pnr-flow-roster-meta">
-                  {p.dob ?? "—"}{p.gender ? `, ${p.gender}` : ""}
-                  {p.seat && <span className="mono chip small muted seat-chip">{formatSeatDisplay(p.seat)}</span>}
-                </div>
-              </div>
+                passenger={p}
+                active={p.id === flowActive?.id}
+                classLetter={classFor(p, seatByCode)}
+                onSelect={() => setFlowActiveId(p.id)}
+                onOpenFlags={() => setFlagsModalPax(p)}
+                onOpenInfo={() => setInfoModalOpen(true)}
+              />
             ))}
           </div>
 
@@ -349,6 +357,19 @@ export function PnrView() {
             )}
           </div>
         </div>
+
+        {flagsModalPax && (
+          <PassengerDetailModal
+            kind="flags"
+            flightId={fid}
+            passenger={flagsModalPax}
+            seats={seats}
+            onSeatUpdated={handleSeatUpdated}
+            onClose={() => setFlagsModalPax(null)}
+            onUpdated={handlePassengerUpdated}
+          />
+        )}
+        {infoModalOpen && <FaresInfoModal carrierCode={flight.carrier_code} onClose={() => setInfoModalOpen(false)} />}
       </div>
     );
   }

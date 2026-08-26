@@ -59,7 +59,7 @@ const EMPTY_SEARCH = { airline: "", flight: "", origin: "", destination: "", dat
 const EMPTY_QUICK = { airline: "", flight: "", origin: "", destination: "", std: "", etd: "", sta: "", ata: "" };
 
 export function Dashboard() {
-  useRegisterTab("Flights", false);
+  useRegisterTab("Flights");
   const navigate = useNavigate();
   const [flights, setFlights] = useState<Flight[]>([]);
   const [error, setError] = useState("");
