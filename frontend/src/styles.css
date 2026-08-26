@@ -2092,14 +2092,19 @@ tr.row-hover { cursor: pointer; }
 .pnr-flow-roster {
   flex: 0 0 320px;
   background: transparent;
-  border-right: none;
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
 }
 .pnr-flow-roster-row { padding: 10px 16px; cursor: pointer; background: transparent; }
 .pnr-flow-roster-row:hover { background: var(--field-bg); }
-.pnr-flow-roster-row.selected { background: var(--panel); box-shadow: inset 3px 0 0 0 var(--accent); border-bottom: 1px solid var(--panel-border); }
-.pnr-flow-roster-row.selected:last-child { border-bottom: none; }
+.pnr-flow-roster-row.selected {
+  background: var(--panel);
+  border-top: 1px solid var(--panel-border);
+  border-bottom: 1px solid var(--panel-border);
+  border-left: 1px solid var(--panel-border);
+  box-shadow: inset 3px 0 0 0 var(--accent);
+}
 
 .pnr-flow-roster-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
 .pnr-flow-roster-name { font-weight: 700; font-size: 14px; color: var(--field-value); }

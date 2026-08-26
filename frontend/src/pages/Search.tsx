@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, PassengerSearchMode, PassengerSearchResult } from "../api";
 import { useRegisterTab } from "../tabs";
+import { usePersistentState } from "../usePersistentState";
 
 const MODES: { key: PassengerSearchMode; label: string }[] = [
   { key: "surname", label: "Last Name" },
@@ -43,13 +44,13 @@ export function Search() {
   useRegisterTab("Search");
   const navigate = useNavigate();
 
-  const [mode, setMode] = useState<PassengerSearchMode>("surname");
-  const [query, setQuery] = useState("");
+  const [mode, setMode] = usePersistentState<PassengerSearchMode>("dcs_search_mode", "surname");
+  const [query, setQuery] = usePersistentState("dcs_search_query", "");
 
-  const [results, setResults] = useState<PassengerSearchResult[] | null>(null);
+  const [results, setResults] = usePersistentState<PassengerSearchResult[] | null>("dcs_search_results", null);
   const [error, setError] = useState("");
   const [searching, setSearching] = useState(false);
-  const [paxQuickFilter, setPaxQuickFilter] = useState<PaxQuickFilterKey>("all");
+  const [paxQuickFilter, setPaxQuickFilter] = usePersistentState<PaxQuickFilterKey>("dcs_search_quick_filter", "all");
 
   async function runSearch(e: React.FormEvent) {
     e.preventDefault();

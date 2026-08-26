@@ -28,28 +28,34 @@ interface Props {
 export function FlowRosterRow({ passenger: p, active, classLetter, onSelect, onOpenFlags, onOpenInfo }: Props) {
   const ssr = p.ssr ?? [];
   const age = ageFromDob(p.dob);
+  const hasRemarks = ssr.length > 0;
+  const flagButtons = (
+    <div className="pnr-flow-roster-flags">
+      <button type="button" className="pnr-flow-flag-btn" onClick={(e) => { e.stopPropagation(); onOpenFlags(); }}>COM</button>
+      <button type="button" className="pnr-flow-flag-btn" onClick={(e) => { e.stopPropagation(); onOpenFlags(); }}>FFP</button>
+    </div>
+  );
 
   return (
     <div className={`pnr-flow-roster-row ${active ? "selected" : ""}`} onClick={onSelect}>
       <div className="pnr-flow-roster-top">
         <div className="pnr-flow-roster-name">{p.surname} {p.given_name}</div>
-        {ssr.length > 0 && (
+        {hasRemarks && (
           <div className="pnr-flow-roster-remarks">
             {ssr.map((code) => (
               <span key={code} className="pnr-flow-remark-chip">{code}</span>
             ))}
           </div>
         )}
+        {/* No remarks to show here, so the flags ride up onto this row instead of leaving it empty. */}
+        {!hasRemarks && flagButtons}
       </div>
       <div className="pnr-flow-roster-mid">
         <div className="pnr-flow-roster-meta">
           {fmtDobShort(p.dob)}{age && ` (${age})`}{p.gender ? `, ${p.gender}` : ""}
           {p.seat && <span className="pnr-flow-seat-box mono">{formatSeatDisplay(p.seat)}</span>}
         </div>
-        <div className="pnr-flow-roster-flags">
-          <button type="button" className="pnr-flow-flag-btn" onClick={(e) => { e.stopPropagation(); onOpenFlags(); }}>COM</button>
-          <button type="button" className="pnr-flow-flag-btn" onClick={(e) => { e.stopPropagation(); onOpenFlags(); }}>FFP</button>
-        </div>
+        {hasRemarks && flagButtons}
       </div>
       {active && (
         <div className="pnr-flow-roster-bottom">

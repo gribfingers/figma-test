@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { api, Flight } from "../api";
 import { useRegisterTab } from "../tabs";
 import { useToast } from "../toast";
+import { usePersistentState } from "../usePersistentState";
 import { FlightCardHeader } from "../components/flightcard/FlightCardHeader";
 import { FlightAction } from "../components/flightcard/FlightActionsMenu";
 import { MainTab } from "../components/flightcard/MainTab";
@@ -28,7 +29,7 @@ export function FlightCard() {
   const navigate = useNavigate();
   const [flight, setFlight] = useState<Flight | null>(null);
   useRegisterTab(flight ? `${flight.carrier_code}${flight.flight_number}` : "Flight");
-  const [tab, setTab] = useState<TabKey>("main");
+  const [tab, setTab] = usePersistentState<TabKey>(`dcs_flight_tab_${fid}`, "main");
   const [draft, setDraft] = useState<MainDraft | null>(null);
   const [manifest, setManifest] = useState<{ label: string; text: string } | null>(null);
   const [error, setError] = useState("");
