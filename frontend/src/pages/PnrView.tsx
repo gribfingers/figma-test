@@ -7,6 +7,17 @@ import { parsePassengerExtra } from "../paxExtra";
 import { DocScannedIcon, DocVerifiedIcon, SearchIcon } from "../components/Icon";
 import { useRegisterTab } from "../tabs";
 import { usePopoverPosition } from "../usePopoverPosition";
+import { segmentsForFlight } from "../flightSegments";
+import { DocumentsStep } from "../components/checkin/DocumentsStep";
+
+const FLOW_STEPS = ["docs", "seats", "baggage", "services"] as const;
+type FlowStep = (typeof FLOW_STEPS)[number];
+const FLOW_STEP_LABEL: Record<FlowStep, string> = {
+  docs: "Documents",
+  seats: "Seats",
+  baggage: "Baggage",
+  services: "Extra services",
+};
 
 // Last-fetched flight/passengers per flight, kept outside component state so
 // it survives this component unmounting when the agent switches to another
@@ -208,6 +219,8 @@ export function PnrView() {
   const [passengers, setPassengers] = useState<Passenger[]>(() => passengersCache.get(fid) ?? []);
   const [checked, setChecked] = useState<Set<number>>(() => new Set());
   const [extraPassengers, setExtraPassengers] = useState<Passenger[]>(() => extraPassengersCache.get(pid) ?? []);
+  const [flowStep, setFlowStep] = useState<FlowStep | null>(null);
+  const [flowActiveId, setFlowActiveId] = useState<number | null>(null);
 
   useEffect(() => {
     api.getFlight(fid).then((f) => {
@@ -260,6 +273,84 @@ export function PnrView() {
   const someChecked = rosterPassengers.some((p) => checked.has(p.id));
   function toggleAllChecked() {
     setChecked(allChecked ? new Set() : new Set(rosterPassengers.map((p) => p.id)));
+  }
+
+  function handlePassengerUpdated(updated: Passenger) {
+    setPassengers((prev) => {
+      const next = prev.map((p) => (p.id === updated.id ? updated : p));
+      passengersCache.set(fid, next);
+      return next;
+    });
+    setExtraPassengers((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+  }
+
+  const flowPassengers = rosterPassengers.filter((p) => checked.has(p.id));
+  const flowActive = flowPassengers.find((p) => p.id === flowActiveId) ?? flowPassengers[0];
+
+  function startCheckinFlow() {
+    if (checked.size === 0) return;
+    setFlowStep("docs");
+    setFlowActiveId(flowPassengers[0]?.id ?? null);
+  }
+  function finishFlow() {
+    setFlowStep(null);
+    setFlowActiveId(null);
+  }
+  function nextFlowStep() {
+    const idx = FLOW_STEPS.indexOf(flowStep!);
+    if (idx < FLOW_STEPS.length - 1) setFlowStep(FLOW_STEPS[idx + 1]);
+  }
+
+  if (flowStep) {
+    return (
+      <div className="pnr-view">
+        <div className="pnr-head pnr-head-flow">
+          <div className="pnr-head-id">
+            <div className="pnr-flight-number">{flight.carrier_code}{flight.flight_number}</div>
+            <div className="pnr-route">{flight.origin} → {flight.destination}</div>
+            <div className="pnr-date">{fmtCardDate(flight.std)}</div>
+          </div>
+          <div className="spacer" />
+          <div className="pnr-flow-actions">
+            <button type="button" className="tertiary" onClick={finishFlow}>Finish</button>
+            <button type="button" className="secondary" disabled>Check-in</button>
+            <button type="button" className="secondary" disabled={flowStep === "services"} onClick={nextFlowStep}>Next</button>
+          </div>
+        </div>
+
+        <div className="pnr-flow-body">
+          <div className="panel panel--flush pnr-flow-roster">
+            {flowPassengers.map((p) => (
+              <div
+                key={p.id}
+                className={`pnr-flow-roster-row ${p.id === flowActive?.id ? "selected" : ""}`}
+                onClick={() => setFlowActiveId(p.id)}
+              >
+                <div className="pnr-flow-roster-name">{p.surname} {p.given_name}</div>
+                <div className="pnr-flow-roster-meta">
+                  {p.dob ?? "—"}{p.gender ? `, ${p.gender}` : ""}
+                  {p.seat && <span className="mono chip small muted seat-chip">{formatSeatDisplay(p.seat)}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="panel panel--flush pnr-flow-panel">
+            {flowStep === "docs" && flowActive && (
+              <DocumentsStep
+                flightId={fid}
+                passenger={flowActive}
+                segments={segmentsForFlight(flight)}
+                onUpdated={handlePassengerUpdated}
+              />
+            )}
+            {flowStep !== "docs" && (
+              <div className="pnr-flow-placeholder">{FLOW_STEP_LABEL[flowStep]} step is coming soon.</div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -319,7 +410,7 @@ export function PnrView() {
           }}
         />
         <div className="spacer" />
-        <button type="button" className="secondary" disabled={checked.size === 0}>Check-in</button>
+        <button type="button" className="secondary" disabled={checked.size === 0} onClick={startCheckinFlow}>Check-in</button>
         <button type="button" className="secondary" disabled={checked.size === 0}>Actions</button>
       </div>
 

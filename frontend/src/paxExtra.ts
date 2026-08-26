@@ -18,6 +18,28 @@ export interface PassengerDocument {
   doc_expiry: string;
 }
 
+/** DOCO — an entry document (visa/entry permit) beyond the passenger's ID document. */
+export interface VisaDocument {
+  document_type: string;
+  expiration_date: string;
+  visa_number: string;
+  applicable_country: string;
+  issue_country: string;
+  issue_city: string;
+  issue_date: string;
+  birth_place: string;
+}
+
+/** DOCA — a destination/origin address on file, some countries require one for entry. */
+export interface AddressDocument {
+  address_type: string;
+  country: string;
+  state: string;
+  city: string;
+  address: string;
+  zip_code: string;
+}
+
 /**
  * Fields with no dedicated column yet — waitlisted/priority-list flags,
  * passenger type, iAPP (checked in via mobile app), the connecting
@@ -37,6 +59,8 @@ export interface PassengerExtra {
   comments?: { checkin: string[]; boarding: string[] };
   ffp?: { airline: string; card: string };
   documents?: PassengerDocument[];
+  visaDocs?: VisaDocument[];
+  addressDocs?: AddressDocument[];
   cabinBagCount?: number;
   cabinBagWeight?: number;
   /** Set by the agent once they've checked the physical document against the booking. */

@@ -19,6 +19,8 @@ import {
 } from "./PassengerForm";
 import { Modal } from "../Modal";
 import { PASSENGER_COLUMNS, PassengersToolbar, QuickFilter } from "./PassengersToolbar";
+import { SegmentToggle } from "../SegmentToggle";
+import { segmentsForFlight } from "../../flightSegments";
 
 interface Props {
   flight: Flight;
@@ -127,6 +129,8 @@ export function PassengersTab({ flight }: Props) {
   const [asvcFilter, setAsvcFilter] = useState("");
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(() => new Set(PASSENGER_COLUMNS.map((c) => c.key)));
   const [mapHidden, setMapHidden] = useState(false);
+  const [selectedSegment, setSelectedSegment] = useState(0);
+  const segments = useMemo(() => segmentsForFlight(flight), [flight]);
   const cabinFeatures = useMemo(() => cabinFeaturesFor(flight.aircraft_type), [flight.aircraft_type]);
   const rowRefs = useRef(new Map<number, HTMLTableRowElement>());
   const seatmapRef = useRef<HTMLDivElement>(null);
@@ -332,6 +336,7 @@ export function PassengersTab({ flight }: Props) {
   return (
     <div className={`passengers-tab ${mapHidden ? "map-hidden" : ""}`}>
       <div className="passengers-list">
+        <SegmentToggle segments={segments} selected={selectedSegment} onSelect={setSelectedSegment} />
         <PassengersToolbar
           seats={seats}
           reseatCount={reseatCount}

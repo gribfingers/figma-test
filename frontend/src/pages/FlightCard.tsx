@@ -48,8 +48,10 @@ export function FlightCard() {
   async function handleSave() {
     if (!flight || !draft) return;
     setError("");
+    const first = draft.segments[0];
+    const std = combineDateAndTime(flight.std, first.depDate, first.depTime);
+    const sta = combineDateAndTime(flight.sta ?? flight.std, first.arrDate, first.arrTime);
     const extra = JSON.stringify({
-      terminalTo: draft.terminalTo,
       checkinDesk: draft.checkinDesk,
       comment: draft.comment,
       partnerFlight: draft.partnerFlight,
@@ -57,18 +59,29 @@ export function FlightCard() {
       apis: draft.apis,
       maxWeight: draft.maxWeight,
       checks: draft.checks,
+      segments: [
+        { terminalTo: first.terminalTo },
+        ...draft.segments.slice(1).map((s) => ({
+          origin: s.depAirport,
+          destination: s.arrAirport,
+          std: combineDateAndTime(std, s.depDate, s.depTime),
+          sta: combineDateAndTime(sta, s.arrDate, s.arrTime),
+          terminalFrom: s.terminalFrom,
+          terminalTo: s.terminalTo,
+        })),
+      ],
     });
     try {
       const updated = await api.updateFlight(flight.id, {
         aircraft_type: draft.aircraftType,
-        terminal: draft.terminalFrom || null,
+        terminal: first.terminalFrom || null,
         gate: draft.gate || null,
         aircraft_reg: draft.acReg || null,
         aircraft_version: draft.seatConfig || null,
-        origin: draft.depAirport,
-        destination: draft.arrAirport,
-        std: combineDateAndTime(flight.std, draft.depDate, draft.depTime),
-        sta: combineDateAndTime(flight.sta ?? flight.std, draft.arrDate, draft.arrTime),
+        origin: first.depAirport,
+        destination: first.arrAirport,
+        std,
+        sta,
         extra,
       });
       setFlight(updated);

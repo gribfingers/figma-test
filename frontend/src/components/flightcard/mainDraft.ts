@@ -1,4 +1,21 @@
 import { Flight } from "../../api";
+import { MAX_SEGMENTS, segmentsForFlight } from "../../flightSegments";
+
+// One leg of the flight's routing, as edited on the Main tab — one
+// segment-card per entry. Segment 1 round-trips through the real Flight
+// columns (origin/destination/std/sta/terminal) on save; any further
+// segments live only in Flight.extra.segments until they get dedicated
+// columns, same as the rest of the ad-hoc Main-tab fields below.
+export interface SegmentDraft {
+  depAirport: string;
+  arrAirport: string;
+  depDate: string;
+  depTime: string;
+  arrDate: string;
+  arrTime: string;
+  terminalFrom: string;
+  terminalTo: string;
+}
 
 // The Main tab's editable fields, lifted out of the tab so the Save button
 // in the header (a sibling) can tell whether anything changed and trigger
@@ -8,18 +25,11 @@ import { Flight } from "../../api";
 // dedicated columns.
 export interface MainDraft {
   aircraftType: string;
-  terminalFrom: string;
-  terminalTo: string;
   checkinDesk: string;
   gate: string;
   acReg: string;
   seatConfig: string;
-  depAirport: string;
-  arrAirport: string;
-  depDate: string;
-  depTime: string;
-  arrDate: string;
-  arrTime: string;
+  segments: SegmentDraft[];
   comment: string;
   partnerFlight: string;
   agreement: string;
@@ -43,6 +53,17 @@ export function fmtDateValue(iso: string | null): string {
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
 }
 
+export const EMPTY_SEGMENT: SegmentDraft = {
+  depAirport: "",
+  arrAirport: "",
+  depDate: "",
+  depTime: "",
+  arrDate: "",
+  arrTime: "",
+  terminalFrom: "",
+  terminalTo: "",
+};
+
 export function draftFromFlight(flight: Flight): MainDraft {
   let extra: Record<string, unknown> = {};
   try {
@@ -52,18 +73,20 @@ export function draftFromFlight(flight: Flight): MainDraft {
   }
   return {
     aircraftType: flight.aircraft_type,
-    terminalFrom: flight.terminal ?? "",
-    terminalTo: typeof extra.terminalTo === "string" ? extra.terminalTo : "",
     checkinDesk: typeof extra.checkinDesk === "string" ? extra.checkinDesk : "",
     gate: flight.gate ?? "",
     acReg: flight.aircraft_reg ?? "",
     seatConfig: flight.aircraft_version ?? "",
-    depAirport: flight.origin,
-    arrAirport: flight.destination,
-    depDate: fmtDateValue(flight.std),
-    depTime: fmtTimeValue(flight.std),
-    arrDate: fmtDateValue(flight.sta ?? flight.std),
-    arrTime: fmtTimeValue(flight.sta),
+    segments: segmentsForFlight(flight).map((s) => ({
+      depAirport: s.origin,
+      arrAirport: s.destination,
+      depDate: fmtDateValue(s.std),
+      depTime: fmtTimeValue(s.std),
+      arrDate: fmtDateValue(s.sta ?? s.std),
+      arrTime: fmtTimeValue(s.sta),
+      terminalFrom: s.terminalFrom,
+      terminalTo: s.terminalTo,
+    })),
     comment: typeof extra.comment === "string" ? extra.comment : "",
     partnerFlight: typeof extra.partnerFlight === "string" ? extra.partnerFlight : "",
     agreement: typeof extra.agreement === "string" ? extra.agreement : "codeshare",

@@ -1611,7 +1611,17 @@ a { color: var(--accent); }
    more room than a plain 50/50 split gives it — the side panel (comment,
    partner flight, checks) can live with less. */
 .flight-main-grid { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
-.segment-card { border: 1px solid var(--panel-border); border-radius: 4px; padding: 16px; align-self: start; }
+.segment-cards { display: flex; flex-direction: column; gap: 12px; align-self: start; }
+.segment-card { position: relative; border: 1px solid var(--panel-border); border-radius: 4px; padding: 16px; }
+.segment-remove {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+}
+.segment-add { align-self: flex-start; }
 .segment-endpoints { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; overflow-x: auto; }
 .segment-point { display: flex; align-items: center; gap: 10px; }
 .segment-point.right { flex-direction: row-reverse; }
@@ -2029,6 +2039,72 @@ tr.row-hover { cursor: pointer; }
 .pnr-add-pax-results li:hover { background: var(--field-bg); }
 .pnr-add-pax-empty { color: var(--muted); cursor: default; }
 .pnr-add-pax-empty:hover { background: transparent; }
+
+/* Per-leg pill toggle (Documents step, Pax tab) — only rendered once a flight actually has more than one segment. */
+.segment-toggle { display: flex; gap: 8px; margin-bottom: 12px; }
+.segment-toggle-pill {
+  height: 32px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--chip-grey-bg);
+  color: var(--muted);
+  font-size: 13px;
+}
+.segment-toggle-pill:hover:not(.selected) { background: var(--hover-bg); color: var(--muted); }
+.segment-toggle-pill.selected { background: var(--accent); color: var(--accent-ink); }
+
+/* ---- PNR view: check-in flow (Documents/Seats/Baggage/Extra services) ---- */
+.pnr-head-flow { grid-template-columns: auto 1fr auto; }
+.pnr-flow-actions { display: flex; align-items: center; gap: 12px; }
+
+.pnr-flow-body { display: flex; gap: 16px; align-items: flex-start; min-height: 0; }
+.pnr-flow-roster { flex: 0 0 300px; padding: 4px 0; }
+.pnr-flow-roster-row { padding: 10px 16px; cursor: pointer; border-bottom: 1px solid var(--panel-border); }
+.pnr-flow-roster-row:last-child { border-bottom: none; }
+.pnr-flow-roster-row:hover { background: var(--field-bg); }
+.pnr-flow-roster-row.selected { background: var(--accent-selected); box-shadow: inset 3px 0 0 0 var(--accent); }
+.pnr-flow-roster-name { font-weight: 700; font-size: 14px; color: var(--field-value); }
+.pnr-flow-roster-meta { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+.pnr-flow-panel { flex: 1; min-width: 0; padding: 20px; }
+.pnr-flow-placeholder { color: var(--muted); font-size: 14px; }
+
+.docs-step-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.docs-verify-link { margin-left: auto; }
+
+.docs-tabs { display: flex; gap: 24px; border-bottom: 1px solid var(--panel-border); }
+.docs-tab {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  height: auto;
+  padding: 0 0 10px;
+  text-transform: none;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.docs-tab:hover:not(.selected) { background: transparent; color: var(--field-value); }
+.docs-tab.selected { color: var(--accent); border-bottom-color: var(--accent); }
+.docs-tab-warn { color: var(--danger); margin-left: 2px; }
+
+.docs-add-link { margin: 16px 0; }
+
+.docs-cards { display: flex; flex-direction: column; }
+.docs-empty { color: var(--muted); font-size: 14px; padding: 16px 0; }
+
+.doc-card { padding: 16px 0; border-bottom: 1px solid var(--panel-border); }
+.doc-card:last-child { border-bottom: none; }
+.doc-card-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px 24px; }
+.doc-card-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.doc-field { min-width: 0; }
+.doc-field-label { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+.doc-field-value { display: block; font-size: 14px; color: var(--field-value); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.doc-card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
+.doc-card-actions { display: flex; align-items: center; justify-content: flex-end; gap: 16px; margin-left: auto; }
 
 @media (max-width: 640px) {
   .top-tab { padding: 18px 10px; height: 48px; font-size: 12px; }

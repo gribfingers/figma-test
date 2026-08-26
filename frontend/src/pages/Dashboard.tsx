@@ -7,6 +7,7 @@ import { DateTimePicker } from "../components/DateTimePicker";
 import { RefreshIcon } from "../components/Icon";
 import { SortTh, useSort } from "../components/SortTh";
 import { useRegisterTab } from "../tabs";
+import { fullRouteLabel, routeLabel } from "../flightSegments";
 
 const OPS_STATUS_LABEL: Record<string, string> = {
   SCHEDULED: "Scheduled",
@@ -204,7 +205,7 @@ export function Dashboard() {
                   <td className="mono">{formatTime(f.std)}</td>
                   <td>{f.carrier_code}</td>
                   <td className="mono">{f.flight_number}</td>
-                  <td className="mono">{f.origin} → {f.destination}</td>
+                  <td className="mono" title={fullRouteLabel(f)}>{routeLabel(f)}</td>
                   <td><span className={`chip middle ${OPS_STATUS_BADGE[f.ops_status] ?? "muted"}`}>{OPS_STATUS_LABEL[f.ops_status] ?? f.ops_status}</span></td>
                   <td className="mono">{formatTime(f.etd)}</td>
                   <td className="mono">{formatTime(f.sta)}</td>
