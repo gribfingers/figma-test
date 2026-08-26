@@ -166,6 +166,36 @@ export function asvcForPassenger(p: Passenger): AsvcLeg[] {
   });
 }
 
+export interface SeatServiceItem {
+  rfisc: string;
+  label: string;
+  price: number;
+  paid: boolean;
+}
+
+const SEAT_SERVICE_LABELS = ["Хорошее место", "У окна", "У прохода", "Больше места для ног"];
+
+/**
+ * Paid seat-selection extras, per segment — no backing table yet, generated
+ * deterministically from the passenger id (same approach as ASVC above) so
+ * a given passenger/segment always shows the same chips. The green/red bar
+ * on each row is just this — paid or not.
+ */
+export function seatServicesForPassenger(p: Passenger, segmentCount: number): SeatServiceItem[][] {
+  const rand = seededRandom(p.id * 65599 + 101);
+  return Array.from({ length: Math.max(segmentCount, 1) }, () => {
+    const count = 1 + Math.floor(rand() * 2); // 1-2 per segment
+    const pool = [...SEAT_SERVICE_LABELS];
+    const items: SeatServiceItem[] = [];
+    for (let i = 0; i < count; i++) {
+      const idx = Math.floor(rand() * pool.length);
+      const label = pool.splice(idx, 1)[0];
+      items.push({ rfisc: "0B5", label, price: 12500, paid: rand() < 0.7 });
+    }
+    return items;
+  });
+}
+
 export type AsvcStatus = "none" | "ok" | "conflict";
 
 /** AUX chip color: gray with no ancillary purchases, green if all paid, red if any are unpaid. */

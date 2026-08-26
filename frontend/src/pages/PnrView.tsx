@@ -53,6 +53,44 @@ function classFor(p: Passenger, seatByCode: Map<string, SeatCell>): "C" | "Y" | 
   return seat.cabin_class === "J" ? "C" : "Y";
 }
 
+interface FlowRow {
+  passenger: Passenger;
+  nested: boolean;
+  index: number | null;
+}
+
+// Nests an infant's card under the first checked adult sharing its PNR
+// (mirrors PassengersTab's buildRows) — infants don't get their own numbered
+// slot in the flow roster, just a small connector under their guardian.
+function buildFlowRows(passengers: Passenger[]): FlowRow[] {
+  const infantsByLocator = new Map<string, Passenger[]>();
+  for (const p of passengers) {
+    if (!p.infant) continue;
+    if (!infantsByLocator.has(p.record_locator)) infantsByLocator.set(p.record_locator, []);
+    infantsByLocator.get(p.record_locator)!.push(p);
+  }
+  const nestedIds = new Set<number>();
+  const rows: FlowRow[] = [];
+  let n = 0;
+  for (const p of passengers) {
+    if (p.infant) continue;
+    n++;
+    rows.push({ passenger: p, nested: false, index: n });
+    const infants = (infantsByLocator.get(p.record_locator) ?? []).filter((inf) => !nestedIds.has(inf.id));
+    for (const inf of infants) {
+      rows.push({ passenger: inf, nested: true, index: null });
+      nestedIds.add(inf.id);
+    }
+  }
+  for (const p of passengers) {
+    if (p.infant && !nestedIds.has(p.id)) {
+      n++;
+      rows.push({ passenger: p, nested: false, index: n });
+    }
+  }
+  return rows;
+}
+
 function statusLabel(p: Passenger): string {
   if (p.boarding_status === "BOARDED") return "Boarded";
   if (p.boarding_status === "OFFLOADED") return "Offloaded";
@@ -382,15 +420,18 @@ export function PnrView() {
 
         <div className="pnr-flow-body">
           <div className="panel panel--flush pnr-flow-roster">
-            {flowPassengers.map((p) => (
+            {buildFlowRows(flowPassengers).map((row) => (
               <FlowRosterRow
-                key={p.id}
-                passenger={p}
-                active={p.id === flowActive?.id}
-                classLetter={classFor(p, seatByCode)}
+                key={row.passenger.id}
+                passenger={row.passenger}
+                nested={row.nested}
+                index={row.index}
+                active={row.passenger.id === flowActive?.id}
+                classLetter={classFor(row.passenger, seatByCode)}
                 showSeat={flowStep === "seats"}
-                onSelect={() => setFlowActiveId(p.id)}
-                onOpenFlags={() => setFlagsModalPax(p)}
+                segments={segmentsForFlight(flight)}
+                onSelect={() => setFlowActiveId(row.passenger.id)}
+                onOpenFlags={() => setFlagsModalPax(row.passenger)}
                 onOpenInfo={() => setInfoModalOpen(true)}
               />
             ))}

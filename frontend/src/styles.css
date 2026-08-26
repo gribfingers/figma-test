@@ -2115,7 +2115,10 @@ tr.row-hover { cursor: pointer; }
 }
 
 .pnr-flow-roster-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
-.pnr-flow-roster-name { font-weight: 700; font-size: 14px; color: var(--field-value); }
+.pnr-flow-roster-name { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; color: var(--field-value); }
+.pnr-flow-roster-index { color: var(--muted); font-weight: 700; }
+.pnr-flow-roster-nested-icon { color: var(--muted); flex-shrink: 0; }
+.pnr-flow-roster-row.nested { padding-left: 40px; }
 .pnr-flow-roster-remarks { display: flex; gap: 6px; flex-shrink: 0; }
 .pnr-flow-remark-chip {
   display: inline-flex;
@@ -2130,9 +2133,8 @@ tr.row-hover { cursor: pointer; }
 }
 
 .pnr-flow-roster-mid { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; }
-.pnr-flow-roster-mid-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .pnr-flow-roster-meta { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
-.pnr-flow-seat-box { display: inline-flex; align-items: center; justify-content: center; min-width: 36px; height: 24px; padding: 0 8px; background: var(--accent-soft); border-radius: 4px; font-size: 14px; font-weight: 800; color: var(--accent); }
+.pnr-flow-seat-box { display: inline-flex; align-items: center; justify-content: center; min-width: 36px; height: 26px; padding: 0 8px; border: 1.5px solid var(--field-value); border-radius: 4px; font-size: 14px; font-weight: 800; color: var(--field-value); background: var(--panel); flex-shrink: 0; }
 .pnr-flow-roster-flags { display: flex; gap: 6px; flex-shrink: 0; }
 .pnr-flow-flag-btn {
   all: unset;
@@ -2162,6 +2164,45 @@ tr.row-hover { cursor: pointer; }
 }
 /* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
 .pnr-flow-roster-bottom .pnr-flow-info-btn:hover { background: transparent; color: var(--accent); }
+
+/* ---- Seats step: paid seat-selection extras on the active/inactive roster card ---- */
+.pnr-flow-seat-detail { margin-top: 10px; }
+.pnr-flow-seat-segment + .pnr-flow-seat-segment { margin-top: 12px; }
+.pnr-flow-seat-segment-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; font-weight: 700; color: var(--field-value); margin-bottom: 6px; }
+.pnr-flow-seat-segment-head-plain { justify-content: flex-end; }
+.seat-service-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--field-bg);
+  border-radius: 4px;
+  font-size: 13px;
+}
+.seat-service-row + .seat-service-row { margin-top: 4px; }
+.seat-service-code { font-weight: 700; color: var(--field-value); }
+.seat-service-label { flex: 1; color: var(--field-value); }
+.seat-service-price { color: var(--accent); font-weight: 600; }
+.seat-service-row::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; width: 3px; border-radius: 0 4px 4px 0; background: var(--danger); }
+.seat-service-row.paid::after { background: var(--ok); }
+
+.pnr-flow-seat-compact { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.seat-service-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px 4px 8px;
+  background: var(--field-bg);
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--field-value);
+  overflow: hidden;
+}
+.seat-service-chip::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; width: 3px; background: var(--danger); }
+.seat-service-chip.paid::after { background: var(--ok); }
 
 .pnr-flow-panel {
   flex: 1;
