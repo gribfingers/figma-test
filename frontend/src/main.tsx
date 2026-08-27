@@ -16,6 +16,7 @@ import { NewFlight } from "./pages/NewFlight";
 import { FlightCard } from "./pages/FlightCard";
 import { CheckIn } from "./pages/CheckIn";
 import { Boarding } from "./pages/Boarding";
+import { BoardingPax } from "./pages/BoardingPax";
 import { UserAdmin } from "./pages/UserAdmin";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
@@ -37,6 +38,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
                     <Route path="flights/:flightId" element={<FlightCard />} />
                     <Route path="checkin/:flightId" element={<CheckIn />} />
                     <Route path="boarding/:flightId" element={<Boarding />} />
+                    <Route path="boarding/:flightId/pax/:passengerId" element={<BoardingPax />} />
                     <Route path="users-admin" element={<UserAdmin />} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                   </Route>

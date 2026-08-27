@@ -2151,6 +2151,58 @@ tr.row-hover { cursor: pointer; }
 /* Fixed width so the button doesn't resize when "Start boarding" becomes "Close flight". */
 .boarding-start-btn { width: 160px; }
 
+/* ---- Boarding workstation: per-passenger view (BoardingPax.tsx) ---- */
+.boarding-remain-block { display: flex; align-items: baseline; gap: 8px; white-space: nowrap; }
+.boarding-remain-label { font-size: 13px; color: var(--muted); }
+.boarding-remain-value { font-size: 20px; font-weight: 800; color: var(--ok); }
+.boarding-remain-value-muted { color: var(--field-value); }
+
+.boarding-pax-body { display: flex; gap: 0; flex: 1; min-height: 0; }
+.boarding-pax-card { flex: 0 0 400px; overflow-y: auto; }
+.boarding-pax-map { flex: 1; min-width: 0; padding: 0; display: flex; flex-direction: column; }
+
+.boarding-pax-name { font-size: 26px; font-weight: 800; color: var(--accent); margin-bottom: 16px; }
+.boarding-pax-steps { display: flex; gap: 20px; margin-bottom: 24px; }
+.boarding-pax-steps a { color: var(--muted); display: inline-flex; }
+.boarding-pax-steps a:hover { color: var(--accent); }
+
+.boarding-pax-seat-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+.boarding-pax-seat-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border: 1.5px solid var(--field-border);
+  border-radius: 4px;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--field-value);
+  flex-shrink: 0;
+}
+.boarding-pax-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 72px;
+  padding: 0 20px;
+  border-radius: 4px;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #fff;
+  background: var(--muted-2);
+}
+.boarding-pax-status-badge.ok { background: var(--ok); }
+.boarding-pax-status-badge.danger { background: var(--danger); }
+.boarding-pax-remarks { display: flex; flex-wrap: wrap; gap: 6px; max-width: 180px; }
+
+.boarding-pax-comment { font-size: 14px; color: var(--field-value); line-height: 1.5; margin-bottom: 24px; }
+
+.boarding-pax-actions { display: flex; flex-direction: column; gap: 10px; }
+.boarding-pax-actions button { width: 100%; }
+
 .quick-status-pill {
   all: unset;
   box-sizing: border-box;

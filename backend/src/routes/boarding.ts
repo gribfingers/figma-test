@@ -73,6 +73,17 @@ boardingRouter.post("/:flightId/offload/:passengerId", requireEdit, (req, res) =
   res.json(serializePassenger(updated));
 });
 
+/** Undo a boarding scan — the gate agent's own "deboard first" escape hatch (see offload above). */
+boardingRouter.post("/:flightId/unboard/:passengerId", requireEdit, (req, res) => {
+  const passenger = db.prepare("SELECT * FROM passengers WHERE id = ? AND flight_id = ?").get(req.params.passengerId, req.params.flightId) as Passenger | undefined;
+  if (!passenger) return res.status(404).json({ error: "Passenger not found on this flight" });
+  if (passenger.boarding_status !== "BOARDED") return res.status(409).json({ error: "Passenger is not boarded" });
+
+  db.prepare("UPDATE passengers SET boarding_status = 'NOT_BOARDED' WHERE id = ?").run(passenger.id);
+  const updated = db.prepare("SELECT * FROM passengers WHERE id = ?").get(passenger.id) as Passenger;
+  res.json(serializePassenger(updated));
+});
+
 /** Flight close-out: lock boarding, mark remaining checked-in pax as no-show, emit the PFS. */
 boardingRouter.post("/:flightId/close", requireEdit, (req, res) => {
   const flight = db.prepare("SELECT * FROM flights WHERE id = ?").get(req.params.flightId) as Flight | undefined;

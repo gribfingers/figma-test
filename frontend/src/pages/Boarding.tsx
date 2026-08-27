@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { api, Flight, Passenger, SeatCell } from "../api";
 import {
   ArrowNestedIcon,
@@ -140,6 +140,7 @@ const FACETS: { key: FacetKey; label: string; test: (p: Passenger) => boolean }[
 export function Boarding() {
   const { flightId } = useParams();
   const fid = Number(flightId);
+  const navigate = useNavigate();
   const [flight, setFlight] = useState<Flight | null>(null);
   useRegisterTab(flight ? `Boarding ${flight.carrier_code}${flight.flight_number}` : "Boarding");
   const [passengers, setPassengers] = useState<Passenger[]>([]);
@@ -404,7 +405,7 @@ export function Boarding() {
                 const extra = parsePassengerExtra(p);
                 const cls = classFor(p, seatByCode);
                 return (
-                  <tr key={p.id} className={`clickable ${selected.has(p.id) ? "pax-row-active" : ""}`} onClick={() => toggleSelected(p.id)}>
+                  <tr key={p.id} className={`clickable ${selected.has(p.id) ? "pax-row-active" : ""}`} onClick={() => navigate(`/boarding/${fid}/pax/${p.id}`)}>
                     <td>
                       <input
                         type="checkbox"

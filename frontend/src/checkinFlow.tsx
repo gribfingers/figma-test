@@ -24,6 +24,23 @@ function loadStoredSteps(): Record<number, FlowStep> {
   }
 }
 
+/**
+ * Writes a PNR's flow step directly to the same localStorage key
+ * CheckinFlowProvider reads on mount — for opening a check-in step in a
+ * brand-new tab (e.g. from the Boarding workstation's per-passenger view),
+ * which gets its own fresh provider instance with no way to call setFlowStep
+ * on it before it renders.
+ */
+export function presetCheckinStep(pid: number, step: FlowStep) {
+  const stored = loadStoredSteps();
+  stored[pid] = step;
+  try {
+    localStorage.setItem(STEP_STORAGE_KEY, JSON.stringify(stored));
+  } catch {
+    // Storage full or unavailable — the new tab will just open on the roster instead.
+  }
+}
+
 interface CheckinFlowState {
   flowStepFor: (pid: number) => FlowStep | null;
   setFlowStep: (pid: number, step: FlowStep | null) => void;

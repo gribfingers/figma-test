@@ -470,15 +470,14 @@ export function InfoIcon({ size = 16, className }: IconProps) {
 }
 
 /** Boarding pass with a checkmark — the check-in workstation nav item. */
-/** A passenger behind a check-in desk, a small plane on the front panel — the check-in workstation nav item. */
+/** A passenger with a search/lookup glyph — the check-in workstation nav item. */
 export function CheckInIcon({ size = 18, className }: IconProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
-      <circle cx="12" cy="5.5" r="2.2" />
-      <path d="M8 11.5c0-2.2 1.8-3.5 4-3.5s4 1.3 4 3.5" />
-      <path d="M4.5 11.5h15" />
-      <path d="M6 11.5v6M18 11.5v6" />
-      <path d="M8.7 16.6l8.3-3.4-3.9 3.7-1.1-1.1-2.1.3z" fill="currentColor" stroke="none" />
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className}>
+      <path
+        d="M12 3C9.794 3 8 4.794 8 7C8 9.206 9.794 11 12 11C14.206 11 16 9.206 16 7C16 4.794 14.206 3 12 3ZM12 5C13.103 5 14 5.897 14 7C14 8.103 13.103 9 12 9C10.897 9 10 8.103 10 7C10 5.897 10.897 5 12 5ZM18 13C15.2 13 13 15.2 13 18C13 20.8 15.2 23 18 23C19 23 20.0008 22.6992 20.8008 22.1992L22.5996 24L24 22.5996L22.1992 20.8008C22.6992 20.0008 23 19 23 18C23 15.2 20.8 13 18 13ZM12 14C8.859 14 3 15.546 3 18.5V21H11.6836C11.3876 20.378 11.1811 19.707 11.0801 19H5V18.5C5 17.693 8.19511 16.2314 11.2871 16.0254C11.5011 15.2954 11.8309 14.6178 12.2559 14.0078C12.1709 14.0058 12.081 14 12 14ZM18 15C19.7 15 21 16.3 21 18C21 19.7 19.7 21 18 21C16.3 21 15 19.7 15 18C15 16.3 16.3 15 18 15Z"
+        fill="currentColor"
+      />
     </svg>
   );
 }
