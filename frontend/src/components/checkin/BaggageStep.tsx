@@ -28,7 +28,6 @@ interface BagRow {
 interface CarryOnRow {
   id: number;
   weight: string;
-  tagNumber: string;
   typeId: string;
   mcoRef: string | null;
 }
@@ -48,7 +47,7 @@ function emptyBagRow(destination: string): BagRow {
   };
 }
 function emptyCarryOnRow(): CarryOnRow {
-  return { id: nextRowId++, weight: "", tagNumber: "", typeId: CARRY_ON_TYPES[0].id, mcoRef: null };
+  return { id: nextRowId++, weight: "", typeId: CARRY_ON_TYPES[0].id, mcoRef: null };
 }
 
 // No pricing/paid-status backend for baggage tags — deterministic from the
@@ -277,41 +276,38 @@ export function BaggageStep({ flight, passenger, passengers, segments, onCalcula
         })}
       </div>
 
-      <button type="button" className="tertiary docs-add-link baggage-carryon-add" onClick={() => setCarryOn((prev) => [...prev, emptyCarryOnRow()])}>
-        Add carry-on
-      </button>
-      {carryOn.length > 0 && (
-        <div className="baggage-carryon-rows">
-          {carryOn.map((row) => (
-            <div key={row.id} className="baggage-row baggage-row-carryon">
-              <input
-                className="baggage-row-tag"
-                value={row.tagNumber}
-                onChange={(e) => updateCarryOn(row.id, { tagNumber: e.target.value.replace(/\D/g, "").slice(0, 3) })}
-              />
-              <span className="baggage-carryon-type">{baggageTypeDisplay(row.typeId)}</span>
-              <div className="field2" style={{ width: 110 }}>
-                <input
-                  value={row.weight}
-                  placeholder=" "
-                  onChange={(e) => updateCarryOn(row.id, { weight: e.target.value.replace(/\D/g, "").slice(0, 3) })}
-                />
-                <label>Weight, kg</label>
+      <div className="baggage-carryon-section">
+        <button type="button" className="tertiary docs-add-link baggage-carryon-add" onClick={() => setCarryOn((prev) => [...prev, emptyCarryOnRow()])}>
+          Add carry-on
+        </button>
+        {carryOn.length > 0 && (
+          <div className="baggage-carryon-rows">
+            {carryOn.map((row) => (
+              <div key={row.id} className="baggage-row baggage-row-carryon">
+                <span className="baggage-carryon-type">{baggageTypeDisplay(row.typeId)}</span>
+                <div className="field2" style={{ width: 110 }}>
+                  <input
+                    value={row.weight}
+                    placeholder=" "
+                    onChange={(e) => updateCarryOn(row.id, { weight: e.target.value.replace(/\D/g, "").slice(0, 3) })}
+                  />
+                  <label>Weight, kg</label>
+                </div>
+                <button type="button" className="baggage-row-remove" onClick={() => removeCarryOn(row.id)} aria-label="Remove">
+                  <CloseIcon size={16} />
+                </button>
+                {!!row.weight && (
+                  row.mcoRef ? (
+                    <span className="baggage-mco-ref mono">MCO #{row.mcoRef}</span>
+                  ) : (
+                    <button type="button" className="link-btn" onClick={() => setMcoRowId(row.id)}>Insert MCO</button>
+                  )
+                )}
               </div>
-              <button type="button" className="baggage-row-remove" onClick={() => removeCarryOn(row.id)} aria-label="Remove">
-                <CloseIcon size={16} />
-              </button>
-              {!!row.weight && (
-                row.mcoRef ? (
-                  <span className="baggage-mco-ref mono">MCO #{row.mcoRef}</span>
-                ) : (
-                  <button type="button" className="link-btn" onClick={() => setMcoRowId(row.id)}>Insert MCO</button>
-                )
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
 
       {infoOpen && <BaggageFaresModal passengers={passengers} onClose={() => setInfoOpen(false)} />}
       {mcoRowId !== null && (

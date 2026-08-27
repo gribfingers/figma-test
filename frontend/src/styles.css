@@ -2245,12 +2245,15 @@ tr.row-hover { cursor: pointer; }
 .seat-service-chip-price:hover { text-decoration: underline; }
 
 /* ---- Baggage step ---- */
+.baggage-step { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 .baggage-step-actions { display: flex; align-items: center; gap: 16px; margin-left: auto; }
 .baggage-rows { display: flex; flex-direction: column; gap: 8px; }
+/* Pushed to the bottom of the step regardless of how many checked bags are above it. */
+.baggage-carryon-section { margin-top: auto; }
 .baggage-carryon-add { display: block; margin-top: 24px; margin-bottom: 12px; }
 /* Carry-on pieces are compact enough to sit side by side, wrapping only once a line runs out of room. */
 .baggage-carryon-rows { display: flex; flex-flow: row wrap; gap: 8px; }
-.baggage-row-carryon { width: auto; padding: 6px 10px; background: var(--field-bg); border-radius: 4px; }
+.baggage-row-carryon { width: auto; padding: 6px 10px; }
 
 .baggage-row {
   display: flex;
@@ -2265,19 +2268,6 @@ tr.row-hover { cursor: pointer; }
 /* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
 .baggage-rows .baggage-row-chevron:hover { background: transparent; color: var(--field-value); }
 .baggage-row-origin { color: var(--muted); font-size: 13px; flex-shrink: 0; }
-.baggage-row-tag {
-  all: unset;
-  box-sizing: border-box;
-  width: 44px;
-  height: 30px;
-  padding: 0 8px;
-  border: 1px solid var(--panel-border);
-  border-radius: 4px;
-  background: var(--field-bg);
-  color: var(--field-value);
-  font-size: 13px;
-  flex-shrink: 0;
-}
 .baggage-row-static { flex: 1; color: var(--muted); font-size: 13px; }
 .baggage-row-static-weight { flex: 0 0 auto; }
 .baggage-row-static-type { flex: 1; }
