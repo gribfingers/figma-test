@@ -292,7 +292,8 @@ body {
   background: var(--panel);
   flex-shrink: 0;
 }
-.tabs-list { display: flex; align-items: flex-end; height: 56px; overflow-x: auto; }
+.tabs-list { display: flex; align-items: flex-end; height: 56px; overflow-x: auto; scrollbar-width: none; }
+.tabs-list::-webkit-scrollbar { display: none; }
 /* Carries the shared bottom border across the blank stretch between the
    last tab and the right-side icons, so the line runs the full width of
    the bar (only the selected tab breaks it). */
@@ -382,6 +383,12 @@ body {
 }
 /* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
 .tabs-bar .tabs-icon-btn:hover { background: var(--field-bg); color: var(--field-value); }
+/* Must come after .tabs-icon-btn — its own all:unset otherwise wins the
+   flex-shrink cascade (equal specificity, later source order) and lets
+   these buttons get squashed instead of staying pinned at 36px. */
+.tabs-scroll-btn { flex-shrink: 0; margin: 0 2px; }
+.tabs-scroll-btn:disabled { opacity: 0.3; cursor: default; }
+.tabs-bar .tabs-scroll-btn:disabled:hover { background: transparent; }
 .tabs-badge {
   position: absolute;
   top: 2px;

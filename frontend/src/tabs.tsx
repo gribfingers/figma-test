@@ -12,6 +12,7 @@ interface TabsContextValue {
   activePath: string;
   openTab: (tab: TabInfo) => void;
   closeTab: (path: string) => void;
+  closeAllTabs: () => void;
 }
 
 // Flights is a normal, closable tab like any other now — this is just the
@@ -87,8 +88,17 @@ export function TabsProvider({ children }: { children: ReactNode }) {
     [location.pathname, navigate]
   );
 
+  // Only closable tabs go away — same rule closeTab's own per-tab button follows.
+  const closeAllTabs = useCallback(() => {
+    setTabs((prev) => {
+      const kept = prev.filter((t) => !t.closable);
+      navigate(kept[0]?.path ?? EMPTY_PATH);
+      return kept;
+    });
+  }, [navigate]);
+
   return (
-    <TabsContext.Provider value={{ tabs, activePath: location.pathname, openTab, closeTab }}>
+    <TabsContext.Provider value={{ tabs, activePath: location.pathname, openTab, closeTab, closeAllTabs }}>
       {children}
     </TabsContext.Provider>
   );

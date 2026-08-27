@@ -1,14 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
 import { useTabs } from "../tabs";
 import { useAuth } from "../auth";
 import { useCheckinFlow, pnrFlowPidFromPath } from "../checkinFlow";
+import { useToast } from "../toast";
 import { userAvatarColor, userInitials } from "../userDisplay";
-import { ChatIcon, CloseIcon } from "./Icon";
+import { ChatIcon, ChevronLeftIcon, ChevronRightIcon, CloseIcon } from "./Icon";
 import { UserPanel } from "./UserPanel";
 import { Messenger } from "./Messenger";
 import { Modal } from "./Modal";
+
+// How far one click of a scroll arrow moves the tab strip.
+const TAB_SCROLL_STEP = 240;
 
 // Moscow time, shown as a fixed reference point regardless of the viewer's
 // own browser timezone — flight times throughout the app are UTC wall-clock
@@ -32,14 +36,21 @@ function MoscowClock() {
 }
 
 export function TopTabs() {
-  const { tabs, activePath, closeTab } = useTabs();
+  const { tabs, activePath, closeTab, closeAllTabs } = useTabs();
   const { user } = useAuth();
   const { flowStepFor, setFlowStep } = useCheckinFlow();
+  const { showToast } = useToast();
   const [panelOpen, setPanelOpen] = useState(false);
   const [messengerOpen, setMessengerOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   // Path of a tab pending confirmation before it's closed (mid check-in flow).
   const [closeConfirmPath, setCloseConfirmPath] = useState<string | null>(null);
+
+  const listRef = useRef<HTMLDivElement>(null);
+  const [overflowing, setOverflowing] = useState(false);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const wasOverflowingRef = useRef(false);
 
   function requestCloseTab(path: string) {
     const pid = pnrFlowPidFromPath(path);
@@ -49,6 +60,40 @@ export function TopTabs() {
       closeTab(path);
     }
   }
+
+  function handleCloseAll() {
+    if (!window.confirm(`Close all ${tabs.length} tabs?`)) return;
+    closeAllTabs();
+  }
+
+  function scrollTabs(dir: -1 | 1) {
+    listRef.current?.scrollBy({ left: dir * TAB_SCROLL_STEP, behavior: "smooth" });
+  }
+
+  function updateScrollState() {
+    const el = listRef.current;
+    if (!el) return;
+    const isOverflowing = el.scrollWidth > el.clientWidth + 1;
+    setOverflowing(isOverflowing);
+    setCanScrollLeft(el.scrollLeft > 1);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
+    if (isOverflowing && !wasOverflowingRef.current) {
+      showToast("Too many tabs open — scroll the strip or close a few.", "info");
+    }
+    wasOverflowingRef.current = isOverflowing;
+  }
+
+  // Re-measure whenever the tab count changes and whenever the strip itself
+  // is resized (sidebar toggle, window resize) — not just on mount.
+  useEffect(() => {
+    updateScrollState();
+    const el = listRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(updateScrollState);
+    ro.observe(el);
+    return () => ro.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tabs.length]);
 
   useEffect(() => {
     if (!user) return;
@@ -64,7 +109,18 @@ export function TopTabs() {
 
   return (
     <div className="tabs-bar">
-      <div className="tabs-list">
+      {overflowing && (
+        <button
+          type="button"
+          className="tabs-icon-btn tabs-scroll-btn"
+          title="Scroll tabs left"
+          disabled={!canScrollLeft}
+          onClick={() => scrollTabs(-1)}
+        >
+          <ChevronLeftIcon size={18} />
+        </button>
+      )}
+      <div className="tabs-list" ref={listRef} onScroll={updateScrollState}>
         {tabs.map((tab) => {
           const selected = tab.path === activePath;
           return (
@@ -88,6 +144,22 @@ export function TopTabs() {
           );
         })}
       </div>
+      {overflowing && (
+        <button
+          type="button"
+          className="tabs-icon-btn tabs-scroll-btn"
+          title="Scroll tabs right"
+          disabled={!canScrollRight}
+          onClick={() => scrollTabs(1)}
+        >
+          <ChevronRightIcon size={18} />
+        </button>
+      )}
+      {overflowing && (
+        <button type="button" className="tabs-icon-btn" title="Close all tabs" onClick={handleCloseAll}>
+          <CloseIcon size={16} />
+        </button>
+      )}
       <div className="tabs-fill" />
       <div className="tabs-actions">
         <MoscowClock />
