@@ -1,8 +1,9 @@
 import { useRef, useState } from "react";
 import { Flight, Passenger } from "../../api";
-import { AIRPORTS } from "../../airports";
+import { FlightSegment } from "../../flightSegments";
 import { CARRY_ON_TYPES, baggageTypeDisplay } from "../../baggageTypes";
 import { BaggageTypeSelect } from "../BaggageTypeSelect";
+import { Select } from "../Select";
 import { ArrowNestedIcon, ChevronRightIcon, CloseIcon, InfoIcon, PrinterIcon, RefreshIcon, RubleIcon, TagIcon } from "../Icon";
 import { FaresInfoModal } from "./FaresInfoModal";
 import { McoModal } from "./McoModal";
@@ -13,8 +14,12 @@ type PrintStatus = "idle" | "error" | "printed";
 interface BagRow {
   id: number;
   destination: string;
-  tagNumber: string;
+  weight: string;
   typeId: string;
+  tagNumber: string;
+  manualTagOpen: boolean;
+  daa: boolean;
+  dmg: boolean;
   printStatus: PrintStatus;
   expanded: boolean;
 }
@@ -29,7 +34,18 @@ interface CarryOnRow {
 let nextRowId = 1;
 
 function emptyBagRow(destination: string): BagRow {
-  return { id: nextRowId++, destination, tagNumber: "", typeId: "", printStatus: "idle", expanded: false };
+  return {
+    id: nextRowId++,
+    destination,
+    weight: "",
+    typeId: "",
+    tagNumber: "",
+    manualTagOpen: false,
+    daa: false,
+    dmg: false,
+    printStatus: "idle",
+    expanded: false,
+  };
 }
 function emptyCarryOnRow(): CarryOnRow {
   return { id: nextRowId++, tagNumber: "", typeId: CARRY_ON_TYPES[0].id, expanded: false, mcoRef: null };
@@ -53,10 +69,15 @@ function rowPaid(seed: string): boolean {
 function printSucceeds(seed: string): boolean {
   return hashSeed(`print-${seed}`) % 3 !== 0;
 }
+/** Auto-assigned when a bag is printed without a manually-entered tag number. */
+function autoTagNumber(seed: string): string {
+  return String(100 + (hashSeed(`tag-${seed}`) % 900));
+}
 
 interface Props {
   flight: Flight;
   passenger: Passenger;
+  segments: FlightSegment[];
   /** Reveals this passenger's baggage prices on their roster card — nothing shows there until Calculate has actually run. */
   onCalculate: () => void;
 }
@@ -68,13 +89,18 @@ interface Props {
  * ready) -> ready (blue) -> printed (green, row locks to read-only, the
  * remove action becomes "undo") or, occasionally, error (red, retry).
  */
-export function BaggageStep({ flight, passenger, onCalculate }: Props) {
+export function BaggageStep({ flight, passenger, segments, onCalculate }: Props) {
   const [rows, setRows] = useState<BagRow[]>(() => [emptyBagRow(flight.destination)]);
   const [carryOn, setCarryOn] = useState<CarryOnRow[]>([]);
   const [infoOpen, setInfoOpen] = useState(false);
   const [mcoRowId, setMcoRowId] = useState<number | null>(null);
   const { showToast } = useToast();
   const seedRef = useRef(passenger.id);
+
+  // A bag can only be checked to one of this flight's actual stops — on a
+  // single-segment flight that's just the destination, so there's nothing to
+  // choose and the field doesn't show at all.
+  const destinationOptions = [...new Set(segments.map((s) => s.destination))].map((code) => ({ value: code, label: code }));
 
   function updateRow(id: number, patch: Partial<BagRow>) {
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
@@ -83,13 +109,13 @@ export function BaggageStep({ flight, passenger, onCalculate }: Props) {
     setRows((prev) => prev.filter((r) => r.id !== id));
   }
   function attemptPrint(row: BagRow, isRetry: boolean) {
-    const seed = `${seedRef.current}-${row.id}-${row.tagNumber}-${row.typeId}`;
+    const seed = `${seedRef.current}-${row.id}-${row.weight}-${row.typeId}`;
     if (!isRetry && !printSucceeds(seed)) {
       updateRow(row.id, { printStatus: "error" });
       showToast("Print failed: Error 111, out of ink", "error");
       return;
     }
-    updateRow(row.id, { printStatus: "printed" });
+    updateRow(row.id, { printStatus: "printed", tagNumber: row.tagNumber || autoTagNumber(seed) });
     showToast(isRetry ? "Bag tag reprinted" : "Bag tag printed");
   }
 
@@ -130,8 +156,8 @@ export function BaggageStep({ flight, passenger, onCalculate }: Props) {
 
       <div className="baggage-rows">
         {rows.map((row) => {
-          const complete = !!row.tagNumber && !!row.typeId;
-          const tone = complete ? (rowPaid(`${seedRef.current}-${row.id}-${row.tagNumber}-${row.typeId}`) ? "paid" : "unpaid") : "neutral";
+          const complete = !!row.weight && !!row.typeId;
+          const tone = complete ? (rowPaid(`${seedRef.current}-${row.id}-${row.weight}-${row.typeId}`) ? "paid" : "unpaid") : "neutral";
           const locked = row.printStatus === "printed";
           return (
             <div key={row.id} className={`baggage-row ${row.expanded ? "expanded" : ""} baggage-row-${row.printStatus}`}>
@@ -143,25 +169,32 @@ export function BaggageStep({ flight, passenger, onCalculate }: Props) {
               >
                 <ChevronRightIcon size={14} />
               </button>
-              <span className="baggage-row-origin">{flight.origin} -</span>
-              {locked ? (
-                <span className="baggage-row-static mono">{row.destination}</span>
-              ) : (
-                <select className="baggage-row-dest" value={row.destination} onChange={(e) => updateRow(row.id, { destination: e.target.value })}>
-                  {AIRPORTS.map((a) => (
-                    <option key={a.code} value={a.code}>{a.code}</option>
-                  ))}
-                </select>
+              {segments.length > 1 && (
+                <>
+                  <span className="baggage-row-origin">{flight.origin} -</span>
+                  {locked ? (
+                    <span className="baggage-row-static mono">{row.destination}</span>
+                  ) : (
+                    <Select
+                      label=""
+                      value={row.destination}
+                      onChange={(v) => updateRow(row.id, { destination: v })}
+                      options={destinationOptions}
+                      style={{ width: 110 }}
+                    />
+                  )}
+                </>
               )}
               {locked ? (
-                <span className="baggage-row-static baggage-row-static-tag mono">{row.tagNumber}</span>
+                <span className="baggage-row-static baggage-row-static-weight mono">{row.weight} kg</span>
               ) : (
-                <input
-                  className="baggage-row-tag"
-                  value={row.tagNumber}
-                  placeholder=""
-                  onChange={(e) => updateRow(row.id, { tagNumber: e.target.value.replace(/\D/g, "").slice(0, 3) })}
-                />
+                <div className="baggage-row-weight">
+                  <input
+                    value={row.weight}
+                    placeholder="Weight, kg"
+                    onChange={(e) => updateRow(row.id, { weight: e.target.value.replace(/\D/g, "").slice(0, 3) })}
+                  />
+                </div>
               )}
               {locked ? (
                 <span className="baggage-row-static baggage-row-static-type">{baggageTypeDisplay(row.typeId)}</span>
@@ -199,6 +232,40 @@ export function BaggageStep({ flight, passenger, onCalculate }: Props) {
                 <button type="button" className="baggage-row-remove" onClick={() => removeRow(row.id)} aria-label="Remove">
                   <CloseIcon size={16} />
                 </button>
+              )}
+
+              {row.expanded && (
+                <div className="baggage-row-detail baggage-row-detail-full">
+                  {/* No EMD lookup wired up — present for layout, no action yet. */}
+                  <button type="button" className="tertiary">EMD</button>
+                  {row.manualTagOpen ? (
+                    <input
+                      autoFocus
+                      className="baggage-row-tag-input"
+                      placeholder="Tag #"
+                      value={row.tagNumber}
+                      onChange={(e) => updateRow(row.id, { tagNumber: e.target.value.replace(/\D/g, "").slice(0, 3) })}
+                      onBlur={() => updateRow(row.id, { manualTagOpen: false })}
+                      onKeyDown={(e) => { if (e.key === "Enter") updateRow(row.id, { manualTagOpen: false }); }}
+                    />
+                  ) : row.tagNumber ? (
+                    <span className="baggage-row-tag-display mono">Tag {row.tagNumber}</span>
+                  ) : (
+                    <button type="button" className="tertiary" onClick={() => updateRow(row.id, { manualTagOpen: true })}>Tag manually</button>
+                  )}
+                  {/* No multi-passenger transfer wired up — present for layout, no action yet. */}
+                  <button type="button" className="tertiary">Transfer to another passenger</button>
+                  <div className="baggage-row-detail-checks">
+                    <label className="baggage-row-check">
+                      <input type="checkbox" checked={row.daa} onChange={(e) => updateRow(row.id, { daa: e.target.checked })} />
+                      DAA
+                    </label>
+                    <label className="baggage-row-check">
+                      <input type="checkbox" checked={row.dmg} onChange={(e) => updateRow(row.id, { dmg: e.target.checked })} />
+                      DMG
+                    </label>
+                  </div>
+                </div>
               )}
             </div>
           );

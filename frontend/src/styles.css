@@ -2240,17 +2240,21 @@ tr.row-hover { cursor: pointer; }
 /* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
 .baggage-rows .baggage-row-chevron:hover { background: transparent; color: var(--field-value); }
 .baggage-row-origin { color: var(--muted); font-size: 13px; flex-shrink: 0; }
-.baggage-row-dest {
-  height: 30px;
-  padding: 0 8px;
-  border: 1px solid var(--panel-border);
-  border-radius: 4px;
+/* Standard field styling (same border/radius/background as .field2) without the floating-label machinery — this row has no room for a label above each box. */
+.baggage-row-weight {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  width: 110px;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--field-border);
+  border-radius: var(--field-radius);
   background: var(--field-bg);
-  color: var(--field-value);
-  font-size: 13px;
-  font-weight: 700;
   flex-shrink: 0;
 }
+.baggage-row-weight input { all: unset; box-sizing: border-box; width: 100%; font-size: 14px; color: var(--field-value); }
+.baggage-row-weight input::placeholder { color: var(--field-placeholder); }
 .baggage-row-tag {
   all: unset;
   box-sizing: border-box;
@@ -2265,7 +2269,7 @@ tr.row-hover { cursor: pointer; }
   flex-shrink: 0;
 }
 .baggage-row-static { flex: 1; color: var(--muted); font-size: 13px; }
-.baggage-row-static-tag { flex: 0 0 44px; }
+.baggage-row-static-weight { flex: 0 0 auto; }
 .baggage-row-static-type { flex: 1; }
 
 .baggage-row-print {
@@ -2274,9 +2278,9 @@ tr.row-hover { cursor: pointer; }
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 4px;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--field-radius);
   cursor: pointer;
   color: var(--btn-disabled-text);
   flex-shrink: 0;
@@ -2308,13 +2312,13 @@ tr.row-hover { cursor: pointer; }
   all: unset;
   box-sizing: border-box;
   width: 100%;
-  height: 30px;
-  padding: 0 28px 0 10px;
-  border: 1px solid var(--panel-border);
-  border-radius: 4px;
+  height: 42px;
+  padding: 0 28px 0 12px;
+  border: 1px solid var(--field-border);
+  border-radius: var(--field-radius);
   background: var(--field-bg);
   color: var(--field-value);
-  font-size: 13px;
+  font-size: 14px;
   cursor: pointer;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2323,6 +2327,23 @@ tr.row-hover { cursor: pointer; }
 .baggage-type-trigger-paid { color: var(--ok); }
 .baggage-type-trigger-unpaid { color: var(--danger); }
 .baggage-type-select .select-chevron { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--muted); }
+
+.baggage-row-detail-full { display: flex; align-items: center; gap: 20px; }
+.baggage-row-tag-display { font-size: 13px; color: var(--field-value); }
+.baggage-row-tag-input {
+  all: unset;
+  box-sizing: border-box;
+  width: 60px;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--field-border);
+  border-radius: var(--field-radius);
+  background: var(--field-bg);
+  color: var(--field-value);
+  font-size: 13px;
+}
+.baggage-row-detail-checks { display: flex; align-items: center; gap: 16px; margin-left: auto; }
+.baggage-row-check { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--field-value); cursor: pointer; }
 
 .mco-confirm-box { background: var(--field-bg); border-radius: 4px; padding: 12px 14px; font-size: 13px; color: var(--field-value); line-height: 1.5; }
 
