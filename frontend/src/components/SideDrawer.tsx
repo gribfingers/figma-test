@@ -36,9 +36,10 @@ function isFlightPage(pathname: string): boolean {
   return pathname === "/" || pathname.startsWith("/flights/") || pathname.startsWith("/boarding/");
 }
 
-// Passenger search and the whole check-in flow (roster + PNR) — everything reached from the Check-in icon.
+// Passenger search and a PNR's own check-in page — NOT the flight-level check-in board
+// (/checkin/:flightId) an agent passes through to get there.
 function isCheckinPage(pathname: string): boolean {
-  return pathname === "/search" || pathname.startsWith("/checkin/");
+  return pathname === "/search" || /^\/checkin\/[^/]+\/pnr\//.test(pathname);
 }
 
 export function SideDrawer() {

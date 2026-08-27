@@ -155,18 +155,29 @@ input[type="checkbox"] {
 }
 input[type="checkbox"]:hover { border-color: var(--field-border-hover); }
 input[type="checkbox"]:checked { background: var(--accent); border-color: var(--accent); }
+/* left/top:50% + negative margins of exactly half the box's own width/height centers the
+   checkmark's 4x7 box geometrically, regardless of the parent's border/padding arithmetic
+   (far more robust than hand-picked left/top pixel offsets). The extra half-pixel on the
+   top margin is the only tuned value left: the border-triangle trick draws just the
+   right+bottom edges, so the ink's visual weight sits slightly below the box's own center. */
 input[type="checkbox"]:checked::after {
   content: "";
   position: absolute;
-  left: 4.25px;
-  top: 1.25px;
+  left: 50%;
+  top: 50%;
   width: 4px;
   height: 7px;
+  margin: -5px 0 0 -2.5px;
   border: solid var(--accent-ink);
   border-width: 0 1.5px 1.5px 0;
   transform: rotate(45deg);
 }
 input[type="checkbox"]:disabled { cursor: not-allowed; opacity: 0.5; }
+/* input:focus's padding:6px 9px + border:2px (18px+4px horizontal) can't fit inside a 16px
+   border-box, so the browser is forced to grow the box outward to fit them — the checkbox
+   balloons to ~22x16 the moment it's focused (i.e. right after every click) and snaps back
+   on blur. That's what was reading as both an off-center checkmark and a jittering box. */
+input[type="checkbox"]:focus, input[type="radio"]:focus { padding: 0; border-width: 1.5px; }
 
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; overflow: hidden; }
@@ -2393,13 +2404,15 @@ tr.row-hover { cursor: pointer; }
 
 /* ---- Extra services step ---- */
 .extra-services-groups { display: flex; flex-direction: column; }
-.extra-service-group-label { font-size: 13px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.04em; padding: 16px 0 8px; }
+.extra-service-group-label { font-size: 13px; font-weight: 700; color: var(--field-value); text-transform: uppercase; letter-spacing: 0.04em; padding: 16px 0 8px; }
 .extra-service-group-label:first-child { padding-top: 0; }
 /* Fixed height regardless of checked state — the row's controls (.qty-stepper etc, 42px tall)
    mount instantly on check, so animating min-height only ever produced an instant snap (the
    content already exceeded the interpolated value on the very first frame). Reserving the full
-   height up front means checking a row never shifts the rows below it. */
-.extra-service-row { display: flex; align-items: center; gap: 16px; padding: 8px 0; min-height: 58px; border-bottom: 1px solid var(--panel-border); }
+   height up front means checking a row never shifts the rows below it. 59px (not the exact
+   58px the controls need) so sub-pixel rounding in the checked layout can never push the row's
+   actual content past the reserved min-height and force a 1px reflow. */
+.extra-service-row { display: flex; align-items: center; gap: 16px; padding: 8px 0; min-height: 59px; border-bottom: 1px solid var(--panel-border); }
 .extra-service-row:last-child { border-bottom: none; }
 .extra-service-checkbox { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--field-value); cursor: pointer; }
 /* The row's own height no longer changes on check (see above), but the controls still mount
