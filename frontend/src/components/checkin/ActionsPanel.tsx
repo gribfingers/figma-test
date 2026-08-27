@@ -1,12 +1,14 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Flight, Passenger } from "../../api";
 import { FlightSegment } from "../../flightSegments";
 import { formatSeatDisplay } from "../../seatExtra";
 import { useToast } from "../../toast";
+import { usePopoverPosition } from "../../usePopoverPosition";
 import { Field } from "../Field";
 import { Select, SelectOption } from "../Select";
 import { DateField } from "../DateField";
-import { ChevronDownIcon, CloseIcon, PlusIcon, RefreshIcon, SearchIcon, TrashIcon } from "../Icon";
+import { ChevronDownIcon, CloseIcon, MinusIcon, PlusIcon, RefreshIcon, SearchIcon, TrashIcon } from "../Icon";
 
 export type ActionsPanelKind = "cancel" | "move" | "print" | "priority" | "remarks" | "quick" | "transfer";
 
@@ -100,17 +102,23 @@ const CANCEL_OPTIONS = [
   { key: "priority_list", label: "Still on Priority list" },
 ];
 const CANCEL_REASONS: SelectOption[] = [
-  { value: "late_gate", label: "Late for gate" },
-  { value: "no_show", label: "No-show" },
-  { value: "denied_boarding", label: "Denied boarding" },
-  { value: "doc_issue", label: "Document issue" },
+  { value: "lated_gate", label: "Lated gate" },
+  { value: "security", label: "Security" },
+  { value: "customs", label: "Customs/Immigration" },
+  { value: "distraction", label: "Distraction behavior" },
+  { value: "refused_payment", label: "Refused payment" },
+  { value: "passenger_initiative", label: "Passenger initiative" },
+  { value: "health", label: "Health" },
   { value: "other", label: "Other" },
 ];
+const OTHER_REASON_PLACEHOLDER =
+  "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam";
 
 function CancelCheckinPanel({ segments, onClose }: { segments: FlightSegment[]; onClose: () => void }) {
   const [segIndex, setSegIndex] = useState(-1);
   const [option, setOption] = useState("offload");
-  const [reason, setReason] = useState("late_gate");
+  const [reason, setReason] = useState("lated_gate");
+  const [otherReason, setOtherReason] = useState(OTHER_REASON_PLACEHOLDER);
   const { showToast } = useToast();
 
   function save() {
@@ -132,6 +140,11 @@ function CancelCheckinPanel({ segments, onClose }: { segments: FlightSegment[]; 
       <div>
         <div className="actions-section-label">Reason for offload</div>
         <Select label="" value={reason} onChange={setReason} options={CANCEL_REASONS} style={{ marginTop: 8 }} />
+        {reason === "other" && (
+          <div className="field2 tall" style={{ marginTop: 12 }}>
+            <textarea value={otherReason} onChange={(e) => setOtherReason(e.target.value)} placeholder=" " rows={4} />
+          </div>
+        )}
       </div>
     </Shell>
   );
@@ -257,14 +270,25 @@ function PriorityListPanel({ segments, onClose }: { segments: FlightSegment[]; o
   );
 }
 
-interface RemarkSection {
+interface RemarkEntry {
+  code: string;
+  text: string;
+}
+interface RemarkSectionDef {
   key: string;
   title: string;
-  entries: { code: string; text: string }[];
+  entries: RemarkEntry[];
 }
 // No structured per-category remarks data source yet (SSR codes are flat, not
 // grouped) — illustrative content until one exists, same scope as MOCK_COUPONS.
-const REMARK_SECTIONS: RemarkSection[] = [
+const REMARK_CATALOG: RemarkEntry[] = [
+  { code: "ABCD", text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed" },
+  { code: "ABCD", text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed" },
+  { code: "ABCD", text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed" },
+  { code: "ABCD", text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed" },
+  { code: "ABCD", text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed" },
+];
+const REMARK_SECTION_DEFS: RemarkSectionDef[] = [
   { key: "bags", title: "Bags/Carry on", entries: [
     { code: "ABCD", text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed" },
     { code: "ABCD", text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed" },
@@ -279,6 +303,116 @@ const REMARK_SECTIONS: RemarkSection[] = [
   ] },
 ];
 
+/** Rich code picker for the remark-add form — each option shows the code plus its full description, unlike the plain generic Select. */
+function RemarkCodeField({ value, onSelect }: { value: RemarkEntry | null; onSelect: (e: RemarkEntry) => void }) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLUListElement>(null);
+  const rect = usePopoverPosition(rootRef, open);
+
+  useEffect(() => {
+    if (!open) return;
+    function onDocMouseDown(e: MouseEvent) {
+      const target = e.target as Node;
+      if (rootRef.current?.contains(target)) return;
+      if (menuRef.current?.contains(target)) return;
+      setOpen(false);
+    }
+    document.addEventListener("mousedown", onDocMouseDown);
+    return () => document.removeEventListener("mousedown", onDocMouseDown);
+  }, [open]);
+
+  return (
+    <div ref={rootRef} className={`field2 select-field ${open ? "open" : ""} ${value ? "has-value" : ""}`}>
+      <button type="button" className="select-trigger" aria-haspopup="listbox" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+        {value?.code ?? ""}
+      </button>
+      <label>{value ? "Code" : "Remark"}</label>
+      <ChevronDownIcon size={16} className="select-chevron" />
+      {open &&
+        rect &&
+        createPortal(
+          <ul ref={menuRef} className="select-menu actions-remark-code-menu" style={{ position: "fixed", top: rect.top, left: rect.left, width: rect.width }}>
+            {REMARK_CATALOG.map((c, i) => (
+              <li key={i} onClick={() => { onSelect(c); setOpen(false); }}>
+                <div className="actions-remark-code-option-code">{c.code}</div>
+                <div className="actions-remark-code-option-text">{c.text}</div>
+              </li>
+            ))}
+          </ul>,
+          document.body
+        )}
+    </div>
+  );
+}
+
+function RemarksSection({ title, initialEntries }: { title: string; initialEntries: RemarkEntry[] }) {
+  const [entries, setEntries] = useState(initialEntries);
+  const [formOpen, setFormOpen] = useState(false);
+  const [code, setCode] = useState<RemarkEntry | null>(null);
+  const [description, setDescription] = useState("");
+
+  function pickCode(c: RemarkEntry) {
+    setCode(c);
+    setDescription(c.text);
+  }
+
+  function save() {
+    if (!code) return;
+    setEntries((prev) => [{ code: code.code, text: description }, ...prev]);
+    setFormOpen(false);
+    setCode(null);
+    setDescription("");
+  }
+
+  function remove(index: number) {
+    setEntries((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  return (
+    <div className="actions-remark-section">
+      <div className="actions-remark-section-head">
+        <span>{title}</span>
+        <button
+          type="button"
+          className="icon-button"
+          aria-label={formOpen ? `Close ${title}` : `Add ${title} remark`}
+          onClick={() => {
+            setFormOpen((o) => !o);
+            setCode(null);
+            setDescription("");
+          }}
+        >
+          {formOpen ? <MinusIcon size={16} /> : <PlusIcon size={16} />}
+        </button>
+      </div>
+
+      {formOpen && (
+        <div className="actions-remark-form">
+          <RemarkCodeField value={code} onSelect={pickCode} />
+          <div className="field2 tall">
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder=" " rows={2} />
+            <label>Description</label>
+          </div>
+          <button type="button" className="tertiary actions-remark-save" disabled={!code} onClick={save}>Save</button>
+        </div>
+      )}
+
+      {entries.map((e, i) => (
+        <div key={i} className="actions-remark-entry">
+          <div className="actions-remark-entry-body">
+            <div className="actions-remark-code">{e.code}</div>
+            <div className="actions-remark-text">{e.text}</div>
+          </div>
+          <button type="button" className="icon-button actions-remark-delete" aria-label="Delete remark" onClick={() => remove(i)}>
+            <TrashIcon size={16} />
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function RemarksPanel({ onClose }: { onClose: () => void }) {
   const { showToast } = useToast();
 
@@ -289,21 +423,8 @@ function RemarksPanel({ onClose }: { onClose: () => void }) {
 
   return (
     <Shell title="Remarks" onClose={onClose} footer={<button type="button" className="tertiary" onClick={save}>Save</button>}>
-      {REMARK_SECTIONS.map((section) => (
-        <div key={section.key} className="actions-remark-section">
-          <div className="actions-remark-section-head">
-            <span>{section.title}</span>
-            <button type="button" className="icon-button" aria-label={`Add ${section.title} remark`}>
-              <PlusIcon size={16} />
-            </button>
-          </div>
-          {section.entries.map((e, i) => (
-            <div key={i} className="actions-remark-entry">
-              <div className="actions-remark-code">{e.code}</div>
-              <div className="actions-remark-text">{e.text}</div>
-            </div>
-          ))}
-        </div>
+      {REMARK_SECTION_DEFS.map((section) => (
+        <RemarksSection key={section.key} title={section.title} initialEntries={section.entries} />
       ))}
     </Shell>
   );
