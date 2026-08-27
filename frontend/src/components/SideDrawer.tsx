@@ -4,6 +4,7 @@ import { useAuth } from "../auth";
 import { useCheckinFlow, FLOW_STEPS, FLOW_STEP_LABEL, FlowStep, pnrFlowPidFromPath } from "../checkinFlow";
 import {
   BaggageFlowIcon,
+  BoardingIcon,
   BurgerIcon,
   CartFlowIcon,
   CheckInIcon,
@@ -29,17 +30,21 @@ function formatClock(d: Date): string {
   return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 }
 
-// Flight board itself, creating/editing a flight, and the gate/boarding
-// screen (reached from a flight card's Actions menu) — all about a
-// flight's own record and operations, not a specific passenger's check-in.
+// Flight board itself and creating/editing a flight — a flight's own record,
+// not a specific passenger's check-in or gate boarding.
 function isFlightPage(pathname: string): boolean {
-  return pathname === "/" || pathname.startsWith("/flights/") || pathname.startsWith("/boarding/");
+  return pathname === "/" || pathname.startsWith("/flights/");
 }
 
 // Passenger search and the flight-level check-in board (/checkin/:flightId) — NOT a specific
 // PNR's own flow page, which gets its own active icon lower down once you're in it.
 function isCheckinPage(pathname: string): boolean {
   return pathname === "/search" || /^\/checkin\/[^/]+$/.test(pathname);
+}
+
+// Boarding search and a specific flight's gate boarding screen.
+function isBoardingPage(pathname: string): boolean {
+  return pathname === "/boarding-search" || pathname.startsWith("/boarding/");
 }
 
 export function SideDrawer() {
@@ -75,6 +80,9 @@ export function SideDrawer() {
         </Link>
         <Link to="/search" className={`side-item ${isCheckinPage(pathname) ? "selected" : ""}`} data-tooltip="Check-in">
           <CheckInIcon size={20} />
+        </Link>
+        <Link to="/boarding-search" className={`side-item ${isBoardingPage(pathname) ? "selected" : ""}`} data-tooltip="Boarding">
+          <BoardingIcon size={20} />
         </Link>
         {showFlowIcons && (
           <>

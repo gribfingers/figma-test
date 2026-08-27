@@ -480,6 +480,18 @@ export function CheckInIcon({ size = 18, className }: IconProps) {
   );
 }
 
+/** A gate doorway with an arrow walking through it — the boarding workstation nav item. */
+export function BoardingIcon({ size = 18, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M6 17V8.5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2V17" />
+      <path d="M4 17h16" />
+      <path d="M9 12h6" />
+      <path d="M12.5 9.5L15 12l-2.5 2.5" />
+    </svg>
+  );
+}
+
 /** ID card with a portrait — the check-in flow's Documents step. */
 export function DocumentsFlowIcon({ size = 18, className }: IconProps) {
   return (
