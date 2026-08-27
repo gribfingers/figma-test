@@ -2240,21 +2240,6 @@ tr.row-hover { cursor: pointer; }
 /* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
 .baggage-rows .baggage-row-chevron:hover { background: transparent; color: var(--field-value); }
 .baggage-row-origin { color: var(--muted); font-size: 13px; flex-shrink: 0; }
-/* Standard field styling (same border/radius/background as .field2) without the floating-label machinery — this row has no room for a label above each box. */
-.baggage-row-weight {
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  width: 110px;
-  height: 42px;
-  padding: 0 12px;
-  border: 1px solid var(--field-border);
-  border-radius: var(--field-radius);
-  background: var(--field-bg);
-  flex-shrink: 0;
-}
-.baggage-row-weight input { all: unset; box-sizing: border-box; width: 100%; font-size: 14px; color: var(--field-value); }
-.baggage-row-weight input::placeholder { color: var(--field-placeholder); }
 .baggage-row-tag {
   all: unset;
   box-sizing: border-box;
@@ -2307,26 +2292,12 @@ tr.row-hover { cursor: pointer; }
 .baggage-row-detail { padding: 6px 10px 10px 34px; }
 .baggage-mco-ref { font-size: 13px; color: var(--muted); }
 
-.baggage-type-select { position: relative; flex: 1; display: flex; align-items: center; }
-.baggage-type-trigger {
-  all: unset;
-  box-sizing: border-box;
-  width: 100%;
-  height: 42px;
-  padding: 0 28px 0 12px;
-  border: 1px solid var(--field-border);
-  border-radius: var(--field-radius);
-  background: var(--field-bg);
-  color: var(--field-value);
-  font-size: 14px;
-  cursor: pointer;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.baggage-type-trigger-paid { color: var(--ok); }
-.baggage-type-trigger-unpaid { color: var(--danger); }
-.baggage-type-select .select-chevron { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--muted); }
+/* Paid/unpaid tone on the selected baggage type's displayed value — the field2/select-field box itself is standard.
+   Extra specificity (parent-scoped, and again on :hover) so this beats the shared .select-field .select-trigger:hover rule. */
+.select-field .select-trigger.baggage-type-trigger-paid,
+.select-field .select-trigger.baggage-type-trigger-paid:hover { color: var(--ok); }
+.select-field .select-trigger.baggage-type-trigger-unpaid,
+.select-field .select-trigger.baggage-type-trigger-unpaid:hover { color: var(--danger); }
 
 .baggage-row-detail-full { display: flex; align-items: center; gap: 20px; }
 .baggage-row-tag-display { font-size: 13px; color: var(--field-value); }

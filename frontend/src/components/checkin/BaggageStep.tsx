@@ -176,7 +176,7 @@ export function BaggageStep({ flight, passenger, segments, onCalculate }: Props)
                     <span className="baggage-row-static mono">{row.destination}</span>
                   ) : (
                     <Select
-                      label=""
+                      label="To"
                       value={row.destination}
                       onChange={(v) => updateRow(row.id, { destination: v })}
                       options={destinationOptions}
@@ -188,18 +188,19 @@ export function BaggageStep({ flight, passenger, segments, onCalculate }: Props)
               {locked ? (
                 <span className="baggage-row-static baggage-row-static-weight mono">{row.weight} kg</span>
               ) : (
-                <div className="baggage-row-weight">
+                <div className="field2" style={{ width: 110 }}>
                   <input
                     value={row.weight}
-                    placeholder="Weight, kg"
+                    placeholder=" "
                     onChange={(e) => updateRow(row.id, { weight: e.target.value.replace(/\D/g, "").slice(0, 3) })}
                   />
+                  <label>Weight, kg</label>
                 </div>
               )}
               {locked ? (
                 <span className="baggage-row-static baggage-row-static-type">{baggageTypeDisplay(row.typeId)}</span>
               ) : (
-                <BaggageTypeSelect value={row.typeId} onChange={(id) => updateRow(row.id, { typeId: id })} style={{ flex: 1 }} tone={tone} />
+                <BaggageTypeSelect label="Type" value={row.typeId} onChange={(id) => updateRow(row.id, { typeId: id })} style={{ flex: 1 }} tone={tone} />
               )}
 
               {row.printStatus === "error" ? (

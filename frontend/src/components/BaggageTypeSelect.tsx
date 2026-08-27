@@ -5,6 +5,7 @@ import { ChevronDownIcon } from "./Icon";
 import { BAGGAGE_SPECIAL_TYPES, BAGGAGE_TYPE_GROUPS, baggageTypeDisplay } from "../baggageTypes";
 
 interface Props {
+  label: string;
   value: string;
   onChange: (id: string) => void;
   style?: React.CSSProperties;
@@ -12,8 +13,8 @@ interface Props {
   tone?: "neutral" | "paid" | "unpaid";
 }
 
-/** Same custom-dropdown pattern as Select/AirportSelect, grouped (Standard/Oversize/Sport, then special handling types with no group of their own). */
-export function BaggageTypeSelect({ value, onChange, style, tone = "neutral" }: Props) {
+/** Same custom-dropdown pattern as Select/AirportSelect (field2 box, floating label), grouped (Standard/Oversize/Sport, then special handling types with no group of their own). */
+export function BaggageTypeSelect({ label, value, onChange, style, tone = "neutral" }: Props) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLUListElement>(null);
@@ -39,16 +40,17 @@ export function BaggageTypeSelect({ value, onChange, style, tone = "neutral" }: 
   }, [open]);
 
   return (
-    <div ref={rootRef} className="baggage-type-select" style={style}>
+    <div ref={rootRef} className={`field2 select-field ${open ? "open" : ""} ${value ? "has-value" : ""}`} style={style}>
       <button
         type="button"
-        className={`baggage-type-trigger baggage-type-trigger-${tone}`}
+        className={`select-trigger baggage-type-trigger-${tone}`}
         aria-haspopup="listbox"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
       >
         {value ? baggageTypeDisplay(value) : ""}
       </button>
+      <label>{label}</label>
       <ChevronDownIcon size={16} className="select-chevron" />
       {open && rect &&
         createPortal(
