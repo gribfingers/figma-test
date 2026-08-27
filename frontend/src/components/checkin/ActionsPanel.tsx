@@ -138,8 +138,7 @@ function CancelCheckinPanel({ segments, onClose }: { segments: FlightSegment[]; 
         ))}
       </div>
       <div>
-        <div className="actions-section-label">Reason for offload</div>
-        <Select label="" value={reason} onChange={setReason} options={CANCEL_REASONS} style={{ marginTop: 8 }} />
+        <Select label="Reason for offload" value={reason} onChange={setReason} options={CANCEL_REASONS} />
         {reason === "other" && (
           <div className="field2 tall" style={{ marginTop: 12 }}>
             <textarea value={otherReason} onChange={(e) => setOtherReason(e.target.value)} placeholder=" " rows={4} />

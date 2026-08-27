@@ -2236,7 +2236,6 @@ tr.row-hover { cursor: pointer; }
 .actions-panel-footer { margin-top: 16px; padding-top: 16px; flex-shrink: 0; display: flex; justify-content: flex-end; gap: 16px; }
 .actions-muted-text { color: var(--muted); }
 .actions-hint-text { font-size: 14px; color: var(--field-value); }
-.actions-section-label { font-size: 15px; font-weight: 700; color: var(--field-value); }
 
 .actions-tab-row { display: flex; gap: 8px; }
 .actions-tab { all: unset; box-sizing: border-box; flex: 1; padding: 8px 12px; font-size: 13px; font-weight: 600; color: var(--muted); border: 1px solid var(--panel-border); border-radius: 4px; cursor: pointer; text-align: center; }
