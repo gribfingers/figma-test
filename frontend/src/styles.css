@@ -2157,7 +2157,7 @@ tr.row-hover { cursor: pointer; }
 .boarding-remain-value { font-size: 20px; font-weight: 800; color: var(--ok); }
 .boarding-remain-value-muted { color: var(--field-value); }
 
-.boarding-pax-body { display: flex; gap: 0; flex: 1; min-height: 0; }
+.boarding-pax-body { display: flex; gap: 16px; flex: 1; min-height: 0; }
 .boarding-pax-card { flex: 0 0 400px; overflow-y: auto; }
 .boarding-pax-map { flex: 1; min-width: 0; padding: 20px 20px 0; display: flex; flex-direction: column; }
 
