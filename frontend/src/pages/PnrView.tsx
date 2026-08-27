@@ -284,6 +284,8 @@ export function PnrView() {
   // Baggage prices only show on the roster card once the agent has actually
   // run Calculate for that passenger — not just from opening the Baggage step.
   const [baggageCalculated, setBaggageCalculated] = useState<Set<number>>(() => new Set());
+  // Unlike baggageCalculated, this tracks a live count — the roster card's
+  // service chips disappear again if the passenger's last confirmed service gets unchecked.
   const [servicesConfirmed, setServicesConfirmed] = useState<Set<number>>(() => new Set());
 
   useEffect(() => {
@@ -483,7 +485,14 @@ export function PnrView() {
                 flight={flight}
                 passenger={flowActive}
                 segments={segmentsForFlight(flight)}
-                onConfirm={() => setServicesConfirmed((prev) => new Set(prev).add(flowActive.id))}
+                onConfirmedChange={(hasConfirmed) =>
+                  setServicesConfirmed((prev) => {
+                    const next = new Set(prev);
+                    if (hasConfirmed) next.add(flowActive.id);
+                    else next.delete(flowActive.id);
+                    return next;
+                  })
+                }
               />
             )}
             {flowStep !== "docs" && flowStep !== "seats" && flowStep !== "baggage" && flowStep !== "services" && (

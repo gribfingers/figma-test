@@ -132,7 +132,41 @@
   --ok-border: rgba(71, 218, 0, 0.4);
 }
 
-input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
+input[type="radio"] { accent-color: var(--accent); }
+/* Native checkboxes ignore border-radius entirely (Chromium keeps its own fixed shape
+   unless appearance is reset), so this is a fully custom box + hand-drawn checkmark
+   rather than an accent-color tint over the native control. */
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  padding: 0;
+  border-radius: 2px;
+  border: 1.5px solid var(--field-border);
+  background: var(--field-bg);
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+  vertical-align: middle;
+  margin: 0;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+input[type="checkbox"]:hover { border-color: var(--field-border-hover); }
+input[type="checkbox"]:checked { background: var(--accent); border-color: var(--accent); }
+input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 4px;
+  height: 8px;
+  border: solid var(--accent-ink);
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
+}
+input[type="checkbox"]:disabled { cursor: not-allowed; opacity: 0.5; }
 
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; overflow: hidden; }
@@ -458,8 +492,9 @@ th input:focus {
   box-shadow: none;
 }
 th input:disabled { background: var(--field-bg-disabled); color: var(--muted-2); cursor: not-allowed; }
-/* The generic th-filter-input sizing above shouldn't stretch a plain select-all checkbox into a giant pill. */
-th input[type="checkbox"] { min-width: 0; width: auto; height: auto; padding: 0; border: none; background: transparent; }
+/* The generic th-filter-input sizing above shouldn't stretch a plain select-all checkbox into a giant pill —
+   its own width/height/border/background come from the base input[type="checkbox"] rule. */
+th input[type="checkbox"] { min-width: 0; padding: 0; }
 
 th.th-sort { cursor: pointer; user-select: none; }
 th.th-sort:hover { color: var(--accent); }
@@ -2340,7 +2375,11 @@ tr.row-hover { cursor: pointer; }
 .extra-services-groups { display: flex; flex-direction: column; }
 .extra-service-group-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; padding: 16px 0 8px; }
 .extra-service-group-label:first-child { padding-top: 0; }
-.extra-service-row { display: flex; align-items: center; gap: 16px; padding: 8px 0; border-bottom: 1px solid var(--panel-border); }
+/* Checking a row grows it to fit the tallest control (.field2/.qty-stepper, 42px, plus this
+   row's own 16px vertical padding = 58px) — animate that instead of snapping everything below
+   it down instantly. */
+.extra-service-row { display: flex; align-items: center; gap: 16px; padding: 8px 0; min-height: 42px; border-bottom: 1px solid var(--panel-border); transition: min-height 0.15s ease; }
+.extra-service-row.expanded { min-height: 58px; }
 .extra-service-row:last-child { border-bottom: none; }
 .extra-service-checkbox { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--field-value); cursor: pointer; }
 .extra-service-row-controls { display: flex; align-items: center; gap: 12px; margin-left: auto; }
