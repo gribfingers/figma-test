@@ -2163,8 +2163,10 @@ tr.row-hover { cursor: pointer; }
   cursor: pointer;
   white-space: nowrap;
 }
-.quick-status-pill:hover { border-color: var(--field-border-hover); color: var(--field-value); }
 .quick-status-pill.selected { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+/* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
+.panel-head .quick-status-pill:hover { background: transparent; border-color: var(--field-border-hover); color: var(--field-value); }
+.panel-head .quick-status-pill.selected:hover { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 
 /* Small flag chips inline under a passenger's name, distinct from the bigger pill chips in PassengersTab's own Flags column. */
 .board-flags { display: flex; gap: 4px; margin-top: 4px; }
