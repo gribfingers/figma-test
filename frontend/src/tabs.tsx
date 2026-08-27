@@ -19,6 +19,9 @@ interface TabsContextValue {
 // closed), not a permanent fixture.
 const HOME_TAB: TabInfo = { path: "/", label: "Flights", closable: true };
 const STORAGE_KEY = "dcs_tabs";
+// Closing the very last tab lands here instead of silently reopening
+// Flights — no sidebar item matches this path, so nothing shows active.
+export const EMPTY_PATH = "/empty";
 
 function loadStoredTabs(): TabInfo[] {
   try {
@@ -75,8 +78,8 @@ export function TabsProvider({ children }: { children: ReactNode }) {
         if (idx === -1) return prev;
         const next = prev.filter((t) => t.path !== path);
         if (location.pathname === path) {
-          const fallback = next[idx - 1] ?? next[0] ?? HOME_TAB;
-          navigate(fallback.path);
+          const fallback = next[idx - 1] ?? next[0] ?? null;
+          navigate(fallback ? fallback.path : EMPTY_PATH);
         }
         return next;
       });
