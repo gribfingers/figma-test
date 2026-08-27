@@ -146,6 +146,7 @@ export function Boarding() {
   const [seats, setSeats] = useState<SeatCell[]>([]);
   const [scanValue, setScanValue] = useState("");
   const [scanOpen, setScanOpen] = useState(false);
+  const [boardingStarted, setBoardingStarted] = useState(false);
   const [message, setMessage] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
   const [manifest, setManifest] = useState<{ label: string; text: string } | null>(null);
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -276,12 +277,7 @@ export function Boarding() {
   const closed = flight.status === "CLOSED" || flight.status === "DEPARTED";
 
   return (
-    <div>
-      <div className="boarding-subtabs">
-        <span className="boarding-subtab">Passenger list</span>
-        <span className="boarding-subtab boarding-subtab-active" title="Per-passenger boarding view — not built yet">Boarding</span>
-      </div>
-
+    <div className="boarding-page">
       <div className="pnr-head">
         <div className="pnr-head-id">
           <div className="pnr-flight-number">{flight.aircraft_reg ?? `${flight.carrier_code}${flight.flight_number}`}</div>
@@ -303,13 +299,17 @@ export function Boarding() {
           <button type="button" className="icon-button" data-tooltip="Scan a boarding pass" onClick={() => setScanOpen((v) => !v)}>
             <HandIcon size={20} />
           </button>
-          <button type="button" className="secondary" disabled={closed}>Start boarding</button>
+          {boardingStarted ? (
+            <button type="button" className="danger boarding-start-btn" onClick={closeFlight} disabled={closed}>Close flight</button>
+          ) : (
+            <button type="button" className="secondary boarding-start-btn" disabled={closed} onClick={() => setBoardingStarted(true)}>Start boarding</button>
+          )}
         </div>
       </div>
 
       {scanOpen && (
         <div className="panel">
-          <form onSubmit={handleScan} className="toolbar">
+          <form onSubmit={handleScan} className="toolbar" style={{ alignItems: "flex-end" }}>
             <div style={{ flex: 1 }}>
               <label>Scan boarding pass (BCBP)</label>
               <div className="input-box">
@@ -329,7 +329,7 @@ export function Boarding() {
 
       {message && <div className={message.kind === "ok" ? "ok-box" : "error-box"}>{message.text}</div>}
 
-      <div className="panel panel--flush">
+      <div className="panel panel--flush boarding-table-panel">
         <div className="toolbar panel-head">
           <button type="button" className={`quick-status-pill ${quickFilter === "all" ? "selected" : ""}`} onClick={() => setQuickFilter("all")}>
             All ({passengers.length})
@@ -349,7 +349,6 @@ export function Boarding() {
           )}
           <button type="button" className="tertiary" onClick={showPnl}>PNL</button>
           <button type="button" className="tertiary" onClick={showPfs}>PFS</button>
-          <button type="button" className="danger small" onClick={closeFlight} disabled={closed}>Close flight</button>
         </div>
 
         <div className="toolbar panel-head">

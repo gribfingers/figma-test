@@ -2143,20 +2143,13 @@ tr.row-hover { cursor: pointer; }
 .pnr-actions { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
 
 /* ---- Boarding workstation (gate) ---- */
-/* Static chrome for now — "Boarding" (the per-passenger detail + seatmap view) isn't built yet. */
-.boarding-subtabs { display: flex; border-bottom: 1px solid var(--panel-border); margin-bottom: 16px; }
-.boarding-subtab {
-  flex: 1;
-  text-align: center;
-  padding: 16px 0;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--accent);
-}
-.boarding-subtab + .boarding-subtab { border-left: 1px solid var(--panel-border); }
-.boarding-subtab-active { color: var(--field-value); cursor: default; }
+/* Only the passenger table scrolls — everything else (header, filters) stays put,
+   same "page itself must not scroll" approach as .pnr-view-flow. */
+.boarding-page { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.boarding-table-panel { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.boarding-table-panel .table-scroll { flex: 1; min-height: 0; overflow-y: auto; }
+/* Fixed width so the button doesn't resize when "Start boarding" becomes "Close flight". */
+.boarding-start-btn { width: 160px; }
 
 .quick-status-pill {
   all: unset;
