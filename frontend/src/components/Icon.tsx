@@ -470,12 +470,15 @@ export function InfoIcon({ size = 16, className }: IconProps) {
 }
 
 /** Boarding pass with a checkmark — the check-in workstation nav item. */
+/** A passenger behind a check-in desk, a small plane on the front panel — the check-in workstation nav item. */
 export function CheckInIcon({ size = 18, className }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
-      <rect x="3" y="5.5" width="18" height="13" rx="2" />
-      <path d="M9 5.5v13" strokeDasharray="2 2.2" />
-      <path d="M12.5 12l2 2 3.5-4" />
+      <circle cx="12" cy="5.5" r="2.2" />
+      <path d="M8 11.5c0-2.2 1.8-3.5 4-3.5s4 1.3 4 3.5" />
+      <path d="M4.5 11.5h15" />
+      <path d="M6 11.5v6M18 11.5v6" />
+      <path d="M8.7 16.6l8.3-3.4-3.9 3.7-1.1-1.1-2.1.3z" fill="currentColor" stroke="none" />
     </svg>
   );
 }
@@ -492,14 +495,13 @@ export function HandIcon({ size = 18, className }: IconProps) {
   );
 }
 
-/** A gate doorway with an arrow walking through it — the boarding workstation nav item. */
+/** Boarding pass with a checkmark — the boarding workstation nav item (was Check-in's icon). */
 export function BoardingIcon({ size = 18, className }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
-      <path d="M6 17V8.5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2V17" />
-      <path d="M4 17h16" />
-      <path d="M9 12h6" />
-      <path d="M12.5 9.5L15 12l-2.5 2.5" />
+      <rect x="3" y="5.5" width="18" height="13" rx="2" />
+      <path d="M9 5.5v13" strokeDasharray="2 2.2" />
+      <path d="M12.5 12l2 2 3.5-4" />
     </svg>
   );
 }
