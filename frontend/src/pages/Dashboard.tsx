@@ -110,8 +110,6 @@ export function Dashboard() {
 
   return (
     <div>
-      <h1>Flight board</h1>
-
       {error && <div className="error-box">{error}</div>}
 
       <div className="panel">

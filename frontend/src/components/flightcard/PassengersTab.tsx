@@ -5,7 +5,7 @@ import { SeatMapPanel } from "../SeatMapPanel";
 import { ArrowBackIcon, ArrowNestedIcon, ChildIcon, InfantIcon } from "../Icon";
 import { SortTh, useSort } from "../SortTh";
 import { FlagStatus, ageFromDob, ageYears, asvcForPassenger, asvcStatus, commentsStatus, etStatus, ffpStatus, isInfant, parsePassengerExtra, trStatus } from "../../paxExtra";
-import { PassengerDetailModal } from "./PassengerModals";
+import { FlagKind, FlagModal, PassengerDetailModal } from "./PassengerModals";
 import { formatSeatDisplay } from "../../seatExtra";
 import { useToast } from "../../toast";
 import {
@@ -26,7 +26,7 @@ interface Props {
   flight: Flight;
 }
 
-type ModalKind = "summary" | "documents" | "remarks" | "baggage" | "flags";
+type ModalKind = "summary" | "documents" | "remarks" | "baggage" | FlagKind;
 
 interface PaxRow {
   passenger: Passenger;
@@ -94,14 +94,18 @@ const FLAG_STATUS: Record<string, (p: Passenger) => FlagStatus> = {
   FFP: ffpStatus,
   ET: etStatus,
 };
-// All five flag chips now live as sections inside the modal's single Flags tab.
-const FLAG_MODAL: Record<string, ModalKind> = {
-  TR: "flags",
-  AUX: "flags",
-  COM: "flags",
-  FFP: "flags",
-  ET: "flags",
+// Each flag chip opens its own small modal.
+const FLAG_MODAL: Record<string, FlagKind> = {
+  TR: "tr",
+  AUX: "aux",
+  COM: "com",
+  FFP: "ffp",
+  ET: "et",
 };
+const FLAG_KINDS = new Set<ModalKind>(["tr", "aux", "com", "ffp", "et"]);
+function isFlagKind(kind: ModalKind): kind is FlagKind {
+  return FLAG_KINDS.has(kind);
+}
 const FLAG_CODES = ["TR", "AUX", "COM", "FFP", "ET"];
 const STATUS_CLASS: Record<FlagStatus, string> = {
   none: "muted",
@@ -463,10 +467,10 @@ export function PassengersTab({ flight }: Props) {
                     {visibleColumns.has("type") && <td className="mono">{extra.type}</td>}
                     {visibleColumns.has("iapp") && <td>{extra.iapp ? "✓" : ""}</td>}
                     {visibleColumns.has("inbound") && (
-                      <td className="pax-route-cell" onClick={(e) => { e.stopPropagation(); setModal({ kind: "flags", passenger: p }); }}>{extra.inbound}</td>
+                      <td className="pax-route-cell" onClick={(e) => { e.stopPropagation(); setModal({ kind: "tr", passenger: p }); }}>{extra.inbound}</td>
                     )}
                     {visibleColumns.has("outbound") && (
-                      <td className="pax-route-cell" onClick={(e) => { e.stopPropagation(); setModal({ kind: "flags", passenger: p }); }}>{extra.outbound}</td>
+                      <td className="pax-route-cell" onClick={(e) => { e.stopPropagation(); setModal({ kind: "tr", passenger: p }); }}>{extra.outbound}</td>
                     )}
                     {visibleColumns.has("bag") && <td className="mono">{p.bag_count > 0 ? `${p.bag_count}/${p.bag_weight_kg}` : ""}</td>}
                     {visibleColumns.has("age") && <td>{ageFromDob(p.dob)}</td>}
@@ -484,6 +488,7 @@ export function PassengersTab({ flight }: Props) {
             </tbody>
           </table>
         </div>
+        <div className="panel-hint">Right-click a row to assign/change or swap the seat, edit the passenger, or delete them.</div>
       </div>
       {mapHidden ? (
         <button type="button" className="passengers-seatmap-collapsed" onClick={() => setMapHidden(false)} title="Show seat map">
@@ -515,19 +520,30 @@ export function PassengersTab({ flight }: Props) {
             onSelectOccupied={handleOccupiedSeatClick}
             disabledSeats={disabledSeats}
           />
+          <div className="panel-hint">Right-click a seat to edit its properties.</div>
         </div>
       )}
 
       {modal && (
-        <PassengerDetailModal
-          kind={modal.kind}
-          flightId={flight.id}
-          passenger={modal.passenger}
-          seats={seats}
-          onSeatUpdated={handleSeatUpdated}
-          onClose={() => setModal(null)}
-          onUpdated={handleUpdated}
-        />
+        isFlagKind(modal.kind) ? (
+          <FlagModal
+            kind={modal.kind}
+            flightId={flight.id}
+            passenger={modal.passenger}
+            onClose={() => setModal(null)}
+            onUpdated={handleUpdated}
+          />
+        ) : (
+          <PassengerDetailModal
+            kind={modal.kind}
+            flightId={flight.id}
+            passenger={modal.passenger}
+            seats={seats}
+            onSeatUpdated={handleSeatUpdated}
+            onClose={() => setModal(null)}
+            onUpdated={handleUpdated}
+          />
+        )
       )}
 
       {contextMenu && (

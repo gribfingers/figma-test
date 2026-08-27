@@ -67,18 +67,18 @@ interface Props {
   confirmedServices: SeatServiceItem[];
   segments: FlightSegment[];
   onSelect: () => void;
-  onOpenFlags: () => void;
+  onOpenFlag: (flag: "com" | "ffp") => void;
   onOpenInfo: () => void;
 }
 
 /**
  * One passenger card in the check-in flow's roster panel. Every card shows
- * identity + remarks + the COM/FFP flag buttons (same modal as the flight
- * card's passengers table); only the currently active one additionally
- * shows the fares-info icon, class, and Reprint BP. On the Seats step, the
- * active card also breaks its paid seat extras out per segment (segment
- * headers only when there's more than one); inactive cards get a condensed
- * one-line summary instead.
+ * identity + remarks + the COM/FFP flag buttons (same standalone modals as
+ * the flight card's passengers table); only the currently active one
+ * additionally shows the fares-info icon, class, and Reprint BP. On the
+ * Seats step, the active card also breaks its paid seat extras out per
+ * segment (segment headers only when there's more than one); inactive
+ * cards get a condensed one-line summary instead.
  */
 export function FlowRosterRow({
   flight,
@@ -94,7 +94,7 @@ export function FlowRosterRow({
   confirmedServices,
   segments,
   onSelect,
-  onOpenFlags,
+  onOpenFlag,
   onOpenInfo,
 }: Props) {
   const ssr = p.ssr ?? [];
@@ -103,8 +103,8 @@ export function FlowRosterRow({
   const [emdItem, setEmdItem] = useState<SeatServiceItem | null>(null);
   const flagButtons = (
     <div className="pnr-flow-roster-flags">
-      <button type="button" className="pnr-flow-flag-btn" onClick={(e) => { e.stopPropagation(); onOpenFlags(); }}>COM</button>
-      <button type="button" className="pnr-flow-flag-btn" onClick={(e) => { e.stopPropagation(); onOpenFlags(); }}>FFP</button>
+      <button type="button" className="pnr-flow-flag-btn" onClick={(e) => { e.stopPropagation(); onOpenFlag("com"); }}>COM</button>
+      <button type="button" className="pnr-flow-flag-btn" onClick={(e) => { e.stopPropagation(); onOpenFlag("ffp"); }}>FFP</button>
     </div>
   );
 

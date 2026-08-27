@@ -100,7 +100,6 @@ export function CheckIn() {
       <Link to="/" style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
         <ArrowBackIcon size={16} /> Flight board
       </Link>
-      <h1>Check-in agent workstation</h1>
       <p className="subtitle">
         Flight <span className="mono">{flight.carrier_code}{flight.flight_number}</span>{" "}
         {flight.origin} → {flight.destination} ·{" "}

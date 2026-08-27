@@ -18,7 +18,7 @@ import { FaresInfoModal } from "../components/checkin/FaresInfoModal";
 import { RouteSegmentsModal } from "../components/checkin/RouteSegmentsModal";
 import { FlightInfoPanel } from "../components/checkin/FlightInfoPanel";
 import { CartPanel } from "../components/checkin/CartPanel";
-import { PassengerDetailModal } from "../components/flightcard/PassengerModals";
+import { FlagKind, FlagModal } from "../components/flightcard/PassengerModals";
 import { Modal } from "../components/Modal";
 import { FLOW_STEPS, FLOW_STEP_LABEL, FlowStep, useCheckinFlow } from "../checkinFlow";
 import { usePersistentState } from "../usePersistentState";
@@ -291,7 +291,7 @@ export function PnrView() {
   const setFlightInfoOpen = (open: boolean) => setFlightInfoOpenFor(pid, open);
   const setCartOpen = (open: boolean) => setCartOpenFor(pid, open);
   const [flowActiveId, setFlowActiveId] = usePersistentState<number | null>(`dcs_pnr_flow_active_${pid}`, null);
-  const [flagsModalPax, setFlagsModalPax] = useState<Passenger | null>(null);
+  const [flagsModal, setFlagsModal] = useState<{ flag: FlagKind; passenger: Passenger } | null>(null);
   const [infoModalOpen, setInfoModalOpen] = useState(false);
   const [finishConfirmOpen, setFinishConfirmOpen] = useState(false);
   const [routeModalOpen, setRouteModalOpen] = useState(false);
@@ -395,7 +395,7 @@ export function PnrView() {
       return next;
     });
     setExtraPassengers((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
-    setFlagsModalPax((prev) => (prev && prev.id === updated.id ? updated : prev));
+    setFlagsModal((prev) => (prev && prev.passenger.id === updated.id ? { ...prev, passenger: updated } : prev));
   }
 
   function handleSeatUpdated(updated: SeatCell) {
@@ -481,7 +481,7 @@ export function PnrView() {
                 confirmedServices={confirmedServices[row.passenger.id] ?? []}
                 segments={segmentsForFlight(flight)}
                 onSelect={() => setFlowActiveId(row.passenger.id)}
-                onOpenFlags={() => setFlagsModalPax(row.passenger)}
+                onOpenFlag={(flag) => setFlagsModal({ flag, passenger: row.passenger })}
                 onOpenInfo={() => setInfoModalOpen(true)}
               />
             ))}
@@ -532,14 +532,12 @@ export function PnrView() {
           </div>
         </div>
 
-        {flagsModalPax && (
-          <PassengerDetailModal
-            kind="flags"
+        {flagsModal && (
+          <FlagModal
+            kind={flagsModal.flag}
             flightId={fid}
-            passenger={flagsModalPax}
-            seats={seats}
-            onSeatUpdated={handleSeatUpdated}
-            onClose={() => setFlagsModalPax(null)}
+            passenger={flagsModal.passenger}
+            onClose={() => setFlagsModal(null)}
             onUpdated={handlePassengerUpdated}
           />
         )}

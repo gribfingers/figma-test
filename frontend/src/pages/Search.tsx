@@ -41,7 +41,7 @@ function fmtStd(iso: string): string {
  * appears above the results once a search comes back.
  */
 export function Search() {
-  useRegisterTab("Search");
+  useRegisterTab("Check-in Search");
   const navigate = useNavigate();
 
   const [mode, setMode] = usePersistentState<PassengerSearchMode>("dcs_search_mode", "surname");
@@ -80,8 +80,6 @@ export function Search() {
 
   return (
     <div>
-      <h1>Check-in agent workstation</h1>
-
       <div className="panel">
         <form onSubmit={runSearch}>
           <div className="toolbar" style={{ margin: 0 }}>

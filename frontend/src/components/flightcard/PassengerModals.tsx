@@ -19,7 +19,8 @@ import {
   paxDraftToPayload,
 } from "./PassengerForm";
 
-export type ModalKind = "summary" | "documents" | "remarks" | "baggage" | "flags";
+export type ModalKind = "summary" | "documents" | "remarks" | "baggage";
+export type FlagKind = "tr" | "aux" | "com" | "ffp" | "et";
 
 interface Props {
   kind: ModalKind;
@@ -41,20 +42,18 @@ async function saveExtra(flightId: number, passenger: Passenger, patch: Partial<
   return api.updatePassenger(flightId, passenger.id, { extra: JSON.stringify(extra) });
 }
 
-function draftTrConflict(d: PaxDraft): boolean {
-  if (!d.inboundTime || !d.outboundTime) return false;
-  const inTime = new Date(d.inboundTime).getTime();
-  const outTime = new Date(d.outboundTime).getTime();
+function trConflict(inboundTime: string, outboundTime: string): boolean {
+  if (!inboundTime || !outboundTime) return false;
+  const inTime = new Date(inboundTime).getTime();
+  const outTime = new Date(outboundTime).getTime();
   return !Number.isNaN(inTime) && !Number.isNaN(outTime) && outTime <= inTime;
 }
 
 /**
  * One tabbed modal for everything about a passenger: Summary/Documents/
- * Remarks/Baggage are plain fields saved together by the modal's own Save
- * button; Flags groups the five flag-chip sections from the passengers
- * table (TR/FFP are editable the same way, COM persists each comment
- * immediately like it always has, AUX/ET stay illustrative/view-only —
- * see asvcForPassenger and MOCK_COUPONS, neither has a backing table).
+ * Remarks/Baggage, saved together by the modal's own Save button. Each of
+ * the five Flags-column chips (TR/AUX/COM/FFP/ET) opens its own small
+ * modal instead — see FlagModal below.
  */
 export function PassengerDetailModal({ kind, flightId, passenger, seats, onSeatUpdated, onClose, onUpdated }: Props) {
   const [draft, setDraft] = useState<PaxDraft>(() => paxDraftFrom(passenger));
@@ -103,11 +102,6 @@ export function PassengerDetailModal({ kind, flightId, passenger, seats, onSeatU
     { key: "documents", label: "Documents", content: <DocumentsFields draft={draft} onChange={setDraft} /> },
     { key: "remarks", label: "Remarks", content: <RemarksFields draft={draft} onChange={setDraft} /> },
     { key: "baggage", label: "Baggage", content: <BaggageFields draft={draft} onChange={setDraft} /> },
-    {
-      key: "flags",
-      label: "Flags",
-      content: <FlagsTab draft={draft} onChange={setDraft} flightId={flightId} passenger={passenger} onUpdated={onUpdated} />,
-    },
   ];
 
   return (
@@ -127,115 +121,240 @@ export function PassengerDetailModal({ kind, flightId, passenger, seats, onSeatU
   );
 }
 
-function FlagsTab({
-  draft,
-  onChange,
-  flightId,
-  passenger,
-  onUpdated,
-}: {
-  draft: PaxDraft;
-  onChange: (d: PaxDraft) => void;
+interface FlagModalProps {
+  kind: FlagKind;
   flightId: number;
   passenger: Passenger;
+  onClose: () => void;
+  onUpdated: (p: Passenger) => void;
+}
+
+/** Each Flags-column chip (TR/AUX/COM/FFP/ET) opens its own small, single-purpose modal. */
+export function FlagModal({ kind, flightId, passenger, onClose, onUpdated }: FlagModalProps) {
+  switch (kind) {
+    case "tr":
+      return <TrModal flightId={flightId} passenger={passenger} onClose={onClose} onUpdated={onUpdated} />;
+    case "aux":
+      return <AuxModal passenger={passenger} onClose={onClose} />;
+    case "com":
+      return <ComModal flightId={flightId} passenger={passenger} onClose={onClose} onUpdated={onUpdated} />;
+    case "ffp":
+      return <FfpModal flightId={flightId} passenger={passenger} onClose={onClose} onUpdated={onUpdated} />;
+    case "et":
+      return <EtModal passenger={passenger} onClose={onClose} />;
+  }
+}
+
+function TrModal({
+  flightId,
+  passenger,
+  onClose,
+  onUpdated,
+}: {
+  flightId: number;
+  passenger: Passenger;
+  onClose: () => void;
   onUpdated: (p: Passenger) => void;
 }) {
-  const conflict = draftTrConflict(draft);
-  const legs = asvcForPassenger(passenger);
+  const extra = parsePassengerExtra(passenger);
+  const [inbound, setInbound] = useState(extra.inbound ?? "");
+  const [inboundTime, setInboundTime] = useState(extra.inboundTime ?? "");
+  const [outbound, setOutbound] = useState(extra.outbound ?? "");
+  const [outboundTime, setOutboundTime] = useState(extra.outboundTime ?? "");
+  const [saving, setSaving] = useState(false);
+  const { showToast } = useToast();
+  const conflict = trConflict(inboundTime, outboundTime);
+
+  async function save() {
+    setSaving(true);
+    try {
+      const updated = await saveExtra(flightId, passenger, { inbound, inboundTime, outbound, outboundTime });
+      onUpdated(updated);
+      showToast("Changes saved");
+      onClose();
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 20, paddingBottom: 16 }}>
-      <div className="document-card">
-        <div className="modal-section-label">TR — Connections</div>
-        <div style={{ display: "flex", gap: 12 }}>
-          <Field label="Inbound flight" style={{ flex: 1 }}>
-            <input value={draft.inbound} onChange={(e) => onChange({ ...draft, inbound: e.target.value.toUpperCase() })} placeholder=" " />
-          </Field>
-          <DateTimePicker label="Inbound arrival" value={draft.inboundTime} onChange={(v) => onChange({ ...draft, inboundTime: v })} style={{ flex: 1 }} />
-        </div>
-        <div style={{ display: "flex", gap: 12, marginTop: 12 }}>
-          <Field label="Outbound flight" style={{ flex: 1 }}>
-            <input value={draft.outbound} onChange={(e) => onChange({ ...draft, outbound: e.target.value.toUpperCase() })} placeholder=" " />
-          </Field>
-          <DateTimePicker label="Outbound departure" value={draft.outboundTime} onChange={(v) => onChange({ ...draft, outboundTime: v })} style={{ flex: 1 }} />
-        </div>
-        {conflict && (
-          <div className="error-box" style={{ marginTop: 12 }}>
-            The outbound connection departs before (or at) the inbound arrival — too tight to make.
-          </div>
-        )}
+    <Modal
+      title={`${paxName(passenger)} — TR`}
+      onClose={onClose}
+      footer={
+        <>
+          <button type="button" className="tertiary" onClick={onClose}>Close</button>
+          <button type="button" className="tertiary" disabled={saving} onClick={save}>Save</button>
+        </>
+      }
+    >
+      <div className="modal-section-label">Connections</div>
+      <div style={{ display: "flex", gap: 12 }}>
+        <Field label="Inbound flight" style={{ flex: 1 }}>
+          <input value={inbound} onChange={(e) => setInbound(e.target.value.toUpperCase())} placeholder=" " />
+        </Field>
+        <DateTimePicker label="Inbound arrival" value={inboundTime} onChange={setInboundTime} style={{ flex: 1 }} />
       </div>
-
-      <div className="document-card">
-        <div className="modal-section-label">AUX — Ancillary services</div>
-        <div className="asvc-columns">
-          {legs.map(({ leg, services }) => (
-            <div key={leg} className="asvc-column">
-              <h3>{leg}</h3>
-              {services.map((s, i) => (
-                <div key={i} className="asvc-row">
-                  <span className="asvc-name">{s.name}</span>
-                  <span className={`asvc-status ${s.paid ? "paid" : "unpaid"}`}>{s.paid ? "Оплачено" : "Не оплачено"}</span>
-                </div>
-              ))}
-              {services.length === 0 && <div className="asvc-row muted">No ancillary services purchased.</div>}
-            </div>
-          ))}
+      <div style={{ display: "flex", gap: 12, marginTop: 12 }}>
+        <Field label="Outbound flight" style={{ flex: 1 }}>
+          <input value={outbound} onChange={(e) => setOutbound(e.target.value.toUpperCase())} placeholder=" " />
+        </Field>
+        <DateTimePicker label="Outbound departure" value={outboundTime} onChange={setOutboundTime} style={{ flex: 1 }} />
+      </div>
+      {conflict && (
+        <div className="error-box" style={{ marginTop: 12 }}>
+          The outbound connection departs before (or at) the inbound arrival — too tight to make.
         </div>
-      </div>
+      )}
+    </Modal>
+  );
+}
 
-      <div className="document-card">
-        <div className="modal-section-label">COM — Comments</div>
-        <CommentsSection flightId={flightId} passenger={passenger} onUpdated={onUpdated} />
-      </div>
-
-      <div className="document-card">
-        <div className="modal-section-label">FFP — Frequent flyer</div>
-        <div className="ffp-fields" style={{ paddingTop: 8, marginBottom: 0 }}>
-          <div className="field2" style={{ width: 100 }}>
-            <input value={draft.ffpAirline} onChange={(e) => onChange({ ...draft, ffpAirline: e.target.value.toUpperCase() })} maxLength={2} placeholder=" " />
-            <label>Airline</label>
-          </div>
-          <div className="field2" style={{ width: 160 }}>
-            <input value={draft.ffpCard} onChange={(e) => onChange({ ...draft, ffpCard: e.target.value })} placeholder=" " />
-            <label>Card Number</label>
-          </div>
-        </div>
-      </div>
-
-      <div className="document-card">
-        <div className="modal-section-label">ET — E-ticket coupons</div>
-        <table className="modal-table" style={{ marginTop: 8 }}>
-          <thead>
-            <tr>
-              <th>Coupon</th><th>Airline</th><th>Flight</th><th>Date</th><th>Loc Time</th>
-              <th>From</th><th>To</th><th>Class</th><th>Fare Basis</th><th>Allowance</th>
-              <th>Segment Status</th><th>Coupon Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {MOCK_COUPONS.map((c) => (
-              <tr key={c.coupon}>
-                <td className="mono">{c.coupon}</td>
-                <td className="mono">{c.airline}</td>
-                <td className="mono">{c.flight}</td>
-                <td className="mono">{c.date}</td>
-                <td className="mono">{c.locTime}</td>
-                <td className="mono">{c.from}</td>
-                <td className="mono">{c.to}</td>
-                <td>{c.cls}</td>
-                <td className="mono">{c.fareBasis}</td>
-                <td className="mono">{c.allowance}</td>
-                <td className="mono">{c.segStatus}</td>
-                <td>
-                  <span className={`coupon-status ${c.couponStatus === "O" ? "open" : ""}`}>{c.couponStatus}</span>
-                </td>
-              </tr>
+function AuxModal({ passenger, onClose }: { passenger: Passenger; onClose: () => void }) {
+  const legs = asvcForPassenger(passenger);
+  return (
+    <Modal
+      title={`${paxName(passenger)} — AUX`}
+      onClose={onClose}
+      width={620}
+      footer={<button type="button" className="tertiary" onClick={onClose}>Close</button>}
+    >
+      <div className="modal-section-label">Ancillary services</div>
+      <div className="asvc-columns">
+        {legs.map(({ leg, services }) => (
+          <div key={leg} className="asvc-column">
+            <h3>{leg}</h3>
+            {services.map((s, i) => (
+              <div key={i} className="asvc-row">
+                <span className="asvc-name">{s.name}</span>
+                <span className={`asvc-status ${s.paid ? "paid" : "unpaid"}`}>{s.paid ? "Оплачено" : "Не оплачено"}</span>
+              </div>
             ))}
-          </tbody>
-        </table>
+            {services.length === 0 && <div className="asvc-row muted">No ancillary services purchased.</div>}
+          </div>
+        ))}
       </div>
-    </div>
+    </Modal>
+  );
+}
+
+function ComModal({
+  flightId,
+  passenger,
+  onClose,
+  onUpdated,
+}: {
+  flightId: number;
+  passenger: Passenger;
+  onClose: () => void;
+  onUpdated: (p: Passenger) => void;
+}) {
+  return (
+    <Modal
+      title={`${paxName(passenger)} — COM`}
+      onClose={onClose}
+      footer={<button type="button" className="tertiary" onClick={onClose}>Close</button>}
+    >
+      <div className="modal-section-label">Comments</div>
+      <CommentsSection flightId={flightId} passenger={passenger} onUpdated={onUpdated} />
+    </Modal>
+  );
+}
+
+function FfpModal({
+  flightId,
+  passenger,
+  onClose,
+  onUpdated,
+}: {
+  flightId: number;
+  passenger: Passenger;
+  onClose: () => void;
+  onUpdated: (p: Passenger) => void;
+}) {
+  const extra = parsePassengerExtra(passenger);
+  const [airline, setAirline] = useState(extra.ffp?.airline ?? "");
+  const [card, setCard] = useState(extra.ffp?.card ?? "");
+  const [saving, setSaving] = useState(false);
+  const { showToast } = useToast();
+
+  async function save() {
+    setSaving(true);
+    try {
+      const updated = await saveExtra(flightId, passenger, { ffp: { airline, card } });
+      onUpdated(updated);
+      showToast("Changes saved");
+      onClose();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Modal
+      title={`${paxName(passenger)} — FFP`}
+      onClose={onClose}
+      footer={
+        <>
+          <button type="button" className="tertiary" onClick={onClose}>Close</button>
+          <button type="button" className="tertiary" disabled={saving} onClick={save}>Save</button>
+        </>
+      }
+    >
+      <div className="modal-section-label">Frequent flyer</div>
+      <div className="ffp-fields" style={{ paddingTop: 8, marginBottom: 0 }}>
+        <div className="field2" style={{ width: 100 }}>
+          <input value={airline} onChange={(e) => setAirline(e.target.value.toUpperCase())} maxLength={2} placeholder=" " />
+          <label>Airline</label>
+        </div>
+        <div className="field2" style={{ width: 160 }}>
+          <input value={card} onChange={(e) => setCard(e.target.value)} placeholder=" " />
+          <label>Card Number</label>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+function EtModal({ passenger, onClose }: { passenger: Passenger; onClose: () => void }) {
+  return (
+    <Modal
+      title={`${paxName(passenger)} — ET`}
+      onClose={onClose}
+      width={860}
+      footer={<button type="button" className="tertiary" onClick={onClose}>Close</button>}
+    >
+      <div className="modal-section-label">E-ticket coupons</div>
+      <table className="modal-table" style={{ marginTop: 8 }}>
+        <thead>
+          <tr>
+            <th>Coupon</th><th>Airline</th><th>Flight</th><th>Date</th><th>Loc Time</th>
+            <th>From</th><th>To</th><th>Class</th><th>Fare Basis</th><th>Allowance</th>
+            <th>Segment Status</th><th>Coupon Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {MOCK_COUPONS.map((c) => (
+            <tr key={c.coupon}>
+              <td className="mono">{c.coupon}</td>
+              <td className="mono">{c.airline}</td>
+              <td className="mono">{c.flight}</td>
+              <td className="mono">{c.date}</td>
+              <td className="mono">{c.locTime}</td>
+              <td className="mono">{c.from}</td>
+              <td className="mono">{c.to}</td>
+              <td>{c.cls}</td>
+              <td className="mono">{c.fareBasis}</td>
+              <td className="mono">{c.allowance}</td>
+              <td className="mono">{c.segStatus}</td>
+              <td>
+                <span className={`coupon-status ${c.couponStatus === "O" ? "open" : ""}`}>{c.couponStatus}</span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </Modal>
   );
 }
 
