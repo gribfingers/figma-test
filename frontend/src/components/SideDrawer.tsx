@@ -36,10 +36,10 @@ function isFlightPage(pathname: string): boolean {
   return pathname === "/" || pathname.startsWith("/flights/") || pathname.startsWith("/boarding/");
 }
 
-// Passenger search and a PNR's own check-in page — NOT the flight-level check-in board
-// (/checkin/:flightId) an agent passes through to get there.
+// Passenger search and the flight-level check-in board (/checkin/:flightId) — NOT a specific
+// PNR's own flow page, which gets its own active icon lower down once you're in it.
 function isCheckinPage(pathname: string): boolean {
-  return pathname === "/search" || /^\/checkin\/[^/]+\/pnr\//.test(pathname);
+  return pathname === "/search" || /^\/checkin\/[^/]+$/.test(pathname);
 }
 
 export function SideDrawer() {
