@@ -2142,6 +2142,52 @@ tr.row-hover { cursor: pointer; }
 
 .pnr-actions { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
 
+/* ---- Boarding workstation (gate) ---- */
+/* Static chrome for now — "Boarding" (the per-passenger detail + seatmap view) isn't built yet. */
+.boarding-subtabs { display: flex; border-bottom: 1px solid var(--panel-border); margin-bottom: 16px; }
+.boarding-subtab {
+  flex: 1;
+  text-align: center;
+  padding: 16px 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.boarding-subtab + .boarding-subtab { border-left: 1px solid var(--panel-border); }
+.boarding-subtab-active { color: var(--field-value); cursor: default; }
+
+.quick-status-pill {
+  all: unset;
+  box-sizing: border-box;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 999px;
+  border: 1px solid var(--field-border);
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.quick-status-pill:hover { border-color: var(--field-border-hover); color: var(--field-value); }
+.quick-status-pill.selected { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+
+/* Small flag chips inline under a passenger's name, distinct from the bigger pill chips in PassengersTab's own Flags column. */
+.board-flags { display: flex; gap: 4px; margin-top: 4px; }
+.board-flag-chip {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  cursor: pointer;
+  background: var(--chip-grey-bg);
+  color: var(--muted);
+}
+.board-flag-chip.ok { background: var(--chip-green-bg); color: var(--ok); }
+.board-flag-chip.danger { background: var(--chip-red-bg); color: var(--danger); }
+.board-flag-chip:hover { filter: brightness(0.96); }
+
 .pnr-view table th:first-child, .pnr-view table td:first-child { width: 1px; white-space: nowrap; padding-right: 8px; }
 
 .pnr-doc-icons { display: inline-flex; gap: 6px; }

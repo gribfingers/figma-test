@@ -480,6 +480,18 @@ export function CheckInIcon({ size = 18, className }: IconProps) {
   );
 }
 
+/** An open palm — "pause/hold boarding" action on the boarding workstation header. */
+export function HandIcon({ size = 18, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M8 12V6a1.5 1.5 0 0 1 3 0v5" />
+      <path d="M11 11V5a1.5 1.5 0 0 1 3 0v6" />
+      <path d="M14 11.5V6a1.5 1.5 0 0 1 3 0v7" />
+      <path d="M17 10.5a1.5 1.5 0 0 1 3 0V14a7 7 0 0 1-7 7h-1a7 7 0 0 1-6-3.4L4.2 14a1.6 1.6 0 0 1 .6-2.2 1.6 1.6 0 0 1 2 .3L8 13.5" />
+    </svg>
+  );
+}
+
 /** A gate doorway with an arrow walking through it — the boarding workstation nav item. */
 export function BoardingIcon({ size = 18, className }: IconProps) {
   return (
