@@ -7,10 +7,12 @@ interface ToastItem {
   id: number;
   kind: ToastKind;
   message: string;
+  onDismiss?: () => void;
 }
 
 interface ToastContextValue {
-  showToast: (message: string, kind?: ToastKind) => void;
+  /** onDismiss fires exactly once, whether the toast times out or is closed manually. */
+  showToast: (message: string, kind?: ToastKind, onDismiss?: () => void) => void;
 }
 
 const ToastContext = createContext<ToastContextValue | null>(null);
@@ -28,13 +30,16 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const nextId = useRef(1);
 
   const dismiss = useCallback((id: number) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
+    setToasts((prev) => {
+      prev.find((t) => t.id === id)?.onDismiss?.();
+      return prev.filter((t) => t.id !== id);
+    });
   }, []);
 
   const showToast = useCallback(
-    (message: string, kind: ToastKind = "success") => {
+    (message: string, kind: ToastKind = "success", onDismiss?: () => void) => {
       const id = nextId.current++;
-      setToasts((prev) => [...prev, { id, kind, message }]);
+      setToasts((prev) => [...prev, { id, kind, message, onDismiss }]);
       setTimeout(() => dismiss(id), TOAST_DURATION_MS);
     },
     [dismiss]

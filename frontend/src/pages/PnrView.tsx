@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { api, Flight, Passenger, SeatCell } from "../api";
 import { formatSeatDisplay } from "../seatExtra";
 import { parsePassengerExtra } from "../paxExtra";
 import { DocScannedIcon, DocVerifiedIcon, RefreshIcon, SearchIcon } from "../components/Icon";
-import { useRegisterTab } from "../tabs";
+import { useRegisterTab, useTabs } from "../tabs";
+import { useToast } from "../toast";
 import { usePopoverPosition } from "../usePopoverPosition";
 import { segmentsForFlight } from "../flightSegments";
 import { DocumentsStep } from "../components/checkin/DocumentsStep";
@@ -247,6 +248,9 @@ export function PnrView() {
   const { flightId, passengerId } = useParams();
   const fid = Number(flightId);
   const pid = Number(passengerId);
+  const { pathname } = useLocation();
+  const { closeTab } = useTabs();
+  const { showToast } = useToast();
 
   // Re-visiting a tab that's already open remounts this component from
   // scratch (React Router only keeps the matched route mounted), which
@@ -390,6 +394,8 @@ export function PnrView() {
 
   const flowPassengers = rosterPassengers.filter((p) => checked.has(p.id));
   const flowActive = flowPassengers.find((p) => p.id === flowActiveId) ?? flowPassengers[0];
+  // Not until seats and documents are behind us — Baggage/Extra services is where it opens up.
+  const checkInDisabled = flowStep === "docs" || flowStep === "seats";
 
   function startCheckinFlow() {
     if (checked.size === 0) return;
@@ -403,6 +409,13 @@ export function PnrView() {
   function nextFlowStep() {
     const idx = FLOW_STEPS.indexOf(flowStep!);
     if (idx < FLOW_STEPS.length - 1) setFlowStep(FLOW_STEPS[idx + 1]);
+  }
+  // Only reachable once seats and documents are behind us (see checkInDisabled below) — no
+  // check-in API exists yet, so this just tells the agent it's done and closes the tab, the
+  // same way Finish does once its confirm is accepted.
+  function completeCheckin() {
+    const names = flowPassengers.map((p) => `${p.surname} ${p.given_name}`).join(", ");
+    showToast(`${names} checked in`, "success", () => closeTab(pathname));
   }
 
   if (flowStep) {
@@ -423,7 +436,15 @@ export function PnrView() {
               <RefreshIcon size={18} />
             </button>
             <button type="button" className="tertiary" onClick={() => setFinishConfirmOpen(true)}>Finish</button>
-            <button type="button" className="secondary">Check-in</button>
+            <button
+              type="button"
+              className="secondary"
+              disabled={checkInDisabled}
+              data-tooltip={checkInDisabled ? "Seat and verify documents for all passengers first" : undefined}
+              onClick={completeCheckin}
+            >
+              Check-in
+            </button>
             <button type="button" className="tertiary" disabled={flowStep === "services"} onClick={nextFlowStep}>Next</button>
           </div>
         </div>

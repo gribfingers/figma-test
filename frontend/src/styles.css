@@ -2151,6 +2151,24 @@ tr.row-hover { cursor: pointer; }
 .pnr-view-flow { display: flex; flex-direction: column; height: 100%; min-height: 0; }
 .pnr-head-flow { grid-template-columns: auto 1fr auto; flex-shrink: 0; }
 .pnr-flow-actions { display: flex; align-items: center; gap: 12px; }
+.pnr-flow-actions button[data-tooltip] { position: relative; }
+.pnr-flow-actions button[data-tooltip]:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--tooltip-bg);
+  color: var(--tooltip-ink);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 9px;
+  border-radius: 4px;
+  white-space: nowrap;
+  z-index: 50;
+  pointer-events: none;
+}
 
 .pnr-flow-body { display: flex; gap: 0; flex: 1; min-height: 0; }
 .pnr-flow-roster {
