@@ -1,0 +1,272 @@
+import { db } from "./db";
+import { buildSeatMap } from "./utils/seatmap";
+
+// Shared passenger-roster generator used both by the one-time seed script
+// (seed.ts, a curated 3-flight demo set) and by the daily auto-scheduler
+// below (dailyScheduler.ts) — same name pools, same infant/child/adult and
+// checked-in/SSR/priority-list distributions, just parameterized by size
+// instead of a fixed 100.
+
+const MALE_NAMES = ["PETR", "SERGEI", "ALEXEY", "DMITRY", "IVAN", "ANDREI", "NIKOLAI", "VLADIMIR", "MIKHAIL", "ALEXANDER", "OLEG", "PAVEL", "ROMAN", "IGOR", "YURI", "VIKTOR", "ANTON", "DENIS", "KIRILL", "ARTEM"];
+const FEMALE_NAMES = ["ANNA", "OLGA", "EKATERINA", "MARIA", "ELENA", "NATALIA", "TATIANA", "IRINA", "SVETLANA", "YULIA", "GALINA", "LARISA", "VERA", "NADEZHDA", "LYUDMILA", "OKSANA", "POLINA", "DARIA", "KSENIA", "ALINA"];
+const SURNAMES: [string, string][] = [
+  ["IVANOV", "IVANOVA"], ["PETROV", "PETROVA"], ["SIDOROV", "SIDOROVA"], ["KUZNETSOV", "KUZNETSOVA"],
+  ["SMIRNOV", "SMIRNOVA"], ["FEDOROV", "FEDOROVA"], ["MOROZOV", "MOROZOVA"], ["VASILIEV", "VASILIEVA"],
+  ["SOKOLOV", "SOKOLOVA"], ["POPOV", "POPOVA"], ["VOLKOV", "VOLKOVA"], ["ALEXEEV", "ALEXEEVA"],
+  ["LEBEDEV", "LEBEDEVA"], ["KOZLOV", "KOZLOVA"], ["NOVIKOV", "NOVIKOVA"], ["SOLOVIEV", "SOLOVIEVA"],
+  ["ZAITSEV", "ZAITSEVA"], ["PAVLOV", "PAVLOVA"], ["SEMENOV", "SEMENOVA"], ["GOLUBEV", "GOLUBEVA"],
+];
+const SSR_POOL = ["WCHR", "VGML", "PETC", "EXST"];
+const LOCATOR_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no 0/O/1/I — same ambiguity rule real PNR locators follow
+
+function pick<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+function pickSsr(): string[] {
+  const roll = Math.random();
+  if (roll < 0.03) return shuffle(SSR_POOL).slice(0, 2); // occasionally more than one remark
+  if (roll < 0.18) return [pick(SSR_POOL)];
+  return [];
+}
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function randDob(minAge: number, maxAge: number): string {
+  const age = minAge + Math.floor(Math.random() * (maxAge - minAge + 1));
+  const year = new Date().getUTCFullYear() - age;
+  const month = 1 + Math.floor(Math.random() * 12);
+  const day = 1 + Math.floor(Math.random() * 28);
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+function randInt(min: number, max: number): number {
+  return min + Math.floor(Math.random() * (max - min + 1));
+}
+// Random rather than sequential — this now runs indefinitely (once a day,
+// forever), so a process-lifetime counter would collide with locators
+// generated in earlier runs/restarts. There's no UNIQUE constraint on
+// record_locator or ticket_number, so a collision is cosmetic at worst,
+// and 33^6 possibilities makes one vanishingly unlikely anyway.
+function nextLocator(): string {
+  return Array.from({ length: 6 }, () => LOCATOR_ALPHABET[Math.floor(Math.random() * LOCATOR_ALPHABET.length)]).join("");
+}
+function nextTicketNumber(): string {
+  return `555-${1000000000 + Math.floor(Math.random() * 900000000)}`;
+}
+
+interface PaxSpec {
+  gender: "M" | "F";
+  category: "infant" | "child" | "adult";
+  surname: string;
+  givenName: string;
+  dob: string;
+  ssr: string[];
+}
+
+/**
+ * Same ~4% infant / ~10% child / ~86% adult, 50/50 gender split seed.ts
+ * always used for its fixed 100-seat rosters, generalized to any total
+ * size so the daily generator's naturally-varying pax counts still land
+ * on a realistic mix instead of a fixed head count.
+ */
+function buildRoster(size: number): PaxSpec[] {
+  const infantCount = Math.max(0, Math.round(size * 0.04));
+  const childCount = Math.max(0, Math.round(size * 0.1));
+  const adultCount = Math.max(0, size - infantCount - childCount);
+  const roster: PaxSpec[] = [];
+  const plan: { gender: "M" | "F"; category: PaxSpec["category"]; count: number }[] = [
+    { gender: "F", category: "infant", count: Math.round(infantCount / 2) },
+    { gender: "M", category: "infant", count: infantCount - Math.round(infantCount / 2) },
+    { gender: "F", category: "child", count: Math.round(childCount / 2) },
+    { gender: "M", category: "child", count: childCount - Math.round(childCount / 2) },
+    { gender: "F", category: "adult", count: Math.round(adultCount / 2) },
+    { gender: "M", category: "adult", count: adultCount - Math.round(adultCount / 2) },
+  ];
+  for (const { gender, category, count } of plan) {
+    for (let i = 0; i < count; i++) {
+      const [maleSurname, femaleSurname] = pick(SURNAMES);
+      const dob = category === "infant" ? randDob(0, 1) : category === "child" ? randDob(5, 14) : randDob(18, 70);
+      roster.push({
+        gender,
+        category,
+        surname: gender === "M" ? maleSurname : femaleSurname,
+        givenName: pick(gender === "M" ? MALE_NAMES : FEMALE_NAMES),
+        dob,
+        ssr: category === "adult" ? pickSsr() : [],
+      });
+    }
+  }
+  return shuffle(roster);
+}
+
+const insertSeat = db.prepare(`INSERT INTO seats (flight_id, seat, cabin_class, exit_row) VALUES (?, ?, ?, ?)`);
+const insertPax = db.prepare(
+  `INSERT INTO passengers (record_locator, flight_id, surname, given_name, ticket_number, ssr, infant, gender, dob, seat, bag_count, bag_weight_kg, checkin_status, extra)
+   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+);
+
+function typeCode(p: PaxSpec): string {
+  return p.category === "infant" ? "INF" : p.category === "child" ? "CHD" : "ADT";
+}
+
+/**
+ * Builds this flight's seat map and a full roster of `rosterSize`
+ * passengers (infants/children paired with an adult guardian on the same
+ * PNR, ~60% pre-checked-in with a real seat, the rest still pending) — the
+ * exact same generation seed.ts always ran inline, just callable per-flight
+ * so the daily scheduler can reuse it without duplicating the logic.
+ */
+export function insertFlightWithRoster(flightId: number, aircraftType: string, rosterSize: number): void {
+  const seatDefs = buildSeatMap(aircraftType);
+  for (const s of seatDefs) insertSeat.run(flightId, s.seat, s.cabinClass, s.exitRow ? 1 : 0);
+
+  const roster = buildRoster(rosterSize);
+  const infants = roster.filter((p) => p.category === "infant");
+  const children = roster.filter((p) => p.category === "child");
+  const adults = roster.filter((p) => p.category === "adult");
+  const nonInfants = roster.filter((p) => p.category !== "infant");
+
+  const infantGuardians = shuffle(adults).slice(0, infants.length);
+  const childGuardians = shuffle(adults).slice(0, children.length);
+  const locatorByGuardian = new Map<PaxSpec, string>();
+  for (const g of new Set([...infantGuardians, ...childGuardians])) locatorByGuardian.set(g, nextLocator());
+
+  const availableSeats = shuffle(seatDefs);
+  const checkedInCount = Math.round(nonInfants.length * 0.6);
+  const checkedInSet = new Set(shuffle(nonInfants).slice(0, checkedInCount));
+
+  let seatCursor = 0;
+
+  function insertOne(p: PaxSpec, locator: string) {
+    const isCheckedIn = checkedInSet.has(p);
+    const seat = isCheckedIn && p.category !== "infant" ? availableSeats[seatCursor++]?.seat ?? null : null;
+    const info = insertPax.run(
+      locator,
+      flightId,
+      p.surname,
+      p.givenName,
+      nextTicketNumber(),
+      JSON.stringify(p.category === "infant" ? [...p.ssr, "INFANT"] : p.ssr),
+      p.category === "infant" ? 1 : 0,
+      p.gender,
+      p.dob,
+      seat,
+      seat ? (Math.random() < 0.8 ? 1 + Math.floor(Math.random() * 2) : 0) : 0,
+      seat ? Math.round(Math.random() * 20 * 10) / 10 : 0,
+      seat ? "CHECKED_IN" : "NOT_CHECKED_IN",
+      JSON.stringify({
+        type: typeCode(p),
+        wl: p.category !== "infant" && Math.random() < 0.06,
+        pl: p.category !== "infant" && Math.random() < 0.05,
+      })
+    );
+    if (seat) db.prepare("UPDATE seats SET passenger_id = ? WHERE flight_id = ? AND seat = ?").run(info.lastInsertRowid, flightId, seat);
+  }
+
+  for (const a of adults) insertOne(a, locatorByGuardian.get(a) ?? nextLocator());
+  for (let i = 0; i < children.length; i++) {
+    const guardian = childGuardians[i % childGuardians.length];
+    insertOne(children[i], locatorByGuardian.get(guardian)!);
+  }
+  for (let i = 0; i < infants.length; i++) {
+    const guardian = infantGuardians[i % infantGuardians.length];
+    insertOne(infants[i], locatorByGuardian.get(guardian)!);
+  }
+}
+
+// ---- Daily auto-generated schedule (see dailyScheduler.ts) ----
+
+interface FlightTemplate {
+  flightNumber: string;
+  carrierCode: string;
+  origin: string;
+  destination: string;
+  hourUtc: number;
+  aircraftType: string;
+  aircraftReg: string;
+  aircraftVersion: string;
+}
+
+// Same flight numbers recur every generated day, same as a real airline's
+// published schedule would (SU1234 flies SVO-LED daily, etc.) — only the
+// date and the roster inside change.
+const DAILY_FLIGHT_TEMPLATES: FlightTemplate[] = [
+  { flightNumber: "1234", carrierCode: "SU", origin: "SVO", destination: "LED", hourUtc: 7, aircraftType: "A320", aircraftReg: "K0876", aircraftVersion: "C18Y162" },
+  { flightNumber: "5678", carrierCode: "SU", origin: "SVO", destination: "IST", hourUtc: 10, aircraftType: "B738", aircraftReg: "K0654", aircraftVersion: "C24Y168" },
+  { flightNumber: "9012", carrierCode: "SU", origin: "SVX", destination: "DME", hourUtc: 13, aircraftType: "A320", aircraftReg: "K0932", aircraftVersion: "C18Y162" },
+  { flightNumber: "7777", carrierCode: "SU", origin: "LED", destination: "SVO", hourUtc: 16, aircraftType: "A320", aircraftReg: "K0741", aircraftVersion: "C18Y162" },
+  { flightNumber: "2468", carrierCode: "SU", origin: "SVO", destination: "AER", hourUtc: 19, aircraftType: "B738", aircraftReg: "K0512", aircraftVersion: "C24Y168" },
+];
+
+const ROSTER_SIZE_RANGE: [number, number] = [50, 130];
+// Marks a flight as belonging to this generator (as opposed to the curated
+// seed.ts demo flights or one an agent created by hand) — stored in `extra`
+// since there's no dedicated column, and used by hasScheduleForDay to stay
+// idempotent if the scheduler fires twice for the same day.
+const AUTO_GENERATED_MARKER = "dailyAutoGenerated";
+
+function dayStartUtc(date: Date): Date {
+  const d = new Date(date);
+  d.setUTCHours(0, 0, 0, 0);
+  return d;
+}
+function isoAtUtc(dayStart: Date, hour: number): string {
+  const d = new Date(dayStart);
+  d.setUTCHours(hour, 0, 0, 0);
+  return d.toISOString();
+}
+
+const insertFlight = db.prepare(
+  `INSERT INTO flights (flight_number, carrier_code, origin, destination, std, aircraft_type, aircraft_reg, aircraft_version, status, extra)
+   VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'SCHEDULED', ?)`
+);
+
+/** Whether an auto-generated schedule already exists for the UTC calendar day `date` falls in. */
+export function hasScheduleForDay(date: Date): boolean {
+  const start = dayStartUtc(date);
+  const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
+  const row = db
+    .prepare(`SELECT COUNT(*) as c FROM flights WHERE std >= ? AND std < ? AND extra LIKE ?`)
+    .get(start.toISOString(), end.toISOString(), `%"${AUTO_GENERATED_MARKER}":true%`) as { c: number };
+  return row.c > 0;
+}
+
+/**
+ * Generates one day's worth of flights + rosters for the UTC calendar day
+ * `date` falls in, unless one's already there (hasScheduleForDay). Returns
+ * how much it created — {flights: 0, passengers: 0} means it was a no-op.
+ */
+export function generateDailySchedule(date: Date): { flights: number; passengers: number } {
+  if (hasScheduleForDay(date)) return { flights: 0, passengers: 0 };
+
+  const dayStart = dayStartUtc(date);
+  let passengerTotal = 0;
+
+  const tx = db.transaction(() => {
+    for (const tmpl of DAILY_FLIGHT_TEMPLATES) {
+      const std = isoAtUtc(dayStart, tmpl.hourUtc);
+      const info = insertFlight.run(
+        tmpl.flightNumber,
+        tmpl.carrierCode,
+        tmpl.origin,
+        tmpl.destination,
+        std,
+        tmpl.aircraftType,
+        tmpl.aircraftReg,
+        tmpl.aircraftVersion,
+        JSON.stringify({ [AUTO_GENERATED_MARKER]: true })
+      );
+      const flightId = info.lastInsertRowid as number;
+      const rosterSize = randInt(ROSTER_SIZE_RANGE[0], ROSTER_SIZE_RANGE[1]);
+      insertFlightWithRoster(flightId, tmpl.aircraftType, rosterSize);
+      passengerTotal += rosterSize;
+    }
+  });
+  tx();
+
+  return { flights: DAILY_FLIGHT_TEMPLATES.length, passengers: passengerTotal };
+}

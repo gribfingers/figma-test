@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import "./db";
 import { ensureSuperadmin } from "./bootstrapAdmin";
+import { startDailyScheduler } from "./dailyScheduler";
 import { flightsRouter } from "./routes/flights";
 import { checkinRouter } from "./routes/checkin";
 import { boardingRouter } from "./routes/boarding";
@@ -12,6 +13,7 @@ import { messagesRouter } from "./routes/messages";
 import { requireAuth } from "./middleware/auth";
 
 ensureSuperadmin();
+startDailyScheduler();
 
 const app = express();
 app.use(cors());
