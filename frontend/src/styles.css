@@ -158,8 +158,8 @@ input[type="checkbox"]:checked { background: var(--accent); border-color: var(--
 input[type="checkbox"]:checked::after {
   content: "";
   position: absolute;
-  left: 4.5px;
-  top: 1.5px;
+  left: 4.25px;
+  top: 1.25px;
   width: 4px;
   height: 7px;
   border: solid var(--accent-ink);
@@ -2402,7 +2402,13 @@ tr.row-hover { cursor: pointer; }
 .extra-service-row { display: flex; align-items: center; gap: 16px; padding: 8px 0; min-height: 58px; border-bottom: 1px solid var(--panel-border); }
 .extra-service-row:last-child { border-bottom: none; }
 .extra-service-checkbox { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--field-value); cursor: pointer; }
-.extra-service-row-controls { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+/* The row's own height no longer changes on check (see above), but the controls still mount
+   instantly — fading/sliding them in makes that appearance read as a reveal instead of a pop. */
+.extra-service-row-controls { display: flex; align-items: center; gap: 12px; margin-left: auto; animation: extra-service-controls-in 0.15s ease; }
+@keyframes extra-service-controls-in {
+  from { opacity: 0; transform: translateX(6px); }
+  to { opacity: 1; transform: translateX(0); }
+}
 
 .qty-stepper { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--field-border); border-radius: var(--field-radius); height: 42px; padding: 0 8px; flex-shrink: 0; }
 .qty-stepper-value { display: inline-block; width: 20px; text-align: center; font-size: 14px; font-family: var(--mono); color: var(--field-value); }

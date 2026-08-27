@@ -398,7 +398,7 @@ export function PnrView() {
   const checkInDisabled = flowStep === "docs" || flowStep === "seats";
 
   function startCheckinFlow() {
-    if (checked.size === 0) return;
+    if (flowPassengers.length === 0) return;
     setFlowStep("docs");
     setFlowActiveId(flowPassengers[0]?.id ?? null);
   }
@@ -635,8 +635,8 @@ export function PnrView() {
           }}
         />
         <div className="spacer" />
-        <button type="button" className="secondary" disabled={checked.size === 0} onClick={startCheckinFlow}>Check-in</button>
-        <button type="button" className="secondary" disabled={checked.size === 0}>Actions</button>
+        <button type="button" className="secondary" disabled={flowPassengers.length === 0} onClick={startCheckinFlow}>Check-in</button>
+        <button type="button" className="secondary" disabled={flowPassengers.length === 0}>Actions</button>
       </div>
 
       <div className="panel panel--flush">

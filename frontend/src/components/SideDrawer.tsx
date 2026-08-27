@@ -36,6 +36,11 @@ function isFlightPage(pathname: string): boolean {
   return pathname === "/" || pathname.startsWith("/flights/") || pathname.startsWith("/boarding/");
 }
 
+// Passenger search and the whole check-in flow (roster + PNR) — everything reached from the Check-in icon.
+function isCheckinPage(pathname: string): boolean {
+  return pathname === "/search" || pathname.startsWith("/checkin/");
+}
+
 export function SideDrawer() {
   const { pathname } = useLocation();
   const { user } = useAuth();
@@ -66,7 +71,7 @@ export function SideDrawer() {
         >
           <PlaneIcon size={20} />
         </Link>
-        <Link to="/search" className="side-item" data-tooltip="Check-in">
+        <Link to="/search" className={`side-item ${isCheckinPage(pathname) ? "selected" : ""}`} data-tooltip="Check-in">
           <CheckInIcon size={20} />
         </Link>
         {showFlowIcons && (
