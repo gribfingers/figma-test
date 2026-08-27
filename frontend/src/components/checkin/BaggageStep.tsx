@@ -158,7 +158,7 @@ export function BaggageStep({ flight, passenger, segments, onCalculate }: Props)
           const tone = complete ? (rowPaid(`${seedRef.current}-${row.id}-${row.weight}-${row.typeId}`) ? "paid" : "unpaid") : "neutral";
           const locked = row.printStatus === "printed";
           return (
-            <div key={row.id} className={`baggage-row ${row.typeId ? "expanded" : ""} baggage-row-${row.printStatus}`}>
+            <div key={row.id} className={`baggage-row baggage-row-${row.printStatus}`}>
               {segments.length > 1 && (
                 <>
                   <span className="baggage-row-origin">{flight.origin} -</span>
@@ -228,7 +228,7 @@ export function BaggageStep({ flight, passenger, segments, onCalculate }: Props)
               {!!row.typeId && (
                 <div className="baggage-row-detail baggage-row-detail-full">
                   {/* No EMD lookup wired up — present for layout, no action yet. */}
-                  <button type="button" className="tertiary">EMD</button>
+                  <button type="button" className="link-btn">EMD</button>
                   {row.manualTagOpen ? (
                     <input
                       autoFocus
@@ -242,10 +242,10 @@ export function BaggageStep({ flight, passenger, segments, onCalculate }: Props)
                   ) : row.tagNumber ? (
                     <span className="baggage-row-tag-display mono">Tag {row.tagNumber}</span>
                   ) : (
-                    <button type="button" className="tertiary" onClick={() => updateRow(row.id, { manualTagOpen: true })}>Tag manually</button>
+                    <button type="button" className="link-btn" onClick={() => updateRow(row.id, { manualTagOpen: true })}>Tag manually</button>
                   )}
                   {/* No multi-passenger transfer wired up — present for layout, no action yet. */}
-                  <button type="button" className="tertiary">Transfer to another passenger</button>
+                  <button type="button" className="link-btn">Transfer to another passenger</button>
                   <div className="baggage-row-detail-checks">
                     <label className="baggage-row-check">
                       <input type="checkbox" checked={row.daa} onChange={(e) => updateRow(row.id, { daa: e.target.checked })} />

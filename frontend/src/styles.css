@@ -1903,6 +1903,21 @@ tr.pax-row-nested td { color: var(--muted); }
 
 .link-text { color: var(--accent); font-weight: 600; }
 
+/* A <button> that should read as plain link text, not shout as a button (no uppercase/bold chrome, no underline). */
+button.link-btn {
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  color: var(--accent);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 400;
+  text-transform: none;
+  text-decoration: none;
+}
+button.link-btn:hover:not(:disabled) { background: transparent; color: var(--accent-hover); text-decoration: none; }
+button.link-btn:disabled { color: var(--btn-disabled-text); cursor: not-allowed; }
+
 tr.row-hover { cursor: pointer; }
 
 /* ---- Passengers-tab toolbar: quick filters, class counters, search/filters, column visibility ---- */
@@ -2234,7 +2249,6 @@ tr.row-hover { cursor: pointer; }
   border: 1px solid transparent;
   border-radius: 4px;
 }
-.baggage-row.expanded { border-color: var(--warning, #e08a2e); }
 .baggage-row-chevron { all: unset; box-sizing: border-box; display: flex; cursor: pointer; color: var(--muted); flex-shrink: 0; transition: transform 0.12s ease; }
 .baggage-row-chevron.open { transform: rotate(90deg); }
 /* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
