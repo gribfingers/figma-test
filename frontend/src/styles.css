@@ -2163,6 +2163,9 @@ tr.row-hover { cursor: pointer; }
 .pnr-times div + div { margin-top: 4px; }
 
 .pnr-actions { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+.actions-menu-btn { display: inline-flex; align-items: center; gap: 6px; }
+.actions-menu-btn .chevron-rotated { transform: rotate(180deg); }
+.actions-menu { left: auto; width: 220px; }
 
 /* ---- Boarding workstation (gate) ---- */
 /* Only the passenger table scrolls — everything else (header, filters) stays put,

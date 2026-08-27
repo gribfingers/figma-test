@@ -4,7 +4,7 @@ import { useLocation, useParams } from "react-router-dom";
 import { api, Flight, Passenger, SeatCell } from "../api";
 import { formatSeatDisplay } from "../seatExtra";
 import { parsePassengerExtra, SeatServiceItem } from "../paxExtra";
-import { DocScannedIcon, DocVerifiedIcon, RefreshIcon, SearchIcon } from "../components/Icon";
+import { ChevronDownIcon, DocScannedIcon, DocVerifiedIcon, RefreshIcon, SearchIcon } from "../components/Icon";
 import { useRegisterTab, useTabs } from "../tabs";
 import { useToast } from "../toast";
 import { usePopoverPosition } from "../usePopoverPosition";
@@ -38,6 +38,16 @@ const extraPassengersCache = new Map<number, Passenger[]>();
 const CHECKIN_FROM_MIN = -180;
 const BOARDING_FROM_MIN = -45;
 const BOARDING_TO_MIN = -15;
+
+const ACTIONS_MENU_ITEMS = [
+  "Quick check-in",
+  "Cancel check-in",
+  "Move to another flight",
+  "Priority List",
+  "Add/remove remark",
+  "Transfer",
+  "Print boarding pass",
+];
 
 function fmtOffsetTime(std: string, min: number): string {
   const t = new Date(new Date(std).getTime() + min * 60000);
@@ -294,6 +304,29 @@ export function PnrView() {
   const [flowActiveId, setFlowActiveId] = usePersistentState<number | null>(`dcs_pnr_flow_active_${pid}`, null);
   const [flagsModal, setFlagsModal] = useState<{ flag: FlagKind; passenger: Passenger } | null>(null);
   const [docPanelPassenger, setDocPanelPassenger] = useState<Passenger | null>(null);
+  const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
+  const actionsBtnRef = useRef<HTMLButtonElement>(null);
+  const actionsMenuRef = useRef<HTMLUListElement>(null);
+  const actionsMenuRect = usePopoverPosition(actionsBtnRef, actionsMenuOpen);
+
+  useEffect(() => {
+    if (!actionsMenuOpen) return;
+    function onDocMouseDown(e: MouseEvent) {
+      const target = e.target as Node;
+      if (actionsBtnRef.current?.contains(target)) return;
+      if (actionsMenuRef.current?.contains(target)) return;
+      setActionsMenuOpen(false);
+    }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setActionsMenuOpen(false);
+    }
+    document.addEventListener("mousedown", onDocMouseDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onDocMouseDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [actionsMenuOpen]);
   const [infoModalOpen, setInfoModalOpen] = useState(false);
   const [finishConfirmOpen, setFinishConfirmOpen] = useState(false);
   const [routeModalOpen, setRouteModalOpen] = useState(false);
@@ -654,7 +687,35 @@ export function PnrView() {
         />
         <div className="spacer" />
         <button type="button" className="secondary" disabled={flowPassengers.length === 0} onClick={startCheckinFlow}>Check-in</button>
-        <button type="button" className="secondary" disabled={flowPassengers.length === 0}>Actions</button>
+        <button
+          ref={actionsBtnRef}
+          type="button"
+          className="secondary actions-menu-btn"
+          disabled={flowPassengers.length === 0}
+          aria-haspopup="menu"
+          aria-expanded={actionsMenuOpen}
+          onClick={() => setActionsMenuOpen((o) => !o)}
+        >
+          Actions
+          <ChevronDownIcon size={16} className={actionsMenuOpen ? "chevron-rotated" : ""} />
+        </button>
+        {actionsMenuOpen &&
+          actionsMenuRect &&
+          createPortal(
+            <ul
+              ref={actionsMenuRef}
+              className="select-menu actions-menu"
+              role="menu"
+              style={{ position: "fixed", top: actionsMenuRect.top, right: window.innerWidth - (actionsMenuRect.left + actionsMenuRect.width) }}
+            >
+              {ACTIONS_MENU_ITEMS.map((label) => (
+                <li key={label} role="menuitem" onClick={() => setActionsMenuOpen(false)}>
+                  {label}
+                </li>
+              ))}
+            </ul>,
+            document.body
+          )}
       </div>
 
       <div className="panel panel--flush">
