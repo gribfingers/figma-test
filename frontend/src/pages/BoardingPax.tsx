@@ -9,6 +9,7 @@ import { parsePassengerExtra } from "../paxExtra";
 import { useRegisterTab } from "../tabs";
 import { useToast } from "../toast";
 import { FlowStep, presetCheckinStep } from "../checkinFlow";
+import { PassengerDocPanel } from "../components/PassengerDocPanel";
 
 // Matches Boarding.tsx's fmtCardDate/parseVersion/classFor/StatBar/statusLabel/statusChipClass —
 // same light duplication this session's other pages already use rather than a shared module.
@@ -95,6 +96,7 @@ export function BoardingPax() {
   const [seats, setSeats] = useState<SeatCell[]>([]);
   const [message, setMessage] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [docPanelOpen, setDocPanelOpen] = useState(false);
   const { showToast } = useToast();
 
   function refresh() {
@@ -212,7 +214,9 @@ export function BoardingPax() {
 
       <div className="boarding-pax-body">
         <div className="panel boarding-pax-card">
-          <div className="boarding-pax-name">{passenger.surname} {passenger.given_name}</div>
+          <div className="boarding-pax-name" onClick={() => setDocPanelOpen(true)} style={{ cursor: "pointer" }}>
+            {passenger.surname} {passenger.given_name}
+          </div>
           <div className="boarding-pax-steps">
             {STEP_ICONS.map(({ step, icon, tooltip }) => (
               <Link
@@ -270,6 +274,15 @@ export function BoardingPax() {
           />
         </div>
       </div>
+
+      {docPanelOpen && (
+        <PassengerDocPanel
+          flightId={fid}
+          passenger={passenger}
+          onClose={() => setDocPanelOpen(false)}
+          onUpdated={() => refresh()}
+        />
+      )}
     </div>
   );
 }

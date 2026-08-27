@@ -19,6 +19,7 @@ import { RouteSegmentsModal } from "../components/checkin/RouteSegmentsModal";
 import { FlightInfoPanel } from "../components/checkin/FlightInfoPanel";
 import { CartPanel } from "../components/checkin/CartPanel";
 import { FlagKind, FlagModal } from "../components/flightcard/PassengerModals";
+import { PassengerDocPanel } from "../components/PassengerDocPanel";
 import { Modal } from "../components/Modal";
 import { FLOW_STEPS, FLOW_STEP_LABEL, FlowStep, useCheckinFlow } from "../checkinFlow";
 import { usePersistentState } from "../usePersistentState";
@@ -292,6 +293,7 @@ export function PnrView() {
   const setCartOpen = (open: boolean) => setCartOpenFor(pid, open);
   const [flowActiveId, setFlowActiveId] = usePersistentState<number | null>(`dcs_pnr_flow_active_${pid}`, null);
   const [flagsModal, setFlagsModal] = useState<{ flag: FlagKind; passenger: Passenger } | null>(null);
+  const [docPanelPassenger, setDocPanelPassenger] = useState<Passenger | null>(null);
   const [infoModalOpen, setInfoModalOpen] = useState(false);
   const [finishConfirmOpen, setFinishConfirmOpen] = useState(false);
   const [routeModalOpen, setRouteModalOpen] = useState(false);
@@ -697,7 +699,7 @@ export function PnrView() {
                         onClick={(e) => e.stopPropagation()}
                       />
                     </td>
-                    <td className="link-text">{p.surname} {p.given_name}</td>
+                    <td className="link-text" onClick={(e) => { e.stopPropagation(); setDocPanelPassenger(p); }}>{p.surname} {p.given_name}</td>
                     <td>
                       {ssr.length > 0 && (
                         <span className="pax-service-chips">
@@ -738,6 +740,14 @@ export function PnrView() {
         </div>
       </div>
       {routeModalOpen && <RouteSegmentsModal flight={flight} onClose={() => setRouteModalOpen(false)} />}
+      {docPanelPassenger && (
+        <PassengerDocPanel
+          flightId={fid}
+          passenger={docPanelPassenger}
+          onClose={() => setDocPanelPassenger(null)}
+          onUpdated={handlePassengerUpdated}
+        />
+      )}
     </div>
   );
 }

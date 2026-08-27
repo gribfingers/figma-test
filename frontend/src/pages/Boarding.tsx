@@ -12,6 +12,7 @@ import {
 import { useRegisterTab } from "../tabs";
 import { useToast } from "../toast";
 import { FlagKind, FlagModal } from "../components/flightcard/PassengerModals";
+import { PassengerDocPanel } from "../components/PassengerDocPanel";
 import {
   FlagStatus,
   asvcStatus,
@@ -156,6 +157,7 @@ export function Boarding() {
   const [searchMode, setSearchMode] = useState<SearchMode>("seq");
   const [searchQuery, setSearchQuery] = useState("");
   const [flagsModal, setFlagsModal] = useState<{ flag: FlagKind; passenger: Passenger } | null>(null);
+  const [docPanelPassenger, setDocPanelPassenger] = useState<Passenger | null>(null);
   const { showToast } = useToast();
 
   function refresh() {
@@ -419,7 +421,7 @@ export function Boarding() {
                         {nested && <ArrowNestedIcon size={14} className="pax-nest-arrow" />}
                         {nested && <InfantIcon size={14} className="pax-infant-icon" />}
                         {!nested && extra.type === "CHD" && <ChildIcon size={14} className="pax-child-icon" />}
-                        <span className="link-text">{p.surname} {p.given_name}</span>
+                        <span className="link-text" onClick={(e) => { e.stopPropagation(); setDocPanelPassenger(p); }}>{p.surname} {p.given_name}</span>
                       </div>
                       <div className="board-flags" onClick={(e) => e.stopPropagation()}>
                         {FLAG_CODES.map((code) => (
@@ -493,6 +495,15 @@ export function Boarding() {
             setPassengers((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
             setFlagsModal((prev) => (prev && prev.passenger.id === updated.id ? { ...prev, passenger: updated } : prev));
           }}
+        />
+      )}
+
+      {docPanelPassenger && (
+        <PassengerDocPanel
+          flightId={fid}
+          passenger={docPanelPassenger}
+          onClose={() => setDocPanelPassenger(null)}
+          onUpdated={(updated) => setPassengers((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))}
         />
       )}
     </div>
