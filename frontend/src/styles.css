@@ -2159,7 +2159,7 @@ tr.row-hover { cursor: pointer; }
 
 .boarding-pax-body { display: flex; gap: 0; flex: 1; min-height: 0; }
 .boarding-pax-card { flex: 0 0 400px; overflow-y: auto; }
-.boarding-pax-map { flex: 1; min-width: 0; padding: 0; display: flex; flex-direction: column; }
+.boarding-pax-map { flex: 1; min-width: 0; padding: 20px 20px 0; display: flex; flex-direction: column; }
 
 .boarding-pax-name { font-size: 26px; font-weight: 800; color: var(--accent); margin-bottom: 16px; }
 .boarding-pax-steps { display: flex; gap: 20px; margin-bottom: 24px; }
