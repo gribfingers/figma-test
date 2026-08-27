@@ -238,6 +238,9 @@ body {
 .side-drawer .side-item:not(.side-static):hover { background: transparent; color: var(--accent); }
 .side-drawer .side-item.side-static:hover { background: transparent; color: var(--muted); }
 .side-item.selected { border-right-color: transparent; color: var(--field-value); background: var(--bg); }
+/* The active item stays put on hover — no color/background shift. Extra
+   specificity so this beats the :not(.side-static):hover rule above. */
+.side-drawer .side-item.selected:hover { background: var(--bg); color: var(--field-value); }
 .side-list { display: flex; flex-direction: column; }
 .side-bottom {
   margin-top: auto;
