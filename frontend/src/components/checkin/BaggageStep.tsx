@@ -190,7 +190,14 @@ export function BaggageStep({ flight, passenger, segments, onCalculate }: Props)
               {locked ? (
                 <span className="baggage-row-static baggage-row-static-type">{baggageTypeDisplay(row.typeId)}</span>
               ) : (
-                <BaggageTypeSelect label="Type" value={row.typeId} onChange={(id) => updateRow(row.id, { typeId: id })} style={{ flex: 1 }} tone={tone} />
+                <BaggageTypeSelect
+                  label="Type"
+                  value={row.typeId}
+                  onChange={(id) => updateRow(row.id, { typeId: id })}
+                  style={{ flex: 1 }}
+                  tone={tone}
+                  disabled={!row.weight}
+                />
               )}
 
               {row.printStatus === "error" ? (

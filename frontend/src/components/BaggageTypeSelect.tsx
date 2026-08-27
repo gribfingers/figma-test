@@ -11,10 +11,11 @@ interface Props {
   style?: React.CSSProperties;
   /** Paid/unpaid indicator color on the displayed value — independent of the dropdown itself. */
   tone?: "neutral" | "paid" | "unpaid";
+  disabled?: boolean;
 }
 
 /** Same custom-dropdown pattern as Select/AirportSelect (field2 box, floating label), grouped (Standard/Oversize/Sport, then special handling types with no group of their own). */
-export function BaggageTypeSelect({ label, value, onChange, style, tone = "neutral" }: Props) {
+export function BaggageTypeSelect({ label, value, onChange, style, tone = "neutral", disabled }: Props) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLUListElement>(null);
@@ -44,6 +45,7 @@ export function BaggageTypeSelect({ label, value, onChange, style, tone = "neutr
       <button
         type="button"
         className={`select-trigger baggage-type-trigger-${tone}`}
+        disabled={disabled}
         aria-haspopup="listbox"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
@@ -52,7 +54,7 @@ export function BaggageTypeSelect({ label, value, onChange, style, tone = "neutr
       </button>
       <label>{label}</label>
       <ChevronDownIcon size={16} className="select-chevron" />
-      {open && rect &&
+      {open && !disabled && rect &&
         createPortal(
           <ul ref={menuRef} className="select-menu" role="listbox" style={{ position: "fixed", top: rect.top, left: rect.left, width: Math.max(rect.width, 280) }}>
             {BAGGAGE_TYPE_GROUPS.flatMap((g) => [
