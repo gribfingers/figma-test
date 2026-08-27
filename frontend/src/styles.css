@@ -2240,12 +2240,15 @@ tr.row-hover { cursor: pointer; }
 .baggage-step-actions { display: flex; align-items: center; gap: 16px; margin-left: auto; }
 .baggage-rows { display: flex; flex-direction: column; gap: 8px; }
 .baggage-carryon-add { display: block; margin-top: 24px; margin-bottom: 12px; }
+/* Carry-on pieces are compact enough to sit side by side, wrapping only once a line runs out of room. */
+.baggage-carryon-rows { display: flex; flex-flow: row wrap; gap: 8px; }
+.baggage-row-carryon { width: auto; padding: 6px 10px; background: var(--field-bg); border-radius: 4px; }
 
 .baggage-row {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 10px;
+  padding: 6px 0;
   border: 1px solid transparent;
   border-radius: 4px;
 }
@@ -2301,7 +2304,8 @@ tr.row-hover { cursor: pointer; }
   flex-shrink: 0;
 }
 /* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
-.baggage-rows .baggage-row-undo:hover, .baggage-rows .baggage-row-remove:hover { background: transparent; color: var(--field-value); }
+.baggage-rows .baggage-row-undo:hover, .baggage-rows .baggage-row-remove:hover,
+.baggage-carryon-rows .baggage-row-remove:hover { background: transparent; color: var(--field-value); }
 
 .baggage-row-detail { padding: 6px 10px 10px 34px; }
 .baggage-mco-ref { font-size: 13px; color: var(--muted); }
