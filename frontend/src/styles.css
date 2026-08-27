@@ -2237,7 +2237,7 @@ tr.row-hover { cursor: pointer; }
 .seat-service-chip-price:hover { text-decoration: underline; }
 
 /* ---- Baggage step ---- */
-.baggage-step-actions { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+.baggage-step-actions { display: flex; align-items: center; gap: 16px; margin-left: auto; }
 .baggage-rows { display: flex; flex-direction: column; gap: 8px; }
 .baggage-carryon-add { display: block; margin-top: 24px; margin-bottom: 12px; }
 
@@ -2316,22 +2316,23 @@ tr.row-hover { cursor: pointer; }
 /* No chevron on this row anymore, so its detail panel aligns with the row's own left padding instead of the chevron-indented 34px. */
 .baggage-row-detail-full { display: flex; align-items: center; gap: 20px; padding-left: 10px; }
 .baggage-row-tag-display { font-size: 13px; color: var(--field-value); }
-.baggage-row-tag-input {
-  all: unset;
-  box-sizing: border-box;
-  width: 60px;
-  height: 28px;
-  padding: 0 8px;
-  border: 1px solid var(--field-border);
-  border-radius: var(--field-radius);
-  background: var(--field-bg);
-  color: var(--field-value);
-  font-size: 13px;
-}
 .baggage-row-detail-checks { display: flex; align-items: center; gap: 16px; margin-left: auto; }
 .baggage-row-check { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--field-value); cursor: pointer; }
 
 .mco-confirm-box { background: var(--field-bg); border-radius: 4px; padding: 12px 14px; font-size: 13px; color: var(--field-value); line-height: 1.5; }
+
+/* ---- Transfer-bag-to modal ---- */
+.transfer-passenger-list { display: flex; flex-direction: column; gap: 2px; padding: 8px 0; }
+.transfer-passenger-item { padding: 10px 8px; border-radius: 4px; cursor: pointer; color: var(--field-value); }
+.transfer-passenger-item:hover { background: var(--accent-soft); }
+.transfer-passenger-item.selected { background: var(--accent-soft); font-weight: 600; }
+
+/* ---- Baggage Fares modal ---- */
+.baggage-fares-table-wrap { overflow-x: auto; }
+.baggage-fares-refusal { color: var(--danger); }
+.baggage-fares-payment { color: var(--ok); }
+.baggage-fares-total { display: flex; align-items: baseline; gap: 8px; padding: 16px 16px 4px; font-weight: 700; color: var(--field-value); }
+.baggage-fares-total-leader { flex: 1; border-bottom: 1px dotted var(--panel-border); }
 
 /* ---- Extra services step ---- */
 .extra-services-form { display: flex; align-items: center; gap: 10px; }

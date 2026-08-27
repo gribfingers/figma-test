@@ -471,6 +471,7 @@ export function PnrView() {
               <BaggageStep
                 flight={flight}
                 passenger={flowActive}
+                passengers={flowPassengers}
                 segments={segmentsForFlight(flight)}
                 onCalculate={() => setBaggageCalculated((prev) => new Set(prev).add(flowActive.id))}
               />
