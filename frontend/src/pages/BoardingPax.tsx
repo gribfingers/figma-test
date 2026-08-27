@@ -206,13 +206,6 @@ export function BoardingPax() {
             placeholder="Search"
           />
         </form>
-        <button
-          type="button"
-          onClick={boardThis}
-          disabled={passenger.boarding_status === "BOARDED" || passenger.checkin_status !== "CHECKED_IN"}
-        >
-          Board
-        </button>
       </div>
 
       {message && <div className={message.kind === "ok" ? "ok-box" : "error-box"}>{message.text}</div>}
@@ -250,10 +243,21 @@ export function BoardingPax() {
           {comment && <div className="boarding-pax-comment">{comment}</div>}
 
           <div className="boarding-pax-actions">
-            <button type="button" className="secondary" disabled={passenger.boarding_status !== "BOARDED"} onClick={unboardThis}>
-              Unboard
-            </button>
-            <button type="button" className="secondary">Reprint BP</button>
+            {passenger.boarding_status === "BOARDED" ? (
+              <button type="button" className="secondary boarding-pax-action-btn" onClick={unboardThis}>
+                Unboard
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="secondary boarding-pax-action-btn"
+                disabled={passenger.checkin_status !== "CHECKED_IN"}
+                onClick={boardThis}
+              >
+                Board
+              </button>
+            )}
+            <button type="button" className="secondary boarding-pax-action-btn">Reprint BP</button>
           </div>
         </div>
 

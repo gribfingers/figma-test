@@ -2200,8 +2200,8 @@ tr.row-hover { cursor: pointer; }
 
 .boarding-pax-comment { font-size: 14px; color: var(--field-value); line-height: 1.5; margin-bottom: 24px; }
 
-.boarding-pax-actions { display: flex; flex-direction: column; gap: 10px; }
-.boarding-pax-actions button { width: 100%; }
+.boarding-pax-actions { display: flex; flex-direction: column; gap: 12px; }
+.boarding-pax-action-btn { width: 100%; height: 56px; font-size: 15px; }
 
 .quick-status-pill {
   all: unset;
