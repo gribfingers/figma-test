@@ -2,10 +2,11 @@ import { ChangeEvent, CSSProperties, FormEvent, useRef, useState } from "react";
 import { api } from "../api";
 import { useAuth } from "../auth";
 import { useTheme } from "../theme";
+import { useFontSize } from "../fontSize";
 import { resizeImageToDataUrl, userAvatarColor, userInitials } from "../userDisplay";
 import { Field } from "./Field";
 import { Select } from "./Select";
-import { ChevronDownIcon, CloseIcon } from "./Icon";
+import { ChevronDownIcon, CloseIcon, MinusIcon, PlusIcon } from "./Icon";
 
 const COMMON_TIMEZONES = [
   "Europe/Moscow", "Europe/Kaliningrad", "Europe/Samara", "Asia/Yekaterinburg", "Asia/Omsk",
@@ -31,6 +32,7 @@ interface Props {
 export function UserPanel({ onClose }: Props) {
   const { user, logout, updateUser } = useAuth();
   const { theme, setTheme } = useTheme();
+  const { fontSize, increase, decrease } = useFontSize();
   const [settingsOpen, setSettingsOpen] = useState(true);
   const [securityOpen, setSecurityOpen] = useState(false);
   const [timezone, setTimezone] = useState(user?.timezone ?? "Europe/Moscow");
@@ -117,6 +119,18 @@ export function UserPanel({ onClose }: Props) {
                 <div className="user-panel-theme-toggle">
                   <button type="button" className={theme === "light" ? "selected" : ""} onClick={() => setTheme("light")}>Light</button>
                   <button type="button" className={theme === "dark" ? "selected" : ""} onClick={() => setTheme("dark")}>Dark</button>
+                </div>
+              </div>
+              <div className="user-panel-theme-row">
+                <span>Font size</span>
+                <div className="seatmap-zoom">
+                  <button type="button" className="seatmap-zoom-btn" onClick={decrease} aria-label="Decrease font size">
+                    <MinusIcon size={14} />
+                  </button>
+                  <span className="seatmap-zoom-value">{fontSize}%</span>
+                  <button type="button" className="seatmap-zoom-btn" onClick={increase} aria-label="Increase font size">
+                    <PlusIcon size={14} />
+                  </button>
                 </div>
               </div>
               <Select
