@@ -34,13 +34,3 @@ export const EXTRA_SERVICE_GROUPS: ExtraServiceGroup[] = [
   },
 ];
 
-const ALL_EXTRA_SERVICES = EXTRA_SERVICE_GROUPS.flatMap((g) => g.options);
-
-export function extraServiceById(id: string): ExtraServiceOption | undefined {
-  return ALL_EXTRA_SERVICES.find((o) => o.id === id);
-}
-
-export function extraServiceDisplay(id: string): string {
-  const opt = ALL_EXTRA_SERVICES.find((o) => o.id === id);
-  return opt ? `${opt.code} ${opt.label}` : "";
-}

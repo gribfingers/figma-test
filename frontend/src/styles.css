@@ -2337,8 +2337,13 @@ tr.row-hover { cursor: pointer; }
 .baggage-fares-total-leader { flex: 1; border-bottom: 1px dotted var(--panel-border); }
 
 /* ---- Extra services step ---- */
-.extra-services-form { display: flex; align-items: center; gap: 10px; }
-.extra-services-form .select-field { flex: 1; min-width: 0; }
+.extra-services-groups { display: flex; flex-direction: column; }
+.extra-service-group-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; padding: 16px 0 8px; }
+.extra-service-group-label:first-child { padding-top: 0; }
+.extra-service-row { display: flex; align-items: center; gap: 16px; padding: 8px 0; border-bottom: 1px solid var(--panel-border); }
+.extra-service-row:last-child { border-bottom: none; }
+.extra-service-checkbox { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--field-value); cursor: pointer; }
+.extra-service-row-controls { display: flex; align-items: center; gap: 12px; margin-left: auto; }
 
 .qty-stepper { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--field-border); border-radius: var(--field-radius); height: 42px; padding: 0 8px; flex-shrink: 0; }
 .qty-stepper-value { display: inline-block; width: 20px; text-align: center; font-size: 14px; font-family: var(--mono); color: var(--field-value); }
@@ -2347,28 +2352,18 @@ tr.row-hover { cursor: pointer; }
 /* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
 .qty-stepper .qty-stepper-btn:hover:not(:disabled) { background: transparent; color: var(--field-value); }
 
-.extra-services-list { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
-.extra-service-item { display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: var(--field-bg); border-radius: 4px; }
-.extra-service-item-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; }
-.extra-service-item-name { font-size: 13px; font-weight: 600; color: var(--field-value); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-/* Decorative progress-style graphic only — not a real load/completion indicator. */
-.extra-service-item-progress { display: flex; align-items: center; gap: 3px; flex-shrink: 0; }
-.extra-service-item-progress span { display: block; width: 14px; height: 4px; border-radius: 2px; background: var(--ok); }
 .extra-service-item-price {
   all: unset;
   box-sizing: border-box;
   cursor: pointer;
   font-weight: 600;
-  font-size: 13px;
+  font-size: 14px;
   flex-shrink: 0;
 }
 .extra-service-item-price.paid { color: var(--ok); }
 .extra-service-item-price.unpaid { color: var(--danger); }
 /* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
-.extra-services-list .extra-service-item-price:hover { background: transparent; text-decoration: underline; }
-.extra-service-item-remove { all: unset; box-sizing: border-box; display: flex; cursor: pointer; color: var(--muted); flex-shrink: 0; }
-/* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
-.extra-services-list .extra-service-item-remove:hover { background: transparent; color: var(--danger); }
+.extra-service-row-controls .extra-service-item-price:hover { background: transparent; text-decoration: underline; }
 
 .pnr-flow-panel {
   flex: 1;

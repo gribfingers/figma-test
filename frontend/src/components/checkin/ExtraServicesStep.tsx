@@ -2,20 +2,16 @@ import { useState } from "react";
 import { Flight, Passenger } from "../../api";
 import { FlightSegment } from "../../flightSegments";
 import { SeatServiceItem } from "../../paxExtra";
-import { ExtraServiceSelect } from "../ExtraServiceSelect";
 import { SegmentsMultiSelect } from "../SegmentsMultiSelect";
-import { extraServiceById, extraServiceDisplay } from "../../extraServiceTypes";
-import { MinusIcon, PlusIcon, TrashIcon } from "../Icon";
+import { EXTRA_SERVICE_GROUPS } from "../../extraServiceTypes";
+import { MinusIcon, PlusIcon } from "../Icon";
 import { EmdModal } from "./EmdModal";
 
-interface ConfirmedItem {
-  id: number;
-  serviceId: string;
-  price: number;
-  paid: boolean;
+interface RowState {
+  segments: Set<number>;
+  qty: number;
+  confirmed: { price: number; paid: boolean } | null;
 }
-
-let nextConfirmedId = 1;
 
 // No pricing backend for ancillary services either — deterministic per
 // confirmation, same "stable but not user-togglable" approach used
@@ -33,77 +29,104 @@ interface Props {
   onConfirm: () => void;
 }
 
+function defaultRow(segments: FlightSegment[]): RowState {
+  return { segments: new Set(segments.length ? [0] : []), qty: 1, confirmed: null };
+}
+
 /**
- * The check-in flow's Extra services step: pick a service (grouped by
- * Seats/Baggage/Other), which segment(s) it applies to, a quantity, then
- * Confirm adds it to the list below with a price (click to see the EMD).
+ * The check-in flow's Extra services step: the full service list (grouped
+ * by Seats/Baggage/Other) with a checkbox on each row — checking one reveals
+ * its segment picker (multi-segment flights only), a quantity stepper, and
+ * Confirm; confirming swaps that button for the price (click to see the
+ * EMD). Unchecking clears the row back to its default state.
  */
 export function ExtraServicesStep({ flight, passenger, segments, onConfirm }: Props) {
-  const [serviceId, setServiceId] = useState("");
-  const [segmentsSel, setSegmentsSel] = useState<Set<number>>(() => new Set(segments.length ? [0] : []));
-  const [qty, setQty] = useState(1);
-  const [confirmed, setConfirmed] = useState<ConfirmedItem[]>([]);
+  const [rows, setRows] = useState<Record<string, RowState>>({});
   const [emdItem, setEmdItem] = useState<SeatServiceItem | null>(null);
 
-  function confirm() {
-    if (!serviceId) return;
-    const id = nextConfirmedId++;
-    const price = 12500 * qty;
-    const paid = hashSeed(`${passenger.id}-${id}-${serviceId}`) % 3 !== 0;
-    setConfirmed((prev) => [...prev, { id, serviceId, price, paid }]);
-    setServiceId("");
-    setSegmentsSel(new Set(segments.length ? [0] : []));
-    setQty(1);
-    onConfirm();
+  function toggle(id: string, checked: boolean) {
+    setRows((prev) => {
+      const next = { ...prev };
+      if (checked) next[id] = defaultRow(segments);
+      else delete next[id];
+      return next;
+    });
   }
-  function removeConfirmed(id: number) {
-    setConfirmed((prev) => prev.filter((c) => c.id !== id));
+  function updateRow(id: string, patch: Partial<RowState>) {
+    setRows((prev) => (prev[id] ? { ...prev, [id]: { ...prev[id], ...patch } } : prev));
+  }
+  function confirmRow(id: string) {
+    const row = rows[id];
+    if (!row) return;
+    const price = 12500 * row.qty;
+    const paid = hashSeed(`${passenger.id}-${id}-${row.qty}-${[...row.segments].join(",")}`) % 3 !== 0;
+    updateRow(id, { confirmed: { price, paid } });
+    onConfirm();
   }
 
   return (
     <div className="extra-services-step">
-      <div className="extra-services-form">
-        <ExtraServiceSelect value={serviceId} onChange={setServiceId} />
-        <SegmentsMultiSelect segments={segments} selected={segmentsSel} onChange={setSegmentsSel} />
-        <div className="qty-stepper">
-          <button type="button" className="qty-stepper-btn" disabled={qty <= 1} onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="Decrease">
-            <MinusIcon size={14} />
-          </button>
-          <span className="qty-stepper-value">{qty}</span>
-          <button type="button" className="qty-stepper-btn" onClick={() => setQty((q) => q + 1)} aria-label="Increase">
-            <PlusIcon size={14} />
-          </button>
-        </div>
-        <button type="button" className="tertiary" disabled={!serviceId} onClick={confirm}>Confirm</button>
-      </div>
-
-      {confirmed.length > 0 && (
-        <div className="extra-services-list">
-          {confirmed.map((c) => {
-            const opt = extraServiceById(c.serviceId);
-            return (
-              <div key={c.id} className="extra-service-item">
-                <div className="extra-service-item-main">
-                  <span className="extra-service-item-name">{extraServiceDisplay(c.serviceId)}</span>
-                  <div className="extra-service-item-progress">
-                    <span /><span /><span /><span />
-                  </div>
+      <div className="extra-services-groups">
+        {EXTRA_SERVICE_GROUPS.map((g) => (
+          <div key={g.group}>
+            <div className="extra-service-group-label">{g.group}</div>
+            {g.options.map((o) => {
+              const row = rows[o.id];
+              const checked = !!row;
+              return (
+                <div key={o.id} className="extra-service-row">
+                  <label className="extra-service-checkbox">
+                    <input type="checkbox" checked={checked} onChange={(e) => toggle(o.id, e.target.checked)} />
+                    <span className="mono">{o.code}</span> {o.label}
+                  </label>
+                  {row && (
+                    <div className="extra-service-row-controls">
+                      {segments.length > 1 && (
+                        <SegmentsMultiSelect
+                          segments={segments}
+                          selected={row.segments}
+                          onChange={(sel) => updateRow(o.id, { segments: sel })}
+                        />
+                      )}
+                      <div className="qty-stepper">
+                        <button
+                          type="button"
+                          className="qty-stepper-btn"
+                          disabled={row.qty <= 1}
+                          onClick={() => updateRow(o.id, { qty: Math.max(1, row.qty - 1) })}
+                          aria-label="Decrease"
+                        >
+                          <MinusIcon size={14} />
+                        </button>
+                        <span className="qty-stepper-value">{row.qty}</span>
+                        <button
+                          type="button"
+                          className="qty-stepper-btn"
+                          onClick={() => updateRow(o.id, { qty: row.qty + 1 })}
+                          aria-label="Increase"
+                        >
+                          <PlusIcon size={14} />
+                        </button>
+                      </div>
+                      {row.confirmed ? (
+                        <button
+                          type="button"
+                          className={`extra-service-item-price ${row.confirmed.paid ? "paid" : "unpaid"}`}
+                          onClick={() => setEmdItem({ rfisc: o.code, label: o.label, price: row.confirmed!.price, paid: row.confirmed!.paid })}
+                        >
+                          {row.confirmed.price.toLocaleString("ru-RU")} ₽
+                        </button>
+                      ) : (
+                        <button type="button" className="tertiary" onClick={() => confirmRow(o.id)}>Confirm</button>
+                      )}
+                    </div>
+                  )}
                 </div>
-                <button
-                  type="button"
-                  className={`extra-service-item-price ${c.paid ? "paid" : "unpaid"}`}
-                  onClick={() => setEmdItem({ rfisc: opt?.code ?? "", label: opt?.label ?? "", price: c.price, paid: c.paid })}
-                >
-                  {c.price.toLocaleString("ru-RU")} ₽
-                </button>
-                <button type="button" className="extra-service-item-remove" onClick={() => removeConfirmed(c.id)} aria-label="Remove">
-                  <TrashIcon size={18} />
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      )}
+              );
+            })}
+          </div>
+        ))}
+      </div>
 
       {emdItem && <EmdModal flight={flight} passenger={passenger} item={emdItem} onClose={() => setEmdItem(null)} />}
     </div>
