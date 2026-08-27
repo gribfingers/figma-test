@@ -2030,7 +2030,15 @@ tr.row-hover { cursor: pointer; }
 .pnr-head-id { flex-shrink: 0; min-width: 140px; display: flex; align-items: center; gap: 12px; }
 .pnr-flight-number { font-size: 22px; font-weight: 800; color: var(--field-value); line-height: 1.2; }
 .pnr-head-id-meta { display: flex; flex-direction: column; }
-.pnr-route { color: var(--accent); font-weight: 600; font-size: 13px; }
+.pnr-route {
+  all: unset;
+  cursor: pointer;
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 13px;
+}
+/* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
+.pnr-head-id-meta .pnr-route:hover { background: transparent; color: var(--accent-hover); }
 .pnr-date { color: var(--muted); font-size: 12px; margin-top: 2px; }
 
 .pnr-stats { display: flex; justify-content: center; gap: 40px; min-width: 0; }

@@ -14,6 +14,7 @@ import { BaggageStep } from "../components/checkin/BaggageStep";
 import { ExtraServicesStep } from "../components/checkin/ExtraServicesStep";
 import { FlowRosterRow } from "../components/checkin/FlowRosterRow";
 import { FaresInfoModal } from "../components/checkin/FaresInfoModal";
+import { RouteSegmentsModal } from "../components/checkin/RouteSegmentsModal";
 import { FlightInfoPanel } from "../components/checkin/FlightInfoPanel";
 import { PassengerDetailModal } from "../components/flightcard/PassengerModals";
 import { Modal } from "../components/Modal";
@@ -279,6 +280,7 @@ export function PnrView() {
   const [flagsModalPax, setFlagsModalPax] = useState<Passenger | null>(null);
   const [infoModalOpen, setInfoModalOpen] = useState(false);
   const [finishConfirmOpen, setFinishConfirmOpen] = useState(false);
+  const [routeModalOpen, setRouteModalOpen] = useState(false);
   // Baggage prices only show on the roster card once the agent has actually
   // run Calculate for that passenger — not just from opening the Baggage step.
   const [baggageCalculated, setBaggageCalculated] = useState<Set<number>>(() => new Set());
@@ -408,7 +410,7 @@ export function PnrView() {
           <div className="pnr-head-id">
             <div className="pnr-flight-number">{flight.carrier_code}{flight.flight_number}</div>
             <div className="pnr-head-id-meta">
-              <div className="pnr-route">{flight.origin} → {flight.destination}</div>
+              <button type="button" className="pnr-route" onClick={() => setRouteModalOpen(true)}>{flight.origin} → {flight.destination}</button>
               <div className="pnr-date">{fmtCardDate(flight.std)}</div>
             </div>
           </div>
@@ -502,6 +504,7 @@ export function PnrView() {
           />
         )}
         {infoModalOpen && <FaresInfoModal carrierCode={flight.carrier_code} onClose={() => setInfoModalOpen(false)} />}
+        {routeModalOpen && <RouteSegmentsModal flight={flight} onClose={() => setRouteModalOpen(false)} />}
         {flightInfoOpen && (
           <FlightInfoPanel
             flight={flight}
@@ -549,7 +552,7 @@ export function PnrView() {
         <div className="pnr-head-id">
           <div className="pnr-flight-number">{flight.carrier_code}{flight.flight_number}</div>
           <div className="pnr-head-id-meta">
-            <div className="pnr-route">{flight.origin} → {flight.destination}</div>
+            <button type="button" className="pnr-route" onClick={() => setRouteModalOpen(true)}>{flight.origin} → {flight.destination}</button>
             <div className="pnr-date">{fmtCardDate(flight.std)}</div>
           </div>
         </div>
@@ -688,6 +691,7 @@ export function PnrView() {
           </table>
         </div>
       </div>
+      {routeModalOpen && <RouteSegmentsModal flight={flight} onClose={() => setRouteModalOpen(false)} />}
     </div>
   );
 }
