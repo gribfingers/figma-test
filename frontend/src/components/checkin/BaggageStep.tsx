@@ -21,7 +21,6 @@ interface BagRow {
   daa: boolean;
   dmg: boolean;
   printStatus: PrintStatus;
-  expanded: boolean;
 }
 interface CarryOnRow {
   id: number;
@@ -44,7 +43,6 @@ function emptyBagRow(destination: string): BagRow {
     daa: false,
     dmg: false,
     printStatus: "idle",
-    expanded: false,
   };
 }
 function emptyCarryOnRow(): CarryOnRow {
@@ -160,15 +158,7 @@ export function BaggageStep({ flight, passenger, segments, onCalculate }: Props)
           const tone = complete ? (rowPaid(`${seedRef.current}-${row.id}-${row.weight}-${row.typeId}`) ? "paid" : "unpaid") : "neutral";
           const locked = row.printStatus === "printed";
           return (
-            <div key={row.id} className={`baggage-row ${row.expanded ? "expanded" : ""} baggage-row-${row.printStatus}`}>
-              <button
-                type="button"
-                className={`baggage-row-chevron ${row.expanded ? "open" : ""}`}
-                onClick={() => updateRow(row.id, { expanded: !row.expanded })}
-                aria-label="Toggle details"
-              >
-                <ChevronRightIcon size={14} />
-              </button>
+            <div key={row.id} className={`baggage-row ${row.typeId ? "expanded" : ""} baggage-row-${row.printStatus}`}>
               {segments.length > 1 && (
                 <>
                   <span className="baggage-row-origin">{flight.origin} -</span>
@@ -235,7 +225,7 @@ export function BaggageStep({ flight, passenger, segments, onCalculate }: Props)
                 </button>
               )}
 
-              {row.expanded && (
+              {!!row.typeId && (
                 <div className="baggage-row-detail baggage-row-detail-full">
                   {/* No EMD lookup wired up — present for layout, no action yet. */}
                   <button type="button" className="tertiary">EMD</button>

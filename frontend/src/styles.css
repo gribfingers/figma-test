@@ -2299,7 +2299,8 @@ tr.row-hover { cursor: pointer; }
 .select-field .select-trigger.baggage-type-trigger-unpaid,
 .select-field .select-trigger.baggage-type-trigger-unpaid:hover { color: var(--danger); }
 
-.baggage-row-detail-full { display: flex; align-items: center; gap: 20px; }
+/* No chevron on this row anymore, so its detail panel aligns with the row's own left padding instead of the chevron-indented 34px. */
+.baggage-row-detail-full { display: flex; align-items: center; gap: 20px; padding-left: 10px; }
 .baggage-row-tag-display { font-size: 13px; color: var(--field-value); }
 .baggage-row-tag-input {
   all: unset;
