@@ -8,6 +8,7 @@ import { ChevronDownIcon, DocScannedIcon, DocVerifiedIcon, RefreshIcon, SearchIc
 import { useRegisterTab, useTabs } from "../tabs";
 import { useToast } from "../toast";
 import { usePopoverPosition } from "../usePopoverPosition";
+import { usePanelTransition, useRetainedPanelTransition } from "../usePanelMounted";
 import { segmentsForFlight } from "../flightSegments";
 import { DocumentsStep } from "../components/checkin/DocumentsStep";
 import { SeatsStep } from "../components/checkin/SeatsStep";
@@ -307,6 +308,10 @@ export function PnrView() {
   const [docPanelPassenger, setDocPanelPassenger] = useState<Passenger | null>(null);
   const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
   const [actionsPanelKind, setActionsPanelKind] = useState<ActionsPanelKind | null>(null);
+  const flightInfoTransition = usePanelTransition(flightInfoOpen);
+  const cartTransition = usePanelTransition(cartOpen);
+  const docPanelTransition = useRetainedPanelTransition(docPanelPassenger);
+  const actionsPanelTransition = useRetainedPanelTransition(actionsPanelKind);
   const actionsBtnRef = useRef<HTMLButtonElement>(null);
   const actionsMenuRef = useRef<HTMLUListElement>(null);
   const actionsMenuRect = usePopoverPosition(actionsBtnRef, actionsMenuOpen);
@@ -580,7 +585,7 @@ export function PnrView() {
         )}
         {infoModalOpen && <FaresInfoModal carrierCode={flight.carrier_code} onClose={() => setInfoModalOpen(false)} />}
         {routeModalOpen && <RouteSegmentsModal flight={flight} onClose={() => setRouteModalOpen(false)} />}
-        {flightInfoOpen && (
+        {flightInfoTransition.mounted && (
           <FlightInfoPanel
             flight={flight}
             checkinTill={fmtOffsetTime(flight.std, BOARDING_FROM_MIN)}
@@ -591,14 +596,16 @@ export function PnrView() {
             webCheckedInTotal={webCheckedInTotal}
             boardedTotal={boardedTotal}
             passengerTotal={passengers.length}
+            open={flightInfoTransition.entered}
             onClose={() => setFlightInfoOpen(false)}
           />
         )}
-        {cartOpen && (
+        {cartTransition.mounted && (
           <CartPanel
             passengers={flowPassengers}
             segments={segmentsForFlight(flight)}
             confirmedServices={confirmedServices}
+            open={cartTransition.entered}
             onClose={() => setCartOpen(false)}
           />
         )}
@@ -810,20 +817,22 @@ export function PnrView() {
         </div>
       </div>
       {routeModalOpen && <RouteSegmentsModal flight={flight} onClose={() => setRouteModalOpen(false)} />}
-      {docPanelPassenger && (
+      {docPanelTransition.mounted && docPanelTransition.retained && (
         <PassengerDocPanel
           flightId={fid}
-          passenger={docPanelPassenger}
+          passenger={docPanelTransition.retained}
+          open={docPanelTransition.entered}
           onClose={() => setDocPanelPassenger(null)}
           onUpdated={handlePassengerUpdated}
         />
       )}
-      {actionsPanelKind && (
+      {actionsPanelTransition.mounted && actionsPanelTransition.retained && (
         <ActionsPanel
-          kind={actionsPanelKind}
+          kind={actionsPanelTransition.retained}
           flight={flight}
           passengers={flowPassengers}
           segments={segmentsForFlight(flight)}
+          open={actionsPanelTransition.entered}
           onClose={() => setActionsPanelKind(null)}
         />
       )}

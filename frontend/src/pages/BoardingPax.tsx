@@ -10,6 +10,7 @@ import { useRegisterTab } from "../tabs";
 import { useToast } from "../toast";
 import { FlowStep, presetCheckinStep } from "../checkinFlow";
 import { PassengerDocPanel } from "../components/PassengerDocPanel";
+import { usePanelTransition } from "../usePanelMounted";
 
 // Matches Boarding.tsx's fmtCardDate/parseVersion/classFor/StatBar/statusLabel/statusChipClass —
 // same light duplication this session's other pages already use rather than a shared module.
@@ -97,6 +98,7 @@ export function BoardingPax() {
   const [message, setMessage] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [docPanelOpen, setDocPanelOpen] = useState(false);
+  const docPanelTransition = usePanelTransition(docPanelOpen);
   const { showToast } = useToast();
 
   function refresh() {
@@ -275,10 +277,11 @@ export function BoardingPax() {
         </div>
       </div>
 
-      {docPanelOpen && (
+      {docPanelTransition.mounted && (
         <PassengerDocPanel
           flightId={fid}
           passenger={passenger}
+          open={docPanelTransition.entered}
           onClose={() => setDocPanelOpen(false)}
           onUpdated={() => refresh()}
         />

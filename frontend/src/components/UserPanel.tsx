@@ -26,10 +26,11 @@ function timezoneOptions(): string[] {
 }
 
 interface Props {
+  open: boolean;
   onClose: () => void;
 }
 
-export function UserPanel({ onClose }: Props) {
+export function UserPanel({ open, onClose }: Props) {
   const { user, logout, updateUser } = useAuth();
   const { theme, setTheme } = useTheme();
   const { fontSize, increase, decrease } = useFontSize();
@@ -80,7 +81,7 @@ export function UserPanel({ onClose }: Props) {
   }
 
   return (
-    <div className="user-panel-overlay" onClick={onClose}>
+    <div className={`user-panel-overlay ${open ? "open" : ""}`} onClick={onClose}>
       <div className="user-panel" onClick={(e) => e.stopPropagation()}>
         <div className="user-panel-header">
           <div>

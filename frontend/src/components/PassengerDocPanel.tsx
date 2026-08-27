@@ -13,6 +13,7 @@ function fmtDMY(date: string | null): string {
 interface Props {
   flightId: number;
   passenger: Passenger;
+  open: boolean;
   onClose: () => void;
   onUpdated: (p: Passenger) => void;
 }
@@ -23,7 +24,7 @@ interface Props {
  * as a link. Confirm marks the document verified, same as the Documents
  * step's own "Verify docs" action.
  */
-export function PassengerDocPanel({ flightId, passenger, onClose, onUpdated }: Props) {
+export function PassengerDocPanel({ flightId, passenger, open, onClose, onUpdated }: Props) {
   const extra = parsePassengerExtra(passenger);
   const fullName = [passenger.surname, passenger.given_name, passenger.middle_name].filter(Boolean).join(" ");
 
@@ -36,7 +37,7 @@ export function PassengerDocPanel({ flightId, passenger, onClose, onUpdated }: P
   }
 
   return (
-    <div className="pax-doc-panel-overlay" onClick={onClose}>
+    <div className={`pax-doc-panel-overlay ${open ? "open" : ""}`} onClick={onClose}>
       <div className="pax-doc-panel" onClick={(e) => e.stopPropagation()}>
         <div className="pax-doc-panel-header">
           <div className="pax-doc-panel-name">{fullName}</div>

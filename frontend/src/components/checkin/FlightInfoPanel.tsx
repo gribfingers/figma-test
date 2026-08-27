@@ -16,6 +16,7 @@ interface Props {
   webCheckedInTotal: number;
   boardedTotal: number;
   passengerTotal: number;
+  open: boolean;
   onClose: () => void;
 }
 
@@ -50,12 +51,13 @@ export function FlightInfoPanel({
   webCheckedInTotal,
   boardedTotal,
   passengerTotal,
+  open,
   onClose,
 }: Props) {
   const available: ClassCounts = { C: capacity.C - booked.C, Y: capacity.Y - booked.Y };
 
   return (
-    <div className="flight-info-panel-overlay" onClick={onClose}>
+    <div className={`flight-info-panel-overlay ${open ? "open" : ""}`} onClick={onClose}>
       <div className="flight-info-panel" onClick={(e) => e.stopPropagation()}>
         <div className="flight-info-panel-header">
           <div>

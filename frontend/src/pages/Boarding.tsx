@@ -4,6 +4,7 @@ import { api, Flight, Passenger, SeatCell } from "../api";
 import {
   ArrowNestedIcon,
   ChildIcon,
+  CloseIcon,
   DocScannedIcon,
   DocVerifiedIcon,
   HandIcon,
@@ -13,6 +14,7 @@ import { useRegisterTab } from "../tabs";
 import { useToast } from "../toast";
 import { FlagKind, FlagModal } from "../components/flightcard/PassengerModals";
 import { PassengerDocPanel } from "../components/PassengerDocPanel";
+import { useRetainedPanelTransition } from "../usePanelMounted";
 import {
   FlagStatus,
   asvcStatus,
@@ -158,6 +160,7 @@ export function Boarding() {
   const [searchQuery, setSearchQuery] = useState("");
   const [flagsModal, setFlagsModal] = useState<{ flag: FlagKind; passenger: Passenger } | null>(null);
   const [docPanelPassenger, setDocPanelPassenger] = useState<Passenger | null>(null);
+  const docPanelTransition = useRetainedPanelTransition(docPanelPassenger);
   const { showToast } = useToast();
 
   function refresh() {
@@ -480,7 +483,12 @@ export function Boarding() {
 
       {manifest && (
         <div className="panel">
-          <h3>{manifest.label}</h3>
+          <div className="manifest-head">
+            <h3>{manifest.label}</h3>
+            <button type="button" className="icon-button" aria-label="Close" onClick={() => setManifest(null)}>
+              <CloseIcon size={16} />
+            </button>
+          </div>
           <pre className="manifest">{manifest.text}</pre>
         </div>
       )}
@@ -498,10 +506,11 @@ export function Boarding() {
         />
       )}
 
-      {docPanelPassenger && (
+      {docPanelTransition.mounted && docPanelTransition.retained && (
         <PassengerDocPanel
           flightId={fid}
-          passenger={docPanelPassenger}
+          passenger={docPanelTransition.retained}
+          open={docPanelTransition.entered}
           onClose={() => setDocPanelPassenger(null)}
           onUpdated={(updated) => setPassengers((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))}
         />

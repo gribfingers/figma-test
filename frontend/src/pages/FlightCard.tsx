@@ -5,6 +5,7 @@ import { useRegisterTab } from "../tabs";
 import { useToast } from "../toast";
 import { usePersistentState } from "../usePersistentState";
 import { FlightCardHeader } from "../components/flightcard/FlightCardHeader";
+import { CloseIcon } from "../components/Icon";
 import { FlightAction } from "../components/flightcard/FlightActionsMenu";
 import { MainTab } from "../components/flightcard/MainTab";
 import { CountersTab } from "../components/flightcard/CountersTab";
@@ -101,7 +102,7 @@ export function FlightCard() {
     if (!flight) return;
     setError("");
     try {
-      if (action === "checkin") return navigate(`/checkin/${flight.id}`);
+      if (action === "checkin") return navigate("/search");
       if (action === "boarding") return navigate(`/boarding/${flight.id}`);
       if (action === "pnl") {
         const text = await api.pnl(flight.id);
@@ -156,7 +157,12 @@ export function FlightCard() {
 
       {manifest && (
         <div className="panel">
-          <h3>{manifest.label}</h3>
+          <div className="manifest-head">
+            <h3>{manifest.label}</h3>
+            <button type="button" className="icon-button" aria-label="Close" onClick={() => setManifest(null)}>
+              <CloseIcon size={16} />
+            </button>
+          </div>
           <pre className="manifest">{manifest.text}</pre>
         </div>
       )}

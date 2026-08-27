@@ -5,6 +5,7 @@ import { resizeDataUrl, resizeImageToDataUrl, userAvatarColor, userInitials } fr
 import { ArrowBackIcon, AttachIcon, CameraIcon, CloseIcon, SendIcon } from "./Icon";
 
 interface Props {
+  open: boolean;
   onClose: () => void;
 }
 
@@ -48,7 +49,7 @@ async function captureScreenshot(): Promise<string> {
   }
 }
 
-export function Messenger({ onClose }: Props) {
+export function Messenger({ open, onClose }: Props) {
   const { user } = useAuth();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [query, setQuery] = useState("");
@@ -166,7 +167,7 @@ export function Messenger({ onClose }: Props) {
   });
 
   return (
-    <div className="messenger-overlay" onClick={onClose}>
+    <div className={`messenger-overlay ${open ? "open" : ""}`} onClick={onClose}>
       <div className="messenger-panel" onClick={(e) => e.stopPropagation()}>
         {!activeContact ? (
           <>

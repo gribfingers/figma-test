@@ -389,7 +389,7 @@ body {
 /* Must come after .tabs-icon-btn — its own all:unset otherwise wins the
    flex-shrink cascade (equal specificity, later source order) and lets
    these buttons get squashed instead of staying pinned at 36px. */
-.tabs-scroll-btn { flex-shrink: 0; margin: 0 2px; }
+.tabs-scroll-btn { flex-shrink: 0; margin: 0 2px; border: 1px solid var(--panel-border); }
 .tabs-scroll-btn:disabled { opacity: 0.3; cursor: default; }
 .tabs-bar .tabs-scroll-btn:disabled:hover { background: transparent; }
 .tabs-badge {
@@ -1159,6 +1159,55 @@ button.icon-button:hover { background: var(--hover-bg); }
 .login-card .field2 { margin-bottom: 16px; }
 .login-card button[type="submit"] { margin-top: 4px; }
 
+/* ---- Slide-out side panels: shared enter/exit transition ----
+   Each panel below is mounted/unmounted by usePanelTransition (see
+   usePanelMounted.ts), which holds it in the DOM through its exit
+   animation and defers the .open class by one frame on entry — this CSS
+   just has to react to that .open class turning on/off. */
+.user-panel-overlay,
+.pax-doc-panel-overlay,
+.messenger-overlay,
+.actions-panel-overlay,
+.flight-info-panel-overlay,
+.cart-panel-overlay {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.user-panel-overlay.open,
+.pax-doc-panel-overlay.open,
+.messenger-overlay.open,
+.actions-panel-overlay.open,
+.flight-info-panel-overlay.open,
+.cart-panel-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+/* Right-opening panels slide in from off the right edge. */
+.user-panel-overlay .user-panel,
+.pax-doc-panel-overlay .pax-doc-panel,
+.messenger-overlay .messenger-panel,
+.actions-panel-overlay .actions-panel {
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+}
+.user-panel-overlay.open .user-panel,
+.pax-doc-panel-overlay.open .pax-doc-panel,
+.messenger-overlay.open .messenger-panel,
+.actions-panel-overlay.open .actions-panel {
+  transform: translateX(0);
+}
+/* Left-opening panels slide in from off the left edge. */
+.flight-info-panel-overlay .flight-info-panel,
+.cart-panel-overlay .cart-panel {
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+}
+.flight-info-panel-overlay.open .flight-info-panel,
+.cart-panel-overlay.open .cart-panel {
+  transform: translateX(0);
+}
+
 /* ---- Account panel (avatar click) ---- */
 .user-panel-overlay { position: fixed; inset: 0; background: rgba(24, 31, 36, 0.32); z-index: 100; display: flex; justify-content: flex-end; }
 .user-panel {
@@ -1591,6 +1640,8 @@ button.icon-button:hover { background: var(--hover-bg); }
   text-transform: uppercase;
 }
 
+.manifest-head { display: flex; align-items: center; justify-content: space-between; }
+.manifest-head h3 { margin: 0; }
 pre.manifest {
   background: #0a1a3f;
   color: #b9f5c5;
@@ -1615,7 +1666,7 @@ a { color: var(--accent); }
    independently scrolling panes instead of the page growing/scrolling as a
    whole; overflow-y:auto here is a fallback for tabs (Main/Counters/...) or
    the PNL/PFS manifest panel that don't manage their own internal scroll. */
-.flight-card-page { display: flex; flex-direction: column; height: 100%; min-height: 0; overflow-y: auto; }
+.flight-card-page { display: flex; flex-direction: column; height: 100%; min-height: 0; overflow-y: auto; gap: 16px; }
 .flight-card-panel {
   flex: 1;
   min-height: 0;
@@ -2264,7 +2315,7 @@ tr.row-hover { cursor: pointer; }
 /* ---- Boarding workstation (gate) ---- */
 /* Only the passenger table scrolls — everything else (header, filters) stays put,
    same "page itself must not scroll" approach as .pnr-view-flow. */
-.boarding-page { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.boarding-page { display: flex; flex-direction: column; height: 100%; min-height: 0; gap: 16px; }
 .boarding-table-panel { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 .boarding-table-panel .table-scroll { flex: 1; min-height: 0; overflow-y: auto; }
 /* Fixed width so the button doesn't resize when "Start boarding" becomes "Close flight". */

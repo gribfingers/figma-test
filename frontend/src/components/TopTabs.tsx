@@ -5,6 +5,7 @@ import { useTabs } from "../tabs";
 import { useAuth } from "../auth";
 import { useCheckinFlow, pnrFlowPidFromPath } from "../checkinFlow";
 import { useToast } from "../toast";
+import { usePanelTransition } from "../usePanelMounted";
 import { userAvatarColor, userInitials } from "../userDisplay";
 import { ChatIcon, ChevronLeftIcon, ChevronRightIcon, CloseIcon } from "./Icon";
 import { UserPanel } from "./UserPanel";
@@ -42,6 +43,8 @@ export function TopTabs() {
   const { showToast } = useToast();
   const [panelOpen, setPanelOpen] = useState(false);
   const [messengerOpen, setMessengerOpen] = useState(false);
+  const panelTransition = usePanelTransition(panelOpen);
+  const messengerTransition = usePanelTransition(messengerOpen);
   const [unreadCount, setUnreadCount] = useState(0);
   // Path of a tab pending confirmation before it's closed (mid check-in flow).
   const [closeConfirmPath, setCloseConfirmPath] = useState<string | null>(null);
@@ -156,7 +159,7 @@ export function TopTabs() {
         </button>
       )}
       {overflowing && (
-        <button type="button" className="tabs-icon-btn" title="Close all tabs" onClick={handleCloseAll}>
+        <button type="button" className="tabs-icon-btn tabs-scroll-btn" title="Close all tabs" onClick={handleCloseAll}>
           <CloseIcon size={16} />
         </button>
       )}
@@ -189,8 +192,10 @@ export function TopTabs() {
           </button>
         )}
       </div>
-      {panelOpen && <UserPanel onClose={() => setPanelOpen(false)} />}
-      {messengerOpen && <Messenger onClose={() => setMessengerOpen(false)} />}
+      {panelTransition.mounted && <UserPanel open={panelTransition.entered} onClose={() => setPanelOpen(false)} />}
+      {messengerTransition.mounted && (
+        <Messenger open={messengerTransition.entered} onClose={() => setMessengerOpen(false)} />
+      )}
       {closeConfirmPath && (
         <Modal
           title="Exit check-in"

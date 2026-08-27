@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { ReactNode, createContext, useContext, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Flight, Passenger } from "../../api";
 import { FlightSegment } from "../../flightSegments";
@@ -17,8 +17,13 @@ interface Props {
   flight: Flight;
   passengers: Passenger[];
   segments: FlightSegment[];
+  open: boolean;
   onClose: () => void;
 }
+
+// Threads the slide transition's open/closed state down to Shell without
+// every one of the 7 sub-panels below needing to accept and forward it.
+const OpenContext = createContext(true);
 
 /** "1980-12-22" -> "22.12.1980"; blank/invalid input stays blank. */
 function fmtDMY(date: string | null): string {
@@ -37,8 +42,9 @@ function paxName(p: Passenger): string {
 
 /** Slide-out side panel shell (same shape as PassengerDocPanel/UserPanel) shared by every Actions-menu panel below. */
 function Shell({ title, onClose, footer, children }: { title: string; onClose: () => void; footer?: ReactNode; children: ReactNode }) {
+  const open = useContext(OpenContext);
   return (
-    <div className="actions-panel-overlay" onClick={onClose}>
+    <div className={`actions-panel-overlay ${open ? "open" : ""}`} onClick={onClose}>
       <div className="actions-panel" onClick={(e) => e.stopPropagation()}>
         <div className="actions-panel-header">
           <div className="actions-panel-title">{title}</div>
@@ -75,23 +81,29 @@ function SegmentAllTabs({ segments, selected, onSelect }: { segments: FlightSegm
  * scope as e.g. the ET modal's mock coupon table — so each one below is a
  * self-contained, locally-stateful form; Save/Print just toast and close.
  */
-export function ActionsPanel({ kind, flight, passengers, segments, onClose }: Props) {
-  switch (kind) {
-    case "cancel":
-      return <CancelCheckinPanel segments={segments} onClose={onClose} />;
-    case "move":
-      return <MoveFlightPanel onClose={onClose} />;
-    case "print":
-      return <PrintBoardingPassPanel passengers={passengers} segments={segments} onClose={onClose} />;
-    case "priority":
-      return <PriorityListPanel segments={segments} onClose={onClose} />;
-    case "remarks":
-      return <RemarksPanel onClose={onClose} />;
-    case "quick":
-      return <QuickCheckinPanel flight={flight} passengers={passengers} segments={segments} onClose={onClose} />;
-    case "transfer":
-      return <GroupTransferPanel passengers={passengers} onClose={onClose} />;
-  }
+export function ActionsPanel({ kind, flight, passengers, segments, open, onClose }: Props) {
+  return (
+    <OpenContext.Provider value={open}>
+      {(() => {
+        switch (kind) {
+          case "cancel":
+            return <CancelCheckinPanel segments={segments} onClose={onClose} />;
+          case "move":
+            return <MoveFlightPanel onClose={onClose} />;
+          case "print":
+            return <PrintBoardingPassPanel passengers={passengers} segments={segments} onClose={onClose} />;
+          case "priority":
+            return <PriorityListPanel segments={segments} onClose={onClose} />;
+          case "remarks":
+            return <RemarksPanel onClose={onClose} />;
+          case "quick":
+            return <QuickCheckinPanel flight={flight} passengers={passengers} segments={segments} onClose={onClose} />;
+          case "transfer":
+            return <GroupTransferPanel passengers={passengers} onClose={onClose} />;
+        }
+      })()}
+    </OpenContext.Provider>
+  );
 }
 
 const CANCEL_OPTIONS = [

@@ -8,6 +8,7 @@ interface Props {
   segments: FlightSegment[];
   /** Extra services actually confirmed on the Extra services step — same data the roster card shows. */
   confirmedServices: Record<number, SeatServiceItem[]>;
+  open: boolean;
   onClose: () => void;
 }
 
@@ -26,7 +27,7 @@ function CartLine({ label, amount, bold }: { label: string; amount: number; bold
 }
 
 /** Slide-out side panel (same shell as FlightInfoPanel, but from the left) opened from the check-in flow's Cart nav icon. */
-export function CartPanel({ passengers, segments, confirmedServices, onClose }: Props) {
+export function CartPanel({ passengers, segments, confirmedServices, open, onClose }: Props) {
   const rows = passengers.map((p) => {
     const seat = sum(seatServicesForPassenger(p, segments.length).flat());
     const baggage = sum(baggageServicesForPassenger(p, segments.length).flat());
@@ -36,7 +37,7 @@ export function CartPanel({ passengers, segments, confirmedServices, onClose }: 
   const grandTotal = rows.reduce((total, r) => total + r.total, 0);
 
   return (
-    <div className="cart-panel-overlay" onClick={onClose}>
+    <div className={`cart-panel-overlay ${open ? "open" : ""}`} onClick={onClose}>
       <div className="cart-panel" onClick={(e) => e.stopPropagation()}>
         <div className="cart-panel-header">
           <div className="cart-panel-title">Cart</div>
