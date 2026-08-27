@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { api, Flight, Passenger, SeatCell } from "../api";
 import { cabinFeaturesFor } from "../cabinLayout";
 import { SeatMapPanel } from "../components/SeatMapPanel";
-import { BaggageFlowIcon, DocumentsFlowIcon, SeatsFlowIcon, ServicesFlowIcon, UserIcon } from "../components/Icon";
+import { BaggageFlowIcon, DocumentsFlowIcon, SeatsFlowIcon, ServicesFlowIcon } from "../components/Icon";
 import { formatSeatDisplay } from "../seatExtra";
 import { parsePassengerExtra } from "../paxExtra";
 import { useRegisterTab } from "../tabs";
@@ -212,32 +212,22 @@ export function BoardingPax() {
 
       <div className="boarding-pax-body">
         <div className="panel boarding-pax-card">
-          <div className="boarding-pax-header">
-            {/* No real photo capture in this prototype (see paxExtra.ts's docScanned/docVerified
-                flags) — a document scanner would normally image the whole bio page, photo
-                included, so this is a placeholder for where that would show. */}
-            <div className="boarding-pax-photo">
-              <UserIcon size={40} />
-            </div>
-            <div className="boarding-pax-header-info">
-              <div className="boarding-pax-name">{passenger.surname} {passenger.given_name}</div>
-              <div className="boarding-pax-steps">
-                {STEP_ICONS.map(({ step, icon, tooltip }) => (
-                  <Link
-                    key={step}
-                    to={`/checkin/${fid}/pnr/${passenger.id}`}
-                    target="_blank"
-                    data-tooltip={tooltip}
-                    onClick={() => {
-                      presetFlowSelection(passenger.id);
-                      presetCheckinStep(passenger.id, step);
-                    }}
-                  >
-                    {icon(20)}
-                  </Link>
-                ))}
-              </div>
-            </div>
+          <div className="boarding-pax-name">{passenger.surname} {passenger.given_name}</div>
+          <div className="boarding-pax-steps">
+            {STEP_ICONS.map(({ step, icon, tooltip }) => (
+              <Link
+                key={step}
+                to={`/checkin/${fid}/pnr/${passenger.id}`}
+                target="_blank"
+                data-tooltip={tooltip}
+                onClick={() => {
+                  presetFlowSelection(passenger.id);
+                  presetCheckinStep(passenger.id, step);
+                }}
+              >
+                {icon(28)}
+              </Link>
+            ))}
           </div>
 
           <div className="boarding-pax-seat-row">
@@ -259,7 +249,7 @@ export function BoardingPax() {
             ) : (
               <button
                 type="button"
-                className="secondary boarding-pax-action-btn"
+                className="boarding-pax-action-btn"
                 disabled={passenger.checkin_status !== "CHECKED_IN"}
                 onClick={boardThis}
               >
