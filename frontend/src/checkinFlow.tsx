@@ -29,6 +29,8 @@ interface CheckinFlowState {
   setFlowStep: (pid: number, step: FlowStep | null) => void;
   flightInfoOpenFor: (pid: number) => boolean;
   setFlightInfoOpen: (pid: number, open: boolean) => void;
+  cartOpenFor: (pid: number) => boolean;
+  setCartOpen: (pid: number, open: boolean) => void;
 }
 
 // PnrView owns the flow (it has the flight/passenger data), but the flow's
@@ -46,6 +48,7 @@ const CheckinFlowContext = createContext<CheckinFlowState | null>(null);
 export function CheckinFlowProvider({ children }: { children: ReactNode }) {
   const [stepByPid, setStepByPid] = useState<Record<number, FlowStep>>(loadStoredSteps);
   const [infoOpenByPid, setInfoOpenByPid] = useState<Record<number, boolean>>({});
+  const [cartOpenByPid, setCartOpenByPid] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
     try {
@@ -65,10 +68,15 @@ export function CheckinFlowProvider({ children }: { children: ReactNode }) {
         }
         return { ...prev, [pid]: step };
       });
-      if (step === null) setInfoOpenByPid((prev) => ({ ...prev, [pid]: false }));
+      if (step === null) {
+        setInfoOpenByPid((prev) => ({ ...prev, [pid]: false }));
+        setCartOpenByPid((prev) => ({ ...prev, [pid]: false }));
+      }
     },
     flightInfoOpenFor: (pid) => infoOpenByPid[pid] ?? false,
     setFlightInfoOpen: (pid, open) => setInfoOpenByPid((prev) => ({ ...prev, [pid]: open })),
+    cartOpenFor: (pid) => cartOpenByPid[pid] ?? false,
+    setCartOpen: (pid, open) => setCartOpenByPid((prev) => ({ ...prev, [pid]: open })),
   };
 
   return <CheckinFlowContext.Provider value={value}>{children}</CheckinFlowContext.Provider>;

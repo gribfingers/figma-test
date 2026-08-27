@@ -17,6 +17,7 @@ import { FlowRosterRow } from "../components/checkin/FlowRosterRow";
 import { FaresInfoModal } from "../components/checkin/FaresInfoModal";
 import { RouteSegmentsModal } from "../components/checkin/RouteSegmentsModal";
 import { FlightInfoPanel } from "../components/checkin/FlightInfoPanel";
+import { CartPanel } from "../components/checkin/CartPanel";
 import { PassengerDetailModal } from "../components/flightcard/PassengerModals";
 import { Modal } from "../components/Modal";
 import { FLOW_STEPS, FLOW_STEP_LABEL, FlowStep, useCheckinFlow } from "../checkinFlow";
@@ -275,11 +276,20 @@ export function PnrView() {
     });
   }
   const [extraPassengers, setExtraPassengers] = useState<Passenger[]>(() => extraPassengersCache.get(pid) ?? []);
-  const { flowStepFor, setFlowStep: setFlowStepFor, flightInfoOpenFor, setFlightInfoOpen: setFlightInfoOpenFor } = useCheckinFlow();
+  const {
+    flowStepFor,
+    setFlowStep: setFlowStepFor,
+    flightInfoOpenFor,
+    setFlightInfoOpen: setFlightInfoOpenFor,
+    cartOpenFor,
+    setCartOpen: setCartOpenFor,
+  } = useCheckinFlow();
   const flowStep = flowStepFor(pid);
   const flightInfoOpen = flightInfoOpenFor(pid);
+  const cartOpen = cartOpenFor(pid);
   const setFlowStep = (step: FlowStep | null) => setFlowStepFor(pid, step);
   const setFlightInfoOpen = (open: boolean) => setFlightInfoOpenFor(pid, open);
+  const setCartOpen = (open: boolean) => setCartOpenFor(pid, open);
   const [flowActiveId, setFlowActiveId] = usePersistentState<number | null>(`dcs_pnr_flow_active_${pid}`, null);
   const [flagsModalPax, setFlagsModalPax] = useState<Passenger | null>(null);
   const [infoModalOpen, setInfoModalOpen] = useState(false);
@@ -547,6 +557,14 @@ export function PnrView() {
             boardedTotal={boardedTotal}
             passengerTotal={passengers.length}
             onClose={() => setFlightInfoOpen(false)}
+          />
+        )}
+        {cartOpen && (
+          <CartPanel
+            passengers={flowPassengers}
+            segments={segmentsForFlight(flight)}
+            confirmedServices={confirmedServices}
+            onClose={() => setCartOpen(false)}
           />
         )}
         {finishConfirmOpen && (

@@ -1213,13 +1213,14 @@ button.icon-button:hover { background: var(--hover-bg); }
 .user-panel-footer { margin-top: auto; padding-top: 24px; text-align: center; flex-shrink: 0; }
 
 /* ---- Flight Information panel (check-in flow's Flight Info nav icon) ---- */
-.flight-info-panel-overlay { position: fixed; inset: 0; background: rgba(24, 31, 36, 0.32); z-index: 100; display: flex; justify-content: flex-end; }
+/* Opens from the left, same side as the nav icon that triggers it. */
+.flight-info-panel-overlay { position: fixed; inset: 0; background: rgba(24, 31, 36, 0.32); z-index: 100; display: flex; justify-content: flex-start; }
 .flight-info-panel {
   width: 380px;
   max-width: 100%;
   height: 100%;
   background: var(--panel);
-  box-shadow: -8px 0 40px -12px rgba(24, 31, 36, 0.25);
+  box-shadow: 8px 0 40px -12px rgba(24, 31, 36, 0.25);
   display: flex;
   flex-direction: column;
   overflow-y: auto;
@@ -1247,6 +1248,37 @@ button.icon-button:hover { background: var(--hover-bg); }
 .flight-info-counts { display: flex; flex-direction: column; gap: 8px; }
 .flight-info-count-row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: var(--field-value); }
 .flight-info-count-row span:first-child { color: var(--muted); }
+
+/* ---- Cart (Cart nav icon in the check-in flow) ---- */
+/* Same shell as FlightInfoPanel — opens from the left, same side as the nav icon. */
+.cart-panel-overlay { position: fixed; inset: 0; background: rgba(24, 31, 36, 0.32); z-index: 100; display: flex; justify-content: flex-start; }
+.cart-panel {
+  width: 380px;
+  max-width: 100%;
+  height: 100%;
+  background: var(--panel);
+  box-shadow: 8px 0 40px -12px rgba(24, 31, 36, 0.25);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+.cart-panel-header { display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; padding: 24px 24px 20px; }
+.cart-panel-title { font-size: 20px; font-weight: 800; color: var(--field-value); }
+.cart-panel-body { flex: 1; overflow-y: auto; }
+.cart-passenger { padding: 16px 24px; border-bottom: 1px solid var(--panel-border); }
+.cart-passenger-name { font-size: 14px; font-weight: 700; color: var(--field-value); margin-bottom: 12px; }
+.cart-passenger-pay { display: flex; justify-content: flex-end; margin-top: 4px; }
+.cart-passenger-pay button { padding: 0; height: auto; }
+.cart-panel-footer { flex-shrink: 0; padding: 20px 24px 24px; border-top: 1px solid var(--panel-border); display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.cart-panel-footer .cart-line { flex: 1; }
+
+/* Label ... dotted leader ... value, like a menu/invoice line. */
+.cart-line { display: flex; align-items: baseline; gap: 6px; font-size: 14px; color: var(--field-value); margin-bottom: 8px; }
+.cart-line:last-child { margin-bottom: 0; }
+.cart-line-label { flex-shrink: 0; color: var(--muted); }
+.cart-line-leader { flex: 1; border-bottom: 1px dotted var(--border-strong); margin-bottom: 4px; }
+.cart-line-value { flex-shrink: 0; font-family: var(--mono); }
+.cart-line-total .cart-line-label, .cart-line-total .cart-line-value { font-weight: 700; color: var(--field-value); }
 
 /* ---- Messenger (Chat button in the top bar) ---- */
 .messenger-overlay { position: fixed; inset: 0; background: rgba(24, 31, 36, 0.32); z-index: 100; display: flex; justify-content: flex-end; }

@@ -45,10 +45,11 @@ function isCheckinPage(pathname: string): boolean {
 export function SideDrawer() {
   const { pathname } = useLocation();
   const { user } = useAuth();
-  const { flowStepFor, setFlowStep, flightInfoOpenFor, setFlightInfoOpen } = useCheckinFlow();
+  const { flowStepFor, setFlowStep, flightInfoOpenFor, setFlightInfoOpen, cartOpenFor, setCartOpen } = useCheckinFlow();
   const pnrPid = pnrFlowPidFromPath(pathname);
   const flowStep = pnrPid !== null ? flowStepFor(pnrPid) : null;
   const flightInfoOpen = pnrPid !== null && flightInfoOpenFor(pnrPid);
+  const cartOpen = pnrPid !== null && cartOpenFor(pnrPid);
   const showFlowIcons = pnrPid !== null && flowStep !== null;
   const [lastUpdated, setLastUpdated] = useState(() => new Date());
 
@@ -90,8 +91,12 @@ export function SideDrawer() {
               </button>
             ))}
             <div className="side-divider" />
-            {/* Placeholder — cart functionality isn't built yet. */}
-            <button type="button" className="side-item" data-tooltip="Cart">
+            <button
+              type="button"
+              className={`side-item ${cartOpen ? "selected" : ""}`}
+              data-tooltip="Cart"
+              onClick={() => setCartOpen(pnrPid!, true)}
+            >
               <CartFlowIcon size={20} />
             </button>
             <button
