@@ -26,12 +26,23 @@ interface Props {
   flight: Flight;
   passenger: Passenger;
   segments: FlightSegment[];
-  /** Fires whenever whether this passenger has at least one confirmed service changes — the roster card's chips track this live. */
-  onConfirmedChange: (hasConfirmed: boolean) => void;
+  /** Fires with the full list of confirmed services whenever it changes — the roster card's chips mirror this live. */
+  onConfirmedChange: (items: SeatServiceItem[]) => void;
 }
 
 function defaultRow(segments: FlightSegment[]): RowState {
   return { segments: new Set(segments.length ? [0] : []), qty: 1, confirmed: null };
+}
+
+const ALL_OPTIONS = EXTRA_SERVICE_GROUPS.flatMap((g) => g.options);
+
+function confirmedItems(rows: Record<string, RowState>): SeatServiceItem[] {
+  return ALL_OPTIONS.filter((o) => rows[o.id]?.confirmed).map((o) => ({
+    rfisc: o.code,
+    label: o.label,
+    price: rows[o.id].confirmed!.price,
+    paid: rows[o.id].confirmed!.paid,
+  }));
 }
 
 /**
@@ -50,16 +61,12 @@ export function ExtraServicesStep({ flight, passenger, segments, onConfirmedChan
       setRows((prev) => ({ ...prev, [id]: defaultRow(segments) }));
       return;
     }
-    const wasConfirmed = rows[id]?.confirmed !== null;
     setRows((prev) => {
       const next = { ...prev };
       delete next[id];
+      onConfirmedChange(confirmedItems(next));
       return next;
     });
-    if (wasConfirmed) {
-      const stillHasAny = Object.entries(rows).some(([k, r]) => k !== id && r.confirmed !== null);
-      onConfirmedChange(stillHasAny);
-    }
   }
   function updateRow(id: string, patch: Partial<RowState>) {
     setRows((prev) => (prev[id] ? { ...prev, [id]: { ...prev[id], ...patch } } : prev));
@@ -69,8 +76,11 @@ export function ExtraServicesStep({ flight, passenger, segments, onConfirmedChan
     if (!row) return;
     const price = 12500 * row.qty;
     const paid = hashSeed(`${passenger.id}-${id}-${row.qty}-${[...row.segments].join(",")}`) % 3 !== 0;
-    updateRow(id, { confirmed: { price, paid } });
-    onConfirmedChange(true);
+    setRows((prev) => {
+      const next = { ...prev, [id]: { ...prev[id], confirmed: { price, paid } } };
+      onConfirmedChange(confirmedItems(next));
+      return next;
+    });
   }
 
   return (
@@ -83,7 +93,7 @@ export function ExtraServicesStep({ flight, passenger, segments, onConfirmedChan
               const row = rows[o.id];
               const checked = !!row;
               return (
-                <div key={o.id} className={`extra-service-row ${checked ? "expanded" : ""}`}>
+                <div key={o.id} className="extra-service-row">
                   <label className="extra-service-checkbox">
                     <input type="checkbox" checked={checked} onChange={(e) => toggle(o.id, e.target.checked)} />
                     <span className="mono">{o.code}</span> {o.label}

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Flight, Passenger } from "../../api";
-import { ageFromDob, baggageServicesForPassenger, extraServicesForPassenger, SeatServiceItem, seatServicesForPassenger } from "../../paxExtra";
+import { ageFromDob, baggageServicesForPassenger, SeatServiceItem, seatServicesForPassenger } from "../../paxExtra";
 import { formatSeatDisplay } from "../../seatExtra";
 import { FlightSegment } from "../../flightSegments";
 import { InfantIcon, InfoIcon } from "../Icon";
@@ -61,10 +61,10 @@ interface Props {
   showBaggage: boolean;
   /** Prices only appear on the card once Calculate has actually been run for this passenger. */
   baggageCalculated: boolean;
-  /** Paid extra-service chips (independent mock data, not mirroring the confirmed list) — only shown on the Extra services step. */
+  /** Extra-service chips — only shown on the Extra services step. */
   showServices: boolean;
-  /** Chips only appear on the card once at least one service has actually been confirmed for this passenger. */
-  servicesConfirmed: boolean;
+  /** The services this passenger has actually confirmed on the Extra services step — mirrored onto the card verbatim. */
+  confirmedServices: SeatServiceItem[];
   segments: FlightSegment[];
   onSelect: () => void;
   onOpenFlags: () => void;
@@ -91,7 +91,7 @@ export function FlowRosterRow({
   showBaggage,
   baggageCalculated,
   showServices,
-  servicesConfirmed,
+  confirmedServices,
   segments,
   onSelect,
   onOpenFlags,
@@ -111,7 +111,7 @@ export function FlowRosterRow({
   const servicesBySegment = showSeat && !nested ? seatServicesForPassenger(p, segments.length) : [];
   // Baggage extras aren't broken out per segment (no "SVX-DME" grouping) — just a flat list, full rows on the active card and compact chips otherwise, same as seats.
   const baggageItems = showBaggage && baggageCalculated && !nested ? baggageServicesForPassenger(p, segments.length).flat() : [];
-  const serviceItems = showServices && servicesConfirmed && !nested ? extraServicesForPassenger(p) : [];
+  const serviceItems = showServices && !nested ? confirmedServices : [];
 
   return (
     <div className={`pnr-flow-roster-row ${active ? "selected" : ""} ${nested ? "nested" : ""}`} onClick={onSelect}>

@@ -158,10 +158,10 @@ input[type="checkbox"]:checked { background: var(--accent); border-color: var(--
 input[type="checkbox"]:checked::after {
   content: "";
   position: absolute;
-  left: 5px;
-  top: 2px;
+  left: 4.5px;
+  top: 1.5px;
   width: 4px;
-  height: 8px;
+  height: 7px;
   border: solid var(--accent-ink);
   border-width: 0 1.5px 1.5px 0;
   transform: rotate(45deg);
@@ -2151,24 +2151,26 @@ tr.row-hover { cursor: pointer; }
 .pnr-view-flow { display: flex; flex-direction: column; height: 100%; min-height: 0; }
 .pnr-head-flow { grid-template-columns: auto 1fr auto; flex-shrink: 0; }
 .pnr-flow-actions { display: flex; align-items: center; gap: 12px; }
-.pnr-flow-actions button[data-tooltip] { position: relative; }
-.pnr-flow-actions button[data-tooltip]:hover::after {
-  content: attr(data-tooltip);
+.pnr-flow-checkin-wrap { position: relative; display: inline-flex; }
+.pnr-flow-checkin-tooltip {
+  display: none;
   position: absolute;
   top: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
+  right: 0;
+  width: 190px;
   background: var(--tooltip-bg);
   color: var(--tooltip-ink);
   font-family: var(--font);
   font-size: 12px;
   font-weight: 500;
-  padding: 5px 9px;
+  text-transform: none;
+  line-height: 1.4;
+  padding: 7px 10px;
   border-radius: 4px;
-  white-space: nowrap;
   z-index: 50;
   pointer-events: none;
 }
+.pnr-flow-checkin-wrap:hover .pnr-flow-checkin-tooltip { display: block; }
 
 .pnr-flow-body { display: flex; gap: 0; flex: 1; min-height: 0; }
 .pnr-flow-roster {
@@ -2391,13 +2393,13 @@ tr.row-hover { cursor: pointer; }
 
 /* ---- Extra services step ---- */
 .extra-services-groups { display: flex; flex-direction: column; }
-.extra-service-group-label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; padding: 16px 0 8px; }
+.extra-service-group-label { font-size: 13px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.04em; padding: 16px 0 8px; }
 .extra-service-group-label:first-child { padding-top: 0; }
-/* Checking a row grows it to fit the tallest control (.field2/.qty-stepper, 42px, plus this
-   row's own 16px vertical padding = 58px) — animate that instead of snapping everything below
-   it down instantly. */
-.extra-service-row { display: flex; align-items: center; gap: 16px; padding: 8px 0; min-height: 42px; border-bottom: 1px solid var(--panel-border); transition: min-height 0.15s ease; }
-.extra-service-row.expanded { min-height: 58px; }
+/* Fixed height regardless of checked state — the row's controls (.qty-stepper etc, 42px tall)
+   mount instantly on check, so animating min-height only ever produced an instant snap (the
+   content already exceeded the interpolated value on the very first frame). Reserving the full
+   height up front means checking a row never shifts the rows below it. */
+.extra-service-row { display: flex; align-items: center; gap: 16px; padding: 8px 0; min-height: 58px; border-bottom: 1px solid var(--panel-border); }
 .extra-service-row:last-child { border-bottom: none; }
 .extra-service-checkbox { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--field-value); cursor: pointer; }
 .extra-service-row-controls { display: flex; align-items: center; gap: 12px; margin-left: auto; }

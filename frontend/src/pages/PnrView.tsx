@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { useLocation, useParams } from "react-router-dom";
 import { api, Flight, Passenger, SeatCell } from "../api";
 import { formatSeatDisplay } from "../seatExtra";
-import { parsePassengerExtra } from "../paxExtra";
+import { parsePassengerExtra, SeatServiceItem } from "../paxExtra";
 import { DocScannedIcon, DocVerifiedIcon, RefreshIcon, SearchIcon } from "../components/Icon";
 import { useRegisterTab, useTabs } from "../tabs";
 import { useToast } from "../toast";
@@ -288,9 +288,9 @@ export function PnrView() {
   // Baggage prices only show on the roster card once the agent has actually
   // run Calculate for that passenger — not just from opening the Baggage step.
   const [baggageCalculated, setBaggageCalculated] = useState<Set<number>>(() => new Set());
-  // Unlike baggageCalculated, this tracks a live count — the roster card's
-  // service chips disappear again if the passenger's last confirmed service gets unchecked.
-  const [servicesConfirmed, setServicesConfirmed] = useState<Set<number>>(() => new Set());
+  // Unlike baggageCalculated, this mirrors the actual confirmed items live — the roster
+  // card's service chips update (and disappear) as the agent checks/unchecks/confirms rows.
+  const [confirmedServices, setConfirmedServices] = useState<Record<number, SeatServiceItem[]>>({});
 
   useEffect(() => {
     api.getFlight(fid).then((f) => {
@@ -436,15 +436,19 @@ export function PnrView() {
               <RefreshIcon size={18} />
             </button>
             <button type="button" className="tertiary" onClick={() => setFinishConfirmOpen(true)}>Finish</button>
-            <button
-              type="button"
-              className="secondary"
-              disabled={checkInDisabled}
-              data-tooltip={checkInDisabled ? "Seat and verify documents for all passengers first" : undefined}
-              onClick={completeCheckin}
-            >
-              Check-in
-            </button>
+            <span className="pnr-flow-checkin-wrap">
+              <button
+                type="button"
+                className="secondary"
+                disabled={checkInDisabled}
+                onClick={completeCheckin}
+              >
+                Check-in
+              </button>
+              {checkInDisabled && (
+                <span className="pnr-flow-checkin-tooltip">Seat and verify documents for all passengers first</span>
+              )}
+            </span>
             <button type="button" className="tertiary" disabled={flowStep === "services"} onClick={nextFlowStep}>Next</button>
           </div>
         </div>
@@ -464,7 +468,7 @@ export function PnrView() {
                 showBaggage={flowStep === "baggage"}
                 baggageCalculated={baggageCalculated.has(row.passenger.id)}
                 showServices={flowStep === "services"}
-                servicesConfirmed={servicesConfirmed.has(row.passenger.id)}
+                confirmedServices={confirmedServices[row.passenger.id] ?? []}
                 segments={segmentsForFlight(flight)}
                 onSelect={() => setFlowActiveId(row.passenger.id)}
                 onOpenFlags={() => setFlagsModalPax(row.passenger)}
@@ -503,16 +507,12 @@ export function PnrView() {
             )}
             {flowStep === "services" && flowActive && (
               <ExtraServicesStep
+                key={flowActive.id}
                 flight={flight}
                 passenger={flowActive}
                 segments={segmentsForFlight(flight)}
-                onConfirmedChange={(hasConfirmed) =>
-                  setServicesConfirmed((prev) => {
-                    const next = new Set(prev);
-                    if (hasConfirmed) next.add(flowActive.id);
-                    else next.delete(flowActive.id);
-                    return next;
-                  })
+                onConfirmedChange={(items) =>
+                  setConfirmedServices((prev) => ({ ...prev, [flowActive.id]: items }))
                 }
               />
             )}
