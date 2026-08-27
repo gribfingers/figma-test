@@ -2167,6 +2167,78 @@ tr.row-hover { cursor: pointer; }
 .actions-menu-btn .chevron-rotated { transform: rotate(180deg); }
 .actions-menu { left: auto; width: 220px; }
 
+/* ---- Actions dropdown panels (Cancel check-in, Move flight, Print BP, Priority list, Remarks, Quick check-in, Group transfer) ---- */
+.actions-panel-overlay { position: fixed; inset: 0; background: rgba(24, 31, 36, 0.32); z-index: 100; display: flex; justify-content: flex-end; }
+.actions-panel {
+  width: 430px;
+  max-width: 100%;
+  height: 100%;
+  background: var(--panel);
+  box-shadow: -8px 0 40px -12px rgba(24, 31, 36, 0.25);
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  box-sizing: border-box;
+}
+.actions-panel-header { display: flex; align-items: flex-start; justify-content: space-between; flex-shrink: 0; margin-bottom: 20px; }
+.actions-panel-title { font-size: 18px; font-weight: 800; color: var(--field-value); }
+.actions-panel-body { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
+.actions-panel-footer { margin-top: 16px; padding-top: 16px; flex-shrink: 0; display: flex; justify-content: flex-end; gap: 16px; }
+.actions-muted-text { color: var(--muted); }
+.actions-hint-text { font-size: 14px; color: var(--field-value); }
+.actions-section-label { font-size: 15px; font-weight: 700; color: var(--field-value); }
+
+.actions-tab-row { display: flex; gap: 8px; }
+.actions-tab { all: unset; box-sizing: border-box; flex: 1; padding: 8px 12px; font-size: 13px; font-weight: 600; color: var(--muted); border: 1px solid var(--panel-border); border-radius: 4px; cursor: pointer; text-align: center; }
+.actions-tab:hover { background: var(--hover-bg); }
+.actions-tab.selected { background: var(--accent-selected); border-color: var(--accent-selected); color: var(--field-value); }
+
+.actions-checkbox-list { display: flex; flex-direction: column; gap: 12px; }
+.actions-checkbox-row { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--field-value); cursor: pointer; }
+
+.actions-print-segment { display: flex; flex-direction: column; gap: 10px; }
+.actions-print-segment-head { font-size: 13px; font-weight: 700; color: var(--field-value); text-transform: uppercase; letter-spacing: 0.03em; }
+
+.actions-priority-link { align-self: flex-start; padding: 0; }
+
+.actions-remark-section { border: 1px solid var(--panel-border); border-radius: 4px; padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+.actions-remark-section-head { display: flex; align-items: center; justify-content: space-between; font-size: 15px; font-weight: 700; color: var(--field-value); }
+.actions-remark-entry { display: flex; flex-direction: column; gap: 2px; }
+.actions-remark-code { font-size: 13px; font-weight: 700; color: var(--field-value); }
+.actions-remark-text { font-size: 13px; color: var(--muted); line-height: 1.4; }
+
+.actions-quick-flight-row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: var(--field-value); }
+.actions-quick-checked-in { color: var(--ok); font-weight: 700; }
+.actions-quick-print-all { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--field-value); cursor: pointer; }
+.actions-quick-segment { border: 1px solid var(--panel-border); border-radius: 4px; overflow: hidden; }
+.actions-quick-segment-head { all: unset; box-sizing: border-box; width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; font-size: 13px; font-weight: 700; color: var(--field-value); cursor: pointer; }
+.actions-quick-segment-head:hover { background: var(--hover-bg); }
+.actions-quick-segment-head .chevron-rotated { transform: rotate(180deg); }
+.actions-quick-pax-card { padding: 12px 14px; border-top: 1px solid var(--panel-border); display: flex; flex-direction: column; gap: 8px; }
+.actions-quick-pax-top { display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 700; color: var(--field-value); }
+.actions-quick-pax-seat { font-weight: 400; color: var(--muted); }
+.actions-quick-pax-print { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--field-value); cursor: pointer; }
+.actions-quick-footer { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+.actions-quick-footer label { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--field-value); cursor: pointer; }
+
+.actions-transfer-card { display: flex; align-items: center; gap: 16px; border: 1px solid var(--panel-border); border-radius: 4px; padding: 12px 14px; font-size: 13px; color: var(--field-value); }
+.actions-transfer-card-col { display: flex; flex-direction: column; gap: 2px; }
+.actions-transfer-card-times { flex: 1; }
+.actions-transfer-etd { color: var(--danger); font-weight: 700; }
+.actions-transfer-search-row { display: flex; align-items: flex-end; gap: 8px; }
+.actions-transfer-search-btn { all: unset; box-sizing: border-box; width: 40px; height: 40px; border-radius: 4px; background: var(--accent); color: var(--accent-ink); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+.actions-transfer-search-btn:hover:not(:disabled) { background: var(--accent-hover); }
+.actions-transfer-search-btn:disabled { cursor: not-allowed; opacity: 0.6; }
+.actions-transfer-results { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+.actions-transfer-match-hint { font-size: 14px; color: var(--field-value); }
+.actions-transfer-match-group { border-top: 1px solid var(--panel-border); padding-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.actions-transfer-match-row { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--field-value); cursor: pointer; }
+.actions-transfer-dob { font-size: 12px; color: var(--muted); }
+.actions-transfer-ok { display: flex; justify-content: flex-end; }
+
+.spin { animation: actions-spin 0.8s linear infinite; }
+@keyframes actions-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
 /* ---- Boarding workstation (gate) ---- */
 /* Only the passenger table scrolls — everything else (header, filters) stays put,
    same "page itself must not scroll" approach as .pnr-view-flow. */

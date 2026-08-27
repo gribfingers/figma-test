@@ -20,6 +20,7 @@ import { FlightInfoPanel } from "../components/checkin/FlightInfoPanel";
 import { CartPanel } from "../components/checkin/CartPanel";
 import { FlagKind, FlagModal } from "../components/flightcard/PassengerModals";
 import { PassengerDocPanel } from "../components/PassengerDocPanel";
+import { ActionsPanel, ActionsPanelKind } from "../components/checkin/ActionsPanel";
 import { Modal } from "../components/Modal";
 import { FLOW_STEPS, FLOW_STEP_LABEL, FlowStep, useCheckinFlow } from "../checkinFlow";
 import { usePersistentState } from "../usePersistentState";
@@ -39,14 +40,14 @@ const CHECKIN_FROM_MIN = -180;
 const BOARDING_FROM_MIN = -45;
 const BOARDING_TO_MIN = -15;
 
-const ACTIONS_MENU_ITEMS = [
-  "Quick check-in",
-  "Cancel check-in",
-  "Move to another flight",
-  "Priority List",
-  "Add/remove remark",
-  "Transfer",
-  "Print boarding pass",
+const ACTIONS_MENU_ITEMS: { label: string; kind: ActionsPanelKind }[] = [
+  { label: "Quick check-in", kind: "quick" },
+  { label: "Cancel check-in", kind: "cancel" },
+  { label: "Move to another flight", kind: "move" },
+  { label: "Priority List", kind: "priority" },
+  { label: "Add/remove remark", kind: "remarks" },
+  { label: "Transfer", kind: "transfer" },
+  { label: "Print boarding pass", kind: "print" },
 ];
 
 function fmtOffsetTime(std: string, min: number): string {
@@ -305,6 +306,7 @@ export function PnrView() {
   const [flagsModal, setFlagsModal] = useState<{ flag: FlagKind; passenger: Passenger } | null>(null);
   const [docPanelPassenger, setDocPanelPassenger] = useState<Passenger | null>(null);
   const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
+  const [actionsPanelKind, setActionsPanelKind] = useState<ActionsPanelKind | null>(null);
   const actionsBtnRef = useRef<HTMLButtonElement>(null);
   const actionsMenuRef = useRef<HTMLUListElement>(null);
   const actionsMenuRect = usePopoverPosition(actionsBtnRef, actionsMenuOpen);
@@ -708,8 +710,15 @@ export function PnrView() {
               role="menu"
               style={{ position: "fixed", top: actionsMenuRect.top, right: window.innerWidth - (actionsMenuRect.left + actionsMenuRect.width) }}
             >
-              {ACTIONS_MENU_ITEMS.map((label) => (
-                <li key={label} role="menuitem" onClick={() => setActionsMenuOpen(false)}>
+              {ACTIONS_MENU_ITEMS.map(({ label, kind }) => (
+                <li
+                  key={label}
+                  role="menuitem"
+                  onClick={() => {
+                    setActionsMenuOpen(false);
+                    setActionsPanelKind(kind);
+                  }}
+                >
                   {label}
                 </li>
               ))}
@@ -807,6 +816,15 @@ export function PnrView() {
           passenger={docPanelPassenger}
           onClose={() => setDocPanelPassenger(null)}
           onUpdated={handlePassengerUpdated}
+        />
+      )}
+      {actionsPanelKind && (
+        <ActionsPanel
+          kind={actionsPanelKind}
+          flight={flight}
+          passengers={flowPassengers}
+          segments={segmentsForFlight(flight)}
+          onClose={() => setActionsPanelKind(null)}
         />
       )}
     </div>
