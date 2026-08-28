@@ -1,8 +1,9 @@
 import { SeatCell } from "./api";
-import { AnimalIcon, BrokenIcon, CgBlockIcon, ChildIcon, CrewIcon, StretcherIcon, WheelchairIcon } from "./components/Icon";
+import { ChildIcon } from "./components/Icon";
 import {
-  SeatBassinetIcon, SeatEmergencyIcon, SeatFixedArmrestIcon, SeatHardBlockIcon,
-  SeatInftIcon, SeatLegroomIcon, SeatNoReclineIcon, SeatSoftBlockIcon, SeatTransitIcon,
+  SeatAnimalIcon, SeatBassinetIcon, SeatBrokenIcon, SeatCgBlockIcon, SeatCrewIcon,
+  SeatEmergencyIcon, SeatFixedArmrestIcon, SeatHardBlockIcon, SeatInftIcon, SeatLegroomIcon,
+  SeatNoReclineIcon, SeatSoftBlockIcon, SeatStretcherIcon, SeatTransitIcon, SeatWheelchairIcon,
 } from "./components/SeatIcons";
 
 /**
@@ -68,12 +69,12 @@ export interface SeatAttrDef {
 export const SEAT_ATTRS: SeatAttrDef[] = [
   { key: "hardBlock", label: "Жёсткий блок", icon: SeatHardBlockIcon },
   { key: "softBlock", label: "Мягкий блок", icon: SeatSoftBlockIcon },
-  { key: "broken", label: "Сломанное", icon: BrokenIcon },
-  { key: "cgBlock", label: "Блок центровки", icon: CgBlockIcon },
-  { key: "crew", label: "Экипаж", icon: CrewIcon },
-  { key: "stretcher", label: "Носилки", icon: StretcherIcon },
-  { key: "wheelchair", label: "Кресло", icon: WheelchairIcon },
-  { key: "animal", label: "Животное", icon: AnimalIcon },
+  { key: "broken", label: "Сломанное", icon: SeatBrokenIcon },
+  { key: "cgBlock", label: "Блок центровки", icon: SeatCgBlockIcon },
+  { key: "crew", label: "Экипаж", icon: SeatCrewIcon },
+  { key: "stretcher", label: "Носилки", icon: SeatStretcherIcon },
+  { key: "wheelchair", label: "Кресло", icon: SeatWheelchairIcon },
+  { key: "animal", label: "Животное", icon: SeatAnimalIcon },
   { key: "bassinet", label: "Люлька для младенца", icon: SeatBassinetIcon },
   { key: "infant", label: "Младенец", icon: SeatInftIcon },
   { key: "child", label: "Ребёнок", icon: ChildIcon },
