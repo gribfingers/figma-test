@@ -7,10 +7,8 @@ interface Props {
   onChange: (key: string) => void;
 }
 
-// Not persisted to the backend yet — the Flight model has no field for this
-// status glossary, so selecting an item here only updates the button label
-// (same "local UI state, not wired up" scope as the Actions/Popular action
-// buttons next to it) until a backend field exists.
+// Persisted to flights.ops_status by the parent (see FlightCardHeader's
+// onStatusChange) — this component itself is just the picker UI.
 export function FlightStatusSelect({ value, onChange }: Props) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);

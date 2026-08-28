@@ -5,9 +5,13 @@ export type BoardingStatus = "NOT_BOARDED" | "BOARDED" | "OFFLOADED" | "NO_SHOW"
 /**
  * Operational (FIDS-board) status, distinct from `status`: `status` tracks
  * this DCS's own check-in/boarding lifecycle, `ops_status` tracks what an
- * airport display board would show for the flight itself.
+ * airport display board would show for the flight itself. The DB default
+ * "SCHEDULED" means "no agent has set one yet" (see frontend's
+ * flightStatuses.ts OPS_STATUS_UNSET); any other value is one of that
+ * glossary's keys (frontend-owned, hence a plain string here rather than a
+ * union the backend would have to keep in sync with it).
  */
-export type OpsStatus = "SCHEDULED" | "DELAYED" | "BOARDING" | "DEPARTED" | "ARRIVED" | "CANCELLED";
+export type OpsStatus = string;
 
 /**
  * SSR (Special Service Request) codes — a small subset of the standard

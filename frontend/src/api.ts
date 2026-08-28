@@ -1,4 +1,8 @@
-export type OpsStatus = "SCHEDULED" | "DELAYED" | "BOARDING" | "DEPARTED" | "ARRIVED" | "CANCELLED";
+// The flights.ops_status column's DB default ("SCHEDULED") means "no agent
+// has manually set a status yet" (see flightStatuses.ts's OPS_STATUS_UNSET);
+// any other value is one of FLIGHT_STATUSES' keys — a plain string rather
+// than a fixed union since that glossary is the actual source of truth.
+export type OpsStatus = string;
 
 export interface Flight {
   id: number;
@@ -168,6 +172,8 @@ export const api = {
     }),
   changeSeat: (passengerId: number, seat: string) =>
     request<Passenger>(`/checkin/${passengerId}/seat`, { method: "POST", body: JSON.stringify({ seat }) }),
+  cancelCheckin: (passengerId: number, option: string) =>
+    request<Passenger>(`/checkin/${passengerId}/cancel`, { method: "POST", body: JSON.stringify({ option }) }),
   swapSeats: (passengerId: number, otherPassengerId: number) =>
     request<{ a: Passenger; b: Passenger }>(`/checkin/swap-seats`, {
       method: "POST",

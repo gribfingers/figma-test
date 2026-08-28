@@ -834,6 +834,8 @@ export function PnrView() {
           segments={segmentsForFlight(flight)}
           open={actionsPanelTransition.entered}
           onClose={() => setActionsPanelKind(null)}
+          onPassengerUpdated={handlePassengerUpdated}
+          onSeatsChanged={() => api.seatmap(fid).then(setSeats)}
         />
       )}
     </div>

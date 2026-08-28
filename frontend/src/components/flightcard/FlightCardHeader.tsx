@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { Flight } from "../../api";
-import { FLIGHT_STATUSES } from "../../flightStatuses";
-import { FLIGHT_PHASES, currentPhaseIndex } from "../../flightPhase";
-import { useToast } from "../../toast";
+import { OPS_STATUS_UNSET } from "../../flightStatuses";
+import { FLIGHT_PHASES, currentPhaseIndex, isFlightDeparted, phaseBasedStatusKey } from "../../flightPhase";
 import { FlightStatusSelect } from "./FlightStatusSelect";
 import { FlightAction, FlightActionsMenu } from "./FlightActionsMenu";
 
@@ -12,6 +11,7 @@ interface Props {
   dirty: boolean;
   onSave: () => void;
   onAction: (action: FlightAction) => void;
+  onStatusChange: (key: string) => void;
 }
 
 function fmtWindow(std: string, fromMin: number, toMin: number): string {
@@ -30,17 +30,7 @@ function fmtCardDate(std: string): string {
   return `${day}${month}${year} · ${time}`;
 }
 
-// No matching backend field yet (see FlightStatusSelect) — this only picks
-// a reasonable starting point in the new glossary from the existing
-// lifecycle field, it isn't a real mapping.
-function defaultStatusKey(status: Flight["ops_status"]): string {
-  if (status === "BOARDING") return "open";
-  if (status === "DEPARTED" || status === "ARRIVED") return "take_off";
-  if (status === "CANCELLED") return "canceled_no_host";
-  return "active_not_open";
-}
-
-export function FlightCardHeader({ flight, activeTab, dirty, onSave, onAction }: Props) {
+export function FlightCardHeader({ flight, activeTab, dirty, onSave, onAction, onStatusChange }: Props) {
   // Ticks so the highlighted phase keeps up with real time even if nothing
   // else on the page changes (not just right after editing std/sta).
   const [now, setNow] = useState(() => new Date());
@@ -49,16 +39,11 @@ export function FlightCardHeader({ flight, activeTab, dirty, onSave, onAction }:
     return () => clearInterval(t);
   }, []);
   const currentPhase = currentPhaseIndex(flight, now);
-  const [statusKey, setStatusKey] = useState(() => defaultStatusKey(flight.ops_status));
-  const { showToast } = useToast();
-
-  function handleStatusChange(key: string) {
-    if (key === statusKey) return;
-    const from = FLIGHT_STATUSES.find((s) => s.key === statusKey)?.labelEn ?? statusKey;
-    const to = FLIGHT_STATUSES.find((s) => s.key === key)?.labelEn ?? key;
-    setStatusKey(key);
-    showToast(`Flight status changed from ${from} to ${to}`);
-  }
+  // No manual status set yet (ops_status is still its DB default) — show a
+  // reasonable guess from where the flight currently sits on the timeline,
+  // same one phaseStatusLabel would fall back to on the flights board.
+  const statusKey = flight.ops_status && flight.ops_status !== OPS_STATUS_UNSET ? flight.ops_status : phaseBasedStatusKey(flight, now);
+  const departed = isFlightDeparted(flight, now);
 
   return (
     <div className="flight-card-head">
@@ -74,7 +59,7 @@ export function FlightCardHeader({ flight, activeTab, dirty, onSave, onAction }:
           <div className="flight-card-date">{fmtCardDate(flight.std)}</div>
         </div>
 
-        <FlightStatusSelect value={statusKey} onChange={handleStatusChange} />
+        <FlightStatusSelect value={statusKey} onChange={onStatusChange} />
       </div>
 
       <div className="flight-status-group">
@@ -92,7 +77,7 @@ export function FlightCardHeader({ flight, activeTab, dirty, onSave, onAction }:
       <div className="flight-card-actions">
         <FlightActionsMenu onAction={onAction} />
         {activeTab === "main" && (
-          <button type="button" disabled={!dirty} onClick={onSave}>
+          <button type="button" disabled={!dirty || departed} title={departed ? "A departed flight's record can't be changed" : undefined} onClick={onSave}>
             Save
           </button>
         )}

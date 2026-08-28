@@ -148,6 +148,77 @@ checkinRouter.post("/:passengerId", requireEdit, (req, res) => {
   res.json({ passenger: serializePassenger(updated), bcbp });
 });
 
+/**
+ * Reverses check-in — the counterpart to POST /:passengerId above. Frees
+ * the seat (or keeps the number but marks it merely "reserved" — see
+ * seats.extra/seatExtra.ts — when the agent picked "Make seats reserved"),
+ * clears the boarding pass/sequence, and returns the passenger to
+ * NOT_CHECKED_IN. Blocked once boarded, since checkin_status regressing
+ * past boarding_status would leave the record inconsistent — unboard
+ * first (boarding.ts's /unboard).
+ */
+checkinRouter.post("/:passengerId/cancel", requireEdit, (req, res) => {
+  const passenger = db.prepare("SELECT * FROM passengers WHERE id = ?").get(req.params.passengerId) as Passenger | undefined;
+  if (!passenger) return res.status(404).json({ error: "Passenger not found" });
+  if (passenger.checkin_status !== "CHECKED_IN") {
+    return res.status(409).json({ error: "Passenger is not checked in" });
+  }
+  if (passenger.boarding_status === "BOARDED") {
+    return res.status(409).json({ error: "Passenger has already boarded — unboard first" });
+  }
+
+  const option = typeof req.body?.option === "string" ? req.body.option : "offload";
+  const keepSeatReserved = option === "make_seats_reserved";
+  const clearBags = option === "offload_cancel_bags";
+
+  const tx = db.transaction(() => {
+    if (passenger.seat) {
+      if (keepSeatReserved) {
+        const seatRow = db
+          .prepare("SELECT extra FROM seats WHERE flight_id = ? AND seat = ?")
+          .get(passenger.flight_id, passenger.seat) as { extra: string | null } | undefined;
+        let seatExtra: Record<string, unknown> = {};
+        try {
+          seatExtra = seatRow?.extra ? JSON.parse(seatRow.extra) : {};
+        } catch {
+          seatExtra = {};
+        }
+        seatExtra.reserved = true;
+        db.prepare("UPDATE seats SET passenger_id = NULL, extra = ? WHERE flight_id = ? AND seat = ?").run(
+          JSON.stringify(seatExtra),
+          passenger.flight_id,
+          passenger.seat
+        );
+      } else {
+        db.prepare("UPDATE seats SET passenger_id = NULL WHERE flight_id = ? AND seat = ?").run(passenger.flight_id, passenger.seat);
+      }
+    }
+
+    let paxExtra: Record<string, unknown> = {};
+    try {
+      paxExtra = passenger.extra ? JSON.parse(passenger.extra) : {};
+    } catch {
+      paxExtra = {};
+    }
+    if (option === "priority_list") paxExtra.pl = true;
+
+    db.prepare(
+      `UPDATE passengers SET checkin_status = 'NOT_CHECKED_IN', checkin_sequence = NULL, bcbp = NULL,
+       seat = ?, bag_count = ?, bag_weight_kg = ?, extra = ? WHERE id = ?`
+    ).run(
+      keepSeatReserved ? passenger.seat : null,
+      clearBags ? 0 : passenger.bag_count,
+      clearBags ? 0 : passenger.bag_weight_kg,
+      JSON.stringify(paxExtra),
+      passenger.id
+    );
+  });
+  tx();
+
+  const updated = db.prepare("SELECT * FROM passengers WHERE id = ?").get(passenger.id) as Passenger;
+  res.json(serializePassenger(updated));
+});
+
 /** Change seat assignment for an already checked-in passenger (before boarding). */
 checkinRouter.post("/:passengerId/seat", requireEdit, (req, res) => {
   const passenger = db.prepare("SELECT * FROM passengers WHERE id = ?").get(req.params.passengerId) as Passenger | undefined;

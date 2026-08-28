@@ -12,6 +12,8 @@ interface Props {
   flight: Flight;
   draft: MainDraft;
   onChange: (patch: Partial<MainDraft>) => void;
+  /** A departed flight's own record can't be changed anymore (see FlightCard.tsx's isFlightDeparted). */
+  readOnly?: boolean;
 }
 
 const AGREEMENT_TYPES = [
@@ -32,13 +34,14 @@ const CHECKS = [
   "iAPP",
 ];
 
-export function MainTab({ flight, draft, onChange }: Props) {
+export function MainTab({ flight, draft, onChange, readOnly }: Props) {
   // Route (airport/time) fields are shown as plain text until "Change
   // route" is used — that's the manual-entry path for small airports
   // without a preloaded schedule. "Back to initial route" discards edits.
   const [editingRoute, setEditingRoute] = useState(false);
 
   function toggleRoute() {
+    if (readOnly) return;
     if (editingRoute) {
       onChange({ segments: draftFromFlight(flight).segments });
     }
@@ -46,10 +49,12 @@ export function MainTab({ flight, draft, onChange }: Props) {
   }
 
   function updateSegment(i: number, patch: Partial<SegmentDraft>) {
+    if (readOnly) return;
     onChange({ segments: draft.segments.map((s, idx) => (idx === i ? { ...s, ...patch } : s)) });
   }
 
   function addSegment() {
+    if (readOnly) return;
     const last = draft.segments[draft.segments.length - 1];
     onChange({
       segments: [
@@ -66,11 +71,12 @@ export function MainTab({ flight, draft, onChange }: Props) {
   }
 
   function removeSegment(i: number) {
+    if (readOnly) return;
     onChange({ segments: draft.segments.filter((_, idx) => idx !== i) });
   }
 
   return (
-    <div className="grid-2 flight-main-grid">
+    <div className={`grid-2 flight-main-grid ${readOnly ? "flight-main-grid-readonly" : ""}`}>
       <div className="segment-cards">
         {draft.segments.map((segment, i) => (
           <SegmentCard
@@ -147,11 +153,13 @@ export function MainTab({ flight, draft, onChange }: Props) {
           ))}
         </div>
 
-        <div className="route-toggle-row">
-          <button type="button" className="tertiary" onClick={toggleRoute}>
-            {editingRoute ? "Back to initial route" : "Change route"}
-          </button>
-        </div>
+        {!readOnly && (
+          <div className="route-toggle-row">
+            <button type="button" className="tertiary" onClick={toggleRoute}>
+              {editingRoute ? "Back to initial route" : "Change route"}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

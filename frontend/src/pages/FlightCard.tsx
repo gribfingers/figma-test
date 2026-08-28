@@ -3,6 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { api, Flight } from "../api";
 import { useRegisterTab } from "../tabs";
 import { useToast } from "../toast";
+import { FLIGHT_STATUSES, OPS_STATUS_UNSET } from "../flightStatuses";
+import { isFlightDeparted, phaseBasedStatusKey } from "../flightPhase";
 import { usePersistentState } from "../usePersistentState";
 import { FlightCardHeader } from "../components/flightcard/FlightCardHeader";
 import { CloseIcon } from "../components/Icon";
@@ -46,9 +48,28 @@ export function FlightCard() {
   if (!flight || !draft) return <div className="content">Loading…</div>;
 
   const dirty = !draftsEqual(draft, draftFromFlight(flight));
+  const departed = isFlightDeparted(flight, new Date());
+
+  async function handleStatusChange(key: string) {
+    if (!flight) return;
+    const now = new Date();
+    const currentKey = flight.ops_status && flight.ops_status !== OPS_STATUS_UNSET ? flight.ops_status : phaseBasedStatusKey(flight, now);
+    if (key === currentKey) return;
+    setError("");
+    try {
+      const updated = await api.updateFlight(flight.id, { ops_status: key });
+      setFlight(updated);
+      setDraft(draftFromFlight(updated));
+      const from = FLIGHT_STATUSES.find((s) => s.key === currentKey)?.labelEn ?? currentKey;
+      const to = FLIGHT_STATUSES.find((s) => s.key === key)?.labelEn ?? key;
+      showToast(`Flight status changed from ${from} to ${to}`);
+    } catch (e: any) {
+      setError(e.message);
+    }
+  }
 
   async function handleSave() {
-    if (!flight || !draft) return;
+    if (!flight || !draft || departed) return;
     setError("");
     const first = draft.segments[0];
     const std = combineDateAndTime(flight.std, first.depDate, first.depTime);
@@ -131,7 +152,14 @@ export function FlightCard() {
     <div className="flight-card-page">
       {error && <div className="error-box">{error}</div>}
       <div className="flight-card-panel">
-        <FlightCardHeader flight={flight} activeTab={tab} dirty={dirty} onSave={handleSave} onAction={handleAction} />
+        <FlightCardHeader
+          flight={flight}
+          activeTab={tab}
+          dirty={dirty}
+          onSave={handleSave}
+          onAction={handleAction}
+          onStatusChange={handleStatusChange}
+        />
         <div className="flight-tabs">
           {TABS.map((t) => (
             <button
@@ -146,7 +174,12 @@ export function FlightCard() {
         </div>
         <div className="flight-card-body">
           {tab === "main" && (
-            <MainTab flight={flight} draft={draft} onChange={(patch) => setDraft((d) => (d ? { ...d, ...patch } : d))} />
+            <MainTab
+              flight={flight}
+              draft={draft}
+              onChange={(patch) => setDraft((d) => (d ? { ...d, ...patch } : d))}
+              readOnly={departed}
+            />
           )}
           {tab === "counters" && <CountersTab />}
           {tab === "passengers" && <PassengersTab flight={flight} />}

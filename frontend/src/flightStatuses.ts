@@ -94,3 +94,25 @@ export const FLIGHT_STATUSES: FlightStatusOption[] = [
     source: "Manual",
   },
 ];
+
+// Same DB default every generated/seeded flight starts with (flights.ops_status
+// column default) — means "no agent has manually set a status yet," so the
+// flights board falls back to computing one from elapsed time (see
+// flightPhase.ts's phaseStatusLabel) instead of showing this literally.
+export const OPS_STATUS_UNSET = "SCHEDULED";
+
+/** Badge tone for the flights board's Status column once a flight has a manual status (see FlightCardHeader). */
+export const FLIGHT_STATUS_BADGE: Record<string, "ok" | "warn" | "muted" | "danger"> = {
+  inactive: "muted",
+  active_not_open: "muted",
+  open: "warn",
+  checkin_closed: "warn",
+  gate_closed: "warn",
+  push_back: "warn",
+  take_off: "muted",
+  return: "danger",
+  on_hold: "danger",
+  canceled_no_host: "danger",
+  open_airport_only: "warn",
+  fit: "danger",
+};

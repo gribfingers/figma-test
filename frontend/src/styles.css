@@ -1852,6 +1852,8 @@ a { color: var(--accent); }
    more room than a plain 50/50 split gives it — the side panel (comment,
    partner flight, checks) can live with less. */
 .flight-main-grid { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+/* Departed flight's Main tab — visible but not editable (see FlightCard.tsx's isFlightDeparted). */
+.flight-main-grid-readonly { pointer-events: none; opacity: 0.6; }
 .segment-cards { display: flex; flex-direction: column; gap: 12px; align-self: start; }
 .segment-card { position: relative; border: 1px solid var(--panel-border); border-radius: 4px; padding: 16px; }
 .segment-remove { display: block; margin-top: 12px; color: var(--danger); }

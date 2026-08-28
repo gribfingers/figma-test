@@ -1,6 +1,6 @@
 import { ReactNode, createContext, useContext, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Flight, Passenger } from "../../api";
+import { api, Flight, Passenger } from "../../api";
 import { FlightSegment } from "../../flightSegments";
 import { formatSeatDisplay } from "../../seatExtra";
 import { useToast } from "../../toast";
@@ -19,6 +19,10 @@ interface Props {
   segments: FlightSegment[];
   open: boolean;
   onClose: () => void;
+  /** Fires once per passenger actually changed on the backend (e.g. Cancel check-in) so the roster/seat map reflect it immediately. */
+  onPassengerUpdated?: (p: Passenger) => void;
+  /** Fires after an action changes seat occupancy, so the caller can re-fetch the seat map. */
+  onSeatsChanged?: () => void;
 }
 
 // Threads the slide transition's open/closed state down to Shell without
@@ -76,18 +80,29 @@ function SegmentAllTabs({ segments, selected, onSelect }: { segments: FlightSegm
 
 /**
  * Everything opened from the PNR roster's Actions dropdown. No backing
- * endpoints exist yet for any of these (bulk offload/priority/transfer
- * workflows) — same "illustrative until there's a real data source"
- * scope as e.g. the ET modal's mock coupon table — so each one below is a
- * self-contained, locally-stateful form; Save/Print just toast and close.
+ * endpoints exist yet for most of these (bulk move/priority/transfer
+ * workflows) — same "illustrative until there's a real data source" scope
+ * as e.g. the ET modal's mock coupon table, so those below are still
+ * self-contained, locally-stateful forms; Save/Print just toast and close.
+ * "cancel" (Cancel check-in) is the exception — it's wired to a real
+ * backend action since undoing a check-in is a genuine data-integrity
+ * operation, not an illustrative one.
  */
-export function ActionsPanel({ kind, flight, passengers, segments, open, onClose }: Props) {
+export function ActionsPanel({ kind, flight, passengers, segments, open, onClose, onPassengerUpdated, onSeatsChanged }: Props) {
   return (
     <OpenContext.Provider value={open}>
       {(() => {
         switch (kind) {
           case "cancel":
-            return <CancelCheckinPanel segments={segments} onClose={onClose} />;
+            return (
+              <CancelCheckinPanel
+                segments={segments}
+                passengers={passengers}
+                onClose={onClose}
+                onPassengerUpdated={onPassengerUpdated}
+                onSeatsChanged={onSeatsChanged}
+              />
+            );
           case "move":
             return <MoveFlightPanel onClose={onClose} />;
           case "print":
@@ -126,20 +141,65 @@ const CANCEL_REASONS: SelectOption[] = [
 const OTHER_REASON_PLACEHOLDER =
   "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam";
 
-function CancelCheckinPanel({ segments, onClose }: { segments: FlightSegment[]; onClose: () => void }) {
+function CancelCheckinPanel({
+  segments,
+  passengers,
+  onClose,
+  onPassengerUpdated,
+  onSeatsChanged,
+}: {
+  segments: FlightSegment[];
+  passengers: Passenger[];
+  onClose: () => void;
+  onPassengerUpdated?: (p: Passenger) => void;
+  onSeatsChanged?: () => void;
+}) {
   const [segIndex, setSegIndex] = useState(-1);
   const [option, setOption] = useState("offload");
   const [reason, setReason] = useState("lated_gate");
   const [otherReason, setOtherReason] = useState(OTHER_REASON_PLACEHOLDER);
+  const [saving, setSaving] = useState(false);
   const { showToast } = useToast();
 
-  function save() {
-    showToast("Check-in cancelled");
+  // Only checked-in passengers can actually have their check-in cancelled —
+  // the backend rejects anyone else (409), so filter up front rather than
+  // firing requests that are guaranteed to fail.
+  const eligible = passengers.filter((p) => p.checkin_status === "CHECKED_IN");
+
+  async function save() {
+    if (eligible.length === 0) {
+      showToast("No checked-in passengers selected", "error");
+      onClose();
+      return;
+    }
+    setSaving(true);
+    let succeeded = 0;
+    for (const p of eligible) {
+      try {
+        const updated = await api.cancelCheckin(p.id, option);
+        onPassengerUpdated?.(updated);
+        succeeded++;
+      } catch {
+        // One passenger's failure (e.g. already boarded by the time this ran) shouldn't stop the rest.
+      }
+    }
+    setSaving(false);
+    if (succeeded > 0) onSeatsChanged?.();
+    const failed = eligible.length - succeeded;
+    if (failed === 0) {
+      showToast(succeeded === 1 ? "Check-in cancelled" : `Check-in cancelled for ${succeeded} passengers`);
+    } else {
+      showToast(`Check-in cancelled for ${succeeded}, failed for ${failed}`, succeeded > 0 ? "info" : "error");
+    }
     onClose();
   }
 
   return (
-    <Shell title="Check-in Cancelling" onClose={onClose} footer={<button type="button" className="tertiary" onClick={save}>Save</button>}>
+    <Shell
+      title="Check-in Cancelling"
+      onClose={onClose}
+      footer={<button type="button" className="tertiary" onClick={save} disabled={saving}>Save</button>}
+    >
       <SegmentAllTabs segments={segments} selected={segIndex} onSelect={setSegIndex} />
       <div className="actions-checkbox-list">
         {CANCEL_OPTIONS.map((o) => (
