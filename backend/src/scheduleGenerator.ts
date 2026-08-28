@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { buildSeatMap } from "./utils/seatmap";
+import { buildSeatMap, SeatDef } from "./utils/seatmap";
 import { encodeBcbp, PAX_STATUS } from "./bcbp";
 import { toJulianDayOfYear } from "./utils/julian";
 
@@ -117,7 +117,8 @@ function buildRoster(size: number): PaxSpec[] {
   return shuffle(roster);
 }
 
-const insertSeat = db.prepare(`INSERT INTO seats (flight_id, seat, cabin_class, exit_row) VALUES (?, ?, ?, ?)`);
+const insertSeat = db.prepare(`INSERT INTO seats (flight_id, seat, cabin_class, exit_row, extra) VALUES (?, ?, ?, ?, ?)`);
+const updateSeatExtra = db.prepare(`UPDATE seats SET extra = ? WHERE flight_id = ? AND seat = ?`);
 const insertPax = db.prepare(
   `INSERT INTO passengers (record_locator, flight_id, surname, given_name, ticket_number, document_type, document_number, nationality, doc_expiry, ssr, infant, gender, dob, seat, bag_count, bag_weight_kg, checkin_status, checkin_sequence, bcbp, extra)
    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
@@ -125,6 +126,74 @@ const insertPax = db.prepare(
 
 function typeCode(p: PaxSpec): string {
   return p.category === "infant" ? "INF" : p.category === "child" ? "CHD" : "ADT";
+}
+
+// Mirrors the exit-door row position from frontend/src/cabinLayout.ts (the
+// backend has no access to frontend files) so a generated flight's real
+// exit-row seats (the exit_row DB flag) line up with the exit-door graphic
+// the seat map draws right after this row.
+const EXIT_ROW_AFTER: Record<string, number> = { A320: 11, B738: 13, A321: 14, A330: 19 };
+
+// A seat with one of these flags can never have a real occupant (hard/soft/
+// cg-blocked, broken, or a crew jump seat) — kept out of both the checked-in
+// and pre-booked seat pools below.
+const UNASSIGNABLE_SEAT_ATTRS = ["hardBlock", "softBlock", "cgBlock", "broken", "crew"] as const;
+// These are just eligibility/amenity flags — a real passenger can still sit there.
+const OTHER_SEAT_ATTRS = ["noRecline", "stretcher", "wheelchair", "animal", "child", "infant", "transit", "fixedArmrest"] as const;
+const PAID_SEAT_RFISC = "0B5"; // same code paxExtra.ts's mock ancillary-purchase data already uses
+
+interface SeatExtraAssignment {
+  extra: Record<string, unknown>;
+  exitRow?: boolean;
+}
+
+/**
+ * Scatters one seat of every "general layer" attribute the seat-map legend
+ * defines (frontend/src/seatExtra.ts SEAT_ATTRS) across a freshly generated
+ * flight, plus a batch of paid/legroom seats — so a new flight's seat map
+ * already demonstrates every seat type instead of only ever showing plain
+ * ones (those only appeared before if an agent set them by hand). Returns
+ * which seats are unfit for a real occupant so the roster generator below
+ * keeps passengers off them.
+ */
+function buildSeatExtras(seatDefs: SeatDef[], aircraftType: string): { assignments: Map<string, SeatExtraAssignment>; unassignable: Set<string> } {
+  const assignments = new Map<string, SeatExtraAssignment>();
+  const unassignable = new Set<string>();
+
+  const exitAfterRow = EXIT_ROW_AFTER[aircraftType];
+  if (exitAfterRow != null) {
+    for (const s of seatDefs) {
+      if (s.row === exitAfterRow + 1) assignments.set(s.seat, { extra: { legroom: true }, exitRow: true });
+    }
+  }
+
+  const pool = shuffle(seatDefs.filter((s) => !assignments.has(s.seat)));
+  function take(n: number): SeatDef[] {
+    return pool.splice(0, n);
+  }
+
+  for (const attr of UNASSIGNABLE_SEAT_ATTRS) {
+    const [seat] = take(1);
+    if (!seat) continue;
+    assignments.set(seat.seat, { extra: { [attr]: true } });
+    unassignable.add(seat.seat);
+  }
+  for (const attr of OTHER_SEAT_ATTRS) {
+    const [seat] = take(1);
+    if (seat) assignments.set(seat.seat, { extra: { [attr]: true } });
+  }
+
+  // Paid "preferred seat" selection — a batch, not just one, since this is
+  // the single most common real-world seat attribute.
+  const economyLeft = pool.filter((s) => s.cabinClass === "Y");
+  const paidCount = Math.max(1, Math.round(economyLeft.length * 0.12));
+  for (const s of shuffle(economyLeft).slice(0, paidCount)) {
+    assignments.set(s.seat, {
+      extra: { price: 500 + Math.floor(Math.random() * 10) * 100, priceIcon: Math.random() < 0.3, rfisc: PAID_SEAT_RFISC },
+    });
+  }
+
+  return { assignments, unassignable };
 }
 
 export interface FlightForRoster {
@@ -140,9 +209,15 @@ export interface FlightForRoster {
 /**
  * Builds this flight's seat map and a full roster of `rosterSize`
  * passengers (infants/children paired with an adult guardian on the same
- * PNR, ~60% pre-checked-in with a real seat, the rest still pending) — the
- * exact same generation seed.ts always ran inline, just callable per-flight
- * so the daily scheduler can reuse it without duplicating the logic.
+ * PNR) — the exact same generation seed.ts always ran inline, just
+ * callable per-flight so the daily scheduler can reuse it without
+ * duplicating the logic.
+ *
+ * ~60% are pre-checked-in with a real seat; most of the rest have already
+ * picked/been given a seat at booking time too (shown as a "Reserved" or
+ * "Preseated" hold marker on an otherwise-free seat — see seatExtra.ts's
+ * seatSubtype), same as a modern airline's advance seat selection; only a
+ * remaining sliver haven't chosen a seat at all yet.
  *
  * Checked-in passengers get a real bcbp (same encodeBcbp call the actual
  * check-in route makes) and a checkin_sequence, mirrored onto
@@ -152,7 +227,12 @@ export interface FlightForRoster {
  */
 export function insertFlightWithRoster(flight: FlightForRoster, rosterSize: number): void {
   const seatDefs = buildSeatMap(flight.aircraftType);
-  for (const s of seatDefs) insertSeat.run(flight.id, s.seat, s.cabinClass, s.exitRow ? 1 : 0);
+  const { assignments: seatExtras, unassignable } = buildSeatExtras(seatDefs, flight.aircraftType);
+  for (const s of seatDefs) {
+    const assignment = seatExtras.get(s.seat);
+    const exitRow = assignment?.exitRow ?? s.exitRow;
+    insertSeat.run(flight.id, s.seat, s.cabinClass, exitRow ? 1 : 0, assignment ? JSON.stringify(assignment.extra) : null);
+  }
 
   const roster = buildRoster(rosterSize);
   const infants = roster.filter((p) => p.category === "infant");
@@ -165,9 +245,16 @@ export function insertFlightWithRoster(flight: FlightForRoster, rosterSize: numb
   const locatorByGuardian = new Map<PaxSpec, string>();
   for (const g of new Set([...infantGuardians, ...childGuardians])) locatorByGuardian.set(g, nextLocator());
 
-  const availableSeats = shuffle(seatDefs);
+  // Real occupants (checked-in) and pre-booked (not-yet-checked-in) hold
+  // markers share one pool so the same seat is never handed to two
+  // passengers — seats an agent could never actually assign (blocked/
+  // broken/crew) are excluded from both.
+  const availableSeats = shuffle(seatDefs.filter((s) => !unassignable.has(s.seat)));
   const checkedInCount = Math.round(nonInfants.length * 0.6);
   const checkedInSet = new Set(shuffle(nonInfants).slice(0, checkedInCount));
+  const notYetCheckedIn = nonInfants.filter((p) => !checkedInSet.has(p));
+  const preBookedCount = Math.round(notYetCheckedIn.length * 0.85);
+  const preBookedSet = new Set(shuffle(notYetCheckedIn).slice(0, preBookedCount));
   const seatByCode = new Map(seatDefs.map((s) => [s.seat, s]));
   const julianDate = toJulianDayOfYear(flight.std);
 
@@ -176,10 +263,11 @@ export function insertFlightWithRoster(flight: FlightForRoster, rosterSize: numb
 
   function insertOne(p: PaxSpec, locator: string) {
     const isCheckedIn = checkedInSet.has(p);
-    const seat = isCheckedIn && p.category !== "infant" ? availableSeats[seatCursor++]?.seat ?? null : null;
+    const isPreBooked = !isCheckedIn && preBookedSet.has(p);
+    const seat = p.category !== "infant" && (isCheckedIn || isPreBooked) ? availableSeats[seatCursor++]?.seat ?? null : null;
     let checkinSequence: number | null = null;
     let bcbp: string | null = null;
-    if (seat) {
+    if (seat && isCheckedIn) {
       checkinSequence = ++sequenceCursor;
       bcbp = encodeBcbp({
         surname: p.surname,
@@ -212,9 +300,9 @@ export function insertFlightWithRoster(flight: FlightForRoster, rosterSize: numb
       p.gender,
       p.dob,
       seat,
-      seat ? (Math.random() < 0.8 ? 1 + Math.floor(Math.random() * 2) : 0) : 0,
-      seat ? Math.round(Math.random() * 20 * 10) / 10 : 0,
-      seat ? "CHECKED_IN" : "NOT_CHECKED_IN",
+      isCheckedIn ? (Math.random() < 0.8 ? 1 + Math.floor(Math.random() * 2) : 0) : 0,
+      isCheckedIn ? Math.round(Math.random() * 20 * 10) / 10 : 0,
+      isCheckedIn ? "CHECKED_IN" : "NOT_CHECKED_IN",
       checkinSequence,
       bcbp,
       JSON.stringify({
@@ -223,7 +311,16 @@ export function insertFlightWithRoster(flight: FlightForRoster, rosterSize: numb
         pl: p.category !== "infant" && Math.random() < 0.05,
       })
     );
-    if (seat) db.prepare("UPDATE seats SET passenger_id = ? WHERE flight_id = ? AND seat = ?").run(info.lastInsertRowid, flight.id, seat);
+    if (seat && isCheckedIn) {
+      db.prepare("UPDATE seats SET passenger_id = ? WHERE flight_id = ? AND seat = ?").run(info.lastInsertRowid, flight.id, seat);
+    } else if (seat && isPreBooked) {
+      // Hold marker only — the seat stays visually "free" (no passenger_id)
+      // until the passenger actually checks in, same as a real advance
+      // seat-selection system (see seatExtra.ts's "Hold markers" comment).
+      const current = seatExtras.get(seat)?.extra ?? {};
+      const holdKind = Math.random() < 0.2 ? "preseated" : "reserved";
+      updateSeatExtra.run(JSON.stringify({ ...current, [holdKind]: true }), flight.id, seat);
+    }
   }
 
   for (const a of adults) insertOne(a, locatorByGuardian.get(a) ?? nextLocator());
