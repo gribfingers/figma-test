@@ -261,16 +261,45 @@ interface FlightTemplate {
   stops?: string[];
 }
 
-// Same flight numbers recur every generated day, same as a real airline's
-// published schedule would (SU1234 flies SVO-LED daily, etc.) — only the
-// date and the roster inside change.
-const DAILY_FLIGHT_TEMPLATES: FlightTemplate[] = [
+// Same 5 flight numbers/times recur every generated day, same as a real
+// airline's published schedule would (SU1234 flies SVO-LED daily, etc.) —
+// kept as the "headline" flights other parts of the app (and manual
+// testing) already know by number.
+const HEADLINE_TEMPLATES: FlightTemplate[] = [
   { flightNumber: "1234", carrierCode: "SU", origin: "SVO", destination: "LED", hourUtc: 7, aircraftType: "A320", aircraftReg: "K0876", aircraftVersion: "C18Y162" },
   { flightNumber: "5678", carrierCode: "SU", origin: "SVO", destination: "IST", hourUtc: 10, aircraftType: "B738", aircraftReg: "K0654", aircraftVersion: "C24Y168" },
   { flightNumber: "9012", carrierCode: "SU", origin: "SVX", destination: "DME", hourUtc: 13, aircraftType: "A320", aircraftReg: "K0932", aircraftVersion: "C18Y162", stops: ["LED"] },
   { flightNumber: "7777", carrierCode: "SU", origin: "LED", destination: "SVO", hourUtc: 16, aircraftType: "A320", aircraftReg: "K0741", aircraftVersion: "C18Y162" },
   { flightNumber: "2468", carrierCode: "SU", origin: "SVO", destination: "AER", hourUtc: 19, aircraftType: "B738", aircraftReg: "K0512", aircraftVersion: "C24Y168", stops: ["KZN"] },
 ];
+
+// Per FLIGHT_PHASES (frontend/src/flightPhase.ts), Check-in is a 135-minute
+// window before std but Boarding is only 30 minutes — the tighter one sets
+// the bar. With the 5 headline flights alone (3h apart), most of the day has
+// no flight boarding or checking in at all. Filling every other half-hour
+// slot with a filler flight (cycling through the same 5 route/aircraft
+// profiles under a new flight number) makes consecutive boarding windows
+// touch exactly (see buildSegmentChain's std math), so at any moment of the
+// day — not just these 5 windows — at least one flight is boarding and at
+// least one is checking in.
+const FILLER_SLOT_MINUTES = 30;
+const FILLER_FLIGHT_NUMBER_START = 3001;
+
+function buildDailyFlightTemplates(): FlightTemplate[] {
+  const templates = [...HEADLINE_TEMPLATES];
+  const occupiedMinutes = new Set(HEADLINE_TEMPLATES.map((t) => Math.round(t.hourUtc * 60)));
+  let fillerNumber = FILLER_FLIGHT_NUMBER_START;
+  let profileIdx = 0;
+  for (let minuteOfDay = 0; minuteOfDay < 24 * 60; minuteOfDay += FILLER_SLOT_MINUTES) {
+    if (occupiedMinutes.has(minuteOfDay)) continue;
+    const { flightNumber: _flightNumber, hourUtc: _hourUtc, ...profile } = HEADLINE_TEMPLATES[profileIdx % HEADLINE_TEMPLATES.length];
+    profileIdx++;
+    templates.push({ ...profile, flightNumber: String(fillerNumber++), hourUtc: minuteOfDay / 60 });
+  }
+  return templates;
+}
+
+const DAILY_FLIGHT_TEMPLATES: FlightTemplate[] = buildDailyFlightTemplates();
 
 // Rough, distance-agnostic per-leg timing for chaining a multi-stop
 // itinerary's departure/arrival times — good enough for demo data, not a
