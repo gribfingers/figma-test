@@ -125,15 +125,17 @@ export function TopTabs() {
   return (
     <div className="tabs-bar">
       {overflowing && (
-        <button
-          type="button"
-          className="tabs-icon-btn tabs-scroll-btn"
-          title="Scroll tabs left"
-          disabled={!canScrollLeft}
-          onClick={() => scrollTabs(-1)}
-        >
-          <ChevronLeftIcon size={18} />
-        </button>
+        <div className="tabs-scroll-group">
+          <button
+            type="button"
+            className="tabs-icon-btn tabs-scroll-btn"
+            title="Scroll tabs left"
+            disabled={!canScrollLeft}
+            onClick={() => scrollTabs(-1)}
+          >
+            <ChevronLeftIcon size={18} />
+          </button>
+        </div>
       )}
       <div className="tabs-list" ref={listRef} onScroll={updateScrollState}>
         {tabs.map((tab) => {
@@ -165,20 +167,20 @@ export function TopTabs() {
         })}
       </div>
       {overflowing && (
-        <button
-          type="button"
-          className="tabs-icon-btn tabs-scroll-btn"
-          title="Scroll tabs right"
-          disabled={!canScrollRight}
-          onClick={() => scrollTabs(1)}
-        >
-          <ChevronRightIcon size={18} />
-        </button>
-      )}
-      {overflowing && (
-        <button type="button" className="tabs-icon-btn tabs-scroll-btn" title="Close all tabs" onClick={handleCloseAll}>
-          <CloseIcon size={16} />
-        </button>
+        <div className="tabs-scroll-group">
+          <button
+            type="button"
+            className="tabs-icon-btn tabs-scroll-btn"
+            title="Scroll tabs right"
+            disabled={!canScrollRight}
+            onClick={() => scrollTabs(1)}
+          >
+            <ChevronRightIcon size={18} />
+          </button>
+          <button type="button" className="tabs-icon-btn tabs-scroll-btn" title="Close all tabs" onClick={handleCloseAll}>
+            <CloseIcon size={16} />
+          </button>
+        </div>
       )}
       <div className="tabs-fill" />
       <div className="tabs-actions">

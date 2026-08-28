@@ -142,13 +142,13 @@ export function Dashboard() {
             />
             <DateTimePicker
               label="Date/time from"
-              style={{ minWidth: 170 }}
+              style={{ minWidth: 194 }}
               value={draftSearch.dateFrom}
               onChange={(v) => setDraftSearch({ ...draftSearch, dateFrom: v })}
             />
             <DateTimePicker
               label="Date/time to"
-              style={{ minWidth: 170 }}
+              style={{ minWidth: 194 }}
               value={draftSearch.dateTo}
               onChange={(v) => setDraftSearch({ ...draftSearch, dateTo: v })}
             />

@@ -36,10 +36,11 @@ function isFlightPage(pathname: string): boolean {
   return pathname === "/" || pathname.startsWith("/flights/");
 }
 
-// Passenger search and the flight-level check-in board (/checkin/:flightId) — NOT a specific
-// PNR's own flow page, which gets its own active icon lower down once you're in it.
+// Passenger search, the flight-level check-in board (/checkin/:flightId), and a
+// specific PNR's own flow page (/checkin/:flightId/pnr/:passengerId) — all part of
+// the check-in workstation, so the sidebar icon stays lit throughout.
 function isCheckinPage(pathname: string): boolean {
-  return pathname === "/search" || /^\/checkin\/[^/]+$/.test(pathname);
+  return pathname === "/search" || pathname.startsWith("/checkin/");
 }
 
 // Boarding search and a specific flight's gate boarding screen.

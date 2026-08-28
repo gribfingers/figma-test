@@ -386,10 +386,30 @@ body {
 }
 /* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
 .tabs-bar .tabs-icon-btn:hover { background: var(--field-bg); color: var(--field-value); }
+/* Wraps the scroll-arrow/close-all buttons so the shared baseline border
+   the rest of the bar draws (.top-tab, .tabs-fill, .tabs-actions) continues
+   underneath them too, instead of leaving a gap — the buttons themselves
+   are round, so a border on the group carries that line, not the buttons. */
+.tabs-scroll-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 56px;
+  box-sizing: border-box;
+  padding: 0 8px;
+  border-bottom: 1px solid var(--panel-border);
+  flex-shrink: 0;
+}
 /* Must come after .tabs-icon-btn — its own all:unset otherwise wins the
    flex-shrink cascade (equal specificity, later source order) and lets
    these buttons get squashed instead of staying pinned at 36px. */
-.tabs-scroll-btn { flex-shrink: 0; margin: 0 2px; border: 1px solid var(--panel-border); }
+.tabs-scroll-btn {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--panel-border);
+  background: var(--bg);
+}
 .tabs-scroll-btn:disabled { opacity: 0.3; cursor: default; }
 .tabs-bar .tabs-scroll-btn:disabled:hover { background: transparent; }
 .tabs-badge {
@@ -2334,7 +2354,11 @@ tr.row-hover { cursor: pointer; }
 .boarding-remain-value-muted { color: var(--field-value); }
 
 .boarding-pax-body { display: flex; gap: 16px; flex: 1; min-height: 0; }
-.boarding-pax-card { flex: 0 0 400px; overflow-y: auto; }
+/* .panel's default margin-bottom (for stacked panels) only gets zeroed by
+   :last-child — this card sits beside .boarding-pax-map, not above it, and
+   isn't the last child, so without this override that stray 16px margin
+   made stretch size the card 16px shorter than its sibling. */
+.boarding-pax-card { flex: 0 0 400px; overflow-y: auto; margin-bottom: 0; }
 .boarding-pax-map { flex: 1; min-width: 0; padding: 20px 20px 0; display: flex; flex-direction: column; }
 
 .boarding-pax-name { font-size: 26px; font-weight: 800; color: var(--accent); margin-bottom: 16px; }
