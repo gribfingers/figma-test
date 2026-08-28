@@ -1171,6 +1171,13 @@ button.icon-button:hover { background: var(--hover-bg); }
 }
 
 .login-page { height: 100%; display: flex; align-items: center; justify-content: center; background: var(--bg); }
+/* Same fade + rise the toast stack and side panels use elsewhere — this is
+   the only screen without a tab strip, so it gets its own entrance instead
+   of just appearing instantly. */
+@keyframes login-card-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 .login-card {
   width: 340px;
   background: var(--panel);
@@ -1180,6 +1187,7 @@ button.icon-button:hover { background: var(--hover-bg); }
   display: flex;
   flex-direction: column;
   box-shadow: 0 8px 40px -12px rgba(24, 31, 36, 0.2);
+  animation: login-card-in 0.4s ease;
 }
 .login-brand { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 800; color: var(--field-value); margin-bottom: 20px; }
 .login-card .field2 { margin-bottom: 16px; }
