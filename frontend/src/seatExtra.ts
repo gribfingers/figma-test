@@ -2,7 +2,7 @@ import { SeatCell } from "./api";
 import { ChildIcon } from "./components/Icon";
 import {
   SeatAnimalIcon, SeatBrokenIcon, SeatCgBlockIcon, SeatCrewIcon,
-  SeatEmergencyIcon, SeatFixedArmrestIcon, SeatHardBlockIcon, SeatInftIcon, SeatLegroomIcon,
+  SeatEmergencyIcon, SeatFixedArmrestIcon, SeatHardBlockIcon, SeatInftIcon, SeatInstIcon, SeatLegroomIcon,
   SeatNoReclineIcon, SeatSoftBlockIcon, SeatStretcherIcon, SeatTransitIcon, SeatWheelchairIcon,
 } from "./components/SeatIcons";
 
@@ -76,7 +76,7 @@ export const SEAT_ATTRS: SeatAttrDef[] = [
   { key: "wheelchair", label: "Кресло", icon: SeatWheelchairIcon },
   { key: "animal", label: "Животное", icon: SeatAnimalIcon },
   { key: "infant", label: "Младенец (INFT)", icon: SeatInftIcon },
-  { key: "inst", label: "Младенец с местом (INST)", icon: SeatInftIcon },
+  { key: "inst", label: "Младенец с местом (INST)", icon: SeatInstIcon },
   { key: "child", label: "Ребёнок", icon: ChildIcon },
   { key: "transit", label: "Транзит (SOM)", icon: SeatTransitIcon },
   { key: "noRecline", label: "Не откидывается спинка", icon: SeatNoReclineIcon },
