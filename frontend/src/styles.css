@@ -1119,8 +1119,10 @@ button.icon-button:hover { background: var(--hover-bg); }
   font-size: 13px;
   line-height: 1.4;
   pointer-events: auto;
-  animation: toast-in 0.16s ease;
+  animation: toast-in 0.25s ease;
 }
+/* Held in the DOM for TOAST_EXIT_MS (toast.tsx) so this can actually play instead of the toast just vanishing. */
+.toast.closing { animation: toast-out 0.3s ease forwards; }
 .toast span { flex: 1; }
 .toast-success { border-left-color: var(--ok); }
 .toast-error { border-left-color: var(--danger); }
@@ -1142,6 +1144,10 @@ button.icon-button:hover { background: var(--hover-bg); }
 @keyframes toast-in {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
+}
+@keyframes toast-out {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(8px); }
 }
 
 .login-page { height: 100%; display: flex; align-items: center; justify-content: center; background: var(--bg); }

@@ -135,8 +135,9 @@ export function BoardingPax() {
     if (!passenger?.bcbp) return;
     try {
       await api.scanBoardingPass(passenger.bcbp);
-      showToast("Boarded");
-      closeTab(`/boarding/${fid}/pax/${passenger.id}`);
+      // Tab closes once the toast itself dismisses (same pattern as PnrView's
+      // completeCheckin) rather than instantly alongside it — less jarring.
+      showToast("Boarded", "success", () => closeTab(`/boarding/${fid}/pax/${passenger.id}`));
     } catch (e: any) {
       setMessage({ kind: "error", text: e.message });
     }
