@@ -48,6 +48,18 @@ function randDob(minAge: number, maxAge: number): string {
 function randInt(min: number, max: number): number {
   return min + Math.floor(Math.random() * (max - min + 1));
 }
+// A future date (relative to today), same "YYYY-MM-DD" shape as randDob —
+// used for document expiry, which isn't tied to the flight's own date.
+function randFutureDate(minYears: number, maxYears: number): string {
+  const years = minYears + Math.floor(Math.random() * (maxYears - minYears + 1));
+  const year = new Date().getUTCFullYear() + years;
+  const month = 1 + Math.floor(Math.random() * 12);
+  const day = 1 + Math.floor(Math.random() * 28);
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+function randDocumentNumber(): string {
+  return `${randInt(10, 99)}${randInt(1000000, 9999999)}`;
+}
 // Random rather than sequential — this now runs indefinitely (once a day,
 // forever), so a process-lifetime counter would collide with locators
 // generated in earlier runs/restarts. There's no UNIQUE constraint on
@@ -107,8 +119,8 @@ function buildRoster(size: number): PaxSpec[] {
 
 const insertSeat = db.prepare(`INSERT INTO seats (flight_id, seat, cabin_class, exit_row) VALUES (?, ?, ?, ?)`);
 const insertPax = db.prepare(
-  `INSERT INTO passengers (record_locator, flight_id, surname, given_name, ticket_number, ssr, infant, gender, dob, seat, bag_count, bag_weight_kg, checkin_status, checkin_sequence, bcbp, extra)
-   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  `INSERT INTO passengers (record_locator, flight_id, surname, given_name, ticket_number, document_type, document_number, nationality, doc_expiry, ssr, infant, gender, dob, seat, bag_count, bag_weight_kg, checkin_status, checkin_sequence, bcbp, extra)
+   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 );
 
 function typeCode(p: PaxSpec): string {
@@ -191,6 +203,10 @@ export function insertFlightWithRoster(flight: FlightForRoster, rosterSize: numb
       p.surname,
       p.givenName,
       nextTicketNumber(),
+      "P",
+      randDocumentNumber(),
+      "RU",
+      randFutureDate(1, 9),
       JSON.stringify(p.category === "infant" ? [...p.ssr, "INFANT"] : p.ssr),
       p.category === "infant" ? 1 : 0,
       p.gender,
@@ -234,6 +250,15 @@ interface FlightTemplate {
   aircraftType: string;
   aircraftReg: string;
   aircraftVersion: string;
+  /**
+   * Intermediate stop(s) between origin and destination — when present, this
+   * becomes a genuine multi-segment flight: one flights row (whose own
+   * origin/destination/std/sta are the FIRST leg only), with the remaining
+   * legs stored in extra.segments the same way FlightCard's Main tab saves
+   * them (see buildSegmentChain below and Flight.extra.segments in
+   * flightSegments.ts). Same aircraft flies the whole routing (a through-flight).
+   */
+  stops?: string[];
 }
 
 // Same flight numbers recur every generated day, same as a real airline's
@@ -242,10 +267,50 @@ interface FlightTemplate {
 const DAILY_FLIGHT_TEMPLATES: FlightTemplate[] = [
   { flightNumber: "1234", carrierCode: "SU", origin: "SVO", destination: "LED", hourUtc: 7, aircraftType: "A320", aircraftReg: "K0876", aircraftVersion: "C18Y162" },
   { flightNumber: "5678", carrierCode: "SU", origin: "SVO", destination: "IST", hourUtc: 10, aircraftType: "B738", aircraftReg: "K0654", aircraftVersion: "C24Y168" },
-  { flightNumber: "9012", carrierCode: "SU", origin: "SVX", destination: "DME", hourUtc: 13, aircraftType: "A320", aircraftReg: "K0932", aircraftVersion: "C18Y162" },
+  { flightNumber: "9012", carrierCode: "SU", origin: "SVX", destination: "DME", hourUtc: 13, aircraftType: "A320", aircraftReg: "K0932", aircraftVersion: "C18Y162", stops: ["LED"] },
   { flightNumber: "7777", carrierCode: "SU", origin: "LED", destination: "SVO", hourUtc: 16, aircraftType: "A320", aircraftReg: "K0741", aircraftVersion: "C18Y162" },
-  { flightNumber: "2468", carrierCode: "SU", origin: "SVO", destination: "AER", hourUtc: 19, aircraftType: "B738", aircraftReg: "K0512", aircraftVersion: "C24Y168" },
+  { flightNumber: "2468", carrierCode: "SU", origin: "SVO", destination: "AER", hourUtc: 19, aircraftType: "B738", aircraftReg: "K0512", aircraftVersion: "C24Y168", stops: ["KZN"] },
 ];
+
+// Rough, distance-agnostic per-leg timing for chaining a multi-stop
+// itinerary's departure/arrival times — good enough for demo data, not a
+// real flight-planning model.
+const LEG_DURATION_MIN = 95;
+const GROUND_TIME_MIN = 55;
+
+interface SegmentChain {
+  /** First leg's own std/sta — these go on the flights row itself. */
+  std: string;
+  sta: string;
+  /** extra.segments value, same shape FlightCard's Main tab writes — omitted (undefined) for a nonstop template. */
+  segmentsExtra?: unknown[];
+}
+
+/** Builds a template's leg-by-leg std/sta chain, in the storage shape flightSegments.ts expects. */
+function buildSegmentChain(tmpl: FlightTemplate, dayStart: Date): SegmentChain {
+  const path = [tmpl.origin, ...(tmpl.stops ?? []), tmpl.destination];
+  const legCount = path.length - 1;
+  const legStd = (legIndex: number) => isoAtOffset(dayStart, tmpl.hourUtc * 60 + legIndex * (LEG_DURATION_MIN + GROUND_TIME_MIN));
+  const legSta = (legIndex: number) => isoAtOffset(dayStart, tmpl.hourUtc * 60 + legIndex * (LEG_DURATION_MIN + GROUND_TIME_MIN) + LEG_DURATION_MIN);
+  if (legCount <= 1) return { std: legStd(0), sta: legSta(0) };
+  const segmentsExtra: unknown[] = [{ terminalTo: "", checkinDesk: "" }];
+  for (let leg = 1; leg < legCount; leg++) {
+    segmentsExtra.push({
+      origin: path[leg],
+      destination: path[leg + 1],
+      std: legStd(leg),
+      sta: legSta(leg),
+      terminalFrom: "",
+      terminalTo: "",
+      aircraftType: tmpl.aircraftType,
+      checkinDesk: "",
+      gate: "",
+      acReg: tmpl.aircraftReg,
+      seatConfig: tmpl.aircraftVersion,
+    });
+  }
+  return { std: legStd(0), sta: legSta(0), segmentsExtra };
+}
 
 const ROSTER_SIZE_RANGE: [number, number] = [50, 130];
 // Marks a flight as belonging to this generator (as opposed to the curated
@@ -259,15 +324,13 @@ function dayStartUtc(date: Date): Date {
   d.setUTCHours(0, 0, 0, 0);
   return d;
 }
-function isoAtUtc(dayStart: Date, hour: number): string {
-  const d = new Date(dayStart);
-  d.setUTCHours(hour, 0, 0, 0);
-  return d.toISOString();
+function isoAtOffset(dayStart: Date, minutesFromMidnight: number): string {
+  return new Date(dayStart.getTime() + minutesFromMidnight * 60000).toISOString();
 }
 
 const insertFlight = db.prepare(
-  `INSERT INTO flights (flight_number, carrier_code, origin, destination, std, aircraft_type, aircraft_reg, aircraft_version, status, extra)
-   VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'SCHEDULED', ?)`
+  `INSERT INTO flights (flight_number, carrier_code, origin, destination, std, sta, aircraft_type, aircraft_reg, aircraft_version, status, extra)
+   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'SCHEDULED', ?)`
 );
 
 /** Whether an auto-generated schedule already exists for the UTC calendar day `date` falls in. */
@@ -293,17 +356,25 @@ export function generateDailySchedule(date: Date): { flights: number; passengers
 
   const tx = db.transaction(() => {
     for (const tmpl of DAILY_FLIGHT_TEMPLATES) {
-      const std = isoAtUtc(dayStart, tmpl.hourUtc);
+      const chain = buildSegmentChain(tmpl, dayStart);
+      const std = chain.std;
+      // The flights row's own origin/destination are leg 0 only (e.g. SVX→LED
+      // for a SVX-LED-DME routing) — any further stops live in extra.segments,
+      // same convention flightSegments.ts/FlightCard's Main tab use.
+      const rowDestination = tmpl.stops?.length ? tmpl.stops[0] : tmpl.destination;
+      const extra: Record<string, unknown> = { [AUTO_GENERATED_MARKER]: true };
+      if (chain.segmentsExtra) extra.segments = chain.segmentsExtra;
       const info = insertFlight.run(
         tmpl.flightNumber,
         tmpl.carrierCode,
         tmpl.origin,
-        tmpl.destination,
+        rowDestination,
         std,
+        chain.sta,
         tmpl.aircraftType,
         tmpl.aircraftReg,
         tmpl.aircraftVersion,
-        JSON.stringify({ [AUTO_GENERATED_MARKER]: true })
+        JSON.stringify(extra)
       );
       const flightId = info.lastInsertRowid as number;
       const rosterSize = randInt(ROSTER_SIZE_RANGE[0], ROSTER_SIZE_RANGE[1]);
@@ -313,7 +384,7 @@ export function generateDailySchedule(date: Date): { flights: number; passengers
           carrierCode: tmpl.carrierCode,
           flightNumber: tmpl.flightNumber,
           origin: tmpl.origin,
-          destination: tmpl.destination,
+          destination: rowDestination,
           std,
           aircraftType: tmpl.aircraftType,
         },
