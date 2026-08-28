@@ -140,7 +140,7 @@ const EXIT_ROW_AFTER: Record<string, number> = { A320: 11, B738: 13, A321: 14, A
 const UNASSIGNABLE_SEAT_ATTRS = ["hardBlock", "softBlock", "cgBlock", "broken", "crew"] as const;
 // These are just eligibility/amenity flags — a real passenger can still sit there.
 const OTHER_SEAT_ATTRS = [
-  "noRecline", "stretcher", "wheelchair", "animal", "bassinet", "child", "infant", "transit", "fixedArmrest", "legroom",
+  "noRecline", "stretcher", "wheelchair", "animal", "child", "infant", "transit", "fixedArmrest", "legroom",
 ] as const;
 const PAID_SEAT_RFISC = "0B5"; // same code paxExtra.ts's mock ancillary-purchase data already uses
 

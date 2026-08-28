@@ -18,8 +18,13 @@ interface Props {
   cabinFeatures?: CabinFeature[];
   /** Fires when an occupied seat is left-clicked — lets the caller e.g. highlight/scroll to that passenger's row. */
   onSelectOccupied?: (seat: SeatCell) => void;
-  /** Seat codes the passenger currently being assigned/swapped can't legally sit in (e.g. an infant/child in an exit row) — shown dimmed and unclickable. */
-  disabledSeats?: Set<string>;
+  /** Seat codes the passenger currently being assigned/swapped can't be put in at all (occupied, hard-blocked,
+   *  or an infant/child in an exit row) — dimmed to 20% opacity, rendered as if free regardless of real
+   *  occupancy, and unclickable. */
+  ineligibleSeats?: Set<string>;
+  /** Seat codes that are legal but discouraged for the passenger being assigned (soft-blocked) — dimmed to
+   *  70% opacity with a dashed border, but stay clickable. */
+  undesirableSeats?: Set<string>;
 }
 
 const LETTER_ORDER = ["A", "B", "C", "D", "E", "F"];
@@ -82,7 +87,8 @@ export function SeatMapGrid({
   showRfisc = true,
   cabinFeatures,
   onSelectOccupied,
-  disabledSeats,
+  ineligibleSeats,
+  undesirableSeats,
 }: Props) {
   const rows = new Map<number, SeatCell[]>();
   for (const s of seats) {
@@ -137,24 +143,24 @@ export function SeatMapGrid({
               {rowSeats.map((s) => {
                 const letter = s.seat.slice(3);
                 const extra = parseSeatExtra(s);
-                const state = seatState(s); // free | checked_in | boarded
+                const realState = seatState(s); // free | checked_in | boarded
                 const subtype = seatSubtype(extra); // none | presit | booked
                 const age = occupantAge(s);
                 const isChild = age != null && age < 18;
                 const attr = isChild ? null : primaryAttr(extra) ?? (s.exit_row ? EXIT_ROW_ATTR : null);
-                const blocked = !!extra.hardBlock;
-                const softBlocked = !blocked && !!extra.softBlock;
-                // Blocked seats never show a hold marker — they must always read as plain free seats.
-                const effectiveSubtype = blocked || softBlocked ? "none" : subtype;
-                const ineligible = disabledSeats?.has(s.seat) ?? false;
+                const ineligible = ineligibleSeats?.has(s.seat) ?? false;
+                const undesirable = !ineligible && (undesirableSeats?.has(s.seat) ?? false);
+                // Ineligible seats always read as plain free ones, whatever their real occupancy —
+                // the agent doesn't need to know why a seat can't be picked, just that it can't be.
+                const state = ineligible ? "free" : realState;
+                const effectiveSubtype = ineligible ? "none" : subtype;
                 const classes = [
                   "seat",
                   `seat-${state.replace("_", "-")}`,
                   s.seat === selected ? "selected" : "",
                   s.exit_row ? "exit" : "",
-                  blocked ? "blocked" : "",
-                  softBlocked ? "soft-blocked" : "",
                   ineligible ? "picker-disabled" : "",
+                  undesirable ? "picker-undesirable" : "",
                 ].filter(Boolean).join(" ");
                 const showAisle = letter === "C"; // 3-3 narrow-body layout aisle after column C
                 const Icon = isChild ? SeatChildIcon : attr?.icon;
@@ -177,7 +183,7 @@ export function SeatMapGrid({
                       }
                       onClick={() => {
                         if (s.passenger_id) onSelectOccupied?.(s);
-                        else if (!blocked && !ineligible) onSelect?.(s.seat);
+                        else if (!ineligible) onSelect?.(s.seat);
                       }}
                       onContextMenu={(e) => {
                         if (!onEditSeat) return;

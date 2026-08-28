@@ -1,7 +1,7 @@
 import { SeatCell } from "./api";
 import { ChildIcon } from "./components/Icon";
 import {
-  SeatAnimalIcon, SeatBassinetIcon, SeatBrokenIcon, SeatCgBlockIcon, SeatCrewIcon,
+  SeatAnimalIcon, SeatBrokenIcon, SeatCgBlockIcon, SeatCrewIcon,
   SeatEmergencyIcon, SeatFixedArmrestIcon, SeatHardBlockIcon, SeatInftIcon, SeatLegroomIcon,
   SeatNoReclineIcon, SeatSoftBlockIcon, SeatStretcherIcon, SeatTransitIcon, SeatWheelchairIcon,
 } from "./components/SeatIcons";
@@ -25,7 +25,6 @@ export interface SeatExtra {
   animal?: boolean;
   child?: boolean;
   infant?: boolean;
-  bassinet?: boolean; // INST — bulkhead seat with a fold-out infant cot
   transit?: boolean; // SOM transit point
   fixedArmrest?: boolean;
   legroom?: boolean;
@@ -75,7 +74,6 @@ export const SEAT_ATTRS: SeatAttrDef[] = [
   { key: "stretcher", label: "Носилки", icon: SeatStretcherIcon },
   { key: "wheelchair", label: "Кресло", icon: SeatWheelchairIcon },
   { key: "animal", label: "Животное", icon: SeatAnimalIcon },
-  { key: "bassinet", label: "Люлька для младенца", icon: SeatBassinetIcon },
   { key: "infant", label: "Младенец", icon: SeatInftIcon },
   { key: "child", label: "Ребёнок", icon: ChildIcon },
   { key: "transit", label: "Транзит (SOM)", icon: SeatTransitIcon },

@@ -16,7 +16,8 @@ interface Props {
   onHide?: () => void;
   cabinFeatures?: CabinFeature[];
   onSelectOccupied?: (seat: SeatCell) => void;
-  disabledSeats?: Set<string>;
+  ineligibleSeats?: Set<string>;
+  undesirableSeats?: Set<string>;
   /** Right-click seat attribute editing (exit-row/blocking/service/pricing) — a flight-config action, not appropriate everywhere the map is embedded (e.g. the check-in flow). Defaults to on. */
   allowSeatEdit?: boolean;
 }
@@ -51,7 +52,8 @@ export function SeatMapPanel({
   onHide,
   cabinFeatures,
   onSelectOccupied,
-  disabledSeats,
+  ineligibleSeats,
+  undesirableSeats,
   allowSeatEdit = true,
 }: Props) {
   const [zoom, setZoom] = useState(100);
@@ -165,7 +167,8 @@ export function SeatMapPanel({
             showRfisc={activeLayer === "rfisc"}
             cabinFeatures={cabinFeatures}
             onSelectOccupied={onSelectOccupied}
-            disabledSeats={disabledSeats}
+            ineligibleSeats={ineligibleSeats}
+            undesirableSeats={undesirableSeats}
           />
         </div>
       </div>

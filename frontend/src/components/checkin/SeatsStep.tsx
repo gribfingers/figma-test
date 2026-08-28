@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { api, Passenger, SeatCell } from "../../api";
 import { cabinFeaturesFor } from "../../cabinLayout";
 import { isInfant, parsePassengerExtra } from "../../paxExtra";
+import { parseSeatExtra } from "../../seatExtra";
 import { SeatMapPanel } from "../SeatMapPanel";
 
 interface Props {
@@ -23,14 +24,26 @@ export function SeatsStep({ flightId, aircraftType, passenger, seats, onSeatsRel
   const [error, setError] = useState("");
   const cabinFeatures = useMemo(() => cabinFeaturesFor(aircraftType), [aircraftType]);
 
-  // Someone else's seat can't be picked; an infant/child can't take an exit row (real IATA restriction).
+  // Someone else's seat or a hard-blocked one can't be picked; an infant/child can't take an exit row
+  // (real IATA restriction). Soft-blocked seats are legal but discouraged — see undesirableSeats.
   const restricted = !!passenger.infant || isInfant(passenger.dob) || parsePassengerExtra(passenger).type === "CHD";
-  const disabledSeats = useMemo(() => {
-    const disabled = seats
-      .filter((s) => (s.passenger_id != null && s.passenger_id !== passenger.id) || (restricted && s.exit_row))
+  const ineligibleSeats = useMemo(() => {
+    const ineligible = seats
+      .filter(
+        (s) =>
+          (s.passenger_id != null && s.passenger_id !== passenger.id) ||
+          parseSeatExtra(s).hardBlock ||
+          (restricted && s.exit_row)
+      )
       .map((s) => s.seat);
-    return new Set(disabled);
+    return new Set(ineligible);
   }, [seats, passenger.id, restricted]);
+  const undesirableSeats = useMemo(() => {
+    const undesirable = seats
+      .filter((s) => (s.passenger_id == null || s.passenger_id === passenger.id) && parseSeatExtra(s).softBlock)
+      .map((s) => s.seat);
+    return new Set(undesirable);
+  }, [seats, passenger.id]);
 
   async function assignSeat(seatCode: string) {
     setError("");
@@ -55,7 +68,8 @@ export function SeatsStep({ flightId, aircraftType, passenger, seats, onSeatsRel
           onSelect={assignSeat}
           onSeatUpdated={(updated) => onSeatsReloaded(seats.map((s) => (s.seat === updated.seat ? updated : s)))}
           cabinFeatures={cabinFeatures}
-          disabledSeats={disabledSeats}
+          ineligibleSeats={ineligibleSeats}
+          undesirableSeats={undesirableSeats}
           allowSeatEdit={false}
         />
       </div>

@@ -6,7 +6,7 @@ import { ArrowBackIcon, ArrowNestedIcon, ChildIcon, InfantIcon } from "../Icon";
 import { SortTh, useSort } from "../SortTh";
 import { FlagStatus, ageFromDob, ageYears, asvcForPassenger, asvcStatus, commentsStatus, etStatus, ffpStatus, isInfant, parsePassengerExtra, trStatus } from "../../paxExtra";
 import { FlagKind, FlagModal, PassengerDetailModal } from "./PassengerModals";
-import { formatSeatDisplay } from "../../seatExtra";
+import { formatSeatDisplay, parseSeatExtra } from "../../seatExtra";
 import { useToast } from "../../toast";
 import {
   BaggageFields,
@@ -282,14 +282,21 @@ export function PassengersTab({ flight }: Props) {
   const activeSeat = passengers.find((p) => p.id === activeId)?.seat ?? null;
   const seatByCode = new Map(seats.map((s) => [s.seat, s]));
 
-  // While assigning/changing a seat, only free seats can be picked — already
-  // occupied ones are dimmed and disabled. Exit-row seats are additionally
-  // off-limits for infants/children (real IATA restriction).
-  const disabledSeats = useMemo(() => {
+  // While assigning a seat: already-occupied and hard-blocked seats can't be picked at all, and exit-row
+  // seats are additionally off-limits for infants/children (real IATA restriction). Soft-blocked seats are
+  // legal but discouraged, shown separately (see undesirableSeats).
+  const ineligibleSeats = useMemo(() => {
     if (!seatAction || seatAction.mode !== "assign") return undefined;
     const restricted = !!seatAction.passenger.infant || isInfant(seatAction.passenger.dob) || parsePassengerExtra(seatAction.passenger).type === "CHD";
-    const disabled = seats.filter((s) => s.passenger_id != null || (restricted && s.exit_row)).map((s) => s.seat);
-    return new Set(disabled);
+    const ineligible = seats
+      .filter((s) => s.passenger_id != null || parseSeatExtra(s).hardBlock || (restricted && s.exit_row))
+      .map((s) => s.seat);
+    return new Set(ineligible);
+  }, [seatAction, seats]);
+  const undesirableSeats = useMemo(() => {
+    if (!seatAction || seatAction.mode !== "assign") return undefined;
+    const undesirable = seats.filter((s) => s.passenger_id == null && parseSeatExtra(s).softBlock).map((s) => s.seat);
+    return new Set(undesirable);
   }, [seatAction, seats]);
 
   // Selecting a passenger (either by clicking their row or clicking their
@@ -518,7 +525,8 @@ export function PassengersTab({ flight }: Props) {
             onHide={() => setMapHidden(true)}
             cabinFeatures={cabinFeatures}
             onSelectOccupied={handleOccupiedSeatClick}
-            disabledSeats={disabledSeats}
+            ineligibleSeats={ineligibleSeats}
+            undesirableSeats={undesirableSeats}
           />
           <div className="panel-hint">Right-click a seat to edit its properties.</div>
         </div>
