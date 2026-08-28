@@ -1618,15 +1618,23 @@ button.icon-button:hover { background: var(--hover-bg); }
 .seat-content { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; color: var(--muted); }
 .seat-checked-in .seat-content, .seat-boarded .seat-content { color: #ffffff; }
 .seat.selected .seat-content { color: var(--seat-active-ink); }
+/* The attribute icon set (SeatIcons.tsx) uses fixed hex fills rather than currentColor, so text
+   color alone doesn't reach them — force white explicitly on checked-in/boarded. Paths with a
+   literal fill="none" (the older stroke-only icons) are left alone so they don't gain a fill. */
+.seat-checked-in .seat-content svg path:not([fill="none"]),
+.seat-boarded .seat-content svg path:not([fill="none"]) {
+  fill: #ffffff;
+}
 
 .seat-price-row { display: flex; align-items: center; gap: 1px; max-width: 28px; }
 .seat-price { font-size: 11px; font-weight: 700; line-height: 1; color: var(--field-value); }
-.seat-content:has(.seat-rfisc-badge) .seat-price { font-size: 9px; }
 .seat-checked-in .seat-price, .seat-boarded .seat-price { color: #ffffff; }
 .seat.selected .seat-price { color: var(--seat-active-ink); }
-/* More than 3 digits (max 6): stacked two lines, thousands on top. */
-.seat-price.two-line { display: flex; flex-direction: column; align-items: center; line-height: 1; font-size: 8px; }
-.seat-rfisc-badge { background: var(--seat-busy-bg); color: #ffffff; font-size: 9px; font-weight: 600; line-height: 1; border-radius: 2px; padding: 1.5px 2px; white-space: nowrap; }
+/* More than 3 digits (max 6): stacked two lines, thousands on top — same 11px as every other case. */
+.seat-price.two-line { display: flex; flex-direction: column; align-items: center; line-height: 1; }
+.seat-rfisc-badge { font-size: 11px; font-weight: 700; line-height: 1; color: var(--field-value); white-space: nowrap; }
+.seat-checked-in .seat-rfisc-badge, .seat-boarded .seat-rfisc-badge { color: #ffffff; }
+.seat.selected .seat-rfisc-badge { color: var(--seat-active-ink); }
 
 .seat-child-age { font-size: 12px; font-weight: 600; line-height: 1; color: var(--muted-text); }
 .seat-checked-in .seat-child-age, .seat-boarded .seat-child-age { color: #ffffff; }

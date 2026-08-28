@@ -270,7 +270,8 @@ function SeatEditorModal({
           <input
             value={extra.rfisc ?? ""}
             placeholder=" "
-            onChange={(e) => setExtra((ex) => ({ ...ex, rfisc: e.target.value.toUpperCase() || undefined }))}
+            maxLength={3}
+            onChange={(e) => setExtra((ex) => ({ ...ex, rfisc: e.target.value.toUpperCase().slice(0, 3) || undefined }))}
           />
         </Field>
       </div>
