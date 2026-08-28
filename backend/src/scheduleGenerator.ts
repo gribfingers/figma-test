@@ -326,3 +326,81 @@ export function generateDailySchedule(date: Date): { flights: number; passengers
 
   return { flights: DAILY_FLIGHT_TEMPLATES.length, passengers: passengerTotal };
 }
+
+interface BackfillRow {
+  pid: number;
+  surname: string;
+  given_name: string;
+  record_locator: string;
+  seat: string;
+  flight_id: number;
+  origin: string;
+  destination: string;
+  carrier_code: string;
+  flight_number: string;
+  std: string;
+  last_checkin_sequence: number;
+  cabin_class: string | null;
+}
+
+/**
+ * One-time-per-boot cleanup for passengers that ended up checked in (seat +
+ * CHECKED_IN) without a bcbp — anything inserted before bcbp/checkin_sequence
+ * generation existed here, whether from an old seed run or hand-written
+ * data. Without a bcbp, the boarding screen's "Board" button (which scans
+ * it) silently no-ops, so this backfills both fields the same way
+ * insertFlightWithRoster does for newly-generated passengers, and brings
+ * each affected flight's last_checkin_sequence in line.
+ */
+export function backfillMissingBcbp(): { updated: number } {
+  const rows = db
+    .prepare(
+      `SELECT p.id as pid, p.surname, p.given_name, p.record_locator, p.seat,
+              f.id as flight_id, f.origin, f.destination, f.carrier_code, f.flight_number, f.std, f.last_checkin_sequence,
+              s.cabin_class
+       FROM passengers p
+       JOIN flights f ON f.id = p.flight_id
+       LEFT JOIN seats s ON s.flight_id = p.flight_id AND s.seat = p.seat
+       WHERE p.checkin_status = 'CHECKED_IN' AND p.bcbp IS NULL AND p.seat IS NOT NULL
+       ORDER BY f.id, p.id`
+    )
+    .all() as BackfillRow[];
+
+  if (rows.length === 0) return { updated: 0 };
+
+  const updatePax = db.prepare("UPDATE passengers SET checkin_sequence = ?, bcbp = ? WHERE id = ?");
+  const updateFlightSeq = db.prepare("UPDATE flights SET last_checkin_sequence = ? WHERE id = ?");
+
+  const tx = db.transaction(() => {
+    let currentFlightId: number | null = null;
+    let sequenceCursor = 0;
+    for (const row of rows) {
+      if (row.flight_id !== currentFlightId) {
+        if (currentFlightId !== null) updateFlightSeq.run(sequenceCursor, currentFlightId);
+        currentFlightId = row.flight_id;
+        sequenceCursor = row.last_checkin_sequence;
+      }
+      sequenceCursor++;
+      const bcbp = encodeBcbp({
+        surname: row.surname,
+        givenName: row.given_name,
+        eTicket: true,
+        pnrCode: row.record_locator,
+        fromAirport: row.origin,
+        toAirport: row.destination,
+        carrierCode: row.carrier_code,
+        flightNumber: row.flight_number,
+        julianDate: toJulianDayOfYear(row.std),
+        compartment: row.cabin_class ?? "Y",
+        seat: row.seat,
+        checkInSequence: String(sequenceCursor),
+        paxStatus: PAX_STATUS.CHECKED_IN,
+      });
+      updatePax.run(sequenceCursor, bcbp, row.pid);
+    }
+    if (currentFlightId !== null) updateFlightSeq.run(sequenceCursor, currentFlightId);
+  });
+  tx();
+
+  return { updated: rows.length };
+}
