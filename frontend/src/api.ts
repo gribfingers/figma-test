@@ -224,6 +224,8 @@ export const api = {
   ) => request<User>(`/users/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
   resetUserPassword: (id: number) => request<{ password: string }>(`/users/${id}/reset-password`, { method: "POST" }),
   deleteUser: (id: number) => request<{ ok: boolean }>(`/users/${id}`, { method: "DELETE" }),
+  regenerateTodaySchedule: () =>
+    request<{ flights: number; passengers: number }>("/users/regenerate-today-schedule", { method: "POST" }),
 
   listContacts: () => request<Contact[]>("/messages/contacts"),
   unreadMessageCount: () => request<{ count: number }>("/messages/unread-count"),

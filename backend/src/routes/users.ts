@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db } from "../db";
 import { generatePassword, hashPassword } from "../auth";
 import { AuthUser, requireAuth, requireSuperadmin } from "../middleware/auth";
+import { regenerateTodaySchedule } from "../scheduleGenerator";
 
 export const usersRouter = Router();
 usersRouter.use(requireAuth, requireSuperadmin);
@@ -78,6 +79,12 @@ usersRouter.post("/:id/reset-password", (req, res) => {
   db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(hashPassword(password), req.params.id);
   db.prepare("DELETE FROM sessions WHERE user_id = ?").run(req.params.id);
   res.json({ password });
+});
+
+/** Rebuilds today's auto-generated demo flights from scratch — see regenerateTodaySchedule. */
+usersRouter.post("/regenerate-today-schedule", (_req, res) => {
+  const result = regenerateTodaySchedule(new Date());
+  res.json(result);
 });
 
 usersRouter.delete("/:id", (req, res) => {

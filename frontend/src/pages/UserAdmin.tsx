@@ -33,6 +33,7 @@ export function UserAdmin() {
   const [savingEdit, setSavingEdit] = useState(false);
 
   const [generatedPassword, setGeneratedPassword] = useState<{ login: string; password: string } | null>(null);
+  const [regenerating, setRegenerating] = useState(false);
 
   function load() {
     api.listUsers().then(setUsers).catch((e) => setError(e.message));
@@ -130,6 +131,25 @@ export function UserAdmin() {
     }
   }
 
+  async function regenerateTodaySchedule() {
+    if (
+      !window.confirm(
+        "Rebuild today's auto-generated demo flights from scratch? This deletes and recreates them with the current generator logic, so any open tabs pointing at today's flights/passengers will go stale."
+      )
+    )
+      return;
+    setRegenerating(true);
+    setError("");
+    try {
+      const result = await api.regenerateTodaySchedule();
+      window.alert(`Regenerated ${result.flights} flights / ${result.passengers} passengers for today.`);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setRegenerating(false);
+    }
+  }
+
   return (
     <div>
       <h1>User administration</h1>
@@ -140,6 +160,9 @@ export function UserAdmin() {
       <div className="panel">
         <div className="toolbar">
           <div className="spacer" />
+          <button type="button" className="secondary" disabled={regenerating} onClick={regenerateTodaySchedule}>
+            {regenerating ? "Regenerating…" : "Regenerate today's schedule"}
+          </button>
           <button type="button" className="secondary" onClick={openAdd}>Add user</button>
         </div>
       </div>
