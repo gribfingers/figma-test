@@ -63,6 +63,7 @@ export function Search() {
       setPaxQuickFilter("all");
     } catch (err: any) {
       setError(err.message);
+      setResults(null);
     } finally {
       setSearching(false);
     }
