@@ -52,6 +52,20 @@ function todaySearch(): typeof EMPTY_SEARCH {
   return { ...EMPTY_SEARCH, dateFrom: `${day}T00:00`, dateTo: `${day}T23:59` };
 }
 
+// DateTimePicker's "YYYY-MM-DDTHH:mm" value is already UTC wall-clock
+// digits (see its own parseValue/toValue — no timezone conversion), so
+// these read/write those digits directly with Date.UTC rather than letting
+// `new Date(str)` parse it as the browser's local time.
+function wallClockMs(v: string): number | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(v);
+  return m ? Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]) : null;
+}
+function msToWallClock(ms: number): string {
+  const d = new Date(ms);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+}
+
 export function Dashboard() {
   useRegisterTab("Flights");
   const navigate = useNavigate();
@@ -144,7 +158,19 @@ export function Dashboard() {
               label="Date/time from"
               style={{ minWidth: 194 }}
               value={draftSearch.dateFrom}
-              onChange={(v) => setDraftSearch({ ...draftSearch, dateFrom: v })}
+              onChange={(v) => {
+                // Shift "to" along by the same gap it already had from "from"
+                // (a fresh day's worth, by default) — otherwise picking a
+                // later "from" can leave "to" behind it, an impossible range.
+                const oldFromMs = wallClockMs(draftSearch.dateFrom);
+                const oldToMs = wallClockMs(draftSearch.dateTo);
+                const newFromMs = wallClockMs(v);
+                if (oldFromMs != null && oldToMs != null && newFromMs != null && oldToMs > oldFromMs) {
+                  setDraftSearch({ ...draftSearch, dateFrom: v, dateTo: msToWallClock(newFromMs + (oldToMs - oldFromMs)) });
+                } else {
+                  setDraftSearch({ ...draftSearch, dateFrom: v });
+                }
+              }}
             />
             <DateTimePicker
               label="Date/time to"
