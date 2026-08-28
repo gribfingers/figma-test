@@ -1,4 +1,5 @@
 import { generateDailySchedule } from "./scheduleGenerator";
+import { pruneIfOverSize } from "./dbRetention";
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -11,6 +12,14 @@ function msUntilNextUtcMidnight(): number {
 
 function runDailyGeneration() {
   try {
+    // Prune first — generating every day forever grows the file without
+    // bound (see dbRetention.ts), so free up room before adding more.
+    const pruned = pruneIfOverSize();
+    if (pruned.deletedFlights > 0) {
+      console.log(
+        `[dailyScheduler] DB was ${pruned.sizeMbBefore.toFixed(1)}MB — pruned ${pruned.deletedFlights} oldest flight(s), now ${pruned.sizeMbAfter.toFixed(1)}MB.`
+      );
+    }
     const { flights, passengers } = generateDailySchedule(new Date());
     if (flights > 0) {
       console.log(`[dailyScheduler] Generated ${flights} flights / ${passengers} passengers for today.`);

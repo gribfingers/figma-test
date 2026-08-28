@@ -1,7 +1,7 @@
 import path from "node:path";
 import Database from "better-sqlite3";
 
-const dbPath = process.env.DB_PATH ?? path.join(__dirname, "..", "data.sqlite3");
+export const dbPath = process.env.DB_PATH ?? path.join(__dirname, "..", "data.sqlite3");
 export const db = new Database(dbPath);
 db.pragma("journal_mode = WAL");
 db.pragma("foreign_keys = ON");
