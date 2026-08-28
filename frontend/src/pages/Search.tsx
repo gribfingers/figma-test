@@ -3,6 +3,17 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { api, PassengerSearchMode, PassengerSearchResult } from "../api";
 import { useRegisterTab, useTabs } from "../tabs";
 import { clearPersistentState, usePersistentState } from "../usePersistentState";
+import { SortTh, useSort } from "../components/SortTh";
+
+type ResultSortKey = "name" | "destination" | "flight" | "std" | "pnr" | "status";
+const RESULT_SORT_GETTERS: Record<ResultSortKey, (p: PassengerSearchResult) => string | number> = {
+  name: (p) => `${p.surname}/${p.given_name}`,
+  destination: (p) => p.destination,
+  flight: (p) => `${p.carrier_code}${p.flight_number}`,
+  std: (p) => p.std,
+  pnr: (p) => p.record_locator,
+  status: (p) => p.checkin_status,
+};
 
 const MODES: { key: PassengerSearchMode; label: string; placeholder: string }[] = [
   { key: "surname", label: "Last Name", placeholder: "Search" },
@@ -91,6 +102,7 @@ export function Search() {
     const test = PAX_QUICK_FILTERS.find((f) => f.key === paxQuickFilter)?.test ?? (() => true);
     return results.filter(test);
   }, [results, paxQuickFilter]);
+  const { sorted: sortedResults, sortKey, sortDir, onSort } = useSort(filteredResults, RESULT_SORT_GETTERS);
 
   function openPassenger(p: PassengerSearchResult) {
     navigate(`/checkin/${p.flight_id}/pnr/${p.id}`);
@@ -152,16 +164,16 @@ export function Search() {
             <table>
               <thead>
                 <tr>
-                  <th>Name</th>
-                  <th>Destination</th>
-                  <th>Flight</th>
-                  <th>Date&amp;Time</th>
-                  <th>PNR</th>
-                  <th>Status</th>
+                  <SortTh id="name" label="Name" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                  <SortTh id="destination" label="Destination" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                  <SortTh id="flight" label="Flight" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                  <SortTh id="std" label="Date&Time" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                  <SortTh id="pnr" label="PNR" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                  <SortTh id="status" label="Status" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
                 </tr>
               </thead>
               <tbody>
-                {filteredResults.map((p) => (
+                {sortedResults.map((p) => (
                   <tr key={p.id} className="row-hover" onClick={() => openPassenger(p)}>
                     <td>{p.surname}/{p.given_name}</td>
                     <td className="mono">{p.destination}</td>
@@ -175,7 +187,7 @@ export function Search() {
                     </td>
                   </tr>
                 ))}
-                {filteredResults.length === 0 && (
+                {sortedResults.length === 0 && (
                   <tr><td colSpan={6} style={{ color: "var(--muted)" }}>No passengers match.</td></tr>
                 )}
               </tbody>
