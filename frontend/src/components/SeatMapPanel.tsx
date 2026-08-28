@@ -271,19 +271,15 @@ function SeatEditorModal({
               }}
             />
           </Field>
-          <label className="seat-editor-check" style={{ marginBottom: 16 }}>
-            <input type="checkbox" checked={!!extra.priceIcon} onChange={() => toggle("priceIcon")} />
-            Цена + иконка
-          </label>
+          <Field label="RFISC" style={{ width: 100 }}>
+            <input
+              value={extra.rfisc ?? ""}
+              placeholder=" "
+              maxLength={3}
+              onChange={(e) => setExtra((ex) => ({ ...ex, rfisc: e.target.value.toUpperCase().slice(0, 3) || undefined }))}
+            />
+          </Field>
         </div>
-        <Field label="RFISC" style={{ marginBottom: 16 }}>
-          <input
-            value={extra.rfisc ?? ""}
-            placeholder=" "
-            maxLength={3}
-            onChange={(e) => setExtra((ex) => ({ ...ex, rfisc: e.target.value.toUpperCase().slice(0, 3) || undefined }))}
-          />
-        </Field>
       </div>
     </Modal>
   );

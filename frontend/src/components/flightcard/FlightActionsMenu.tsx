@@ -19,9 +19,11 @@ const ACTIONS: ActionItem[] = [
 
 interface Props {
   onAction: (action: FlightAction) => void;
+  /** Actions to gray out and block, e.g. Open check-in/boarding on a departed flight. */
+  disabledActions?: Set<FlightAction>;
 }
 
-export function FlightActionsMenu({ onAction }: Props) {
+export function FlightActionsMenu({ onAction, disabledActions }: Props) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -54,18 +56,24 @@ export function FlightActionsMenu({ onAction }: Props) {
       </button>
       {open && (
         <ul className="actions-menu" role="listbox">
-          {ACTIONS.map((a) => (
-            <li
-              key={a.key}
-              className={a.danger ? "danger" : ""}
-              onClick={() => {
-                setOpen(false);
-                onAction(a.key);
-              }}
-            >
-              {a.label}
-            </li>
-          ))}
+          {ACTIONS.map((a) => {
+            const disabled = disabledActions?.has(a.key) ?? false;
+            return (
+              <li
+                key={a.key}
+                className={`${a.danger ? "danger" : ""} ${disabled ? "disabled" : ""}`}
+                aria-disabled={disabled}
+                title={disabled ? "A departed flight can't reopen check-in or boarding" : undefined}
+                onClick={() => {
+                  if (disabled) return;
+                  setOpen(false);
+                  onAction(a.key);
+                }}
+              >
+                {a.label}
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

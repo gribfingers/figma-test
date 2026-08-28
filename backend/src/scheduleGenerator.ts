@@ -195,7 +195,7 @@ function buildSeatExtras(seatDefs: SeatDef[], aircraftType: string): { assignmen
   const paidCount = Math.max(1, Math.round(economyLeft.length * 0.12));
   for (const s of shuffle(economyLeft).slice(0, paidCount)) {
     assignments.set(s.seat, {
-      extra: { price: 500 + Math.floor(Math.random() * 10) * 100, priceIcon: Math.random() < 0.3, rfisc: PAID_SEAT_RFISC },
+      extra: { price: 500 + Math.floor(Math.random() * 10) * 100, rfisc: PAID_SEAT_RFISC },
     });
   }
 

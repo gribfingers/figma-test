@@ -4,11 +4,12 @@ import { api, PassengerSearchMode, PassengerSearchResult } from "../api";
 import { useRegisterTab, useTabs } from "../tabs";
 import { clearPersistentState, usePersistentState } from "../usePersistentState";
 
-const MODES: { key: PassengerSearchMode; label: string }[] = [
-  { key: "surname", label: "Last Name" },
-  { key: "pnr", label: "PNR" },
-  { key: "eticket", label: "E-ticket" },
-  { key: "doc", label: "Doc" },
+const MODES: { key: PassengerSearchMode; label: string; placeholder: string }[] = [
+  { key: "surname", label: "Last Name", placeholder: "Search" },
+  { key: "pnr", label: "PNR", placeholder: "Search" },
+  { key: "eticket", label: "E-ticket", placeholder: "Search" },
+  { key: "doc", label: "Doc", placeholder: "Search" },
+  { key: "flight", label: "Flight", placeholder: "Flight number, e.g. SU1234" },
 ];
 
 type PaxQuickFilterKey = "all" | "checked_in" | "not_checked_in" | "boarded" | "unknown";
@@ -118,7 +119,7 @@ export function Search() {
                 className="search-mode-input"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search"
+                placeholder={MODES.find((m) => m.key === mode)?.placeholder ?? "Search"}
                 disabled={searching}
                 autoFocus
               />

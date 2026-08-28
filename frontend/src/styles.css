@@ -1820,6 +1820,8 @@ a { color: var(--accent); }
 .actions-menu li:hover { background: var(--accent-soft); }
 .actions-menu li.danger { color: var(--danger); }
 .actions-menu li.danger:hover { background: var(--danger-soft); }
+.actions-menu li.disabled { color: var(--muted); cursor: not-allowed; }
+.actions-menu li.disabled:hover { background: none; }
 
 .flight-tabs {
   flex-shrink: 0;

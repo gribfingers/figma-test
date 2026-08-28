@@ -5,11 +5,12 @@ import { ChevronDownIcon } from "../Icon";
 interface Props {
   value: string;
   onChange: (key: string) => void;
+  disabled?: boolean;
 }
 
 // Persisted to flights.ops_status by the parent (see FlightCardHeader's
 // onStatusChange) — this component itself is just the picker UI.
-export function FlightStatusSelect({ value, onChange }: Props) {
+export function FlightStatusSelect({ value, onChange, disabled }: Props) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const current = FLIGHT_STATUSES.find((s) => s.key === value) ?? FLIGHT_STATUSES[0];
@@ -35,6 +36,8 @@ export function FlightStatusSelect({ value, onChange }: Props) {
       <button
         type="button"
         className="secondary"
+        disabled={disabled}
+        title={disabled ? "A departed flight's status can't be changed" : undefined}
         aria-haspopup="listbox"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}

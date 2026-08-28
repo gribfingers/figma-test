@@ -53,7 +53,7 @@ export interface Passenger {
   extra: string | null;
 }
 
-export type PassengerSearchMode = "surname" | "pnr" | "eticket" | "doc";
+export type PassengerSearchMode = "surname" | "pnr" | "eticket" | "doc" | "flight";
 
 export interface PassengerSearchResult extends Passenger {
   flight_number: string;

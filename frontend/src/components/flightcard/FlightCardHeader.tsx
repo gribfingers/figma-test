@@ -59,7 +59,7 @@ export function FlightCardHeader({ flight, activeTab, dirty, onSave, onAction, o
           <div className="flight-card-date">{fmtCardDate(flight.std)}</div>
         </div>
 
-        <FlightStatusSelect value={statusKey} onChange={onStatusChange} />
+        <FlightStatusSelect value={statusKey} onChange={onStatusChange} disabled={departed} />
       </div>
 
       <div className="flight-status-group">
@@ -75,7 +75,7 @@ export function FlightCardHeader({ flight, activeTab, dirty, onSave, onAction, o
       </div>
 
       <div className="flight-card-actions">
-        <FlightActionsMenu onAction={onAction} />
+        <FlightActionsMenu onAction={onAction} disabledActions={departed ? new Set<FlightAction>(["checkin", "boarding"]) : undefined} />
         {activeTab === "main" && (
           <button type="button" disabled={!dirty || departed} title={departed ? "A departed flight's record can't be changed" : undefined} onClick={onSave}>
             Save

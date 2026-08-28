@@ -28,7 +28,6 @@ export interface SeatExtra {
   fixedArmrest?: boolean;
   legroom?: boolean;
   price?: number;
-  priceIcon?: boolean; // show a star alongside the price
   rfisc?: string;
   // Hold markers — independent of passenger assignment (a free seat can be
   // pre-seated or reserved before anyone actually checks in), so they're

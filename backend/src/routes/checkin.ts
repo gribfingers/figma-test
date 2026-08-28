@@ -21,13 +21,33 @@ const SEARCH_COLUMN: Record<string, string> = {
  * agent doesn't already know which flight a passenger is on. Surname and
  * doc number match as a substring (a desk agent rarely has the exact full
  * value); PNR and e-ticket match exactly, same as a real PNR retrieval.
+ *
+ * `by=flight` is the other direction — the agent already knows the flight
+ * (e.g. "SU1234") and wants its whole roster loaded, same as Flight
+ * Schedule's Pax tab but reachable straight from the search screen.
  */
 checkinRouter.get("/search", (req, res) => {
   const by = String(req.query.by ?? "surname");
   const q = String(req.query.q ?? "").trim();
+  if (!q) return res.json([]);
+
+  if (by === "flight") {
+    const rows = db
+      .prepare(
+        `SELECT p.*, f.flight_number, f.carrier_code, f.origin, f.destination, f.std, f.status as flight_status
+         FROM passengers p JOIN flights f ON f.id = p.flight_id
+         WHERE UPPER(f.carrier_code || f.flight_number) LIKE UPPER(?)
+         ORDER BY f.std DESC, p.surname, p.given_name
+         LIMIT 300`
+      )
+      .all(`%${q.replace(/\s+/g, "")}%`);
+    return res.json(
+      rows.map((r: any) => ({ ...serializePassenger(r), flight_number: r.flight_number, carrier_code: r.carrier_code, origin: r.origin, destination: r.destination, std: r.std, flight_status: r.flight_status }))
+    );
+  }
+
   const column = SEARCH_COLUMN[by];
   if (!column) return res.status(400).json({ error: `Unknown search field: ${by}` });
-  if (!q) return res.json([]);
 
   const exact = by === "pnr" || by === "eticket";
   const rows = db
