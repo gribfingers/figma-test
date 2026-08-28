@@ -146,7 +146,7 @@ export function SeatMapGrid({
                 const realState = seatState(s); // free | checked_in | boarded
                 const subtype = seatSubtype(extra); // none | presit | booked
                 const age = occupantAge(s);
-                const isChild = age != null && age < 18;
+                const isChild = age != null && age >= 2 && age <= 12; // CHILD = 2 to 12 years old
                 const attr = isChild ? null : primaryAttr(extra) ?? (s.exit_row ? EXIT_ROW_ATTR : null);
                 const ineligible = ineligibleSeats?.has(s.seat) ?? false;
                 const undesirable = !ineligible && (undesirableSeats?.has(s.seat) ?? false);

@@ -24,7 +24,8 @@ export interface SeatExtra {
   wheelchair?: boolean;
   animal?: boolean;
   child?: boolean;
-  infant?: boolean;
+  infant?: boolean; // INFT — lap infant, no seat of their own
+  inst?: boolean; // INST — infant travelling with their own seat
   transit?: boolean; // SOM transit point
   fixedArmrest?: boolean;
   legroom?: boolean;
@@ -74,7 +75,8 @@ export const SEAT_ATTRS: SeatAttrDef[] = [
   { key: "stretcher", label: "Носилки", icon: SeatStretcherIcon },
   { key: "wheelchair", label: "Кресло", icon: SeatWheelchairIcon },
   { key: "animal", label: "Животное", icon: SeatAnimalIcon },
-  { key: "infant", label: "Младенец", icon: SeatInftIcon },
+  { key: "infant", label: "Младенец (INFT)", icon: SeatInftIcon },
+  { key: "inst", label: "Младенец с местом (INST)", icon: SeatInftIcon },
   { key: "child", label: "Ребёнок", icon: ChildIcon },
   { key: "transit", label: "Транзит (SOM)", icon: SeatTransitIcon },
   { key: "noRecline", label: "Не откидывается спинка", icon: SeatNoReclineIcon },
