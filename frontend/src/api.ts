@@ -170,7 +170,8 @@ export const api = {
       method: "POST",
       body: JSON.stringify(data),
     }),
-  changeSeat: (passengerId: number, seat: string) =>
+  /** Pass seat: null to unassign — the passenger goes back to having no seat at all. */
+  changeSeat: (passengerId: number, seat: string | null) =>
     request<Passenger>(`/checkin/${passengerId}/seat`, { method: "POST", body: JSON.stringify({ seat }) }),
   cancelCheckin: (passengerId: number, option: string) =>
     request<Passenger>(`/checkin/${passengerId}/cancel`, { method: "POST", body: JSON.stringify({ option }) }),

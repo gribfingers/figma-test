@@ -211,6 +211,21 @@ export function PassengersTab({ flight }: Props) {
     if (s.passenger_id != null) setActiveId(s.passenger_id);
   }
 
+  /** Clicking the currently active passenger's own (blue) seat again removes it — a quick undo for a
+   *  just-made assignment, without having to go through Actions > Cancel check-in. */
+  async function handleUnassignSeatClick() {
+    if (activeId == null) return;
+    const passenger = passengers.find((p) => p.id === activeId);
+    if (!passenger?.seat) return;
+    try {
+      await api.changeSeat(activeId, null);
+      refreshSeating();
+      showToast(`Seat ${formatSeatDisplay(passenger.seat)} unassigned`);
+    } catch (e: any) {
+      alert(e.message);
+    }
+  }
+
   async function deletePassenger(p: Passenger) {
     setContextMenu(null);
     if (!window.confirm(`Delete pax ${p.surname} ${p.given_name}?`)) return;
@@ -525,6 +540,7 @@ export function PassengersTab({ flight }: Props) {
             onHide={() => setMapHidden(true)}
             cabinFeatures={cabinFeatures}
             onSelectOccupied={handleOccupiedSeatClick}
+            onUnassign={seatAction ? undefined : handleUnassignSeatClick}
             ineligibleSeats={ineligibleSeats}
             undesirableSeats={undesirableSeats}
           />

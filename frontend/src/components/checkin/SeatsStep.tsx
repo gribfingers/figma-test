@@ -57,6 +57,19 @@ export function SeatsStep({ flightId, aircraftType, passenger, seats, onSeatsRel
     }
   }
 
+  /** Clicking the passenger's own (blue) seat again removes it. */
+  async function unassignSeat() {
+    setError("");
+    try {
+      const updated = await api.changeSeat(passenger.id, null);
+      onPassengerUpdated(updated);
+      const freshSeats = await api.seatmap(flightId);
+      onSeatsReloaded(freshSeats);
+    } catch (e: any) {
+      setError(e.message);
+    }
+  }
+
   return (
     <div className="seats-step">
       {error && <div className="error-box">{error}</div>}
@@ -66,6 +79,7 @@ export function SeatsStep({ flightId, aircraftType, passenger, seats, onSeatsRel
           seats={seats}
           selected={passenger.seat}
           onSelect={assignSeat}
+          onUnassign={unassignSeat}
           onSeatUpdated={(updated) => onSeatsReloaded(seats.map((s) => (s.seat === updated.seat ? updated : s)))}
           cabinFeatures={cabinFeatures}
           ineligibleSeats={ineligibleSeats}

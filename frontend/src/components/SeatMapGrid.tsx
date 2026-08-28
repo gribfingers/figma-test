@@ -18,6 +18,9 @@ interface Props {
   cabinFeatures?: CabinFeature[];
   /** Fires when an occupied seat is left-clicked — lets the caller e.g. highlight/scroll to that passenger's row. */
   onSelectOccupied?: (seat: SeatCell) => void;
+  /** Fires instead of onSelectOccupied when the clicked seat is the currently `selected` one — a second
+   *  click on the seat you just assigned removes it, rather than just re-selecting the same passenger. */
+  onUnassign?: (seat: string) => void;
   /** Seat codes the passenger currently being assigned/swapped can't be put in at all (occupied, hard-blocked,
    *  or an infant/child in an exit row) — dimmed to 20% opacity, rendered as if free regardless of real
    *  occupancy, and unclickable. */
@@ -87,6 +90,7 @@ export function SeatMapGrid({
   showRfisc = true,
   cabinFeatures,
   onSelectOccupied,
+  onUnassign,
   ineligibleSeats,
   undesirableSeats,
 }: Props) {
@@ -182,8 +186,10 @@ export function SeatMapGrid({
                           : s.seat
                       }
                       onClick={() => {
-                        if (s.passenger_id) onSelectOccupied?.(s);
-                        else if (!ineligible) onSelect?.(s.seat);
+                        if (s.passenger_id) {
+                          if (s.seat === selected && onUnassign) onUnassign(s.seat);
+                          else onSelectOccupied?.(s);
+                        } else if (!ineligible) onSelect?.(s.seat);
                       }}
                       onContextMenu={(e) => {
                         if (!onEditSeat) return;

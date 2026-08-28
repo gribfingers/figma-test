@@ -239,13 +239,26 @@ checkinRouter.post("/:passengerId/cancel", requireEdit, (req, res) => {
   res.json(serializePassenger(updated));
 });
 
-/** Change seat assignment for an already checked-in passenger (before boarding). */
+/** Change seat assignment for an already checked-in passenger (before boarding). seat: null unassigns. */
 checkinRouter.post("/:passengerId/seat", requireEdit, (req, res) => {
   const passenger = db.prepare("SELECT * FROM passengers WHERE id = ?").get(req.params.passengerId) as Passenger | undefined;
   if (!passenger) return res.status(404).json({ error: "Passenger not found" });
   if (passenger.boarding_status === "BOARDED") return res.status(409).json({ error: "Passenger already boarded" });
 
   const { seat } = req.body;
+
+  if (seat === null) {
+    const tx = db.transaction(() => {
+      if (passenger.seat) {
+        db.prepare("UPDATE seats SET passenger_id = NULL WHERE flight_id = ? AND seat = ?").run(passenger.flight_id, passenger.seat);
+      }
+      db.prepare("UPDATE passengers SET seat = NULL WHERE id = ?").run(passenger.id);
+    });
+    tx();
+    const updated = db.prepare("SELECT * FROM passengers WHERE id = ?").get(passenger.id) as Passenger;
+    return res.json(serializePassenger(updated));
+  }
+
   const seatRow = db.prepare("SELECT * FROM seats WHERE flight_id = ? AND seat = ?").get(passenger.flight_id, seat) as any;
   if (!seatRow) return res.status(400).json({ error: `Seat ${seat} does not exist on this aircraft` });
   if (seatRow.passenger_id && seatRow.passenger_id !== passenger.id) {
