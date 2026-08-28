@@ -275,6 +275,7 @@ export function BoardingPax() {
             selected={passenger.seat}
             onSeatUpdated={handleSeatUpdated}
             cabinFeatures={cabinFeatures}
+            allowSeatEdit={false}
           />
         </div>
       </div>

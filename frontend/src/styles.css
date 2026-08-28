@@ -1601,12 +1601,16 @@ button.icon-button:hover { background: var(--hover-bg); }
 .seat-checked-in { background: var(--seat-busy-bg); border-color: transparent; cursor: default; }
 .seat-boarded { background: var(--seat-boarded-bg); border-color: transparent; cursor: default; }
 .seat.selected { background: var(--seat-active-bg); border-color: var(--seat-active-bg); }
-.seat.blocked { cursor: not-allowed; }
+/* Hard block: never assignable — faded almost to nothing. */
+.seat.blocked { opacity: 0.2; cursor: not-allowed; }
+/* Soft block: undesirable but can still be assigned manually — dimmed, dashed border, but stays clickable. */
+.seat.soft-blocked { opacity: 0.7; border-style: dashed; }
 /* Seats the passenger currently being assigned/changed can't legally sit in
    (see PassengersTab's disabledSeats) — dimmed and inert while picking. */
 .seat.picker-disabled { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
 
-/* Presit/Booked hold markers: 6px color bar on the seat's bottom edge (left bar rotated 90° CCW). */
+/* Presit/Booked hold markers: 6px color bar on the seat's bottom edge (left bar rotated 90° CCW).
+   Never shown on a blocked seat — hard/soft-blocked seats always render as plain free seats. */
 .seat-subtype-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 6px; }
 .seat-subtype-presit { background: #ffaa00; }
 .seat-subtype-booked { background: #64bb3e; }
@@ -1614,16 +1618,17 @@ button.icon-button:hover { background: var(--hover-bg); }
 .seat-content { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; color: var(--muted); }
 .seat-checked-in .seat-content, .seat-boarded .seat-content { color: #ffffff; }
 .seat.selected .seat-content { color: var(--seat-active-ink); }
-.seat-icon-danger { color: var(--danger); }
 
 .seat-price-row { display: flex; align-items: center; gap: 1px; max-width: 28px; }
 .seat-price { font-size: 11px; font-weight: 700; line-height: 1; color: var(--field-value); }
 .seat-content:has(.seat-rfisc-badge) .seat-price { font-size: 9px; }
 .seat-checked-in .seat-price, .seat-boarded .seat-price { color: #ffffff; }
 .seat.selected .seat-price { color: var(--seat-active-ink); }
-.seat-rfisc-badge { background: var(--seat-busy-bg); color: #ffffff; font-size: 7px; font-weight: 600; line-height: 1; border-radius: 2px; padding: 1.5px 2px; white-space: nowrap; }
+/* More than 3 digits (max 6): stacked two lines, thousands on top. */
+.seat-price.two-line { display: flex; flex-direction: column; align-items: center; line-height: 1; font-size: 8px; }
+.seat-rfisc-badge { background: var(--seat-busy-bg); color: #ffffff; font-size: 9px; font-weight: 600; line-height: 1; border-radius: 2px; padding: 1.5px 2px; white-space: nowrap; }
 
-.seat-child-age { font-size: 9px; font-weight: 600; line-height: 1; color: var(--muted-text); }
+.seat-child-age { font-size: 12px; font-weight: 600; line-height: 1; color: var(--muted-text); }
 .seat-checked-in .seat-child-age, .seat-boarded .seat-child-age { color: #ffffff; }
 .seat.selected .seat-child-age { color: var(--seat-active-ink); }
 

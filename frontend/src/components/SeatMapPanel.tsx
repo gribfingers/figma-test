@@ -58,7 +58,10 @@ export function SeatMapPanel({
   const [legendOpen, setLegendOpen] = useState(false);
   const [layersOpen, setLayersOpen] = useState(false);
   const [editingSeat, setEditingSeat] = useState<SeatCell | null>(null);
-  const [visibleLayers, setVisibleLayers] = useState<Set<string>>(() => new Set(SEAT_ATTRS.map((a) => a.key)));
+  // Three layers on the seat map, per the reference spec: attribute icons, price, RFISC — all shown by default.
+  const [showIcons, setShowIcons] = useState(true);
+  const [showPrice, setShowPrice] = useState(true);
+  const [showRfisc, setShowRfisc] = useState(true);
 
   const legendRef = useRef<HTMLDivElement>(null);
   const layersRef = useRef<HTMLDivElement>(null);
@@ -72,14 +75,11 @@ export function SeatMapPanel({
     return () => document.removeEventListener("mousedown", onDocMouseDown);
   }, []);
 
-  function toggleLayer(key: string) {
-    setVisibleLayers((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-  }
+  const LAYER_TOGGLES = [
+    { label: "Иконки", checked: showIcons, toggle: () => setShowIcons((v) => !v) },
+    { label: "Цена", checked: showPrice, toggle: () => setShowPrice((v) => !v) },
+    { label: "RFISC", checked: showRfisc, toggle: () => setShowRfisc((v) => !v) },
+  ];
 
   return (
     <div className="seatmap-panel">
@@ -137,11 +137,10 @@ export function SeatMapPanel({
             </button>
             {layersOpen && (
               <ul className="select-menu seatmap-layers-list">
-                {SEAT_ATTRS.map((a) => (
-                  <li key={a.key} className="pax-columns-item" onClick={() => toggleLayer(a.key)}>
-                    <input type="checkbox" checked={visibleLayers.has(a.key)} readOnly />
-                    <a.icon size={14} />
-                    {a.label}
+                {LAYER_TOGGLES.map((l) => (
+                  <li key={l.label} className="pax-columns-item" onClick={l.toggle}>
+                    <input type="checkbox" checked={l.checked} readOnly />
+                    {l.label}
                   </li>
                 ))}
               </ul>
@@ -162,7 +161,9 @@ export function SeatMapPanel({
             selected={selected}
             onSelect={onSelect}
             onEditSeat={allowSeatEdit ? setEditingSeat : undefined}
-            visibleLayers={visibleLayers}
+            showIcons={showIcons}
+            showPrice={showPrice}
+            showRfisc={showRfisc}
             cabinFeatures={cabinFeatures}
             onSelectOccupied={onSelectOccupied}
             disabledSeats={disabledSeats}
@@ -252,9 +253,13 @@ function SeatEditorModal({
             <input
               type="number"
               min={0}
+              max={999999}
               value={extra.price ?? ""}
               placeholder=" "
-              onChange={(e) => setExtra((ex) => ({ ...ex, price: e.target.value ? Number(e.target.value) : undefined }))}
+              onChange={(e) => {
+                const v = e.target.value ? Math.min(999999, Number(e.target.value)) : undefined;
+                setExtra((ex) => ({ ...ex, price: v }));
+              }}
             />
           </Field>
           <label className="seat-editor-check" style={{ marginBottom: 16 }}>

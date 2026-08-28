@@ -2,7 +2,7 @@ import { Fragment } from "react";
 import { SeatCell } from "../api";
 import { CabinFeature, CabinFeatureType } from "../cabinLayout";
 import { GalleyIcon, SeatChildIcon } from "./Icon";
-import { occupantAge, parseSeatExtra, primaryAttr, seatState, seatSubtype } from "../seatExtra";
+import { EXIT_ROW_ATTR, occupantAge, parseSeatExtra, primaryAttr, seatState, seatSubtype } from "../seatExtra";
 
 interface Props {
   seats: SeatCell[];
@@ -10,8 +10,10 @@ interface Props {
   onSelect?: (seat: string) => void;
   /** Right-clicking any seat opens the attribute editor for it. */
   onEditSeat?: (seat: SeatCell) => void;
-  /** Which attribute keys the "layers" menu currently shows on the map — everything, if omitted. */
-  visibleLayers?: Set<string>;
+  /** The three layer toggles from the seat-map toolbar — all default to shown. */
+  showIcons?: boolean;
+  showPrice?: boolean;
+  showRfisc?: boolean;
   /** WC/galley/exit-door blocks to render as extra rows in the cabin, keyed by the seat row they follow. */
   cabinFeatures?: CabinFeature[];
   /** Fires when an occupied seat is left-clicked — lets the caller e.g. highlight/scroll to that passenger's row. */
@@ -75,7 +77,9 @@ export function SeatMapGrid({
   selected,
   onSelect,
   onEditSeat,
-  visibleLayers,
+  showIcons = true,
+  showPrice = true,
+  showRfisc = true,
   cabinFeatures,
   onSelectOccupied,
   disabledSeats,
@@ -137,8 +141,11 @@ export function SeatMapGrid({
                 const subtype = seatSubtype(extra); // none | presit | booked
                 const age = occupantAge(s);
                 const isChild = age != null && age < 18;
-                const attr = isChild ? null : primaryAttr(extra, visibleLayers);
-                const blocked = extra.hardBlock;
+                const attr = isChild ? null : primaryAttr(extra) ?? (s.exit_row ? EXIT_ROW_ATTR : null);
+                const blocked = !!extra.hardBlock;
+                const softBlocked = !blocked && !!extra.softBlock;
+                // Blocked seats never show a hold marker — they must always read as plain free seats.
+                const effectiveSubtype = blocked || softBlocked ? "none" : subtype;
                 const ineligible = disabledSeats?.has(s.seat) ?? false;
                 const classes = [
                   "seat",
@@ -146,13 +153,16 @@ export function SeatMapGrid({
                   s.seat === selected ? "selected" : "",
                   s.exit_row ? "exit" : "",
                   blocked ? "blocked" : "",
+                  softBlocked ? "soft-blocked" : "",
                   ineligible ? "picker-disabled" : "",
                 ].filter(Boolean).join(" ");
                 const showAisle = letter === "C"; // 3-3 narrow-body layout aisle after column C
                 const Icon = isChild ? SeatChildIcon : attr?.icon;
-                const holdLabel = subtype === "presit" ? "Pre-seated" : subtype === "booked" ? "Reserved" : "";
+                const holdLabel = effectiveSubtype === "presit" ? "Pre-seated" : effectiveSubtype === "booked" ? "Reserved" : "";
                 const priceLabel = extra.price != null ? `${extra.price}` : "";
                 const titleBits = [isChild ? "Child" : attr?.label, holdLabel, extra.rfisc, priceLabel].filter(Boolean).join(", ");
+                const priceStr = extra.price != null ? String(extra.price) : "";
+                const priceTwoLine = priceStr.length > 3;
                 return (
                   <Fragment key={s.seat}>
                     <span
@@ -175,19 +185,27 @@ export function SeatMapGrid({
                         onEditSeat(s);
                       }}
                     >
-                      {subtype !== "none" && <span className={`seat-subtype-bar seat-subtype-${subtype}`} />}
+                      {effectiveSubtype !== "none" && <span className={`seat-subtype-bar seat-subtype-${effectiveSubtype}`} />}
                       <span className="seat-content">
-                        {Icon && (
-                          <Icon
-                            size={isChild ? 8 : extra.price != null || extra.rfisc ? 11 : 13}
-                            className={attr?.key === "hardBlock" || attr?.key === "softBlock" ? "seat-icon-danger" : undefined}
-                          />
+                        {showIcons && Icon && (
+                          <Icon size={isChild ? 8 : extra.price != null || extra.rfisc ? 11 : 13} />
                         )}
                         {isChild && age != null && <span className="seat-child-age">{age}</span>}
-                        {!isChild && (extra.price != null || extra.rfisc) && (
+                        {!isChild && ((showPrice && extra.price != null) || (showRfisc && extra.rfisc)) && (
                           <span className="seat-price-row">
-                            {extra.rfisc && <span className="seat-rfisc-badge">{extra.rfisc}</span>}
-                            {extra.price != null && <span className="seat-price">{extra.price}</span>}
+                            {showRfisc && extra.rfisc && <span className="seat-rfisc-badge">{extra.rfisc}</span>}
+                            {showPrice && extra.price != null && (
+                              <span className={`seat-price${priceTwoLine ? " two-line" : ""}`}>
+                                {priceTwoLine ? (
+                                  <>
+                                    <span>{priceStr.slice(0, -3)}</span>
+                                    <span>{priceStr.slice(-3)}</span>
+                                  </>
+                                ) : (
+                                  priceStr
+                                )}
+                              </span>
+                            )}
                           </span>
                         )}
                       </span>

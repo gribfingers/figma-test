@@ -1,8 +1,9 @@
 import { SeatCell } from "./api";
+import { AnimalIcon, BrokenIcon, CgBlockIcon, ChildIcon, CrewIcon, StretcherIcon, WheelchairIcon } from "./components/Icon";
 import {
-  AnimalIcon, BrokenIcon, CgBlockIcon, ChildIcon, CloseIcon, CrewIcon, FixedArmrestIcon,
-  InfantIcon, LegroomIcon, NoReclineIcon, StretcherIcon, TransitIcon, WheelchairIcon,
-} from "./components/Icon";
+  SeatBassinetIcon, SeatEmergencyIcon, SeatFixedArmrestIcon, SeatHardBlockIcon,
+  SeatInftIcon, SeatLegroomIcon, SeatNoReclineIcon, SeatSoftBlockIcon, SeatTransitIcon,
+} from "./components/SeatIcons";
 
 /**
  * "General layer" seat attributes from the seat-map legend, stored as JSON
@@ -23,6 +24,7 @@ export interface SeatExtra {
   animal?: boolean;
   child?: boolean;
   infant?: boolean;
+  bassinet?: boolean; // INST — bulkhead seat with a fold-out infant cot
   transit?: boolean; // SOM transit point
   fixedArmrest?: boolean;
   legroom?: boolean;
@@ -64,25 +66,30 @@ export interface SeatAttrDef {
 // attributes are set — matches how the reference map shows one glyph per
 // seat; the editor still lets every flag be set independently.
 export const SEAT_ATTRS: SeatAttrDef[] = [
-  { key: "hardBlock", label: "Жёсткий блок", icon: CloseIcon },
-  { key: "softBlock", label: "Мягкий блок", icon: CloseIcon },
+  { key: "hardBlock", label: "Жёсткий блок", icon: SeatHardBlockIcon },
+  { key: "softBlock", label: "Мягкий блок", icon: SeatSoftBlockIcon },
   { key: "broken", label: "Сломанное", icon: BrokenIcon },
   { key: "cgBlock", label: "Блок центровки", icon: CgBlockIcon },
   { key: "crew", label: "Экипаж", icon: CrewIcon },
   { key: "stretcher", label: "Носилки", icon: StretcherIcon },
   { key: "wheelchair", label: "Кресло", icon: WheelchairIcon },
   { key: "animal", label: "Животное", icon: AnimalIcon },
-  { key: "infant", label: "Младенец", icon: InfantIcon },
+  { key: "bassinet", label: "Люлька для младенца", icon: SeatBassinetIcon },
+  { key: "infant", label: "Младенец", icon: SeatInftIcon },
   { key: "child", label: "Ребёнок", icon: ChildIcon },
-  { key: "transit", label: "Транзит (SOM)", icon: TransitIcon },
-  { key: "noRecline", label: "Не откидывается спинка", icon: NoReclineIcon },
-  { key: "fixedArmrest", label: "Не поднимающийся подлокотник", icon: FixedArmrestIcon },
-  { key: "legroom", label: "Место для ног", icon: LegroomIcon },
+  { key: "transit", label: "Транзит (SOM)", icon: SeatTransitIcon },
+  { key: "noRecline", label: "Не откидывается спинка", icon: SeatNoReclineIcon },
+  { key: "fixedArmrest", label: "Не поднимающийся подлокотник", icon: SeatFixedArmrestIcon },
+  { key: "legroom", label: "Место для ног", icon: SeatLegroomIcon },
 ];
 
-/** The one attribute icon to show on a seat cell, by SEAT_ATTRS priority — restricted to `visible` when the layers menu has hidden some. */
-export function primaryAttr(extra: SeatExtra, visible?: Set<string>): SeatAttrDef | null {
-  return SEAT_ATTRS.find((a) => extra[a.key] && (!visible || visible.has(a.key))) ?? null;
+/** Exit-row is its own seats.exit_row column rather than a SeatExtra flag, but shows an icon on the seat
+ *  cell the same way — lowest priority, so any real attribute icon still wins if the seat has one too. */
+export const EXIT_ROW_ATTR: SeatAttrDef = { key: "exitRow" as keyof SeatExtra, label: "Аварийное (exit row)", icon: SeatEmergencyIcon };
+
+/** The one attribute icon to show on a seat cell, by SEAT_ATTRS priority. */
+export function primaryAttr(extra: SeatExtra): SeatAttrDef | null {
+  return SEAT_ATTRS.find((a) => extra[a.key]) ?? null;
 }
 
 export type SeatState = "free" | "checked_in" | "boarded";

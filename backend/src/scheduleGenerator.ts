@@ -139,7 +139,9 @@ const EXIT_ROW_AFTER: Record<string, number> = { A320: 11, B738: 13, A321: 14, A
 // and pre-booked seat pools below.
 const UNASSIGNABLE_SEAT_ATTRS = ["hardBlock", "softBlock", "cgBlock", "broken", "crew"] as const;
 // These are just eligibility/amenity flags — a real passenger can still sit there.
-const OTHER_SEAT_ATTRS = ["noRecline", "stretcher", "wheelchair", "animal", "child", "infant", "transit", "fixedArmrest"] as const;
+const OTHER_SEAT_ATTRS = [
+  "noRecline", "stretcher", "wheelchair", "animal", "bassinet", "child", "infant", "transit", "fixedArmrest", "legroom",
+] as const;
 const PAID_SEAT_RFISC = "0B5"; // same code paxExtra.ts's mock ancillary-purchase data already uses
 
 interface SeatExtraAssignment {
@@ -160,10 +162,14 @@ function buildSeatExtras(seatDefs: SeatDef[], aircraftType: string): { assignmen
   const assignments = new Map<string, SeatExtraAssignment>();
   const unassignable = new Set<string>();
 
+  // Exit-row seats show the Emergency icon (frontend falls back to it whenever
+  // exit_row is set and no other attribute icon takes priority) — they aren't
+  // also flagged as the separate "legroom" amenity, which is seeded once
+  // below like every other attribute so it still gets its own demo seat.
   const exitAfterRow = EXIT_ROW_AFTER[aircraftType];
   if (exitAfterRow != null) {
     for (const s of seatDefs) {
-      if (s.row === exitAfterRow + 1) assignments.set(s.seat, { extra: { legroom: true }, exitRow: true });
+      if (s.row === exitAfterRow + 1) assignments.set(s.seat, { extra: {}, exitRow: true });
     }
   }
 
