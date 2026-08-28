@@ -11,6 +11,7 @@ import { useToast } from "../toast";
 import { FlowStep, presetCheckinStep } from "../checkinFlow";
 import { PassengerDocPanel } from "../components/PassengerDocPanel";
 import { usePanelTransition } from "../usePanelMounted";
+import { EntityNotFound } from "../components/EntityNotFound";
 
 // Matches Boarding.tsx's fmtCardDate/parseVersion/classFor/StatBar/statusLabel/statusChipClass —
 // same light duplication this session's other pages already use rather than a shared module.
@@ -102,8 +103,9 @@ export function BoardingPax() {
   const { showToast } = useToast();
   const { closeTab } = useTabs();
 
+  const [notFound, setNotFound] = useState(false);
   function refresh() {
-    api.getFlight(fid).then(setFlight);
+    api.getFlight(fid).then(setFlight).catch(() => setNotFound(true));
     api.seatmap(fid).then(setSeats);
     api.boardingList(fid).then((r) => setPassengers(r.passengers));
   }
@@ -162,6 +164,7 @@ export function BoardingPax() {
     else setMessage({ kind: "error", text: `No passenger with Sq № ${q}` });
   }
 
+  if (notFound) return <EntityNotFound label="This flight" />;
   if (!flight || !passenger) return <div className="content">Loading…</div>;
 
   const extra = parsePassengerExtra(passenger);

@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 export interface TabInfo {
@@ -13,6 +13,10 @@ interface TabsContextValue {
   openTab: (tab: TabInfo) => void;
   closeTab: (path: string) => void;
   closeAllTabs: () => void;
+  /** Registers a callback to run when the tab at `path` is closed (not on a plain tab-switch remount,
+   *  which happens far more often and should leave persisted state alone) — e.g. to clear stale
+   *  usePersistentState data. Returns an unregister function; call it on unmount. */
+  onTabClose: (path: string, cleanup: () => void) => () => void;
 }
 
 // Flights is a normal, closable tab like any other now — this is just the
@@ -52,6 +56,17 @@ export function TabsProvider({ children }: { children: ReactNode }) {
   const [tabs, setTabs] = useState<TabInfo[]>(loadStoredTabs);
   const location = useLocation();
   const navigate = useNavigate();
+  const closeCleanups = useRef(new Map<string, Set<() => void>>());
+
+  const onTabClose = useCallback((path: string, cleanup: () => void) => {
+    let set = closeCleanups.current.get(path);
+    if (!set) {
+      set = new Set();
+      closeCleanups.current.set(path, set);
+    }
+    set.add(cleanup);
+    return () => set!.delete(cleanup);
+  }, []);
 
   useEffect(() => {
     try {
@@ -74,6 +89,8 @@ export function TabsProvider({ children }: { children: ReactNode }) {
 
   const closeTab = useCallback(
     (path: string) => {
+      closeCleanups.current.get(path)?.forEach((fn) => fn());
+      closeCleanups.current.delete(path);
       setTabs((prev) => {
         const idx = prev.findIndex((t) => t.path === path);
         if (idx === -1) return prev;
@@ -91,6 +108,10 @@ export function TabsProvider({ children }: { children: ReactNode }) {
   // Only closable tabs go away — same rule closeTab's own per-tab button follows.
   const closeAllTabs = useCallback(() => {
     setTabs((prev) => {
+      for (const t of prev) {
+        if (t.closable) closeCleanups.current.get(t.path)?.forEach((fn) => fn());
+      }
+      closeCleanups.current.clear();
       const kept = prev.filter((t) => !t.closable);
       navigate(kept[0]?.path ?? EMPTY_PATH);
       return kept;
@@ -98,7 +119,7 @@ export function TabsProvider({ children }: { children: ReactNode }) {
   }, [navigate]);
 
   return (
-    <TabsContext.Provider value={{ tabs, activePath: location.pathname, openTab, closeTab, closeAllTabs }}>
+    <TabsContext.Provider value={{ tabs, activePath: location.pathname, openTab, closeTab, closeAllTabs, onTabClose }}>
       {children}
     </TabsContext.Provider>
   );

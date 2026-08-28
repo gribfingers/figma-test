@@ -1,8 +1,8 @@
-import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { api, PassengerSearchMode, PassengerSearchResult } from "../api";
-import { useRegisterTab } from "../tabs";
-import { usePersistentState } from "../usePersistentState";
+import { useRegisterTab, useTabs } from "../tabs";
+import { clearPersistentState, usePersistentState } from "../usePersistentState";
 
 const MODES: { key: PassengerSearchMode; label: string }[] = [
   { key: "surname", label: "Last Name" },
@@ -43,6 +43,8 @@ function fmtStd(iso: string): string {
 export function Search() {
   useRegisterTab("Check-in Search");
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const { onTabClose } = useTabs();
 
   const [mode, setMode] = usePersistentState<PassengerSearchMode>("dcs_search_mode", "surname");
   const [query, setQuery] = usePersistentState("dcs_search_query", "");
@@ -51,6 +53,20 @@ export function Search() {
   const [error, setError] = useState("");
   const [searching, setSearching] = useState(false);
   const [paxQuickFilter, setPaxQuickFilter] = usePersistentState<PaxQuickFilterKey>("dcs_search_quick_filter", "all");
+
+  // A search's query/results are only useful for as long as this tab stays open — closing it should
+  // discard them (results can go stale, e.g. after the demo schedule is regenerated) rather than
+  // reappearing next time this tab is opened, unlike a plain tab-switch remount which should keep them.
+  useEffect(
+    () =>
+      onTabClose(pathname, () => {
+        clearPersistentState("dcs_search_mode");
+        clearPersistentState("dcs_search_query");
+        clearPersistentState("dcs_search_results");
+        clearPersistentState("dcs_search_quick_filter");
+      }),
+    [pathname, onTabClose]
+  );
 
   async function runSearch(e: React.FormEvent) {
     e.preventDefault();

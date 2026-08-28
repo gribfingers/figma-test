@@ -23,6 +23,18 @@ function readInitial<T>(key: string, fallback: T): T {
   return fallback;
 }
 
+/** Drops a persisted key from both the in-memory cache and localStorage — for when a value should
+ *  NOT survive some event (e.g. the tab that owns it being closed), unlike the normal tab-switch/reload
+ *  survival usePersistentState gives every key by default. */
+export function clearPersistentState(key: string) {
+  memoryCache.delete(key);
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    // Storage unavailable — nothing to clear.
+  }
+}
+
 /**
  * Like useState, but the value survives both a tab switch (remount) and a
  * full page reload. `key` must be unique to what's being stored — include

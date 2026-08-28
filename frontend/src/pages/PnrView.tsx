@@ -5,6 +5,7 @@ import { api, Flight, Passenger, SeatCell } from "../api";
 import { formatSeatDisplay } from "../seatExtra";
 import { parsePassengerExtra, SeatServiceItem } from "../paxExtra";
 import { ChevronDownIcon, DocScannedIcon, DocVerifiedIcon, RefreshIcon, SearchIcon } from "../components/Icon";
+import { EntityNotFound } from "../components/EntityNotFound";
 import { useRegisterTab, useTabs } from "../tabs";
 import { useToast } from "../toast";
 import { usePopoverPosition } from "../usePopoverPosition";
@@ -344,11 +345,15 @@ export function PnrView() {
   // card's service chips update (and disappear) as the agent checks/unchecks/confirms rows.
   const [confirmedServices, setConfirmedServices] = useState<Record<number, SeatServiceItem[]>>({});
 
+  const [notFound, setNotFound] = useState(false);
   useEffect(() => {
-    api.getFlight(fid).then((f) => {
-      flightCache.set(fid, f);
-      setFlight(f);
-    });
+    api
+      .getFlight(fid)
+      .then((f) => {
+        flightCache.set(fid, f);
+        setFlight(f);
+      })
+      .catch(() => setNotFound(true));
     api.seatmap(fid).then(setSeats);
     api.passengers(fid).then((ps) => {
       passengersCache.set(fid, ps);
@@ -376,6 +381,7 @@ export function PnrView() {
     if (!hasAnyChecked) setFlowStep(null);
   }, [clicked, flowStep, passengers, extraPassengers, checkedArr]);
 
+  if (notFound) return <EntityNotFound label="This flight" />;
   if (!flight || !clicked) return <div className="content">Loading…</div>;
 
   const seatByCode = new Map(seats.map((s) => [s.seat, s]));

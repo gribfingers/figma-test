@@ -7,6 +7,7 @@ import { FLIGHT_STATUSES, OPS_STATUS_UNSET } from "../flightStatuses";
 import { isFlightDeparted, phaseBasedStatusKey } from "../flightPhase";
 import { usePersistentState } from "../usePersistentState";
 import { FlightCardHeader } from "../components/flightcard/FlightCardHeader";
+import { EntityNotFound } from "../components/EntityNotFound";
 import { CloseIcon } from "../components/Icon";
 import { FlightAction } from "../components/flightcard/FlightActionsMenu";
 import { MainTab } from "../components/flightcard/MainTab";
@@ -36,15 +37,20 @@ export function FlightCard() {
   const [draft, setDraft] = useState<MainDraft | null>(null);
   const [manifest, setManifest] = useState<{ label: string; text: string } | null>(null);
   const [error, setError] = useState("");
+  const [notFound, setNotFound] = useState(false);
   const { showToast } = useToast();
 
   useEffect(() => {
-    api.getFlight(fid).then((f) => {
-      setFlight(f);
-      setDraft(draftFromFlight(f));
-    });
+    api
+      .getFlight(fid)
+      .then((f) => {
+        setFlight(f);
+        setDraft(draftFromFlight(f));
+      })
+      .catch(() => setNotFound(true));
   }, [fid]);
 
+  if (notFound) return <EntityNotFound label="This flight" />;
   if (!flight || !draft) return <div className="content">Loading…</div>;
 
   const dirty = !draftsEqual(draft, draftFromFlight(flight));

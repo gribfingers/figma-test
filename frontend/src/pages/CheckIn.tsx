@@ -10,6 +10,7 @@ import { SortTh, useSort } from "../components/SortTh";
 import { DOCUMENT_TYPES, SSR_OPTIONS } from "../paxExtra";
 import { useRegisterTab } from "../tabs";
 import { useToast } from "../toast";
+import { EntityNotFound } from "../components/EntityNotFound";
 
 type ResultSortKey = "pnr" | "passenger" | "status" | "seat";
 const RESULT_SORT_GETTERS: Record<ResultSortKey, (p: Passenger) => string | number> = {
@@ -45,8 +46,12 @@ export function CheckIn() {
     api.seatmap(fid).then(setSeats);
   }
 
+  const [notFound, setNotFound] = useState(false);
   useEffect(() => {
-    api.getFlight(fid).then(setFlight).catch((e) => setError(e.message));
+    api
+      .getFlight(fid)
+      .then(setFlight)
+      .catch(() => setNotFound(true));
     refreshSeats();
   }, [fid]);
 
@@ -91,6 +96,7 @@ export function CheckIn() {
 
   const { sorted: sortedResults, sortKey, sortDir, onSort } = useSort(results, RESULT_SORT_GETTERS);
 
+  if (notFound) return <EntityNotFound label="This flight" />;
   if (!flight) return <div className="content">Loading…</div>;
 
   const alreadyCheckedIn = selected?.checkin_status === "CHECKED_IN";

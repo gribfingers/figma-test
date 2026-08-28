@@ -15,6 +15,7 @@ import { useToast } from "../toast";
 import { FlagKind, FlagModal } from "../components/flightcard/PassengerModals";
 import { PassengerDocPanel } from "../components/PassengerDocPanel";
 import { useRetainedPanelTransition } from "../usePanelMounted";
+import { EntityNotFound } from "../components/EntityNotFound";
 import {
   FlagStatus,
   asvcStatus,
@@ -163,8 +164,9 @@ export function Boarding() {
   const docPanelTransition = useRetainedPanelTransition(docPanelPassenger);
   const { showToast } = useToast();
 
+  const [notFound, setNotFound] = useState(false);
   function refresh() {
-    api.getFlight(fid).then(setFlight);
+    api.getFlight(fid).then(setFlight).catch(() => setNotFound(true));
     api.seatmap(fid).then(setSeats);
     api.boardingList(fid).then((r) => setPassengers(r.passengers));
   }
@@ -279,6 +281,7 @@ export function Boarding() {
     setSelected(allSelected ? new Set() : new Set(rows.map((r) => r.passenger.id)));
   }
 
+  if (notFound) return <EntityNotFound label="This flight" />;
   if (!flight) return <div className="content">Loading…</div>;
   const closed = flight.status === "CLOSED" || flight.status === "DEPARTED";
 
