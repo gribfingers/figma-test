@@ -1,5 +1,7 @@
 import { db } from "./db";
 import { buildSeatMap } from "./utils/seatmap";
+import { encodeBcbp, PAX_STATUS } from "./bcbp";
+import { toJulianDayOfYear } from "./utils/julian";
 
 // Shared passenger-roster generator used both by the one-time seed script
 // (seed.ts, a curated 3-flight demo set) and by the daily auto-scheduler
@@ -105,12 +107,22 @@ function buildRoster(size: number): PaxSpec[] {
 
 const insertSeat = db.prepare(`INSERT INTO seats (flight_id, seat, cabin_class, exit_row) VALUES (?, ?, ?, ?)`);
 const insertPax = db.prepare(
-  `INSERT INTO passengers (record_locator, flight_id, surname, given_name, ticket_number, ssr, infant, gender, dob, seat, bag_count, bag_weight_kg, checkin_status, extra)
-   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  `INSERT INTO passengers (record_locator, flight_id, surname, given_name, ticket_number, ssr, infant, gender, dob, seat, bag_count, bag_weight_kg, checkin_status, checkin_sequence, bcbp, extra)
+   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 );
 
 function typeCode(p: PaxSpec): string {
   return p.category === "infant" ? "INF" : p.category === "child" ? "CHD" : "ADT";
+}
+
+export interface FlightForRoster {
+  id: number;
+  carrierCode: string;
+  flightNumber: string;
+  origin: string;
+  destination: string;
+  std: string;
+  aircraftType: string;
 }
 
 /**
@@ -119,10 +131,16 @@ function typeCode(p: PaxSpec): string {
  * PNR, ~60% pre-checked-in with a real seat, the rest still pending) — the
  * exact same generation seed.ts always ran inline, just callable per-flight
  * so the daily scheduler can reuse it without duplicating the logic.
+ *
+ * Checked-in passengers get a real bcbp (same encodeBcbp call the actual
+ * check-in route makes) and a checkin_sequence, mirrored onto
+ * flights.last_checkin_sequence — without it the boarding screen's "Board"
+ * button (which scans the bcbp) silently no-ops for every generated
+ * passenger, since it has nothing to scan.
  */
-export function insertFlightWithRoster(flightId: number, aircraftType: string, rosterSize: number): void {
-  const seatDefs = buildSeatMap(aircraftType);
-  for (const s of seatDefs) insertSeat.run(flightId, s.seat, s.cabinClass, s.exitRow ? 1 : 0);
+export function insertFlightWithRoster(flight: FlightForRoster, rosterSize: number): void {
+  const seatDefs = buildSeatMap(flight.aircraftType);
+  for (const s of seatDefs) insertSeat.run(flight.id, s.seat, s.cabinClass, s.exitRow ? 1 : 0);
 
   const roster = buildRoster(rosterSize);
   const infants = roster.filter((p) => p.category === "infant");
@@ -138,15 +156,38 @@ export function insertFlightWithRoster(flightId: number, aircraftType: string, r
   const availableSeats = shuffle(seatDefs);
   const checkedInCount = Math.round(nonInfants.length * 0.6);
   const checkedInSet = new Set(shuffle(nonInfants).slice(0, checkedInCount));
+  const seatByCode = new Map(seatDefs.map((s) => [s.seat, s]));
+  const julianDate = toJulianDayOfYear(flight.std);
 
   let seatCursor = 0;
+  let sequenceCursor = 0;
 
   function insertOne(p: PaxSpec, locator: string) {
     const isCheckedIn = checkedInSet.has(p);
     const seat = isCheckedIn && p.category !== "infant" ? availableSeats[seatCursor++]?.seat ?? null : null;
+    let checkinSequence: number | null = null;
+    let bcbp: string | null = null;
+    if (seat) {
+      checkinSequence = ++sequenceCursor;
+      bcbp = encodeBcbp({
+        surname: p.surname,
+        givenName: p.givenName,
+        eTicket: true,
+        pnrCode: locator,
+        fromAirport: flight.origin,
+        toAirport: flight.destination,
+        carrierCode: flight.carrierCode,
+        flightNumber: flight.flightNumber,
+        julianDate,
+        compartment: seatByCode.get(seat)?.cabinClass ?? "Y",
+        seat,
+        checkInSequence: String(checkinSequence),
+        paxStatus: PAX_STATUS.CHECKED_IN,
+      });
+    }
     const info = insertPax.run(
       locator,
-      flightId,
+      flight.id,
       p.surname,
       p.givenName,
       nextTicketNumber(),
@@ -158,13 +199,15 @@ export function insertFlightWithRoster(flightId: number, aircraftType: string, r
       seat ? (Math.random() < 0.8 ? 1 + Math.floor(Math.random() * 2) : 0) : 0,
       seat ? Math.round(Math.random() * 20 * 10) / 10 : 0,
       seat ? "CHECKED_IN" : "NOT_CHECKED_IN",
+      checkinSequence,
+      bcbp,
       JSON.stringify({
         type: typeCode(p),
         wl: p.category !== "infant" && Math.random() < 0.06,
         pl: p.category !== "infant" && Math.random() < 0.05,
       })
     );
-    if (seat) db.prepare("UPDATE seats SET passenger_id = ? WHERE flight_id = ? AND seat = ?").run(info.lastInsertRowid, flightId, seat);
+    if (seat) db.prepare("UPDATE seats SET passenger_id = ? WHERE flight_id = ? AND seat = ?").run(info.lastInsertRowid, flight.id, seat);
   }
 
   for (const a of adults) insertOne(a, locatorByGuardian.get(a) ?? nextLocator());
@@ -176,6 +219,8 @@ export function insertFlightWithRoster(flightId: number, aircraftType: string, r
     const guardian = infantGuardians[i % infantGuardians.length];
     insertOne(infants[i], locatorByGuardian.get(guardian)!);
   }
+
+  if (sequenceCursor > 0) db.prepare("UPDATE flights SET last_checkin_sequence = ? WHERE id = ?").run(sequenceCursor, flight.id);
 }
 
 // ---- Daily auto-generated schedule (see dailyScheduler.ts) ----
@@ -262,7 +307,18 @@ export function generateDailySchedule(date: Date): { flights: number; passengers
       );
       const flightId = info.lastInsertRowid as number;
       const rosterSize = randInt(ROSTER_SIZE_RANGE[0], ROSTER_SIZE_RANGE[1]);
-      insertFlightWithRoster(flightId, tmpl.aircraftType, rosterSize);
+      insertFlightWithRoster(
+        {
+          id: flightId,
+          carrierCode: tmpl.carrierCode,
+          flightNumber: tmpl.flightNumber,
+          origin: tmpl.origin,
+          destination: tmpl.destination,
+          std,
+          aircraftType: tmpl.aircraftType,
+        },
+        rosterSize
+      );
       passengerTotal += rosterSize;
     }
   });

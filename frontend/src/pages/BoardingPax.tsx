@@ -6,7 +6,7 @@ import { SeatMapPanel } from "../components/SeatMapPanel";
 import { BaggageFlowIcon, DocumentsFlowIcon, SeatsFlowIcon, ServicesFlowIcon } from "../components/Icon";
 import { formatSeatDisplay } from "../seatExtra";
 import { parsePassengerExtra } from "../paxExtra";
-import { useRegisterTab } from "../tabs";
+import { useRegisterTab, useTabs } from "../tabs";
 import { useToast } from "../toast";
 import { FlowStep, presetCheckinStep } from "../checkinFlow";
 import { PassengerDocPanel } from "../components/PassengerDocPanel";
@@ -100,6 +100,7 @@ export function BoardingPax() {
   const [docPanelOpen, setDocPanelOpen] = useState(false);
   const docPanelTransition = usePanelTransition(docPanelOpen);
   const { showToast } = useToast();
+  const { closeTab } = useTabs();
 
   function refresh() {
     api.getFlight(fid).then(setFlight);
@@ -134,8 +135,8 @@ export function BoardingPax() {
     if (!passenger?.bcbp) return;
     try {
       await api.scanBoardingPass(passenger.bcbp);
-      refresh();
       showToast("Boarded");
+      closeTab(`/boarding/${fid}/pax/${passenger.id}`);
     } catch (e: any) {
       setMessage({ kind: "error", text: e.message });
     }

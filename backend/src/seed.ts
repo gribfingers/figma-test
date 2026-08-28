@@ -49,7 +49,18 @@ const tx = db.transaction(() => {
   for (const f of flights) {
     const info = insertFlight.run(f.flight_number, f.carrier_code, f.origin, f.destination, f.std, f.aircraft_type, f.aircraft_reg, f.aircraft_version, (f as { extra?: string }).extra ?? null);
     const flightId = info.lastInsertRowid as number;
-    insertFlightWithRoster(flightId, f.aircraft_type, 100);
+    insertFlightWithRoster(
+      {
+        id: flightId,
+        carrierCode: f.carrier_code,
+        flightNumber: f.flight_number,
+        origin: f.origin,
+        destination: f.destination,
+        std: f.std,
+        aircraftType: f.aircraft_type,
+      },
+      100
+    );
   }
 });
 tx();

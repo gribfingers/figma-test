@@ -50,6 +50,7 @@ export function TopTabs() {
   const [closeConfirmPath, setCloseConfirmPath] = useState<string | null>(null);
 
   const listRef = useRef<HTMLDivElement>(null);
+  const activeTabRef = useRef<HTMLAnchorElement>(null);
   const [overflowing, setOverflowing] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -98,6 +99,17 @@ export function TopTabs() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tabs.length]);
 
+  // Whichever tab is active — including one that just opened past the edge
+  // of the visible strip — should always be scrolled into view, not left
+  // hidden behind the scroll arrows. Depends on `tabs` too, not just
+  // activePath: a brand-new tab's own useRegisterTab effect (in the page
+  // component) adds it to the array a render *after* activePath already
+  // points at it, so activePath alone would fire this one render too early
+  // and find no matching ref yet.
+  useEffect(() => {
+    activeTabRef.current?.scrollIntoView({ behavior: "smooth", inline: "nearest", block: "nearest" });
+  }, [activePath, tabs]);
+
   useEffect(() => {
     if (!user) return;
     function poll() {
@@ -127,7 +139,12 @@ export function TopTabs() {
         {tabs.map((tab) => {
           const selected = tab.path === activePath;
           return (
-            <Link key={tab.path} to={tab.path} className={`top-tab ${selected ? "selected" : ""}`}>
+            <Link
+              key={tab.path}
+              to={tab.path}
+              ref={selected ? activeTabRef : undefined}
+              className={`top-tab ${selected ? "selected" : ""}`}
+            >
               <span className="top-tab-label">{tab.label}</span>
               {tab.closable && (
                 <button
