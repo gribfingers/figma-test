@@ -4,10 +4,9 @@ const STORAGE_KEY = "dcs_tab_icons_enabled";
 
 function readStored(): boolean {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw === null ? true : raw === "1";
+    return localStorage.getItem(STORAGE_KEY) === "1";
   } catch {
-    return true;
+    return false;
   }
 }
 
