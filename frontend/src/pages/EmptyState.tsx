@@ -9,7 +9,6 @@ import { Link } from "react-router-dom";
 export function EmptyState() {
   return (
     <div className="empty-state">
-      <img src="/airport-journey.svg" alt="" className="empty-state-animation" />
       <div className="empty-state-title">No tabs open</div>
       <div className="empty-state-subtitle">Pick something from the sidebar to get back to work.</div>
       <Link to="/" className="empty-state-cta">

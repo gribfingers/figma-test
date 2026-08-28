@@ -200,7 +200,6 @@ body {
 
 /* ---- Empty state (last tab closed — see EMPTY_PATH in tabs.tsx) ---- */
 .empty-state { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
-.empty-state-animation { width: min(560px, 80%); height: auto; margin-bottom: 12px; border-radius: 14px; }
 .empty-state-title { font-size: 18px; font-weight: 800; color: var(--field-value); }
 .empty-state-subtitle { font-size: 14px; color: var(--muted); margin-bottom: 16px; }
 
