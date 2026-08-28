@@ -188,7 +188,7 @@ export function SeatMapGrid({
                       {effectiveSubtype !== "none" && <span className={`seat-subtype-bar seat-subtype-${effectiveSubtype}`} />}
                       <span className="seat-content">
                         {showIcons && Icon && (
-                          <Icon size={isChild ? 8 : extra.price != null || extra.rfisc ? 11 : 13} />
+                          <Icon size={isChild ? 8 : extra.price != null || extra.rfisc ? 12 : 16} />
                         )}
                         {isChild && age != null && <span className="seat-child-age">{age}</span>}
                         {!isChild && ((showPrice && extra.price != null) || (showRfisc && extra.rfisc)) && (
