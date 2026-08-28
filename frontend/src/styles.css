@@ -1617,6 +1617,8 @@ button.icon-button:hover { background: var(--hover-bg); }
 .seat-content { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; color: var(--muted); }
 .seat-checked-in .seat-content, .seat-boarded .seat-content { color: #ffffff; }
 .seat.selected .seat-content { color: var(--seat-active-ink); }
+/* Presit/Booked hold marker sits along the bottom edge — nudge the icon/text up so it doesn't crowd it. */
+.seat:has(.seat-subtype-bar) .seat-content { transform: translateY(-2px); }
 /* The attribute icon set (SeatIcons.tsx) uses fixed hex fills rather than currentColor, so text
    color alone doesn't reach them — force white explicitly on checked-in/boarded. Paths with a
    literal fill="none" (the older stroke-only icons) are left alone so they don't gain a fill. */
