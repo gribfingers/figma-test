@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Flight } from "../../api";
 import { FLIGHT_STATUSES } from "../../flightStatuses";
+import { FLIGHT_PHASES, currentPhaseIndex } from "../../flightPhase";
 import { useToast } from "../../toast";
 import { FlightStatusSelect } from "./FlightStatusSelect";
 import { FlightAction, FlightActionsMenu } from "./FlightActionsMenu";
@@ -13,36 +14,11 @@ interface Props {
   onAction: (action: FlightAction) => void;
 }
 
-const PHASES = [
-  { key: "checkin", label: "Check-in", fromMin: -180, toMin: -45 },
-  { key: "boarding", label: "Boarding", fromMin: -45, toMin: -15 },
-  { key: "closing", label: "Closing", fromMin: -15, toMin: -5 },
-  { key: "flying", label: "Flying away", fromMin: -5, toMin: 0 },
-];
-
 function fmtWindow(std: string, fromMin: number, toMin: number): string {
   const base = new Date(std).getTime();
   const f = (m: number) =>
     new Date(base + m * 60000).toLocaleTimeString("en-GB", { timeZone: "UTC", hour: "2-digit", minute: "2-digit" });
   return `${f(fromMin)} - ${f(toMin)}`;
-}
-
-// Which phase is "current" is derived from real elapsed time against this
-// flight's own std-relative windows (the PHASES offsets above), not from
-// ops_status — otherwise editing the departure time would have no effect
-// on the highlighting at all. Phases before it are "past", the one at this
-// index is "active", the rest are "future"; PHASES.length means every phase
-// is already past, -1 means none reached yet. A cancelled flight isn't
-// progressing through phases at all, so it's always treated as none-reached.
-function currentPhaseIndex(flight: Flight, now: Date): number {
-  if (flight.ops_status === "CANCELLED") return -1;
-  const base = new Date(flight.std).getTime();
-  const nowMs = now.getTime();
-  if (nowMs < base + PHASES[0].fromMin * 60000) return -1;
-  for (let i = 0; i < PHASES.length; i++) {
-    if (nowMs < base + PHASES[i].toMin * 60000) return i;
-  }
-  return PHASES.length;
 }
 
 function fmtCardDate(std: string): string {
@@ -102,7 +78,7 @@ export function FlightCardHeader({ flight, activeTab, dirty, onSave, onAction }:
       </div>
 
       <div className="flight-status-group">
-        {PHASES.map((p, i) => {
+        {FLIGHT_PHASES.map((p, i) => {
           const state = i < currentPhase ? "past" : i === currentPhase ? "active" : "";
           return (
             <div key={p.key} className={`flight-status-chip ${state}`}>

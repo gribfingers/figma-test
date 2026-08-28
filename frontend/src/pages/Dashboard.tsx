@@ -8,23 +8,7 @@ import { RefreshIcon } from "../components/Icon";
 import { SortTh, useSort } from "../components/SortTh";
 import { useRegisterTab } from "../tabs";
 import { fullRouteLabel, routeLabel } from "../flightSegments";
-
-const OPS_STATUS_LABEL: Record<string, string> = {
-  SCHEDULED: "Scheduled",
-  DELAYED: "Delayed",
-  BOARDING: "Boarding",
-  DEPARTED: "Departed",
-  ARRIVED: "Arrived",
-  CANCELLED: "Cancelled",
-};
-const OPS_STATUS_BADGE: Record<string, string> = {
-  SCHEDULED: "ok",
-  DELAYED: "warn",
-  BOARDING: "warn",
-  DEPARTED: "muted",
-  ARRIVED: "muted",
-  CANCELLED: "danger",
-};
+import { currentPhaseIndex, phaseStatusLabel } from "../flightPhase";
 
 function formatTime(iso: string | null): string {
   if (!iso) return "";
@@ -44,7 +28,7 @@ const FLIGHT_SORT_GETTERS: Record<FlightSortKey, (f: Flight) => string | number>
   carrier_code: (f) => f.carrier_code,
   flight_number: (f) => f.flight_number,
   route: (f) => `${f.origin}${f.destination}`,
-  ops_status: (f) => OPS_STATUS_LABEL[f.ops_status] ?? f.ops_status,
+  ops_status: (f) => currentPhaseIndex(f, new Date()),
   etd: (f) => toEpoch(f.etd),
   sta: (f) => toEpoch(f.sta),
   ata: (f) => toEpoch(f.ata),
@@ -58,15 +42,32 @@ const FLIGHT_SORT_GETTERS: Record<FlightSortKey, (f: Flight) => string | number>
 const EMPTY_SEARCH = { airline: "", flight: "", origin: "", destination: "", dateFrom: "", dateTo: "" };
 const EMPTY_QUICK = { airline: "", flight: "", origin: "", destination: "", std: "", etd: "", sta: "", ata: "" };
 
+// Board defaults to today's flights (UTC, same wall-clock convention std
+// uses everywhere else) rather than every flight ever scheduled — still
+// just a starting point for the date-range fields, not a hard limit.
+function todaySearch(): typeof EMPTY_SEARCH {
+  const now = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const day = `${now.getUTCFullYear()}-${pad(now.getUTCMonth() + 1)}-${pad(now.getUTCDate())}`;
+  return { ...EMPTY_SEARCH, dateFrom: `${day}T00:00`, dateTo: `${day}T23:59` };
+}
+
 export function Dashboard() {
   useRegisterTab("Flights");
   const navigate = useNavigate();
   const [flights, setFlights] = useState<Flight[]>([]);
   const [error, setError] = useState("");
+  // Ticks so the Status column's phase-derived label (Check-in/Boarding/…)
+  // keeps up with real time even between flight-list refreshes.
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(t);
+  }, []);
 
   // Row 1: broader search, applied on "Search" (or Reset).
-  const [draftSearch, setDraftSearch] = useState(EMPTY_SEARCH);
-  const [appliedSearch, setAppliedSearch] = useState(EMPTY_SEARCH);
+  const [draftSearch, setDraftSearch] = useState(todaySearch);
+  const [appliedSearch, setAppliedSearch] = useState(todaySearch);
   // Row 2: live per-column quick filters, applied as you type.
   const [quick, setQuick] = useState(EMPTY_QUICK);
 
@@ -198,13 +199,15 @@ export function Dashboard() {
               </tr>
             </thead>
             <tbody>
-              {sortedFlights.map((f) => (
+              {sortedFlights.map((f) => {
+                const status = phaseStatusLabel(f, now);
+                return (
                 <tr key={f.id} className="row-hover" onClick={() => navigate(`/flights/${f.id}`)}>
                   <td className="mono">{formatTime(f.std)}</td>
                   <td>{f.carrier_code}</td>
                   <td className="mono">{f.flight_number}</td>
                   <td className="mono" title={fullRouteLabel(f)}>{routeLabel(f)}</td>
-                  <td><span className={`chip middle ${OPS_STATUS_BADGE[f.ops_status] ?? "muted"}`}>{OPS_STATUS_LABEL[f.ops_status] ?? f.ops_status}</span></td>
+                  <td><span className={`chip middle ${status.badge}`}>{status.label}</span></td>
                   <td className="mono">{formatTime(f.etd)}</td>
                   <td className="mono">{formatTime(f.sta)}</td>
                   <td className="mono">{formatTime(f.ata)}</td>
@@ -214,7 +217,8 @@ export function Dashboard() {
                   <td className="mono">{f.aircraft_reg}</td>
                   <td className="mono">{f.aircraft_version}</td>
                 </tr>
-              ))}
+                );
+              })}
               {visibleFlights.length === 0 && (
                 <tr><td colSpan={13} style={{ color: "var(--muted)" }}>No flights match the current filters.</td></tr>
               )}
