@@ -3,6 +3,7 @@ import { api } from "../api";
 import { useAuth } from "../auth";
 import { useTheme } from "../theme";
 import { useFontSize } from "../fontSize";
+import { useTabIcons } from "../tabIcons";
 import { resizeImageToDataUrl, userAvatarColor, userInitials } from "../userDisplay";
 import { Field } from "./Field";
 import { Select } from "./Select";
@@ -34,6 +35,7 @@ export function UserPanel({ open, onClose }: Props) {
   const { user, logout, updateUser } = useAuth();
   const { theme, setTheme } = useTheme();
   const { fontSize, increase, decrease } = useFontSize();
+  const { enabled: tabIconsEnabled, setEnabled: setTabIconsEnabled } = useTabIcons();
   const [settingsOpen, setSettingsOpen] = useState(true);
   const [securityOpen, setSecurityOpen] = useState(false);
   const [timezone, setTimezone] = useState(user?.timezone ?? "Europe/Moscow");
@@ -133,6 +135,16 @@ export function UserPanel({ open, onClose }: Props) {
                     <PlusIcon size={14} />
                   </button>
                 </div>
+              </div>
+              <div className="user-panel-theme-row">
+                <span>Tab section icons</span>
+                <label className="checkbox-row">
+                  <input
+                    type="checkbox"
+                    checked={tabIconsEnabled}
+                    onChange={(e) => setTabIconsEnabled(e.target.checked)}
+                  />
+                </label>
               </div>
               <Select
                 label="Timezone"

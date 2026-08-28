@@ -7,10 +7,18 @@ import { useCheckinFlow, pnrFlowPidFromPath } from "../checkinFlow";
 import { useToast } from "../toast";
 import { usePanelTransition } from "../usePanelMounted";
 import { userAvatarColor, userInitials } from "../userDisplay";
-import { ChatIcon, ChevronLeftIcon, ChevronRightIcon, CloseIcon } from "./Icon";
+import { tabKindForPath, TabKind } from "../tabKind";
+import { useTabIcons } from "../tabIcons";
+import { ChatIcon, ChevronLeftIcon, ChevronRightIcon, CloseIcon, TabBoardingIcon, TabCheckinIcon, TabFlightsIcon } from "./Icon";
 import { UserPanel } from "./UserPanel";
 import { Messenger } from "./Messenger";
 import { Modal } from "./Modal";
+
+const TAB_KIND_ICON: Record<Exclude<TabKind, null>, (size: number) => JSX.Element> = {
+  flights: (size) => <TabFlightsIcon size={size} />,
+  checkin: (size) => <TabCheckinIcon size={size} />,
+  boarding: (size) => <TabBoardingIcon size={size} />,
+};
 
 // How far one click of a scroll arrow moves the tab strip.
 const TAB_SCROLL_STEP = 240;
@@ -41,6 +49,7 @@ export function TopTabs() {
   const { user } = useAuth();
   const { flowStepFor, setFlowStep } = useCheckinFlow();
   const { showToast } = useToast();
+  const { enabled: tabIconsEnabled } = useTabIcons();
   const [panelOpen, setPanelOpen] = useState(false);
   const [messengerOpen, setMessengerOpen] = useState(false);
   const panelTransition = usePanelTransition(panelOpen);
@@ -140,6 +149,7 @@ export function TopTabs() {
       <div className="tabs-list" ref={listRef} onScroll={updateScrollState}>
         {tabs.map((tab) => {
           const selected = tab.path === activePath;
+          const kind = tabKindForPath(tab.path);
           return (
             <Link
               key={tab.path}
@@ -147,6 +157,7 @@ export function TopTabs() {
               ref={selected ? activeTabRef : undefined}
               className={`top-tab ${selected ? "selected" : ""}`}
             >
+              {tabIconsEnabled && kind && <span className="top-tab-icon">{TAB_KIND_ICON[kind](12)}</span>}
               <span className="top-tab-label">{tab.label}</span>
               {tab.closable && (
                 <button

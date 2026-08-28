@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../auth";
 import { useCheckinFlow, FLOW_STEPS, FLOW_STEP_LABEL, FlowStep, pnrFlowPidFromPath } from "../checkinFlow";
+import { tabKindForPath } from "../tabKind";
 import {
   BaggageFlowIcon,
   BoardingIcon,
@@ -30,28 +31,11 @@ function formatClock(d: Date): string {
   return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 }
 
-// Flight board itself and creating/editing a flight — a flight's own record,
-// not a specific passenger's check-in or gate boarding.
-function isFlightPage(pathname: string): boolean {
-  return pathname === "/" || pathname.startsWith("/flights/");
-}
-
-// Passenger search, the flight-level check-in board (/checkin/:flightId), and a
-// specific PNR's own flow page (/checkin/:flightId/pnr/:passengerId) — all part of
-// the check-in workstation, so the sidebar icon stays lit throughout.
-function isCheckinPage(pathname: string): boolean {
-  return pathname === "/search" || pathname.startsWith("/checkin/");
-}
-
-// Boarding search and a specific flight's gate boarding screen.
-function isBoardingPage(pathname: string): boolean {
-  return pathname === "/boarding-search" || pathname.startsWith("/boarding/");
-}
-
 export function SideDrawer() {
   const { pathname } = useLocation();
   const { user } = useAuth();
   const { flowStepFor, setFlowStep, flightInfoOpenFor, setFlightInfoOpen, cartOpenFor, setCartOpen } = useCheckinFlow();
+  const kind = tabKindForPath(pathname);
   const pnrPid = pnrFlowPidFromPath(pathname);
   const flowStep = pnrPid !== null ? flowStepFor(pnrPid) : null;
   const flightInfoOpen = pnrPid !== null && flightInfoOpenFor(pnrPid);
@@ -74,15 +58,15 @@ export function SideDrawer() {
       <div className="side-list">
         <Link
           to="/"
-          className={`side-item ${isFlightPage(pathname) ? "selected" : ""}`}
+          className={`side-item ${kind === "flights" ? "selected" : ""}`}
           data-tooltip="Flight schedule"
         >
           <PlaneIcon size={20} />
         </Link>
-        <Link to="/search" className={`side-item ${isCheckinPage(pathname) ? "selected" : ""}`} data-tooltip="Check-in">
+        <Link to="/search" className={`side-item ${kind === "checkin" ? "selected" : ""}`} data-tooltip="Check-in">
           <CheckInIcon size={20} />
         </Link>
-        <Link to="/boarding-search" className={`side-item ${isBoardingPage(pathname) ? "selected" : ""}`} data-tooltip="Boarding">
+        <Link to="/boarding-search" className={`side-item ${kind === "boarding" ? "selected" : ""}`} data-tooltip="Boarding">
           <BoardingIcon size={20} />
         </Link>
         {showFlowIcons && (

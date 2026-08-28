@@ -8,6 +8,7 @@ import { AuthProvider, RequireAuth } from "./auth";
 import { ToastProvider } from "./toast";
 import { ThemeProvider } from "./theme";
 import { FontSizeProvider } from "./fontSize";
+import { TabIconsProvider } from "./tabIcons";
 import { Login } from "./pages/Login";
 import { Dashboard } from "./pages/Dashboard";
 import { Search } from "./pages/Search";
@@ -26,31 +27,33 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <BrowserRouter>
       <ThemeProvider>
         <FontSizeProvider>
-          <ToastProvider>
-            <AuthProvider>
-              <TabsProvider>
-                <Routes>
-                  <Route path="/login" element={<Login />} />
-                  <Route element={<RequireAuth />}>
-                    <Route path="/" element={<App />}>
-                      <Route index element={<Dashboard />} />
-                      <Route path="search" element={<Search />} />
-                      <Route path="boarding-search" element={<BoardingSearch />} />
-                      <Route path="checkin/:flightId/pnr/:passengerId" element={<PnrView />} />
-                      <Route path="flights/new" element={<NewFlight />} />
-                      <Route path="flights/:flightId" element={<FlightCard />} />
-                      <Route path="checkin/:flightId" element={<CheckIn />} />
-                      <Route path="boarding/:flightId" element={<Boarding />} />
-                      <Route path="boarding/:flightId/pax/:passengerId" element={<BoardingPax />} />
-                      <Route path="users-admin" element={<UserAdmin />} />
-                      <Route path="empty" element={<EmptyState />} />
-                      <Route path="*" element={<Navigate to="/" replace />} />
+          <TabIconsProvider>
+            <ToastProvider>
+              <AuthProvider>
+                <TabsProvider>
+                  <Routes>
+                    <Route path="/login" element={<Login />} />
+                    <Route element={<RequireAuth />}>
+                      <Route path="/" element={<App />}>
+                        <Route index element={<Dashboard />} />
+                        <Route path="search" element={<Search />} />
+                        <Route path="boarding-search" element={<BoardingSearch />} />
+                        <Route path="checkin/:flightId/pnr/:passengerId" element={<PnrView />} />
+                        <Route path="flights/new" element={<NewFlight />} />
+                        <Route path="flights/:flightId" element={<FlightCard />} />
+                        <Route path="checkin/:flightId" element={<CheckIn />} />
+                        <Route path="boarding/:flightId" element={<Boarding />} />
+                        <Route path="boarding/:flightId/pax/:passengerId" element={<BoardingPax />} />
+                        <Route path="users-admin" element={<UserAdmin />} />
+                        <Route path="empty" element={<EmptyState />} />
+                        <Route path="*" element={<Navigate to="/" replace />} />
+                      </Route>
                     </Route>
-                  </Route>
-                </Routes>
-              </TabsProvider>
-            </AuthProvider>
-          </ToastProvider>
+                  </Routes>
+                </TabsProvider>
+              </AuthProvider>
+            </ToastProvider>
+          </TabIconsProvider>
         </FontSizeProvider>
       </ThemeProvider>
     </BrowserRouter>

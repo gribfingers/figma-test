@@ -327,6 +327,9 @@ body {
   border-bottom-color: transparent;
   color: var(--field-value);
 }
+/* Section badge (flights/check-in/boarding) — see TAB_KIND_ICON in
+   TopTabs.tsx and the toggle in UserPanel's Settings section. */
+.top-tab-icon { display: flex; align-items: center; flex-shrink: 0; }
 /* Tab to the left of the active tab: 2px bottom-right radius (its own
    border-right already draws the seam, so no extra border here). */
 .top-tab:has(+ .top-tab.selected) { border-bottom-right-radius: 2px; }
