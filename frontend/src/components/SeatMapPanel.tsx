@@ -58,10 +58,9 @@ export function SeatMapPanel({
   const [legendOpen, setLegendOpen] = useState(false);
   const [layersOpen, setLayersOpen] = useState(false);
   const [editingSeat, setEditingSeat] = useState<SeatCell | null>(null);
-  // Three layers on the seat map, per the reference spec: attribute icons, price, RFISC — all shown by default.
-  const [showIcons, setShowIcons] = useState(true);
-  const [showPrice, setShowPrice] = useState(true);
-  const [showRfisc, setShowRfisc] = useState(true);
+  // Three layers on the seat map, per the reference spec: attribute icons, price, RFISC —
+  // mutually exclusive, only one shown at a time (Icons by default).
+  const [activeLayer, setActiveLayer] = useState<"icons" | "price" | "rfisc">("icons");
 
   const legendRef = useRef<HTMLDivElement>(null);
   const layersRef = useRef<HTMLDivElement>(null);
@@ -75,10 +74,10 @@ export function SeatMapPanel({
     return () => document.removeEventListener("mousedown", onDocMouseDown);
   }, []);
 
-  const LAYER_TOGGLES = [
-    { label: "Иконки", checked: showIcons, toggle: () => setShowIcons((v) => !v) },
-    { label: "Цена", checked: showPrice, toggle: () => setShowPrice((v) => !v) },
-    { label: "RFISC", checked: showRfisc, toggle: () => setShowRfisc((v) => !v) },
+  const LAYER_OPTIONS: { key: "icons" | "price" | "rfisc"; label: string }[] = [
+    { key: "icons", label: "Иконки" },
+    { key: "price", label: "Цена" },
+    { key: "rfisc", label: "RFISC" },
   ];
 
   return (
@@ -137,9 +136,9 @@ export function SeatMapPanel({
             </button>
             {layersOpen && (
               <ul className="select-menu seatmap-layers-list">
-                {LAYER_TOGGLES.map((l) => (
-                  <li key={l.label} className="pax-columns-item" onClick={l.toggle}>
-                    <input type="checkbox" checked={l.checked} readOnly />
+                {LAYER_OPTIONS.map((l) => (
+                  <li key={l.key} className="pax-columns-item" onClick={() => setActiveLayer(l.key)}>
+                    <input type="radio" name="seatmap-layer" checked={activeLayer === l.key} readOnly />
                     {l.label}
                   </li>
                 ))}
@@ -161,9 +160,9 @@ export function SeatMapPanel({
             selected={selected}
             onSelect={onSelect}
             onEditSeat={allowSeatEdit ? setEditingSeat : undefined}
-            showIcons={showIcons}
-            showPrice={showPrice}
-            showRfisc={showRfisc}
+            showIcons={activeLayer === "icons"}
+            showPrice={activeLayer === "price"}
+            showRfisc={activeLayer === "rfisc"}
             cabinFeatures={cabinFeatures}
             onSelectOccupied={onSelectOccupied}
             disabledSeats={disabledSeats}
