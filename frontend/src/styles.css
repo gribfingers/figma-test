@@ -2223,6 +2223,7 @@ tr.row-hover { cursor: pointer; }
 .seatmap-legend-attrs { display: flex; flex-direction: column; gap: 6px; }
 .seatmap-legend-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--field-value); }
 .seatmap-legend-swatch { width: 20px; height: 18px; flex-shrink: 0; cursor: default; }
+.seatmap-legend-child-sample { display: flex; align-items: center; gap: 3px; color: var(--muted); }
 .seat-free-swatch { position: relative; box-sizing: border-box; border-radius: 4px; background: var(--seat-free-bg); border: 1px solid var(--seat-border); overflow: hidden; }
 
 .seatmap-layers-list.select-menu { left: auto; right: 0; width: 240px; max-height: 360px; overflow-y: auto; }

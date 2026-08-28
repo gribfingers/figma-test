@@ -5,7 +5,7 @@ import { SEAT_ATTRS, SeatExtra, parseSeatExtra } from "../seatExtra";
 import { SeatMapGrid } from "./SeatMapGrid";
 import { Modal } from "./Modal";
 import { Field } from "./Field";
-import { HideIcon, LayersIcon, MinusIcon, PlusIcon, RowsIcon } from "./Icon";
+import { HideIcon, LayersIcon, MinusIcon, PlusIcon, RowsIcon, SeatChildIcon } from "./Icon";
 
 interface Props {
   flightId: number;
@@ -122,6 +122,13 @@ export function SeatMapPanel({
                   ))}
                 </div>
                 <div className="seatmap-legend-attrs">
+                  <div className="seatmap-legend-row">
+                    <span className="seatmap-legend-child-sample">
+                      <SeatChildIcon size={8} />
+                      <span className="seat-child-age">5</span>
+                    </span>
+                    Ребёнок (2–12 лет)
+                  </div>
                   {SEAT_ATTRS.map((a) => (
                     <div key={a.key} className="seatmap-legend-row">
                       <a.icon size={14} />

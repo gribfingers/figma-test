@@ -1,5 +1,4 @@
 import { SeatCell } from "./api";
-import { ChildIcon } from "./components/Icon";
 import {
   SeatAnimalIcon, SeatBrokenIcon, SeatCgBlockIcon, SeatCrewIcon,
   SeatEmergencyIcon, SeatFixedArmrestIcon, SeatHardBlockIcon, SeatInftIcon, SeatInstIcon, SeatLegroomIcon,
@@ -23,7 +22,6 @@ export interface SeatExtra {
   stretcher?: boolean;
   wheelchair?: boolean;
   animal?: boolean;
-  child?: boolean;
   infant?: boolean; // INFT — lap infant, no seat of their own
   inst?: boolean; // INST — infant travelling with their own seat
   transit?: boolean; // SOM transit point
@@ -77,7 +75,6 @@ export const SEAT_ATTRS: SeatAttrDef[] = [
   { key: "animal", label: "Животное", icon: SeatAnimalIcon },
   { key: "infant", label: "Младенец (INFT)", icon: SeatInftIcon },
   { key: "inst", label: "Младенец с местом (INST)", icon: SeatInstIcon },
-  { key: "child", label: "Ребёнок", icon: ChildIcon },
   { key: "transit", label: "Транзит (SOM)", icon: SeatTransitIcon },
   { key: "noRecline", label: "Не откидывается спинка", icon: SeatNoReclineIcon },
   { key: "fixedArmrest", label: "Не поднимающийся подлокотник", icon: SeatFixedArmrestIcon },
@@ -126,10 +123,10 @@ function ageFromSeatDob(dob: string | null): number | null {
 
 /**
  * The Figma component's "State=Child" — a distinct visual (narrow child
- * icon + age badge) shown when the seat's real occupant is a minor, derived
- * from the passenger's dob. Independent of the manually-set "child"/
- * "infant" SEAT_ATTRS flags above, which mark a seat's general suitability
- * rather than describe who's actually sitting in it.
+ * icon + age badge) shown when the seat's real occupant is 2 to 12 years
+ * old, derived from the passenger's dob. Independent of the manually-set
+ * "infant"/"inst" SEAT_ATTRS flags above, which mark a seat's general
+ * suitability rather than describe who's actually sitting in it.
  */
 export function occupantAge(s: SeatCell): number | null {
   if (!s.passenger_id) return null;
