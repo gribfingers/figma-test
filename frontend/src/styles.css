@@ -2228,6 +2228,23 @@ tr.row-hover { cursor: pointer; }
 .seatmap-legend-child-sample { display: flex; align-items: center; gap: 3px; color: var(--muted); }
 .seat-free-swatch { position: relative; box-sizing: border-box; border-radius: 4px; background: var(--seat-free-bg); border: 1px solid var(--seat-border); overflow: hidden; }
 
+.seat-info-popover { position: fixed; z-index: 40; width: 260px; max-height: 420px; overflow-y: auto; background: var(--paper); border: 1px solid var(--panel-border); border-radius: 4px; box-shadow: 0 2px 24px -6px var(--shadow-popover); padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.seat-info-title { font-size: 13px; font-weight: 600; color: var(--field-value); margin-bottom: 2px; }
+.seat-info-line { font-size: 12px; color: var(--field-value); }
+.seat-info-attrs { display: flex; flex-direction: column; gap: 6px; padding: 8px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.seat-info-history-link { all: unset; box-sizing: border-box; margin-top: 2px; font-size: 12px; color: var(--accent); cursor: pointer; }
+.seat-info-history-link:hover { text-decoration: underline; }
+
+.seat-history-list { display: flex; flex-direction: column; gap: 10px; }
+.seat-history-row { padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+.seat-history-row:last-child { border-bottom: none; padding-bottom: 0; }
+.seat-history-row-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.seat-history-event { font-size: 13px; font-weight: 600; color: var(--field-value); }
+.seat-history-time { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.seat-history-detail { font-size: 12px; color: var(--field-value); margin-top: 2px; }
+.seat-history-actor { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.muted { color: var(--muted); font-size: 13px; }
+
 .seatmap-layers-list.select-menu { left: auto; right: 0; width: 240px; max-height: 360px; overflow-y: auto; }
 .seatmap-layers-list .pax-columns-item { gap: 8px; }
 

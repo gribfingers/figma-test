@@ -6,6 +6,8 @@ import { SeatMapGrid } from "./SeatMapGrid";
 import { Modal } from "./Modal";
 import { Field } from "./Field";
 import { HideIcon, LayersIcon, MinusIcon, PlusIcon, RowsIcon, SeatChildIcon } from "./Icon";
+import { SeatInfoPopover } from "./SeatInfoPopover";
+import { SeatHistoryModal } from "./SeatHistoryModal";
 
 interface Props {
   flightId: number;
@@ -62,6 +64,8 @@ export function SeatMapPanel({
   const [legendOpen, setLegendOpen] = useState(false);
   const [layersOpen, setLayersOpen] = useState(false);
   const [editingSeat, setEditingSeat] = useState<SeatCell | null>(null);
+  const [infoSeat, setInfoSeat] = useState<{ seat: SeatCell; x: number; y: number } | null>(null);
+  const [historySeat, setHistorySeat] = useState<string | null>(null);
   // Three layers on the seat map, per the reference spec: attribute icons, price, RFISC —
   // mutually exclusive, only one shown at a time (Icons by default).
   const [activeLayer, setActiveLayer] = useState<"icons" | "price" | "rfisc">("icons");
@@ -171,6 +175,7 @@ export function SeatMapPanel({
             selected={selected}
             onSelect={onSelect}
             onEditSeat={allowSeatEdit ? setEditingSeat : undefined}
+            onSeatContextMenu={allowSeatEdit ? undefined : (seat, x, y) => setInfoSeat({ seat, x, y })}
             showIcons={activeLayer === "icons"}
             showPrice={activeLayer === "price"}
             showRfisc={activeLayer === "rfisc"}
@@ -193,6 +198,23 @@ export function SeatMapPanel({
             setEditingSeat(null);
           }}
         />
+      )}
+
+      {infoSeat && (
+        <SeatInfoPopover
+          seatCell={infoSeat.seat}
+          x={infoSeat.x}
+          y={infoSeat.y}
+          onClose={() => setInfoSeat(null)}
+          onOpenHistory={() => {
+            setHistorySeat(infoSeat.seat.seat);
+            setInfoSeat(null);
+          }}
+        />
+      )}
+
+      {historySeat && (
+        <SeatHistoryModal flightId={flightId} seat={historySeat} onClose={() => setHistorySeat(null)} />
       )}
     </div>
   );

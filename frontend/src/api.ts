@@ -77,6 +77,25 @@ export interface SeatCell {
   extra: string | null;
 }
 
+export type SeatEventType =
+  | "assigned"
+  | "unassigned"
+  | "swapped"
+  | "checked_in"
+  | "checkin_cancelled"
+  | "boarded"
+  | "offloaded"
+  | "unboarded"
+  | "attrs_updated";
+
+export interface SeatEvent {
+  id: number;
+  event: SeatEventType;
+  detail: string | null;
+  created_at: string;
+  actor: string | null;
+}
+
 export interface User {
   id: number;
   login: string;
@@ -154,6 +173,8 @@ export const api = {
   seatmap: (flightId: number) => request<SeatCell[]>(`/flights/${flightId}/seatmap`),
   updateSeat: (flightId: number, seat: string, data: { exit_row?: boolean; extra?: string }) =>
     request<SeatCell>(`/flights/${flightId}/seats/${seat}`, { method: "PATCH", body: JSON.stringify(data) }),
+  seatHistory: (flightId: number, seat: string) =>
+    request<SeatEvent[]>(`/flights/${flightId}/seats/${seat}/history`),
   passengers: (flightId: number, q?: string) =>
     request<Passenger[]>(`/flights/${flightId}/passengers${q ? `?q=${encodeURIComponent(q)}` : ""}`),
   addPassenger: (flightId: number, data: Partial<Passenger>) =>

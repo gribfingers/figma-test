@@ -5,6 +5,7 @@ import { serializePassenger } from "../serialize";
 import { encodeBcbp, PAX_STATUS } from "../bcbp";
 import { toJulianDayOfYear } from "../utils/julian";
 import { requireEdit } from "../middleware/auth";
+import { logSeatEvent } from "../seatHistory";
 
 export const checkinRouter = Router();
 
@@ -86,6 +87,9 @@ checkinRouter.post("/swap-seats", requireEdit, (req, res) => {
   });
   tx();
 
+  logSeatEvent(a.flight_id, a.seat, "swapped", `Swapped with ${b.surname}/${b.given_name} (${b.record_locator})`, req.user?.id ?? null);
+  logSeatEvent(b.flight_id, b.seat, "swapped", `Swapped with ${a.surname}/${a.given_name} (${a.record_locator})`, req.user?.id ?? null);
+
   const updatedA = db.prepare("SELECT * FROM passengers WHERE id = ?").get(a.id) as Passenger;
   const updatedB = db.prepare("SELECT * FROM passengers WHERE id = ?").get(b.id) as Passenger;
   res.json({ a: serializePassenger(updatedA), b: serializePassenger(updatedB) });
@@ -164,6 +168,8 @@ checkinRouter.post("/:passengerId", requireEdit, (req, res) => {
   });
   tx();
 
+  logSeatEvent(flight.id, seat, "checked_in", `${passenger.surname}/${passenger.given_name} (${passenger.record_locator})`, req.user?.id ?? null);
+
   const updated = db.prepare("SELECT * FROM passengers WHERE id = ?").get(passenger.id) as Passenger;
   res.json({ passenger: serializePassenger(updated), bcbp });
 });
@@ -235,6 +241,13 @@ checkinRouter.post("/:passengerId/cancel", requireEdit, (req, res) => {
   });
   tx();
 
+  if (passenger.seat) {
+    const detail = `${passenger.surname}/${passenger.given_name} (${passenger.record_locator}) checked out${
+      keepSeatReserved ? " — seat kept reserved" : ""
+    }`;
+    logSeatEvent(passenger.flight_id, passenger.seat, "checkin_cancelled", detail, req.user?.id ?? null);
+  }
+
   const updated = db.prepare("SELECT * FROM passengers WHERE id = ?").get(passenger.id) as Passenger;
   res.json(serializePassenger(updated));
 });
@@ -255,6 +268,15 @@ checkinRouter.post("/:passengerId/seat", requireEdit, (req, res) => {
       db.prepare("UPDATE passengers SET seat = NULL WHERE id = ?").run(passenger.id);
     });
     tx();
+    if (passenger.seat) {
+      logSeatEvent(
+        passenger.flight_id,
+        passenger.seat,
+        "unassigned",
+        `${passenger.surname}/${passenger.given_name} (${passenger.record_locator})`,
+        req.user?.id ?? null
+      );
+    }
     const updated = db.prepare("SELECT * FROM passengers WHERE id = ?").get(passenger.id) as Passenger;
     return res.json(serializePassenger(updated));
   }
@@ -273,6 +295,12 @@ checkinRouter.post("/:passengerId/seat", requireEdit, (req, res) => {
     db.prepare("UPDATE passengers SET seat = ? WHERE id = ?").run(seat, passenger.id);
   });
   tx();
+
+  const paxLabel = `${passenger.surname}/${passenger.given_name} (${passenger.record_locator})`;
+  if (passenger.seat && passenger.seat !== seat) {
+    logSeatEvent(passenger.flight_id, passenger.seat, "unassigned", paxLabel, req.user?.id ?? null);
+  }
+  logSeatEvent(passenger.flight_id, seat, "assigned", paxLabel, req.user?.id ?? null);
 
   const updated = db.prepare("SELECT * FROM passengers WHERE id = ?").get(passenger.id) as Passenger;
   res.json(serializePassenger(updated));

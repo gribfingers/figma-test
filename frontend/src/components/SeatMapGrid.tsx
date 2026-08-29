@@ -8,8 +8,10 @@ interface Props {
   seats: SeatCell[];
   selected?: string | null;
   onSelect?: (seat: string) => void;
-  /** Right-clicking any seat opens the attribute editor for it. */
+  /** Right-clicking any seat opens the attribute editor for it. Takes priority over onSeatContextMenu below. */
   onEditSeat?: (seat: SeatCell) => void;
+  /** Right-clicking any seat opens the read-only info popover — used where onEditSeat isn't (check-in, boarding). */
+  onSeatContextMenu?: (seat: SeatCell, x: number, y: number) => void;
   /** The three layer toggles from the seat-map toolbar — all default to shown. */
   showIcons?: boolean;
   showPrice?: boolean;
@@ -85,6 +87,7 @@ export function SeatMapGrid({
   selected,
   onSelect,
   onEditSeat,
+  onSeatContextMenu,
   showIcons = true,
   showPrice = true,
   showRfisc = true,
@@ -192,9 +195,13 @@ export function SeatMapGrid({
                         } else if (!ineligible) onSelect?.(s.seat);
                       }}
                       onContextMenu={(e) => {
-                        if (!onEditSeat) return;
-                        e.preventDefault();
-                        onEditSeat(s);
+                        if (onEditSeat) {
+                          e.preventDefault();
+                          onEditSeat(s);
+                        } else if (onSeatContextMenu) {
+                          e.preventDefault();
+                          onSeatContextMenu(s, e.clientX, e.clientY);
+                        }
                       }}
                     >
                       {effectiveSubtype !== "none" && <span className={`seat-subtype-bar seat-subtype-${effectiveSubtype}`} />}

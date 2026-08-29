@@ -5,6 +5,7 @@ import { serializePassenger } from "../serialize";
 import { decodeBcbp, PAX_STATUS } from "../bcbp";
 import { buildPfs } from "../edifact";
 import { requireEdit } from "../middleware/auth";
+import { logSeatEvent } from "../seatHistory";
 
 export const boardingRouter = Router();
 
@@ -59,6 +60,15 @@ boardingRouter.post("/scan", requireEdit, (req, res) => {
     return res.status(409).json({ error: "Passenger was offloaded and cannot board", passenger: serializePassenger(passenger) });
   }
   db.prepare("UPDATE passengers SET boarding_status = 'BOARDED' WHERE id = ?").run(passenger.id);
+  if (passenger.seat) {
+    logSeatEvent(
+      passenger.flight_id,
+      passenger.seat,
+      "boarded",
+      `${passenger.surname}/${passenger.given_name} (${passenger.record_locator})`,
+      req.user?.id ?? null
+    );
+  }
   const updated = db.prepare("SELECT * FROM passengers WHERE id = ?").get(passenger.id) as Passenger;
   res.json({ passenger: serializePassenger(updated), decoded });
 });
@@ -69,6 +79,15 @@ boardingRouter.post("/:flightId/offload/:passengerId", requireEdit, (req, res) =
   if (passenger.boarding_status === "BOARDED") return res.status(409).json({ error: "Cannot offload a passenger already boarded — deboard first" });
 
   db.prepare("UPDATE passengers SET boarding_status = 'OFFLOADED' WHERE id = ?").run(passenger.id);
+  if (passenger.seat) {
+    logSeatEvent(
+      passenger.flight_id,
+      passenger.seat,
+      "offloaded",
+      `${passenger.surname}/${passenger.given_name} (${passenger.record_locator})`,
+      req.user?.id ?? null
+    );
+  }
   const updated = db.prepare("SELECT * FROM passengers WHERE id = ?").get(passenger.id) as Passenger;
   res.json(serializePassenger(updated));
 });
@@ -80,6 +99,15 @@ boardingRouter.post("/:flightId/unboard/:passengerId", requireEdit, (req, res) =
   if (passenger.boarding_status !== "BOARDED") return res.status(409).json({ error: "Passenger is not boarded" });
 
   db.prepare("UPDATE passengers SET boarding_status = 'NOT_BOARDED' WHERE id = ?").run(passenger.id);
+  if (passenger.seat) {
+    logSeatEvent(
+      passenger.flight_id,
+      passenger.seat,
+      "unboarded",
+      `${passenger.surname}/${passenger.given_name} (${passenger.record_locator})`,
+      req.user?.id ?? null
+    );
+  }
   const updated = db.prepare("SELECT * FROM passengers WHERE id = ?").get(passenger.id) as Passenger;
   res.json(serializePassenger(updated));
 });

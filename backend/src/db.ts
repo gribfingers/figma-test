@@ -105,6 +105,19 @@ CREATE TABLE IF NOT EXISTS messages (
 );
 CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages(sender_id, recipient_id);
 CREATE INDEX IF NOT EXISTS idx_messages_recipient ON messages(recipient_id, sender_id);
+
+-- One row per state change a seat goes through (assigned/unassigned/checked-in/
+-- boarded/attributes edited/...) — the seat map's right-click "history" popup.
+CREATE TABLE IF NOT EXISTS seat_events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  flight_id INTEGER NOT NULL REFERENCES flights(id) ON DELETE CASCADE,
+  seat TEXT NOT NULL,
+  event TEXT NOT NULL,
+  detail TEXT,
+  user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_seat_events_flight_seat ON seat_events(flight_id, seat, id);
 `);
 
 // Lightweight migration for databases created before the FIDS columns existed.

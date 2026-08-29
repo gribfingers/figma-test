@@ -4,6 +4,7 @@ import { buildSeatMap } from "../utils/seatmap";
 import { Flight, Passenger } from "../types";
 import { serializePassenger } from "../serialize";
 import { requireEdit } from "../middleware/auth";
+import { getSeatHistory, logSeatEvent } from "../seatHistory";
 
 export const flightsRouter = Router();
 
@@ -168,7 +169,7 @@ flightsRouter.get("/:id/seatmap", (req, res) => {
 flightsRouter.patch("/:flightId/seats/:seat", requireEdit, (req, res) => {
   const row = db
     .prepare("SELECT * FROM seats WHERE flight_id = ? AND seat = ?")
-    .get(req.params.flightId, req.params.seat);
+    .get(req.params.flightId, req.params.seat) as { exit_row: number; extra: string | null } | undefined;
   if (!row) return res.status(404).json({ error: "Seat not found" });
 
   const { exit_row, extra } = req.body;
@@ -184,6 +185,35 @@ flightsRouter.patch("/:flightId/seats/:seat", requireEdit, (req, res) => {
     req.params.seat
   );
 
+  const changes: string[] = [];
+  if (exit_row !== undefined && !!exit_row !== !!row.exit_row) changes.push(exit_row ? "+exit row" : "-exit row");
+  if (extra !== undefined) {
+    let before: Record<string, unknown> = {};
+    let after: Record<string, unknown> = {};
+    try {
+      before = row.extra ? JSON.parse(row.extra) : {};
+    } catch {
+      before = {};
+    }
+    try {
+      after = JSON.parse(extra);
+    } catch {
+      after = {};
+    }
+    const keys = new Set([...Object.keys(before), ...Object.keys(after)]);
+    for (const key of keys) {
+      const b = before[key];
+      const a = after[key];
+      if (b === a || (b == null && a == null)) continue;
+      if (a == null || a === false) changes.push(`-${key}`);
+      else if (b == null || b === false) changes.push(`+${key}`);
+      else changes.push(`${key}: ${b} → ${a}`);
+    }
+  }
+  if (changes.length) {
+    logSeatEvent(Number(req.params.flightId), req.params.seat, "attrs_updated", changes.join(", "), req.user?.id ?? null);
+  }
+
   const updated = db
     .prepare(
       `SELECT s.seat, s.cabin_class, s.exit_row, s.passenger_id, s.extra,
@@ -193,6 +223,11 @@ flightsRouter.patch("/:flightId/seats/:seat", requireEdit, (req, res) => {
     )
     .get(req.params.flightId, req.params.seat);
   res.json(updated);
+});
+
+/** History popup on the seat map's right-click menu — every recorded state change for one seat. */
+flightsRouter.get("/:flightId/seats/:seat/history", (req, res) => {
+  res.json(getSeatHistory(Number(req.params.flightId), req.params.seat));
 });
 
 flightsRouter.get("/:id/passengers", (req, res) => {
