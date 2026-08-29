@@ -63,7 +63,11 @@ export function SideDrawer() {
         >
           <PlaneIcon size={20} />
         </Link>
-        <Link to="/search" className={`side-item ${kind === "checkin" ? "selected" : ""}`} data-tooltip="Check-in">
+        <Link
+          to="/search"
+          className={`side-item ${kind === "checkin" && !showFlowIcons ? "selected" : ""}`}
+          data-tooltip="Check-in"
+        >
           <CheckInIcon size={20} />
         </Link>
         <Link to="/boarding-search" className={`side-item ${kind === "boarding" ? "selected" : ""}`} data-tooltip="Boarding">

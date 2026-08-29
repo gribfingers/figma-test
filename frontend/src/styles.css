@@ -1577,7 +1577,7 @@ button.icon-button:hover { background: var(--hover-bg); }
 .counter .lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
 
 /* ---- Seat cell: Figma "Seat H" component (30291:29546), 30x30 fixed ---- */
-.seatmap { display: flex; flex-direction: column; gap: 16px; font-family: var(--font); font-size: 13px; }
+.seatmap { display: flex; flex-direction: column; gap: 16px; font-family: var(--font); font-size: 13px; user-select: none; }
 .seatrow { display: flex; gap: 16px; align-items: center; }
 .seat-col-headers { margin-bottom: 2px; }
 .seat-col-label { width: 30px; text-align: center; font-size: 11px; font-weight: 600; color: var(--muted); font-family: var(--mono); }
@@ -2228,14 +2228,14 @@ tr.row-hover { cursor: pointer; }
 .seatmap-legend-child-sample { display: flex; align-items: center; gap: 3px; color: var(--muted); }
 .seat-free-swatch { position: relative; box-sizing: border-box; border-radius: 4px; background: var(--seat-free-bg); border: 1px solid var(--seat-border); overflow: hidden; }
 
-.seat-info-popover { position: fixed; z-index: 40; width: 260px; max-height: 420px; overflow-y: auto; background: var(--paper); border: 1px solid var(--panel-border); border-radius: 4px; box-shadow: 0 2px 24px -6px var(--shadow-popover); padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.seat-info-popover { position: fixed; z-index: 40; width: 260px; max-height: 420px; overflow-y: auto; background: var(--paper); border: 1px solid var(--panel-border); border-radius: 4px; box-shadow: 0 2px 24px -6px var(--shadow-popover); padding: 12px; display: flex; flex-direction: column; gap: 8px; user-select: none; }
 .seat-info-title { font-size: 13px; font-weight: 600; color: var(--field-value); margin-bottom: 2px; }
 .seat-info-line { font-size: 12px; color: var(--field-value); }
 .seat-info-attrs { display: flex; flex-direction: column; gap: 6px; padding: 8px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
 .seat-info-history-link { all: unset; box-sizing: border-box; margin-top: 2px; font-size: 12px; color: var(--accent); cursor: pointer; }
 .seat-info-history-link:hover { text-decoration: underline; }
 
-.seat-history-list { display: flex; flex-direction: column; gap: 10px; }
+.seat-history-list { display: flex; flex-direction: column; gap: 10px; padding-bottom: 16px; }
 .seat-history-row { padding-bottom: 10px; border-bottom: 1px solid var(--border); }
 .seat-history-row:last-child { border-bottom: none; padding-bottom: 0; }
 .seat-history-row-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
@@ -2243,7 +2243,7 @@ tr.row-hover { cursor: pointer; }
 .seat-history-time { font-size: 12px; color: var(--muted); white-space: nowrap; }
 .seat-history-detail { font-size: 12px; color: var(--field-value); margin-top: 2px; }
 .seat-history-actor { font-size: 12px; color: var(--muted); margin-top: 2px; }
-.muted { color: var(--muted); font-size: 13px; }
+.muted { color: var(--muted); font-size: 13px; padding-bottom: 16px; }
 
 .seatmap-layers-list.select-menu { left: auto; right: 0; width: 240px; max-height: 360px; overflow-y: auto; }
 .seatmap-layers-list .pax-columns-item { gap: 8px; }
@@ -2566,7 +2566,7 @@ tr.row-hover { cursor: pointer; }
   overflow-y: auto;
   min-height: 0;
 }
-.pnr-flow-roster-row { padding: 10px 16px; cursor: pointer; background: transparent; }
+.pnr-flow-roster-row { padding: 10px 16px; cursor: pointer; background: transparent; user-select: none; }
 .pnr-flow-roster-row:hover { background: var(--field-bg); }
 .pnr-flow-roster-row.selected {
   background: var(--panel);
@@ -2638,7 +2638,8 @@ tr.row-hover { cursor: pointer; }
   align-items: center;
   gap: 10px;
   padding: 8px 12px;
-  background: var(--field-bg);
+  background: var(--paper);
+  border: 1px solid var(--panel-border);
   border-radius: 4px;
   font-size: 13px;
 }
@@ -2664,7 +2665,8 @@ tr.row-hover { cursor: pointer; }
   align-items: center;
   gap: 6px;
   padding: 4px 12px 4px 8px;
-  background: var(--field-bg);
+  background: var(--paper);
+  border: 1px solid var(--panel-border);
   border-radius: 4px;
   font-size: 12px;
   font-weight: 600;
