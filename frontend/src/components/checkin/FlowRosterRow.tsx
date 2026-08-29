@@ -81,17 +81,16 @@ function SeatServiceRow({ item, onOpenEmd }: { item: SeatServiceItem; onOpenEmd:
   );
 }
 
-/** Same property, condensed to a small pill — the inactive card's one-line summary. */
+/** Same property, condensed to a small pill — the inactive card's one-line summary: just the code
+ *  (plus price, when the seat actually has one to collect) — the label stays on the active card only. */
 function SeatServiceChip({ item, onOpenEmd }: { item: SeatServiceItem; onOpenEmd: (item: SeatServiceItem) => void }) {
   return (
     <span className={`seat-service-chip ${item.paid ? "paid" : "unpaid"}`}>
       {item.rfisc && <span className="mono">{item.rfisc}</span>}
-      {item.price != null ? (
+      {item.price != null && (
         <button type="button" className="seat-service-chip-price" onClick={(e) => { e.stopPropagation(); onOpenEmd(item); }}>
           {fmtPrice(item.price)}
         </button>
-      ) : (
-        <span className="seat-service-label">{item.label}</span>
       )}
     </span>
   );

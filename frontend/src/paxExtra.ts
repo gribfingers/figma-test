@@ -1,5 +1,5 @@
 import { Passenger, SeatCell } from "./api";
-import { SEAT_ATTRS, parseSeatExtra } from "./seatExtra";
+import { SEAT_ATTRS, SeatExtra, parseSeatExtra } from "./seatExtra";
 
 /** Same list the check-in flow offers (routes/checkin.ts has no dedicated enum on the wire, just free-form SSR codes). */
 export const SSR_OPTIONS = ["WCHR", "WCHS", "UMNR", "BLND", "DEAF", "VGML", "PETC", "EXST"];
@@ -176,16 +176,36 @@ export interface SeatServiceItem {
 }
 
 // A/F are windows, C/D are the two aisle-adjacent seats in this app's 3-3 layout (aisle after C —
-// see SeatMapGrid.tsx); B/E are plain middle seats, no position line item for those.
-const SEAT_POSITION_LABEL: Record<string, string> = { A: "У окна", F: "У окна", C: "У прохода", D: "У прохода" };
+// see SeatMapGrid.tsx); B/E are plain middle seats, no position line item for those. Codes are the
+// IATA PADIS 9825 seat-characteristic letters (window/aisle) confirmed across multiple GDS/NDC
+// references.
+const SEAT_POSITION: Record<string, { label: string; code: string }> = {
+  A: { label: "У окна", code: "W" },
+  F: { label: "У окна", code: "W" },
+  C: { label: "У прохода", code: "A" },
+  D: { label: "У прохода", code: "A" },
+};
+
+// Best-effort per-attribute codes for when the seat has no price at all (so no real purchased
+// RFISC applies) — legroom/aisle/window follow the confirmed IATA PADIS 9825 letters; the rest
+// (noRecline, fixedArmrest) have no verified public source, so these are plausible placeholders
+// only, not certified codes. "SOM" for transit matches the label's own existing (SOM) tag.
+const SEAT_ATTR_CODE: { [K in keyof SeatExtra]?: string } = {
+  legroom: "L",
+  noRecline: "U",
+  fixedArmrest: "FA",
+  transit: "SOM",
+};
 
 /**
  * The roster card's seat-service line items, derived straight from the
  * passenger's actual assigned seat (seats.extra) rather than fabricated —
  * one row per general-layer attribute the seat really has (legroom,
  * no-recline, fixed armrest, transit) plus a window/aisle row from its
- * letter, all sharing that seat's real rfisc/price. A row's price/rfisc is
- * left blank when the seat doesn't have one — nothing here is invented.
+ * letter. A priced seat shows the real purchased RFISC ("0B5" — Seat
+ * Assignment) on every row; an unpriced amenity shows its own
+ * characteristic code instead (see SEAT_ATTR_CODE) — every row always
+ * carries a code, but price/RFISC-as-purchase only appear when real.
  */
 export function seatServiceItemsForSeat(seat: SeatCell | undefined | null): SeatServiceItem[] {
   if (!seat) return [];
@@ -193,17 +213,18 @@ export function seatServiceItemsForSeat(seat: SeatCell | undefined | null): Seat
   // "paid" here really means "nothing owed" — a free amenity (no price at all) shows green (no
   // payment required), while an actual priced selection shows red until it's collected.
   const paid = extra.price == null;
-  const rfisc = extra.rfisc ?? "";
   const price = extra.price ?? null;
+  const purchasedRfisc = extra.rfisc ?? null;
   const items: SeatServiceItem[] = [];
 
-  const positionLabel = SEAT_POSITION_LABEL[seat.seat.slice(-1)];
-  if (positionLabel) items.push({ rfisc, label: positionLabel, price, paid });
+  const position = SEAT_POSITION[seat.seat.slice(-1)];
+  if (position) items.push({ rfisc: purchasedRfisc ?? position.code, label: position.label, price, paid });
 
   for (const attr of SEAT_ATTRS) {
     if (!extra[attr.key]) continue;
-    if (attr.key !== "legroom" && attr.key !== "noRecline" && attr.key !== "fixedArmrest" && attr.key !== "transit") continue;
-    items.push({ rfisc, label: attr.label, price, paid });
+    const code = SEAT_ATTR_CODE[attr.key];
+    if (!code) continue;
+    items.push({ rfisc: purchasedRfisc ?? code, label: attr.label, price, paid });
   }
 
   return items;
