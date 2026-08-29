@@ -2836,6 +2836,7 @@ tr.row-hover { cursor: pointer; }
 
 .seats-step { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 .seats-step-map { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.seats-step-toolbar { display: flex; justify-content: flex-end; padding: 8px 8px 0; flex-shrink: 0; }
 
 .fares-info-text { font-family: var(--mono); font-size: 12px; line-height: 1.6; color: var(--field-value); white-space: pre; overflow-x: auto; }
 
