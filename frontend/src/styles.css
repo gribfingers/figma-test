@@ -2199,6 +2199,20 @@ tr.row-hover { cursor: pointer; }
 
 .seatmap-panel { display: flex; flex-direction: column; height: 100%; min-height: 0; }
 .seatmap-toolbar { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+.seatmap-toolbar-banner {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--field-value);
+}
 .seatmap-decks { display: inline-flex; background: var(--field-bg); border-radius: 6px; padding: 2px; gap: 2px; }
 .seatmap-deck { all: unset; box-sizing: border-box; padding: 6px 12px; font-size: 12px; font-weight: 600; color: var(--muted); border-radius: 4px; cursor: pointer; }
 /* Extra specificity (parent-scoped) so this beats the global button:hover rule. */

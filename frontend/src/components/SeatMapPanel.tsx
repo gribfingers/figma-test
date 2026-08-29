@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { api, SeatCell } from "../api";
 import { CabinFeature } from "../cabinLayout";
 import { SEAT_ATTRS, SeatExtra, parseSeatExtra } from "../seatExtra";
@@ -23,6 +23,8 @@ interface Props {
   undesirableSeats?: Set<string>;
   /** Right-click seat attribute editing (exit-row/blocking/service/pricing) — a flight-config action, not appropriate everywhere the map is embedded (e.g. the check-in flow). Defaults to on. */
   allowSeatEdit?: boolean;
+  /** An in-progress-pick message (e.g. "Select a pax's seat to swap with X") shown inline in the toolbar, between the deck switcher and zoom/legend/layers — not floated over the grid. */
+  banner?: ReactNode;
 }
 
 const LEGEND_STATES: { cls: string; label: string }[] = [
@@ -59,6 +61,7 @@ export function SeatMapPanel({
   ineligibleSeats,
   undesirableSeats,
   allowSeatEdit = true,
+  banner,
 }: Props) {
   const [zoom, setZoom] = useState(100);
   const [legendOpen, setLegendOpen] = useState(false);
@@ -105,6 +108,7 @@ export function SeatMapPanel({
           <button type="button" className="seatmap-deck selected">Main Deck</button>
           <button type="button" className="seatmap-deck" disabled title="This aircraft has no upper deck">Upper Deck</button>
         </div>
+        {banner && <div className="seatmap-toolbar-banner">{banner}</div>}
         <div className="seatmap-toolbar-actions">
           <div className="seatmap-zoom">
             <button type="button" className="seatmap-zoom-btn" onClick={() => setZoom((z) => Math.max(50, z - 10))} aria-label="Zoom out">

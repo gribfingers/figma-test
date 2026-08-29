@@ -115,16 +115,6 @@ export function SeatsStep({
     <div className="seats-step">
       {error && <div className="error-box">{error}</div>}
       <div className="seats-step-map">
-        {swapping && (
-          <div className="seat-pick-banner">
-            <span>
-              Select a pax's seat to swap with <b>{passenger.surname} {passenger.given_name}</b> ({formatSeatDisplay(passenger.seat!)})
-            </span>
-            <button type="button" className="tertiary" onClick={() => onSwappingChange(false)}>
-              Cancel
-            </button>
-          </div>
-        )}
         <SeatMapPanel
           flightId={flightId}
           seats={seats}
@@ -137,6 +127,18 @@ export function SeatsStep({
           ineligibleSeats={ineligibleSeats}
           undesirableSeats={undesirableSeats}
           allowSeatEdit={false}
+          banner={
+            swapping ? (
+              <>
+                <span>
+                  Select a pax's seat to swap with <b>{passenger.surname} {passenger.given_name}</b> ({formatSeatDisplay(passenger.seat!)})
+                </span>
+                <button type="button" className="tertiary" onClick={() => onSwappingChange(false)}>
+                  Cancel
+                </button>
+              </>
+            ) : undefined
+          }
         />
       </div>
     </div>
