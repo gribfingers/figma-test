@@ -213,6 +213,8 @@ export const api = {
     request<Passenger>(`/boarding/${flightId}/offload/${passengerId}`, { method: "POST" }),
   unboard: (flightId: number, passengerId: number) =>
     request<Passenger>(`/boarding/${flightId}/unboard/${passengerId}`, { method: "POST" }),
+  startBoarding: (flightId: number) =>
+    request<Flight>(`/boarding/${flightId}/start`, { method: "POST" }),
   closeFlight: (flightId: number) =>
     request<{ flight: Flight; pfs: string }>(`/boarding/${flightId}/close`, { method: "POST" }),
 

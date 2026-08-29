@@ -151,7 +151,6 @@ export function Boarding() {
   const [seats, setSeats] = useState<SeatCell[]>([]);
   const [scanValue, setScanValue] = useState("");
   const [scanOpen, setScanOpen] = useState(false);
-  const [boardingStarted, setBoardingStarted] = useState(false);
   const [message, setMessage] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
   const [manifest, setManifest] = useState<{ label: string; text: string } | null>(null);
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -253,6 +252,11 @@ export function Boarding() {
     }
   }
 
+  async function startBoarding() {
+    const updated = await api.startBoarding(fid);
+    setFlight(updated);
+    showToast("Boarding started");
+  }
   async function closeFlight() {
     if (!confirm("Close the flight? Pax checked in but not boarded will be marked NO SHOW.")) return;
     const { flight: updated, pfs } = await api.closeFlight(fid);
@@ -308,10 +312,10 @@ export function Boarding() {
           <button type="button" className="icon-button" data-tooltip="Scan a boarding pass" onClick={() => setScanOpen((v) => !v)}>
             <HandIcon size={20} />
           </button>
-          {boardingStarted ? (
+          {flight.status === "BOARDING" ? (
             <button type="button" className="danger boarding-start-btn" onClick={closeFlight} disabled={closed}>Close flight</button>
           ) : (
-            <button type="button" className="secondary boarding-start-btn" disabled={closed} onClick={() => setBoardingStarted(true)}>Start boarding</button>
+            <button type="button" className="secondary boarding-start-btn" disabled={closed} onClick={startBoarding}>Start boarding</button>
           )}
         </div>
       </div>

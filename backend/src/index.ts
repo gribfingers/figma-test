@@ -3,7 +3,7 @@ import cors from "cors";
 import "./db";
 import { ensureSuperadmin } from "./bootstrapAdmin";
 import { startDailyScheduler } from "./dailyScheduler";
-import { backfillMissingBcbp } from "./scheduleGenerator";
+import { backfillMissingBcbp, backfillOpenStatus } from "./scheduleGenerator";
 import { flightsRouter } from "./routes/flights";
 import { checkinRouter } from "./routes/checkin";
 import { boardingRouter } from "./routes/boarding";
@@ -16,6 +16,8 @@ import { requireAuth } from "./middleware/auth";
 ensureSuperadmin();
 const backfilled = backfillMissingBcbp();
 if (backfilled.updated > 0) console.log(`Backfilled bcbp/checkin_sequence for ${backfilled.updated} checked-in passenger(s).`);
+const openStatusBackfilled = backfillOpenStatus();
+if (openStatusBackfilled.updated > 0) console.log(`Opened ${openStatusBackfilled.updated} generated flight(s) for check-in/boarding.`);
 startDailyScheduler();
 
 const app = express();

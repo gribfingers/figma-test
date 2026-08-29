@@ -460,10 +460,29 @@ function isoAtOffset(dayStart: Date, minutesFromMidnight: number): string {
   return new Date(dayStart.getTime() + minutesFromMidnight * 60000).toISOString();
 }
 
+// 'CHECKIN_OPEN' (not 'SCHEDULED') so generated flights are immediately
+// available for check-in/boarding, matching seed.ts's curated flights —
+// nothing in this app currently has a "open check-in" action that would
+// move a flight off 'SCHEDULED' otherwise.
 const insertFlight = db.prepare(
   `INSERT INTO flights (flight_number, carrier_code, origin, destination, std, sta, aircraft_type, aircraft_reg, aircraft_version, status, extra)
-   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'SCHEDULED', ?)`
+   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'CHECKIN_OPEN', ?)`
 );
+
+/**
+ * One-time fixup for flights generated before insertFlight above switched
+ * from 'SCHEDULED' to 'CHECKIN_OPEN' — without it, every already-generated
+ * flight would sit permanently unavailable for check-in/boarding (see
+ * BoardingSearch.tsx) since nothing else ever moves a flight off 'SCHEDULED'.
+ * Scoped to auto-generated flights only and skips anything already
+ * closed/boarding so it can't undo real agent actions; safe to run on every boot.
+ */
+export function backfillOpenStatus(): { updated: number } {
+  const result = db
+    .prepare(`UPDATE flights SET status = 'CHECKIN_OPEN' WHERE status = 'SCHEDULED' AND extra LIKE ?`)
+    .run(`%"${AUTO_GENERATED_MARKER}":true%`);
+  return { updated: result.changes };
+}
 
 /** Whether an auto-generated schedule already exists for the UTC calendar day `date` falls in. */
 export function hasScheduleForDay(date: Date): boolean {

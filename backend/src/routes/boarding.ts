@@ -112,6 +112,18 @@ boardingRouter.post("/:flightId/unboard/:passengerId", requireEdit, (req, res) =
   res.json(serializePassenger(updated));
 });
 
+/** Moves the flight from check-in into the boarding stage — the gate agent's "Start boarding" button. */
+boardingRouter.post("/:flightId/start", requireEdit, (req, res) => {
+  const flight = db.prepare("SELECT * FROM flights WHERE id = ?").get(req.params.flightId) as Flight | undefined;
+  if (!flight) return res.status(404).json({ error: "Flight not found" });
+  if (flight.status === "CLOSED" || flight.status === "DEPARTED") {
+    return res.status(409).json({ error: "Flight is already closed" });
+  }
+  db.prepare("UPDATE flights SET status = 'BOARDING' WHERE id = ?").run(flight.id);
+  const updated = db.prepare("SELECT * FROM flights WHERE id = ?").get(flight.id) as Flight;
+  res.json(updated);
+});
+
 /** Flight close-out: lock boarding, mark remaining checked-in pax as no-show, emit the PFS. */
 boardingRouter.post("/:flightId/close", requireEdit, (req, res) => {
   const flight = db.prepare("SELECT * FROM flights WHERE id = ?").get(req.params.flightId) as Flight | undefined;
