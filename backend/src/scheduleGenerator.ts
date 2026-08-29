@@ -79,6 +79,10 @@ interface PaxSpec {
   givenName: string;
   dob: string;
   ssr: string[];
+  /** INST — infant traveling on their own purchased seat rather than as a lap infant (INFT). */
+  instWithSeat?: boolean;
+  /** UMNR — a child traveling without a guardian in this roster, paired with a chaperone at seating time. */
+  unaccompanied?: boolean;
 }
 
 /**
@@ -125,7 +129,8 @@ const insertPax = db.prepare(
 );
 
 function typeCode(p: PaxSpec): string {
-  return p.category === "infant" ? "INF" : p.category === "child" ? "CHD" : "ADT";
+  if (p.category === "infant") return p.instWithSeat ? "INS" : "INF";
+  return p.category === "child" ? "CHD" : "ADT";
 }
 
 // Mirrors the exit-door row position from frontend/src/cabinLayout.ts (the
@@ -202,6 +207,125 @@ function buildSeatExtras(seatDefs: SeatDef[], aircraftType: string): { assignmen
   return { assignments, unassignable };
 }
 
+// ---- Linked/grouped seat placement for the generated roster --------------
+//
+// Implements the seating-adjacency business rules for generated passengers
+// only (no live seat-picker enforcement — see the rules doc): an INST infant
+// and their guardian, an EXST passenger and their purchased extra seat, a
+// child and the adult from their booking group, and an unaccompanied minor
+// (UMNR) and a chaperone are all seated in the same row/block whenever a
+// spot is available, never split across the aisle. PETC passengers are kept
+// apart from each other instead. Infants, children, and UMNR never land on
+// an exit-row seat. Where no adjacent option exists, this generator just
+// takes the closest available seats it can (no live-UI "recommended
+// limitation" warning applies here — see the rules doc's scope note).
+
+// Every aircraft this app models is 6-abreast A-F with the aisle after C
+// (see SeatMapGrid.tsx's frontend equivalent) — two 3-seat blocks per row.
+const SEAT_BLOCKS = [
+  ["A", "B", "C"],
+  ["D", "E", "F"],
+];
+
+function seatBlockIndex(letter: string): number {
+  return SEAT_BLOCKS.findIndex((b) => b.includes(letter));
+}
+
+/** Every seat grouped by (row, block) — the unit adjacency search operates within. */
+function groupByRowBlock(seatDefs: SeatDef[]): Map<string, SeatDef[]> {
+  const groups = new Map<string, SeatDef[]>();
+  for (const s of seatDefs) {
+    const blk = seatBlockIndex(s.letter);
+    if (blk < 0) continue;
+    const key = `${s.row}|${blk}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(s);
+  }
+  for (const list of groups.values()) list.sort((a, b) => a.letter.localeCompare(b.letter));
+  return groups;
+}
+
+interface TakeSeatsOpts {
+  /** An infant, child, or UMNR is in the group — exit-row seats are off the table entirely. */
+  excludeExitRow?: boolean;
+}
+
+// SeatDef.exitRow (from buildSeatMap) is always false — this app derives the real exit row from
+// EXIT_ROW_AFTER at generation time (see buildSeatExtras) rather than baking it into the layout
+// template, so the actual set of exit-row seat codes has to be passed in separately.
+function isFreeSeat(s: SeatDef, available: Set<string>, exitRowSeats: Set<string>, opts: TakeSeatsOpts): boolean {
+  return available.has(s.seat) && (!opts.excludeExitRow || !exitRowSeats.has(s.seat));
+}
+
+/** Best-effort fill for whatever a takeAdjacentSeats call couldn't seat contiguously — nearest row first.
+ *  Shuffled before sorting so a null `near` (no group to be near) still scatters seats across the cabin
+ *  instead of always handing out the lowest free row number first. */
+function takeNearestSeats(
+  seatDefs: SeatDef[],
+  available: Set<string>,
+  exitRowSeats: Set<string>,
+  n: number,
+  near: SeatDef | null,
+  opts: TakeSeatsOpts
+): SeatDef[] {
+  const candidates = shuffle(seatDefs.filter((s) => isFreeSeat(s, available, exitRowSeats, opts))).sort((a, b) =>
+    near ? Math.abs(a.row - near.row) - Math.abs(b.row - near.row) : 0
+  );
+  const picked = candidates.slice(0, n);
+  for (const s of picked) available.delete(s.seat);
+  return picked;
+}
+
+/**
+ * Takes n seats for one linked group (INST+guardian, EXST+extra, CHLD+PNR,
+ * UMNR+chaperone), preferring a single contiguous run within one row/block
+ * so nobody in the group is split by the aisle. Falls back to the largest
+ * contiguous run it can find plus nearest-available fill, and finally to
+ * pure nearest-available, rather than leaving the group unseated.
+ */
+function takeAdjacentSeats(
+  seatDefs: SeatDef[],
+  available: Set<string>,
+  exitRowSeats: Set<string>,
+  n: number,
+  opts: TakeSeatsOpts = {}
+): SeatDef[] {
+  const byRowBlock = groupByRowBlock(seatDefs);
+  const rowBlockKeys = shuffle([...byRowBlock.keys()]);
+
+  for (let runLen = Math.min(n, 3); runLen >= 2; runLen--) {
+    for (const key of rowBlockKeys) {
+      const blockSeats = byRowBlock.get(key)!;
+      for (let start = 0; start + runLen <= blockSeats.length; start++) {
+        const run = blockSeats.slice(start, start + runLen);
+        if (run.every((s) => isFreeSeat(s, available, exitRowSeats, opts))) {
+          for (const s of run) available.delete(s.seat);
+          return runLen === n
+            ? run
+            : [...run, ...takeNearestSeats(seatDefs, available, exitRowSeats, n - runLen, run[0], opts)];
+        }
+      }
+    }
+  }
+  return takeNearestSeats(seatDefs, available, exitRowSeats, n, null, opts);
+}
+
+/** PETC's placement rule is the opposite of the others — maximize distance from every PETC seat already placed. */
+function takeFarthestSeat(seatDefs: SeatDef[], available: Set<string>, placedRows: number[]): SeatDef | null {
+  const candidates = seatDefs.filter((s) => available.has(s.seat));
+  let best: SeatDef | null = null;
+  let bestScore = -Infinity;
+  for (const c of candidates) {
+    const score = placedRows.length === 0 ? 0 : Math.min(...placedRows.map((r) => Math.abs(r - c.row)));
+    if (score > bestScore) {
+      bestScore = score;
+      best = c;
+    }
+  }
+  if (best) available.delete(best.seat);
+  return best;
+}
+
 export interface FlightForRoster {
   id: number;
   carrierCode: string;
@@ -241,36 +365,118 @@ export function insertFlightWithRoster(flight: FlightForRoster, rosterSize: numb
   }
 
   const roster = buildRoster(rosterSize);
-  const infants = roster.filter((p) => p.category === "infant");
-  const children = roster.filter((p) => p.category === "child");
+  const allInfants = roster.filter((p) => p.category === "infant");
+  const allChildren = roster.filter((p) => p.category === "child");
   const adults = roster.filter((p) => p.category === "adult");
-  const nonInfants = roster.filter((p) => p.category !== "infant");
 
-  const infantGuardians = shuffle(adults).slice(0, infants.length);
+  // A minority of infants travel INST (own purchased seat, needs a real placement) rather than
+  // as a lap infant/INFT (never seated) — see the "Связанные места" rules doc.
+  const instInfantSet = new Set(shuffle(allInfants).slice(0, Math.round(allInfants.length * 0.25)));
+  for (const inf of instInfantSet) inf.instWithSeat = true;
+
+  // At most one UMNR per flight: a child with no guardian in this roster, paired with a
+  // chaperone (an unrelated female adult) at seating time instead of a family member.
+  const umnrChild = allChildren.length > 0 && Math.random() < 0.25 ? pick(allChildren) : null;
+  if (umnrChild) umnrChild.unaccompanied = true;
+  const children = umnrChild ? allChildren.filter((c) => c !== umnrChild) : allChildren;
+
+  const infantGuardians = shuffle(adults).slice(0, allInfants.length);
   const childGuardians = shuffle(adults).slice(0, children.length);
   const locatorByGuardian = new Map<PaxSpec, string>();
   for (const g of new Set([...infantGuardians, ...childGuardians])) locatorByGuardian.set(g, nextLocator());
 
-  // Real occupants (checked-in) and pre-booked (not-yet-checked-in) hold
-  // markers share one pool so the same seat is never handed to two
-  // passengers — seats an agent could never actually assign (blocked/
-  // broken/crew) are excluded from both.
-  const availableSeats = shuffle(seatDefs.filter((s) => !unassignable.has(s.seat)));
-  const checkedInCount = Math.round(nonInfants.length * 0.6);
-  const checkedInSet = new Set(shuffle(nonInfants).slice(0, checkedInCount));
-  const notYetCheckedIn = nonInfants.filter((p) => !checkedInSet.has(p));
+  const childrenByGuardian = new Map<PaxSpec, PaxSpec[]>();
+  for (let i = 0; i < children.length; i++) {
+    const guardian = childGuardians[i % childGuardians.length];
+    if (!childrenByGuardian.has(guardian)) childrenByGuardian.set(guardian, []);
+    childrenByGuardian.get(guardian)!.push(children[i]);
+  }
+  // Youngest first within each guardian's group — if the group can't all fit in one contiguous
+  // run, whoever's placed first (the run) takes priority over whoever falls to the nearest-seat
+  // fallback, and it's the youngest who most needs to be beside their guardian.
+  for (const list of childrenByGuardian.values()) list.sort((a, b) => (a.dob < b.dob ? 1 : a.dob > b.dob ? -1 : 0));
+  const infantsByGuardian = new Map<PaxSpec, PaxSpec[]>();
+  for (let i = 0; i < allInfants.length; i++) {
+    const guardian = infantGuardians[i % infantGuardians.length];
+    if (!infantsByGuardian.has(guardian)) infantsByGuardian.set(guardian, []);
+    infantsByGuardian.get(guardian)!.push(allInfants[i]);
+  }
+
+  // Who could plausibly hold a real seat at all — a lap infant never does, an INST infant always
+  // might. Real occupants (checked-in) and pre-booked (not-yet-checked-in) hold markers share one
+  // pool so the same seat is never handed to two passengers — seats an agent could never actually
+  // assign (blocked/broken/crew) are excluded from both, and from seat placement entirely.
+  const seatEligible: PaxSpec[] = [...adults, ...children, ...instInfantSet];
+  const checkedInCount = Math.round(seatEligible.length * 0.6);
+  const checkedInSet = new Set(shuffle(seatEligible).slice(0, checkedInCount));
+  const notYetCheckedIn = seatEligible.filter((p) => !checkedInSet.has(p));
   const preBookedCount = Math.round(notYetCheckedIn.length * 0.85);
   const preBookedSet = new Set(shuffle(notYetCheckedIn).slice(0, preBookedCount));
+  const hasSeatNow = (p: PaxSpec) => checkedInSet.has(p) || preBookedSet.has(p);
+  const hasExst = (p: PaxSpec) => p.ssr.includes("EXST");
+  const hasPetc = (p: PaxSpec) => p.ssr.includes("PETC");
+
+  // ---- Adjacency placement, one linked group/pair at a time ----
+  const available = new Set(seatDefs.filter((s) => !unassignable.has(s.seat)).map((s) => s.seat));
+  const exitRowSeats = new Set([...seatExtras.entries()].filter(([, a]) => a.exitRow).map(([seat]) => seat));
+  const assignedSeat = new Map<PaxSpec, string>();
+  const extraSeatFor = new Map<PaxSpec, string>(); // EXST's second, unoccupied-but-reserved seat
+
+  function placeGroup(members: PaxSpec[], excludeExitRow: boolean) {
+    const seated = members.filter(hasSeatNow);
+    if (seated.length === 0) return;
+    const extraNeeded = seated.filter(hasExst).length;
+    const seats = takeAdjacentSeats(seatDefs, available, exitRowSeats, seated.length + extraNeeded, { excludeExitRow });
+    let cursor = 0;
+    for (const p of seated) {
+      if (cursor >= seats.length) break;
+      assignedSeat.set(p, seats[cursor++].seat);
+      if (hasExst(p) && cursor < seats.length) extraSeatFor.set(p, seats[cursor++].seat);
+    }
+  }
+
+  const guardians = new Set([...childGuardians, ...infantGuardians]);
+
+  // UMNR: a seat-eligible female adult with no dependents of her own doubles as chaperone.
+  let umnrChaperone: PaxSpec | null = null;
+  if (umnrChild) umnrChaperone = adults.find((a) => a.gender === "F" && !guardians.has(a) && hasSeatNow(a)) ?? null;
+
+  for (const guardian of shuffle([...guardians])) {
+    const members = [guardian, ...(childrenByGuardian.get(guardian) ?? []), ...(infantsByGuardian.get(guardian) ?? [])];
+    const excludeExitRow = members.some((m) => m.category === "infant" || m.category === "child");
+    placeGroup(members, excludeExitRow);
+  }
+  if (umnrChild) placeGroup(umnrChaperone ? [umnrChild, umnrChaperone] : [umnrChild], true);
+
+  // Solo adults — no dependents, not the UMNR chaperone. PETC gets kept apart from every other
+  // PETC seat placed so far instead of the everyone-else nearest-available placement.
+  const soloAdults = shuffle(adults.filter((a) => !guardians.has(a) && a !== umnrChaperone));
+  const petcRows: number[] = [];
+  for (const a of soloAdults) {
+    if (!hasSeatNow(a)) continue;
+    if (!hasPetc(a)) {
+      placeGroup([a], false);
+      continue;
+    }
+    const seat = takeFarthestSeat(seatDefs, available, petcRows);
+    if (!seat) continue;
+    assignedSeat.set(a, seat.seat);
+    petcRows.push(seat.row);
+    if (hasExst(a)) {
+      const [extra] = takeNearestSeats(seatDefs, available, exitRowSeats, 1, seat, {});
+      if (extra) extraSeatFor.set(a, extra.seat);
+    }
+  }
+
   const seatByCode = new Map(seatDefs.map((s) => [s.seat, s]));
   const julianDate = toJulianDayOfYear(flight.std);
 
-  let seatCursor = 0;
   let sequenceCursor = 0;
 
   function insertOne(p: PaxSpec, locator: string) {
     const isCheckedIn = checkedInSet.has(p);
     const isPreBooked = !isCheckedIn && preBookedSet.has(p);
-    const seat = p.category !== "infant" && (isCheckedIn || isPreBooked) ? availableSeats[seatCursor++]?.seat ?? null : null;
+    const seat = assignedSeat.get(p) ?? null;
     let checkinSequence: number | null = null;
     let bcbp: string | null = null;
     if (seat && isCheckedIn) {
@@ -301,7 +507,7 @@ export function insertFlightWithRoster(flight: FlightForRoster, rosterSize: numb
       randDocumentNumber(),
       "RU",
       randFutureDate(1, 9),
-      JSON.stringify(p.category === "infant" ? [...p.ssr, "INFANT"] : p.ssr),
+      JSON.stringify(p.category === "infant" ? [...p.ssr, "INFANT"] : p.unaccompanied ? [...p.ssr, "UMNR"] : p.ssr),
       p.category === "infant" ? 1 : 0,
       p.gender,
       p.dob,
@@ -319,13 +525,25 @@ export function insertFlightWithRoster(flight: FlightForRoster, rosterSize: numb
     );
     if (seat && isCheckedIn) {
       db.prepare("UPDATE seats SET passenger_id = ? WHERE flight_id = ? AND seat = ?").run(info.lastInsertRowid, flight.id, seat);
-    } else if (seat && isPreBooked) {
-      // Hold marker only — the seat stays visually "free" (no passenger_id)
-      // until the passenger actually checks in, same as a real advance
-      // seat-selection system (see seatExtra.ts's "Hold markers" comment).
-      const current = seatExtras.get(seat)?.extra ?? {};
-      const holdKind = Math.random() < 0.2 ? "preseated" : "reserved";
-      updateSeatExtra.run(JSON.stringify({ ...current, [holdKind]: true }), flight.id, seat);
+    }
+    // Hold marker (seat stays visually "free" until the pax actually checks in) and/or the seat-map's
+    // own "inst" icon flag for the seat an INST infant actually occupies — both merge into the same
+    // seat.extra, tracked back onto seatExtras so a later seat reuses the accumulated value, not a
+    // stale snapshot from before this call's own writes.
+    if (seat && (isPreBooked || p.instWithSeat)) {
+      const patch: Record<string, unknown> = {};
+      if (isPreBooked) patch[Math.random() < 0.2 ? "preseated" : "reserved"] = true;
+      if (p.instWithSeat) patch.inst = true;
+      const merged = { ...(seatExtras.get(seat)?.extra ?? {}), ...patch };
+      seatExtras.set(seat, { ...seatExtras.get(seat), extra: merged });
+      updateSeatExtra.run(JSON.stringify(merged), flight.id, seat);
+    }
+    // EXST's purchased second seat — never a real occupant, just held so nobody else can take it
+    // (the "нельзя занять только одно место" pairing rule, as far as this generator can enforce it).
+    const extraSeat = extraSeatFor.get(p);
+    if (extraSeat) {
+      const current = seatExtras.get(extraSeat)?.extra ?? {};
+      updateSeatExtra.run(JSON.stringify({ ...current, reserved: true }), flight.id, extraSeat);
     }
   }
 
@@ -334,9 +552,10 @@ export function insertFlightWithRoster(flight: FlightForRoster, rosterSize: numb
     const guardian = childGuardians[i % childGuardians.length];
     insertOne(children[i], locatorByGuardian.get(guardian)!);
   }
-  for (let i = 0; i < infants.length; i++) {
+  if (umnrChild) insertOne(umnrChild, nextLocator());
+  for (let i = 0; i < allInfants.length; i++) {
     const guardian = infantGuardians[i % infantGuardians.length];
-    insertOne(infants[i], locatorByGuardian.get(guardian)!);
+    insertOne(allInfants[i], locatorByGuardian.get(guardian)!);
   }
 
   if (sequenceCursor > 0) db.prepare("UPDATE flights SET last_checkin_sequence = ? WHERE id = ?").run(sequenceCursor, flight.id);
