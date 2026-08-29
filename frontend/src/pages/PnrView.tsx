@@ -4,6 +4,7 @@ import { useLocation, useParams } from "react-router-dom";
 import { api, Flight, Passenger, PassengerSearchMode, SeatCell } from "../api";
 import { formatSeatDisplay } from "../seatExtra";
 import { parsePassengerExtra, SeatServiceItem } from "../paxExtra";
+import { BagRow } from "../baggageTypes";
 import { ChevronDownIcon, DocScannedIcon, DocVerifiedIcon, RefreshIcon } from "../components/Icon";
 import { EntityNotFound } from "../components/EntityNotFound";
 import { SEARCH_MODES } from "./Search";
@@ -354,6 +355,10 @@ export function PnrView() {
   // Baggage prices only show on the roster card once the agent has actually
   // run Calculate for that passenger — not just from opening the Baggage step.
   const [baggageCalculated, setBaggageCalculated] = useState<Set<number>>(() => new Set());
+  // The Baggage step's actual bag rows, lifted here per passenger (same reason swapSeatMode and
+  // confirmedServices live here) so the roster card can mirror real rows and so switching between
+  // passengers mid-flow doesn't mix up or drop anyone's in-progress bags.
+  const [baggageRows, setBaggageRows] = useState<Record<number, BagRow[]>>({});
   // Unlike baggageCalculated, this mirrors the actual confirmed items live — the roster
   // card's service chips update (and disappear) as the agent checks/unchecks/confirms rows.
   const [confirmedServices, setConfirmedServices] = useState<Record<number, SeatServiceItem[]>>({});
@@ -538,6 +543,7 @@ export function PnrView() {
                 seat={row.passenger.seat ? seatByCode.get(row.passenger.seat) : undefined}
                 showSeat={flowStep === "seats"}
                 showBaggage={flowStep === "baggage"}
+                bagRows={baggageRows[row.passenger.id] ?? []}
                 baggageCalculated={baggageCalculated.has(row.passenger.id)}
                 showServices={flowStep === "services"}
                 confirmedServices={confirmedServices[row.passenger.id] ?? []}
@@ -573,10 +579,13 @@ export function PnrView() {
             )}
             {flowStep === "baggage" && flowActive && (
               <BaggageStep
+                key={flowActive.id}
                 flight={flight}
                 passenger={flowActive}
                 passengers={flowPassengers}
                 segments={segmentsForFlight(flight)}
+                initialRows={baggageRows[flowActive.id] ?? []}
+                onRowsChange={(rows) => setBaggageRows((prev) => ({ ...prev, [flowActive.id]: rows }))}
                 onCalculate={() => setBaggageCalculated((prev) => new Set(prev).add(flowActive.id))}
               />
             )}
@@ -626,8 +635,9 @@ export function PnrView() {
         {cartTransition.mounted && (
           <CartPanel
             passengers={flowPassengers}
-            segments={segmentsForFlight(flight)}
             seatByCode={seatByCode}
+            baggageRows={baggageRows}
+            baggageCalculated={baggageCalculated}
             confirmedServices={confirmedServices}
             open={cartTransition.entered}
             onClose={() => setCartOpen(false)}

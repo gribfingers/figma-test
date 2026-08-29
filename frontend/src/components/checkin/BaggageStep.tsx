@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { Flight, Passenger } from "../../api";
 import { FlightSegment } from "../../flightSegments";
-import { CARRY_ON_TYPES, baggageTypeDisplay } from "../../baggageTypes";
+import { BagRow, CARRY_ON_TYPES, baggageTypeDisplay } from "../../baggageTypes";
 import { SeatServiceItem } from "../../paxExtra";
 import { BaggageTypeSelect } from "../BaggageTypeSelect";
 import { Select } from "../Select";
@@ -13,18 +13,6 @@ import { TagManualModal } from "./TagManualModal";
 import { TransferBagModal } from "./TransferBagModal";
 import { useToast } from "../../toast";
 
-type PrintStatus = "idle" | "error" | "printed";
-
-interface BagRow {
-  id: number;
-  destination: string;
-  weight: string;
-  typeId: string;
-  tagNumber: string;
-  daa: boolean;
-  dmg: boolean;
-  printStatus: PrintStatus;
-}
 interface CarryOnRow {
   id: number;
   weight: string;
@@ -79,6 +67,10 @@ interface Props {
   /** The full checked-in roster on this PNR — offered as "Transfer to another passenger" targets. */
   passengers: Passenger[];
   segments: FlightSegment[];
+  /** This passenger's bag rows as last lifted to PnrView — resumed here on remount (switching back to this passenger). */
+  initialRows: BagRow[];
+  /** Fires with the full row list on every change — the roster card's checked-bag items mirror this live. */
+  onRowsChange: (rows: BagRow[]) => void;
   /** Reveals this passenger's baggage prices on their roster card — nothing shows there until Calculate has actually run. */
   onCalculate: () => void;
 }
@@ -90,9 +82,19 @@ interface Props {
  * ready) -> ready (blue) -> printed (green, row locks to read-only, the
  * remove action becomes "undo") or, occasionally, error (red, retry).
  */
-export function BaggageStep({ flight, passenger, passengers, segments, onCalculate }: Props) {
-  const [rows, setRows] = useState<BagRow[]>(() => [emptyBagRow(flight.destination)]);
+export function BaggageStep({ flight, passenger, passengers, segments, initialRows, onRowsChange, onCalculate }: Props) {
+  const [rows, setRows] = useState<BagRow[]>(() => (initialRows.length > 0 ? initialRows : [emptyBagRow(flight.destination)]));
   const [carryOn, setCarryOn] = useState<CarryOnRow[]>([]);
+
+  // Central mutation point for `rows` so every change (add/remove/edit) is immediately mirrored
+  // up to PnrView — same live-mirroring approach ExtraServicesStep uses for its confirmed items.
+  function mutateRows(updater: (prev: BagRow[]) => BagRow[]) {
+    setRows((prev) => {
+      const next = updater(prev);
+      onRowsChange(next);
+      return next;
+    });
+  }
   const [infoOpen, setInfoOpen] = useState(false);
   const [mcoRowId, setMcoRowId] = useState<number | null>(null);
   const [manualTagRowId, setManualTagRowId] = useState<number | null>(null);
@@ -110,10 +112,10 @@ export function BaggageStep({ flight, passenger, passengers, segments, onCalcula
   const destinationOptions = [...new Set(segments.map((s) => s.destination))].map((code) => ({ value: code, label: code }));
 
   function updateRow(id: number, patch: Partial<BagRow>) {
-    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+    mutateRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
   }
   function removeRow(id: number) {
-    setRows((prev) => prev.filter((r) => r.id !== id));
+    mutateRows((prev) => prev.filter((r) => r.id !== id));
   }
   function attemptPrint(row: BagRow, isRetry: boolean) {
     const seed = `${seedRef.current}-${row.id}-${row.weight}-${row.typeId}`;
@@ -136,7 +138,7 @@ export function BaggageStep({ flight, passenger, passengers, segments, onCalcula
   return (
     <div className="baggage-step">
       <div className="docs-step-top">
-        <button type="button" className="tertiary docs-add-link" onClick={() => setRows((prev) => [...prev, emptyBagRow(flight.destination)])}>
+        <button type="button" className="tertiary docs-add-link" onClick={() => mutateRows((prev) => [...prev, emptyBagRow(flight.destination)])}>
           Add baggage
         </button>
         <div className="baggage-step-actions">

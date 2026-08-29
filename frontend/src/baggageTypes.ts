@@ -45,6 +45,21 @@ export const BAGGAGE_SPECIAL_TYPES: BaggageTypeOption[] = [
 
 export const CARRY_ON_TYPES: BaggageTypeOption[] = [{ id: "carry-010", code: "010", label: "1-10 kg" }];
 
+export type BagPrintStatus = "idle" | "error" | "printed";
+
+/** One checked-bag row from the Baggage step — lifted up to PnrView (see BaggageStep) so the
+ *  roster card can mirror the same rows, same as the Seats step mirrors the real assigned seat. */
+export interface BagRow {
+  id: number;
+  destination: string;
+  weight: string;
+  typeId: string;
+  tagNumber: string;
+  daa: boolean;
+  dmg: boolean;
+  printStatus: BagPrintStatus;
+}
+
 const ALL_BAGGAGE_TYPES = [...BAGGAGE_TYPE_GROUPS.flatMap((g) => g.options), ...BAGGAGE_SPECIAL_TYPES];
 
 export function baggageTypeById(id: string): BaggageTypeOption | undefined {

@@ -9,20 +9,12 @@ export interface ExtraServiceGroup {
   options: ExtraServiceOption[];
 }
 
-/** Ancillary services offered on the check-in flow's Extra services step, grouped the same way the reference design shows them. */
+/**
+ * Ancillary services offered on the check-in flow's Extra services step. Seats/Baggage groups
+ * used to duplicate what those steps now show for real (see seatServiceItemsForSeat and
+ * baggageServiceItemsForRows in paxExtra.ts) — only the genuinely "other" ancillaries remain here.
+ */
 export const EXTRA_SERVICE_GROUPS: ExtraServiceGroup[] = [
-  {
-    group: "Seats",
-    options: [{ id: "spe-seat", code: "SPE", label: "Spe выбор места на регистрации" }],
-  },
-  {
-    group: "Baggage",
-    options: [
-      { id: "spe-bag", code: "SPE", label: "32kg" },
-      { id: "pzr-bag", code: "PZR", label: "23kg" },
-      { id: "pn8-bag", code: "PN8", label: "10kg" },
-    ],
-  },
   {
     group: "Other",
     options: [

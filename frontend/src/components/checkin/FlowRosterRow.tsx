@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Flight, Passenger, SeatCell } from "../../api";
-import { ageFromDob, baggageServicesForPassenger, SeatServiceItem, seatServiceItemsForSeat } from "../../paxExtra";
+import { BagRow } from "../../baggageTypes";
+import { ageFromDob, baggageServiceItemsForRows, SeatServiceItem, seatServiceItemsForSeat } from "../../paxExtra";
 import { formatSeatDisplay } from "../../seatExtra";
 import { FlightSegment } from "../../flightSegments";
 import { ChevronDownIcon, InfantIcon, InfoIcon } from "../Icon";
@@ -109,8 +110,9 @@ interface Props {
   seat: SeatCell | undefined;
   /** Seat badge + real seat properties — only shown on the Seats step. */
   showSeat: boolean;
-  /** Paid baggage extras (same layout, different mock data) — only shown on the Baggage step. */
+  /** The passenger's actual bag rows from the Baggage step — only shown on the Baggage step. */
   showBaggage: boolean;
+  bagRows: BagRow[];
   /** Prices only appear on the card once Calculate has actually been run for this passenger. */
   baggageCalculated: boolean;
   /** Extra-service chips — only shown on the Extra services step. */
@@ -145,6 +147,7 @@ export function FlowRosterRow({
   seat,
   showSeat,
   showBaggage,
+  bagRows,
   baggageCalculated,
   showServices,
   confirmedServices,
@@ -167,7 +170,7 @@ export function FlowRosterRow({
 
   const seatItems = showSeat && !nested ? seatServiceItemsForSeat(seat) : [];
   // Baggage extras aren't broken out per segment (no "SVX-DME" grouping) — just a flat list, full rows on the active card and compact chips otherwise, same as seats.
-  const baggageItems = showBaggage && baggageCalculated && !nested ? baggageServicesForPassenger(p, segments.length).flat() : [];
+  const baggageItems = showBaggage && !nested ? baggageServiceItemsForRows(p.id, bagRows, baggageCalculated) : [];
   const serviceItems = showServices && !nested ? confirmedServices : [];
 
   return (

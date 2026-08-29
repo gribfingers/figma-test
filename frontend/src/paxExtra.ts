@@ -1,5 +1,6 @@
 import { Passenger, SeatCell } from "./api";
 import { SEAT_ATTRS, SeatExtra, parseSeatExtra } from "./seatExtra";
+import { BagRow, baggageTypeById } from "./baggageTypes";
 
 /** Same list the check-in flow offers (routes/checkin.ts has no dedicated enum on the wire, just free-form SSR codes). */
 export const SSR_OPTIONS = ["WCHR", "WCHS", "UMNR", "BLND", "DEAF", "VGML", "PETC", "EXST"];
@@ -230,22 +231,33 @@ export function seatServiceItemsForSeat(seat: SeatCell | undefined | null): Seat
   return items;
 }
 
-const BAGGAGE_SERVICE_LABELS = ["23 kg", "32 kg", "Excess 5 kg"];
+// Same "stable but not user-togglable" hash as BaggageStep's own Type-field tone — kept in sync
+// deliberately (same seed shape) so a row's roster-card color always matches its Type field color.
+function bagHashSeed(seed: string): number {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+  return h;
+}
+function bagRowPaid(seed: string): boolean {
+  return bagHashSeed(seed) % 3 !== 0;
+}
 
-/** Same shape/approach as seatServicesForPassenger above, but for the Baggage step's roster-card chips. */
-export function baggageServicesForPassenger(p: Passenger, segmentCount: number): SeatServiceItem[][] {
-  const rand = seededRandom(p.id * 48611 + 71);
-  return Array.from({ length: Math.max(segmentCount, 1) }, () => {
-    const count = 1 + Math.floor(rand() * 2); // 1-2 per segment
-    const pool = [...BAGGAGE_SERVICE_LABELS];
-    const items: SeatServiceItem[] = [];
-    for (let i = 0; i < count; i++) {
-      const idx = Math.floor(rand() * pool.length);
-      const label = pool.splice(idx, 1)[0];
-      items.push({ rfisc: "0B5", label, price: 12500, paid: rand() < 0.7 });
-    }
-    return items;
-  });
+/**
+ * The roster card's checked-baggage line items, derived from the Baggage step's actual bag rows
+ * for this passenger (lifted up to PnrView) rather than fabricated — one row per bag that's had a
+ * Type actually picked, with the exact code/label from that Type dropdown. Price/paid only appear
+ * once Calculate has actually run for this passenger, same "neutral until real" rule the Baggage
+ * step itself uses for the Type field's color.
+ */
+export function baggageServiceItemsForRows(passengerId: number, rows: BagRow[], calculated: boolean): SeatServiceItem[] {
+  return rows
+    .filter((r) => r.typeId)
+    .map((r) => {
+      const opt = baggageTypeById(r.typeId);
+      const price = calculated ? 12500 : null;
+      const paid = price == null ? true : bagRowPaid(`${passengerId}-${r.id}-${r.weight}-${r.typeId}`);
+      return { rfisc: opt?.code ?? "", label: opt?.label ?? "", price, paid };
+    });
 }
 
 export type AsvcStatus = "none" | "ok" | "conflict";
