@@ -190,7 +190,9 @@ const SEAT_POSITION_LABEL: Record<string, string> = { A: "У окна", F: "У �
 export function seatServiceItemsForSeat(seat: SeatCell | undefined | null): SeatServiceItem[] {
   if (!seat) return [];
   const extra = parseSeatExtra(seat);
-  const paid = extra.price != null;
+  // "paid" here really means "nothing owed" — a free amenity (no price at all) shows green (no
+  // payment required), while an actual priced selection shows red until it's collected.
+  const paid = extra.price == null;
   const rfisc = extra.rfisc ?? "";
   const price = extra.price ?? null;
   const items: SeatServiceItem[] = [];
