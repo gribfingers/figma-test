@@ -1,11 +1,12 @@
-import { Passenger } from "../../api";
+import { Passenger, SeatCell } from "../../api";
 import { FlightSegment } from "../../flightSegments";
-import { SeatServiceItem, baggageServicesForPassenger, seatServicesForPassenger } from "../../paxExtra";
+import { SeatServiceItem, baggageServicesForPassenger, seatServiceItemsForSeat } from "../../paxExtra";
 import { CloseIcon } from "../Icon";
 
 interface Props {
   passengers: Passenger[];
   segments: FlightSegment[];
+  seatByCode: Map<string, SeatCell>;
   /** Extra services actually confirmed on the Extra services step — same data the roster card shows. */
   confirmedServices: Record<number, SeatServiceItem[]>;
   open: boolean;
@@ -13,7 +14,7 @@ interface Props {
 }
 
 function sum(items: SeatServiceItem[]): number {
-  return items.reduce((total, item) => total + item.price, 0);
+  return items.reduce((total, item) => total + (item.price ?? 0), 0);
 }
 
 function CartLine({ label, amount, bold }: { label: string; amount: number; bold?: boolean }) {
@@ -27,9 +28,9 @@ function CartLine({ label, amount, bold }: { label: string; amount: number; bold
 }
 
 /** Slide-out side panel (same shell as FlightInfoPanel, but from the left) opened from the check-in flow's Cart nav icon. */
-export function CartPanel({ passengers, segments, confirmedServices, open, onClose }: Props) {
+export function CartPanel({ passengers, segments, seatByCode, confirmedServices, open, onClose }: Props) {
   const rows = passengers.map((p) => {
-    const seat = sum(seatServicesForPassenger(p, segments.length).flat());
+    const seat = sum(seatServiceItemsForSeat(p.seat ? seatByCode.get(p.seat) : undefined));
     const baggage = sum(baggageServicesForPassenger(p, segments.length).flat());
     const ancillaries = sum(confirmedServices[p.id] ?? []);
     return { passenger: p, seat, baggage, ancillaries, total: seat + baggage + ancillaries };

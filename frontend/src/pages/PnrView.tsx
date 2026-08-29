@@ -527,6 +527,7 @@ export function PnrView() {
                 index={row.index}
                 active={row.passenger.id === flowActive?.id}
                 classLetter={classFor(row.passenger, seatByCode)}
+                seat={row.passenger.seat ? seatByCode.get(row.passenger.seat) : undefined}
                 showSeat={flowStep === "seats"}
                 showBaggage={flowStep === "baggage"}
                 baggageCalculated={baggageCalculated.has(row.passenger.id)}
@@ -618,6 +619,7 @@ export function PnrView() {
           <CartPanel
             passengers={flowPassengers}
             segments={segmentsForFlight(flight)}
+            seatByCode={seatByCode}
             confirmedServices={confirmedServices}
             open={cartTransition.entered}
             onClose={() => setCartOpen(false)}

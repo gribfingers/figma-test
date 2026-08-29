@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Flight, Passenger } from "../../api";
-import { ageFromDob, baggageServicesForPassenger, SeatServiceItem, seatServicesForPassenger } from "../../paxExtra";
+import { Flight, Passenger, SeatCell } from "../../api";
+import { ageFromDob, baggageServicesForPassenger, SeatServiceItem, seatServiceItemsForSeat } from "../../paxExtra";
 import { formatSeatDisplay } from "../../seatExtra";
 import { FlightSegment } from "../../flightSegments";
 import { ChevronDownIcon, InfantIcon, InfoIcon } from "../Icon";
@@ -65,27 +65,34 @@ function SeatBadge({ seat }: { seat: string }) {
   return <span className="pnr-flow-seat-box mono">{formatSeatDisplay(seat)}</span>;
 }
 
-/** One paid seat-selection extra, full detail — the active card's per-segment breakdown. */
+/** One seat property, full detail — the active card's breakdown. Price/RFISC only render when the
+ *  real seat actually has one (see seatServiceItemsForSeat) — never a fabricated value. */
 function SeatServiceRow({ item, onOpenEmd }: { item: SeatServiceItem; onOpenEmd: (item: SeatServiceItem) => void }) {
   return (
     <div className={`seat-service-row ${item.paid ? "paid" : "unpaid"}`}>
-      <span className="seat-service-code mono">{item.rfisc}</span>
+      {item.rfisc && <span className="seat-service-code mono">{item.rfisc}</span>}
       <span className="seat-service-label">{item.label}</span>
-      <button type="button" className="seat-service-price" onClick={(e) => { e.stopPropagation(); onOpenEmd(item); }}>
-        {fmtPrice(item.price)}
-      </button>
+      {item.price != null && (
+        <button type="button" className="seat-service-price" onClick={(e) => { e.stopPropagation(); onOpenEmd(item); }}>
+          {fmtPrice(item.price)}
+        </button>
+      )}
     </div>
   );
 }
 
-/** Same extra, condensed to a small pill — the inactive card's one-line summary. */
+/** Same property, condensed to a small pill — the inactive card's one-line summary. */
 function SeatServiceChip({ item, onOpenEmd }: { item: SeatServiceItem; onOpenEmd: (item: SeatServiceItem) => void }) {
   return (
     <span className={`seat-service-chip ${item.paid ? "paid" : "unpaid"}`}>
-      <span className="mono">{item.rfisc}</span>
-      <button type="button" className="seat-service-chip-price" onClick={(e) => { e.stopPropagation(); onOpenEmd(item); }}>
-        {fmtPrice(item.price)}
-      </button>
+      {item.rfisc && <span className="mono">{item.rfisc}</span>}
+      {item.price != null ? (
+        <button type="button" className="seat-service-chip-price" onClick={(e) => { e.stopPropagation(); onOpenEmd(item); }}>
+          {fmtPrice(item.price)}
+        </button>
+      ) : (
+        <span className="seat-service-label">{item.label}</span>
+      )}
     </span>
   );
 }
@@ -99,7 +106,9 @@ interface Props {
   /** 1-based position among the top-level (non-nested) cards; unused when nested. */
   index: number | null;
   classLetter: "C" | "Y" | null;
-  /** Seat badge + paid seat extras — only shown on the Seats step. */
+  /** The passenger's actual assigned seat (for its real properties) — undefined until they have one. */
+  seat: SeatCell | undefined;
+  /** Seat badge + real seat properties — only shown on the Seats step. */
   showSeat: boolean;
   /** Paid baggage extras (same layout, different mock data) — only shown on the Baggage step. */
   showBaggage: boolean;
@@ -122,9 +131,10 @@ interface Props {
  * identity + remarks + the COM/FFP flag buttons (same standalone modals as
  * the flight card's passengers table); only the currently active one
  * additionally shows the fares-info icon, class, and Reprint BP. On the
- * Seats step, the active card also breaks its paid seat extras out per
- * segment (segment headers only when there's more than one); inactive
- * cards get a condensed one-line summary instead.
+ * Seats step, the active card also breaks the assigned seat's real
+ * properties out per segment header (only shown when there's more than
+ * one segment — the seat itself doesn't vary by leg); inactive cards get
+ * a condensed one-line summary instead.
  */
 export function FlowRosterRow({
   flight,
@@ -133,6 +143,7 @@ export function FlowRosterRow({
   nested,
   index,
   classLetter,
+  seat,
   showSeat,
   showBaggage,
   baggageCalculated,
@@ -155,7 +166,7 @@ export function FlowRosterRow({
     </div>
   );
 
-  const servicesBySegment = showSeat && !nested ? seatServicesForPassenger(p, segments.length) : [];
+  const seatItems = showSeat && !nested ? seatServiceItemsForSeat(seat) : [];
   // Baggage extras aren't broken out per segment (no "SVX-DME" grouping) — just a flat list, full rows on the active card and compact chips otherwise, same as seats.
   const baggageItems = showBaggage && baggageCalculated && !nested ? baggageServicesForPassenger(p, segments.length).flat() : [];
   const serviceItems = showServices && !nested ? confirmedServices : [];
@@ -194,7 +205,7 @@ export function FlowRosterRow({
                     <span>{seg.origin} - {seg.destination}</span>
                     {i === 0 && <SeatBadge seat={p.seat!} />}
                   </div>
-                  {(servicesBySegment[i] ?? []).map((item, j) => <SeatServiceRow key={j} item={item} onOpenEmd={setEmdItem} />)}
+                  {i === 0 && seatItems.map((item, j) => <SeatServiceRow key={j} item={item} onOpenEmd={setEmdItem} />)}
                 </div>
               ))
             ) : (
@@ -202,13 +213,13 @@ export function FlowRosterRow({
                 <div className="pnr-flow-seat-segment-head pnr-flow-seat-segment-head-plain">
                   <SeatBadge seat={p.seat} />
                 </div>
-                {(servicesBySegment[0] ?? []).map((item, j) => <SeatServiceRow key={j} item={item} onOpenEmd={setEmdItem} />)}
+                {seatItems.map((item, j) => <SeatServiceRow key={j} item={item} onOpenEmd={setEmdItem} />)}
               </div>
             )}
           </div>
         ) : (
           <div className="pnr-flow-seat-compact" onClick={(e) => e.stopPropagation()}>
-            {(servicesBySegment[0] ?? []).map((item, i) => <SeatServiceChip key={i} item={item} onOpenEmd={setEmdItem} />)}
+            {seatItems.map((item, i) => <SeatServiceChip key={i} item={item} onOpenEmd={setEmdItem} />)}
             <SeatBadge seat={p.seat} />
           </div>
         )

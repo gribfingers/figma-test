@@ -1,4 +1,5 @@
-import { Passenger } from "./api";
+import { Passenger, SeatCell } from "./api";
+import { SEAT_ATTRS, parseSeatExtra } from "./seatExtra";
 
 /** Same list the check-in flow offers (routes/checkin.ts has no dedicated enum on the wire, just free-form SSR codes). */
 export const SSR_OPTIONS = ["WCHR", "WCHS", "UMNR", "BLND", "DEAF", "VGML", "PETC", "EXST"];
@@ -169,31 +170,41 @@ export function asvcForPassenger(p: Passenger): AsvcLeg[] {
 export interface SeatServiceItem {
   rfisc: string;
   label: string;
-  price: number;
+  /** null when the seat has no price set — never fabricated (see seatServiceItemsForSeat). */
+  price: number | null;
   paid: boolean;
 }
 
-const SEAT_SERVICE_LABELS = ["Хорошее место", "У окна", "У прохода", "Больше места для ног"];
+// A/F are windows, C/D are the two aisle-adjacent seats in this app's 3-3 layout (aisle after C —
+// see SeatMapGrid.tsx); B/E are plain middle seats, no position line item for those.
+const SEAT_POSITION_LABEL: Record<string, string> = { A: "У окна", F: "У окна", C: "У прохода", D: "У прохода" };
 
 /**
- * Paid seat-selection extras, per segment — no backing table yet, generated
- * deterministically from the passenger id (same approach as ASVC above) so
- * a given passenger/segment always shows the same chips. The green/red bar
- * on each row is just this — paid or not.
+ * The roster card's seat-service line items, derived straight from the
+ * passenger's actual assigned seat (seats.extra) rather than fabricated —
+ * one row per general-layer attribute the seat really has (legroom,
+ * no-recline, fixed armrest, transit) plus a window/aisle row from its
+ * letter, all sharing that seat's real rfisc/price. A row's price/rfisc is
+ * left blank when the seat doesn't have one — nothing here is invented.
  */
-export function seatServicesForPassenger(p: Passenger, segmentCount: number): SeatServiceItem[][] {
-  const rand = seededRandom(p.id * 65599 + 101);
-  return Array.from({ length: Math.max(segmentCount, 1) }, () => {
-    const count = 1 + Math.floor(rand() * 2); // 1-2 per segment
-    const pool = [...SEAT_SERVICE_LABELS];
-    const items: SeatServiceItem[] = [];
-    for (let i = 0; i < count; i++) {
-      const idx = Math.floor(rand() * pool.length);
-      const label = pool.splice(idx, 1)[0];
-      items.push({ rfisc: "0B5", label, price: 12500, paid: rand() < 0.7 });
-    }
-    return items;
-  });
+export function seatServiceItemsForSeat(seat: SeatCell | undefined | null): SeatServiceItem[] {
+  if (!seat) return [];
+  const extra = parseSeatExtra(seat);
+  const paid = extra.price != null;
+  const rfisc = extra.rfisc ?? "";
+  const price = extra.price ?? null;
+  const items: SeatServiceItem[] = [];
+
+  const positionLabel = SEAT_POSITION_LABEL[seat.seat.slice(-1)];
+  if (positionLabel) items.push({ rfisc, label: positionLabel, price, paid });
+
+  for (const attr of SEAT_ATTRS) {
+    if (!extra[attr.key]) continue;
+    if (attr.key !== "legroom" && attr.key !== "noRecline" && attr.key !== "fixedArmrest" && attr.key !== "transit") continue;
+    items.push({ rfisc, label: attr.label, price, paid });
+  }
+
+  return items;
 }
 
 const BAGGAGE_SERVICE_LABELS = ["23 kg", "32 kg", "Excess 5 kg"];
