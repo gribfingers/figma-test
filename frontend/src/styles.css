@@ -2613,7 +2613,6 @@ tr.row-hover { cursor: pointer; }
 .pnr-flow-roster-flags .pnr-flow-flag-btn:hover { background: transparent; border-color: var(--accent); color: var(--accent); }
 
 .pnr-flow-roster-bottom { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
-.pnr-flow-roster-bottom-actions { display: flex; align-items: center; gap: 12px; }
 .pnr-flow-info-btn {
   all: unset;
   box-sizing: border-box;

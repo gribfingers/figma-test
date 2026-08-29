@@ -1,10 +1,54 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Flight, Passenger } from "../../api";
 import { ageFromDob, baggageServicesForPassenger, SeatServiceItem, seatServicesForPassenger } from "../../paxExtra";
 import { formatSeatDisplay } from "../../seatExtra";
 import { FlightSegment } from "../../flightSegments";
-import { InfantIcon, InfoIcon } from "../Icon";
+import { ChevronDownIcon, InfantIcon, InfoIcon } from "../Icon";
 import { EmdModal } from "./EmdModal";
+
+/** "Swap seat…" (Seats step, once seated) and "Reprint BP" tucked under one menu, same
+ *  trigger/list pattern as the flight card header's Actions menu (FlightActionsMenu). */
+function RowActionsMenu({ onSwapSeat }: { onSwapSeat?: () => void }) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onDocMouseDown(e: MouseEvent) {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
+    }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", onDocMouseDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onDocMouseDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
+  return (
+    <div
+      ref={rootRef}
+      className={`actions-select ${open ? "open" : ""}`}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <button type="button" className="tertiary" aria-haspopup="listbox" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+        Actions <ChevronDownIcon size={16} className="chevron-flip" />
+      </button>
+      {open && (
+        <ul className="actions-menu" role="listbox">
+          {onSwapSeat && (
+            <li onClick={() => { setOpen(false); onSwapSeat(); }}>Swap seat…</li>
+          )}
+          {/* No boarding-pass printer wired up — present for layout, no action yet. */}
+          <li onClick={() => setOpen(false)}>Reprint BP</li>
+        </ul>
+      )}
+    </div>
+  );
+}
 
 /** "1980-12-22" -> "22.12.1980"; blank input stays blank. */
 function fmtDobShort(dob: string | null): string {
@@ -199,15 +243,7 @@ export function FlowRosterRow({
           <button type="button" className="pnr-flow-info-btn" onClick={(e) => { e.stopPropagation(); onOpenInfo(); }}>
             <InfoIcon size={16} /> {classLetter}
           </button>
-          <div className="pnr-flow-roster-bottom-actions">
-            {onSwapSeat && p.seat && (
-              <button type="button" className="tertiary" onClick={(e) => { e.stopPropagation(); onSwapSeat(); }}>
-                Swap seat…
-              </button>
-            )}
-            {/* No boarding-pass printer wired up — present for layout, no action yet. */}
-            <button type="button" className="tertiary" onClick={(e) => e.stopPropagation()}>Reprint BP</button>
-          </div>
+          <RowActionsMenu onSwapSeat={p.seat ? onSwapSeat : undefined} />
         </div>
       )}
 
