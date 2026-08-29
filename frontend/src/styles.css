@@ -2507,16 +2507,26 @@ tr.row-hover { cursor: pointer; }
 .pnr-doc-icon-off { color: var(--muted-2); }
 .pnr-cabin-bag { color: var(--ok); }
 
-/* "Add pax" search popover — pulls in passengers from another PNR on the same flight. */
-.pnr-add-pax-popover {
+/* "Add pax" search bar — pulls in passengers from another PNR on the same flight. Sits to the
+   right of the "Add pax" button, same mode-tabs + input look as the Check-in Search screen. */
+.pnr-add-pax { position: relative; }
+.pnr-add-pax-inline { position: absolute; top: 0; left: 100%; margin-left: 8px; width: 420px; z-index: 200; }
+.pnr-add-pax-results {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
   z-index: 200;
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  max-height: 240px;
+  overflow-y: auto;
   background: var(--paper);
   border: 1px solid var(--panel-border);
   border-radius: 4px;
   box-shadow: 0 2px 24px -6px var(--shadow-popover);
-  padding: 8px;
 }
-.pnr-add-pax-results { list-style: none; margin: 6px 0 0; padding: 0; max-height: 240px; overflow-y: auto; }
 .pnr-add-pax-results li {
   display: flex;
   align-items: center;

@@ -15,7 +15,7 @@ const RESULT_SORT_GETTERS: Record<ResultSortKey, (p: PassengerSearchResult) => s
   status: (p) => p.checkin_status,
 };
 
-const MODES: { key: PassengerSearchMode; label: string; placeholder: string }[] = [
+export const SEARCH_MODES: { key: PassengerSearchMode; label: string; placeholder: string }[] = [
   { key: "surname", label: "Last Name", placeholder: "Search" },
   { key: "pnr", label: "PNR", placeholder: "Search" },
   { key: "eticket", label: "E-ticket", placeholder: "Search" },
@@ -115,7 +115,7 @@ export function Search() {
           <div className="toolbar" style={{ margin: 0 }}>
             <div className="search-mode-bar" style={{ flex: 1 }}>
               <div className="search-mode-tabs">
-                {MODES.map((m) => (
+                {SEARCH_MODES.map((m) => (
                   <button
                     key={m.key}
                     type="button"
@@ -131,7 +131,7 @@ export function Search() {
                 className="search-mode-input"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder={MODES.find((m) => m.key === mode)?.placeholder ?? "Search"}
+                placeholder={SEARCH_MODES.find((m) => m.key === mode)?.placeholder ?? "Search"}
                 disabled={searching}
                 autoFocus
               />

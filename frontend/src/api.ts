@@ -175,8 +175,13 @@ export const api = {
     request<SeatCell>(`/flights/${flightId}/seats/${seat}`, { method: "PATCH", body: JSON.stringify(data) }),
   seatHistory: (flightId: number, seat: string) =>
     request<SeatEvent[]>(`/flights/${flightId}/seats/${seat}/history`),
-  passengers: (flightId: number, q?: string) =>
-    request<Passenger[]>(`/flights/${flightId}/passengers${q ? `?q=${encodeURIComponent(q)}` : ""}`),
+  passengers: (flightId: number, q?: string, by?: PassengerSearchMode) => {
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    if (by) params.set("by", by);
+    const qs = params.toString();
+    return request<Passenger[]>(`/flights/${flightId}/passengers${qs ? `?${qs}` : ""}`);
+  },
   addPassenger: (flightId: number, data: Partial<Passenger>) =>
     request<Passenger>(`/flights/${flightId}/passengers`, { method: "POST", body: JSON.stringify(data) }),
   updatePassenger: (flightId: number, passengerId: number, data: Partial<Passenger>) =>

@@ -230,10 +230,31 @@ flightsRouter.get("/:flightId/seats/:seat/history", (req, res) => {
   res.json(getSeatHistory(Number(req.params.flightId), req.params.seat));
 });
 
+// Search field for the "Add pax" bar's mode tabs (Last Name/PNR/E-ticket/Doc) — same columns as
+// checkin.ts's cross-flight SEARCH_COLUMN, but scoped to this one flight via the query below.
+const PASSENGER_SEARCH_COLUMN: Record<string, string> = {
+  surname: "surname",
+  pnr: "record_locator",
+  eticket: "ticket_number",
+  doc: "document_number",
+};
+
 flightsRouter.get("/:id/passengers", (req, res) => {
   const q = String(req.query.q ?? "").trim().toUpperCase();
+  const by = String(req.query.by ?? "");
   let rows: Passenger[];
-  if (q) {
+  if (q && by) {
+    const column = PASSENGER_SEARCH_COLUMN[by];
+    if (!column) return res.status(400).json({ error: `Unknown search field: ${by}` });
+    const exact = by === "pnr" || by === "eticket";
+    rows = db
+      .prepare(
+        `SELECT * FROM passengers WHERE flight_id = ?
+         AND UPPER(${column}) ${exact ? "= ?" : "LIKE ?"}
+         ORDER BY checkin_sequence IS NULL, checkin_sequence, surname`
+      )
+      .all(req.params.id, exact ? q : `%${q}%`) as Passenger[];
+  } else if (q) {
     rows = db
       .prepare(
         `SELECT * FROM passengers WHERE flight_id = ?

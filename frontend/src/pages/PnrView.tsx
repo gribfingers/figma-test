@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useLocation, useParams } from "react-router-dom";
-import { api, Flight, Passenger, SeatCell } from "../api";
+import { api, Flight, Passenger, PassengerSearchMode, SeatCell } from "../api";
 import { formatSeatDisplay } from "../seatExtra";
 import { parsePassengerExtra, SeatServiceItem } from "../paxExtra";
-import { ChevronDownIcon, DocScannedIcon, DocVerifiedIcon, RefreshIcon, SearchIcon } from "../components/Icon";
+import { ChevronDownIcon, DocScannedIcon, DocVerifiedIcon, RefreshIcon } from "../components/Icon";
 import { EntityNotFound } from "../components/EntityNotFound";
+import { SEARCH_MODES } from "./Search";
 import { useRegisterTab, useTabs } from "../tabs";
 import { useToast } from "../toast";
 import { usePopoverPosition } from "../usePopoverPosition";
@@ -155,18 +156,23 @@ interface AddPaxButtonProps {
   onAdd: (p: Passenger) => void;
 }
 
+// Same lookup modes as the Check-in Search screen, minus "Flight" — this
+// search is already scoped to one flight, so there's nothing for that mode to do.
+const ADD_PAX_MODES = SEARCH_MODES.filter((m) => m.key !== "flight");
+
 /**
- * "Add pax" opens a search popover so the agent can pull in passengers
- * from a different PNR on the same flight — the case where several
- * parties reach the desk together and get checked in as one batch.
+ * "Add pax" opens a search bar (same Last Name/PNR/E-ticket/Doc mode tabs as
+ * the Check-in Search screen) to the right of the button, so the agent can
+ * pull in passengers from a different PNR on the same flight — the case
+ * where several parties reach the desk together and get checked in as one
+ * batch.
  */
 function AddPaxButton({ flightId, excludeIds, onAdd }: AddPaxButtonProps) {
   const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState<PassengerSearchMode>("surname");
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Passenger[]>([]);
-  const btnRef = useRef<HTMLButtonElement>(null);
-  const popRef = useRef<HTMLDivElement>(null);
-  const rect = usePopoverPosition(btnRef, open);
+  const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open || !query.trim()) {
@@ -175,7 +181,7 @@ function AddPaxButton({ flightId, excludeIds, onAdd }: AddPaxButtonProps) {
     }
     let cancelled = false;
     const t = setTimeout(() => {
-      api.passengers(flightId, query.trim()).then((found) => {
+      api.passengers(flightId, query.trim(), mode).then((found) => {
         if (!cancelled) setResults(found);
       });
     }, 200);
@@ -183,15 +189,12 @@ function AddPaxButton({ flightId, excludeIds, onAdd }: AddPaxButtonProps) {
       cancelled = true;
       clearTimeout(t);
     };
-  }, [open, query, flightId]);
+  }, [open, mode, query, flightId]);
 
   useEffect(() => {
     if (!open) return;
     function onDocMouseDown(e: MouseEvent) {
-      const target = e.target as Node;
-      if (btnRef.current?.contains(target)) return;
-      if (popRef.current?.contains(target)) return;
-      setOpen(false);
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
     }
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") setOpen(false);
@@ -207,49 +210,54 @@ function AddPaxButton({ flightId, excludeIds, onAdd }: AddPaxButtonProps) {
   const shown = results.filter((p) => !excludeIds.has(p.id));
 
   return (
-    <>
-      <button type="button" className="secondary" ref={btnRef} onClick={() => setOpen((o) => !o)}>
+    <div className="pnr-add-pax" ref={rootRef}>
+      <button type="button" className="secondary" onClick={() => setOpen((o) => !o)}>
         Add pax
       </button>
-      {open &&
-        rect &&
-        createPortal(
-          <div
-            ref={popRef}
-            className="pnr-add-pax-popover"
-            style={{ position: "fixed", top: rect.top, left: rect.left, width: Math.max(rect.width, 300) }}
-          >
-            <div className="input-box">
-              <SearchIcon size={16} />
-              <input
-                autoFocus
-                placeholder="Last name or PNR"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-              />
+      {open && (
+        <div className="pnr-add-pax-inline">
+          <div className="search-mode-bar">
+            <div className="search-mode-tabs">
+              {ADD_PAX_MODES.map((m) => (
+                <button
+                  key={m.key}
+                  type="button"
+                  className={`search-mode-tab ${mode === m.key ? "selected" : ""}`}
+                  onClick={() => setMode(m.key)}
+                >
+                  {m.label}
+                </button>
+              ))}
             </div>
-            {query.trim() && (
-              <ul className="pnr-add-pax-results">
-                {shown.map((p) => (
-                  <li
-                    key={p.id}
-                    onClick={() => {
-                      onAdd(p);
-                      setQuery("");
-                      setResults([]);
-                    }}
-                  >
-                    <span>{p.surname} {p.given_name}</span>
-                    <span className="mono">{p.record_locator}</span>
-                  </li>
-                ))}
-                {shown.length === 0 && <li className="pnr-add-pax-empty">No matches</li>}
-              </ul>
-            )}
-          </div>,
-          document.body
-        )}
-    </>
+            <input
+              className="search-mode-input"
+              autoFocus
+              placeholder={ADD_PAX_MODES.find((m) => m.key === mode)?.placeholder ?? "Search"}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
+          {query.trim() && (
+            <ul className="pnr-add-pax-results">
+              {shown.map((p) => (
+                <li
+                  key={p.id}
+                  onClick={() => {
+                    onAdd(p);
+                    setQuery("");
+                    setResults([]);
+                  }}
+                >
+                  <span>{p.surname} {p.given_name}</span>
+                  <span className="mono">{p.record_locator}</span>
+                </li>
+              ))}
+              {shown.length === 0 && <li className="pnr-add-pax-empty">No matches</li>}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
