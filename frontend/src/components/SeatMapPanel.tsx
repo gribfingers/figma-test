@@ -72,6 +72,16 @@ export function SeatMapPanel({
 
   const legendRef = useRef<HTMLDivElement>(null);
   const layersRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Center the map on whichever seat is "selected" (the active flow passenger's own seat, an
+  // occupied seat picked for editing, ...) whenever that changes — e.g. switching between
+  // passengers in the check-in flow's roster shouldn't require the agent to hunt for their seat.
+  useEffect(() => {
+    if (!selected) return;
+    const cell = scrollRef.current?.querySelector<HTMLElement>(`[data-seat="${selected}"]`);
+    cell?.scrollIntoView({ block: "center", inline: "center", behavior: "smooth" });
+  }, [selected]);
 
   useEffect(() => {
     function onDocMouseDown(e: MouseEvent) {
@@ -168,7 +178,7 @@ export function SeatMapPanel({
         </div>
       </div>
 
-      <div className="seatmap-scroll">
+      <div className="seatmap-scroll" ref={scrollRef}>
         <div className="seatmap-zoom-wrap" style={{ transform: `scale(${zoom / 100})` }}>
           <SeatMapGrid
             seats={seats}
