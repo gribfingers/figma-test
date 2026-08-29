@@ -305,6 +305,11 @@ export function PnrView() {
   const setFlightInfoOpen = (open: boolean) => setFlightInfoOpenFor(pid, open);
   const setCartOpen = (open: boolean) => setCartOpenFor(pid, open);
   const [flowActiveId, setFlowActiveId] = usePersistentState<number | null>(`dcs_pnr_flow_active_${pid}`, null);
+  // Seats step's swap mode lives here (not inside SeatsStep) since the button that starts it sits
+  // on the roster card, a sibling component — reset whenever the active passenger or step changes
+  // so a stale "swapping" state can't survive a switch.
+  const [swapSeatMode, setSwapSeatMode] = useState(false);
+  useEffect(() => setSwapSeatMode(false), [flowActiveId, flowStep]);
   const [flagsModal, setFlagsModal] = useState<{ flag: FlagKind; passenger: Passenger } | null>(null);
   const [docPanelPassenger, setDocPanelPassenger] = useState<Passenger | null>(null);
   const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
@@ -531,6 +536,7 @@ export function PnrView() {
                 onSelect={() => setFlowActiveId(row.passenger.id)}
                 onOpenFlag={(flag) => setFlagsModal({ flag, passenger: row.passenger })}
                 onOpenInfo={() => setInfoModalOpen(true)}
+                onSwapSeat={flowStep === "seats" ? () => setSwapSeatMode(true) : undefined}
               />
             ))}
           </div>
@@ -552,6 +558,8 @@ export function PnrView() {
                 seats={seats}
                 onSeatsReloaded={setSeats}
                 onPassengerUpdated={handlePassengerUpdated}
+                swapping={swapSeatMode}
+                onSwappingChange={setSwapSeatMode}
               />
             )}
             {flowStep === "baggage" && flowActive && (

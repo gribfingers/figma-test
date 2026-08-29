@@ -69,6 +69,8 @@ interface Props {
   onSelect: () => void;
   onOpenFlag: (flag: "com" | "ffp") => void;
   onOpenInfo: () => void;
+  /** Seats step only, active card only, and only once the passenger actually has a seat to swap. */
+  onSwapSeat?: () => void;
 }
 
 /**
@@ -96,6 +98,7 @@ export function FlowRosterRow({
   onSelect,
   onOpenFlag,
   onOpenInfo,
+  onSwapSeat,
 }: Props) {
   const ssr = p.ssr ?? [];
   const age = ageFromDob(p.dob);
@@ -196,8 +199,15 @@ export function FlowRosterRow({
           <button type="button" className="pnr-flow-info-btn" onClick={(e) => { e.stopPropagation(); onOpenInfo(); }}>
             <InfoIcon size={16} /> {classLetter}
           </button>
-          {/* No boarding-pass printer wired up — present for layout, no action yet. */}
-          <button type="button" className="tertiary" onClick={(e) => e.stopPropagation()}>Reprint BP</button>
+          <div className="pnr-flow-roster-bottom-actions">
+            {onSwapSeat && p.seat && (
+              <button type="button" className="tertiary" onClick={(e) => { e.stopPropagation(); onSwapSeat(); }}>
+                Swap seat…
+              </button>
+            )}
+            {/* No boarding-pass printer wired up — present for layout, no action yet. */}
+            <button type="button" className="tertiary" onClick={(e) => e.stopPropagation()}>Reprint BP</button>
+          </div>
         </div>
       )}
 

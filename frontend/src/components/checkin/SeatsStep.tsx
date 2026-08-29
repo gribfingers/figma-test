@@ -13,6 +13,10 @@ interface Props {
   seats: SeatCell[];
   onSeatsReloaded: (seats: SeatCell[]) => void;
   onPassengerUpdated: (p: Passenger) => void;
+  /** Swap mode is started from the roster card's "Swap seat…" button (PnrView), not from here —
+   *  this step just reacts to it (dims the assign/unassign interactions, wires the map click). */
+  swapping: boolean;
+  onSwappingChange: (swapping: boolean) => void;
 }
 
 /**
@@ -23,9 +27,17 @@ interface Props {
  * flight card's Pax tab swap flow: pick another occupied seat on the map
  * (any passenger on the flight, not just this PNR) to trade places with.
  */
-export function SeatsStep({ flightId, aircraftType, passenger, seats, onSeatsReloaded, onPassengerUpdated }: Props) {
+export function SeatsStep({
+  flightId,
+  aircraftType,
+  passenger,
+  seats,
+  onSeatsReloaded,
+  onPassengerUpdated,
+  swapping,
+  onSwappingChange,
+}: Props) {
   const [error, setError] = useState("");
-  const [swapping, setSwapping] = useState(false);
   const { showToast } = useToast();
   const cabinFeatures = useMemo(() => cabinFeaturesFor(aircraftType), [aircraftType]);
 
@@ -83,7 +95,7 @@ export function SeatsStep({ flightId, aircraftType, passenger, seats, onSeatsRel
   async function handleOccupiedSeatClick(s: SeatCell) {
     if (!swapping || s.passenger_id == null) return;
     if (s.passenger_id === passenger.id) {
-      setSwapping(false);
+      onSwappingChange(false);
       return;
     }
     setError("");
@@ -91,7 +103,7 @@ export function SeatsStep({ flightId, aircraftType, passenger, seats, onSeatsRel
       const { a, b } = await api.swapSeats(passenger.id, s.passenger_id);
       onPassengerUpdated(a);
       onPassengerUpdated(b);
-      setSwapping(false);
+      onSwappingChange(false);
       await refreshSeating();
       showToast("Seats swapped");
     } catch (e: any) {
@@ -103,19 +115,12 @@ export function SeatsStep({ flightId, aircraftType, passenger, seats, onSeatsRel
     <div className="seats-step">
       {error && <div className="error-box">{error}</div>}
       <div className="seats-step-map">
-        {passenger.seat && !swapping && (
-          <div className="seats-step-toolbar">
-            <button type="button" className="tertiary" onClick={() => setSwapping(true)}>
-              Swap seat…
-            </button>
-          </div>
-        )}
         {swapping && (
           <div className="seat-pick-banner">
             <span>
               Select a pax's seat to swap with <b>{passenger.surname} {passenger.given_name}</b> ({formatSeatDisplay(passenger.seat!)})
             </span>
-            <button type="button" className="tertiary" onClick={() => setSwapping(false)}>
+            <button type="button" className="tertiary" onClick={() => onSwappingChange(false)}>
               Cancel
             </button>
           </div>
