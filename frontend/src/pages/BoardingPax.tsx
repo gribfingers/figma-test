@@ -5,7 +5,7 @@ import { cabinFeaturesFor } from "../cabinLayout";
 import { SeatMapPanel } from "../components/SeatMapPanel";
 import { BaggageFlowIcon, DocumentsFlowIcon, SeatsFlowIcon, ServicesFlowIcon } from "../components/Icon";
 import { formatSeatDisplay } from "../seatExtra";
-import { parsePassengerExtra } from "../paxExtra";
+import { classFor, parsePassengerExtra } from "../paxExtra";
 import { useRegisterTab, useTabs } from "../tabs";
 import { useToast } from "../toast";
 import { FlowStep, presetCheckinStep } from "../checkinFlow";
@@ -13,8 +13,9 @@ import { PassengerDocPanel } from "../components/PassengerDocPanel";
 import { usePanelTransition } from "../usePanelMounted";
 import { EntityNotFound } from "../components/EntityNotFound";
 
-// Matches Boarding.tsx's fmtCardDate/parseVersion/classFor/StatBar/statusLabel/statusChipClass —
-// same light duplication this session's other pages already use rather than a shared module.
+// Matches Boarding.tsx's fmtCardDate/parseVersion/StatBar/statusLabel/statusChipClass — same
+// light duplication this session's other pages already use rather than a shared module
+// (classFor is the one exception, shared via paxExtra.ts — see its own comment there for why).
 function fmtCardDate(std: string): string {
   const d = new Date(std);
   const day = d.toLocaleDateString("en-GB", { timeZone: "UTC", day: "2-digit" });
@@ -40,11 +41,6 @@ function StatBar({ label, count, total }: { label: "C" | "Y"; count: number; tot
       <span className="pnr-stat-frac mono">{count}/{total}</span>
     </div>
   );
-}
-function classFor(p: Passenger, seatByCode: Map<string, SeatCell>): "C" | "Y" | null {
-  const seat = p.seat ? seatByCode.get(p.seat) : undefined;
-  if (!seat) return null;
-  return seat.cabin_class === "J" ? "C" : "Y";
 }
 function statusLabel(p: Passenger): string {
   if (p.boarding_status === "BOARDED") return "Boarded";

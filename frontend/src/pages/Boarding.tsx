@@ -19,6 +19,7 @@ import { EntityNotFound } from "../components/EntityNotFound";
 import {
   FlagStatus,
   asvcStatus,
+  classFor,
   commentsStatus,
   etStatus,
   ffpStatus,
@@ -55,12 +56,6 @@ function StatBar({ label, count, total }: { label: "C" | "Y"; count: number; tot
       <span className="pnr-stat-frac mono">{count}/{total}</span>
     </div>
   );
-}
-
-function classFor(p: Passenger, seatByCode: Map<string, SeatCell>): "C" | "Y" | null {
-  const seat = p.seat ? seatByCode.get(p.seat) : undefined;
-  if (!seat) return null;
-  return seat.cabin_class === "J" ? "C" : "Y";
 }
 
 function statusLabel(p: Passenger): string {

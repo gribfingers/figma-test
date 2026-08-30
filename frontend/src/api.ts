@@ -51,6 +51,8 @@ export interface Passenger {
   bcbp: string | null;
   created_at: string;
   extra: string | null;
+  /** Booked cabin, set at reservation time independent of whether a seat has been picked yet — see paxExtra.ts's classFor. */
+  class: "C" | "Y";
 }
 
 export type PassengerSearchMode = "surname" | "pnr" | "eticket" | "doc" | "flight";

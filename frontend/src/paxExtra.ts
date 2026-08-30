@@ -123,6 +123,21 @@ export function trStatus(p: Passenger): TrStatus {
   return "ok";
 }
 
+/**
+ * A passenger's cabin for the Booked/Checked stat bars (PnrView, Boarding, BoardingPax) — from
+ * their actual assigned seat when they have one (authoritative — reflects reseating), otherwise
+ * from their real booked class of service (passengers.class), so a passenger who hasn't picked a
+ * seat yet still counts as Booked instead of silently falling out of both bars. A lap infant
+ * (never seated, travels on a guardian's lap) is excluded entirely — it doesn't occupy a
+ * seat-inventory slot, so counting it would inflate Booked past the plane's real C/Y capacity.
+ */
+export function classFor(p: Passenger, seatByCode: Map<string, SeatCell>): "C" | "Y" | null {
+  const seat = p.seat ? seatByCode.get(p.seat) : undefined;
+  if (seat) return seat.cabin_class === "J" ? "C" : "Y";
+  if (parsePassengerExtra(p).type === "INF") return null;
+  return p.class ?? null;
+}
+
 // Deterministic per-id PRNG (Lehmer/Park-Miller) — same passenger always
 // gets the same generated services, rather than reshuffling on every
 // render.

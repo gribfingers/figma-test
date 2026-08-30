@@ -83,4 +83,6 @@ export interface Passenger {
   // outbound connecting flight) — see frontend paxExtra.ts. Same pattern as
   // Flight.extra.
   extra: string | null;
+  /** Booked cabin, independent of whether a seat has been picked yet — see the db.ts column comment. */
+  class: "C" | "Y";
 }

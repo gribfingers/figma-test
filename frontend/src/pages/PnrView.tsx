@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { useLocation, useParams } from "react-router-dom";
 import { api, Flight, Passenger, PassengerSearchMode, SeatCell } from "../api";
 import { formatSeatDisplay } from "../seatExtra";
-import { parsePassengerExtra, SeatServiceItem } from "../paxExtra";
+import { classFor, parsePassengerExtra, SeatServiceItem } from "../paxExtra";
 import { BagRow } from "../baggageTypes";
 import { ChevronDownIcon, CloseIcon, DocScannedIcon, DocVerifiedIcon, RefreshIcon } from "../components/Icon";
 import { EntityNotFound } from "../components/EntityNotFound";
@@ -66,12 +66,6 @@ function fmtCardDate(std: string): string {
   const year = d.toLocaleDateString("en-GB", { timeZone: "UTC", year: "2-digit" });
   const time = d.toLocaleTimeString("en-GB", { timeZone: "UTC", hour: "2-digit", minute: "2-digit" });
   return `${day}${month}${year} · ${time}`;
-}
-
-function classFor(p: Passenger, seatByCode: Map<string, SeatCell>): "C" | "Y" | null {
-  const seat = p.seat ? seatByCode.get(p.seat) : undefined;
-  if (!seat) return null;
-  return seat.cabin_class === "J" ? "C" : "Y";
 }
 
 interface FlowRow {

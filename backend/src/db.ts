@@ -62,7 +62,12 @@ CREATE TABLE IF NOT EXISTS passengers (
   checkin_sequence INTEGER,
   bcbp TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  extra TEXT
+  extra TEXT,
+  -- Booked cabin (C business / Y economy) — set at reservation time, independent of whether a
+  -- specific seat has been picked yet, so the Booked/Checked stat bars can count a passenger who
+  -- hasn't chosen a seat. Once seated, the seat's own cabin_class is authoritative (see paxExtra.ts
+  -- classFor); this column only matters as a fallback for the still-unseated.
+  class TEXT NOT NULL DEFAULT 'Y'
 );
 
 CREATE INDEX IF NOT EXISTS idx_passengers_flight ON passengers(flight_id);
@@ -146,6 +151,7 @@ const passengerMigrations: [string, string][] = [
   ["gender", "ALTER TABLE passengers ADD COLUMN gender TEXT"],
   ["extra", "ALTER TABLE passengers ADD COLUMN extra TEXT"],
   ["middle_name", "ALTER TABLE passengers ADD COLUMN middle_name TEXT"],
+  ["class", "ALTER TABLE passengers ADD COLUMN class TEXT NOT NULL DEFAULT 'Y'"],
 ];
 for (const [column, ddl] of passengerMigrations) {
   if (!existingPassengerColumns.has(column)) db.exec(ddl);

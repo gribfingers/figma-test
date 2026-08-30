@@ -83,6 +83,12 @@ interface PaxSpec {
   instWithSeat?: boolean;
   /** UMNR — a child traveling without a guardian in this roster, paired with a chaperone at seating time. */
   unaccompanied?: boolean;
+  /**
+   * Booked cabin, decided before any seat is picked (see insertFlightWithRoster) — a family/PNR
+   * group all shares one (dependents inherit their guardian's), so seat placement can be
+   * constrained to the matching cabin and the two never end up contradicting each other.
+   */
+  bookedClass?: "C" | "Y";
 }
 
 /**
@@ -124,8 +130,8 @@ function buildRoster(size: number): PaxSpec[] {
 const insertSeat = db.prepare(`INSERT INTO seats (flight_id, seat, cabin_class, exit_row, extra) VALUES (?, ?, ?, ?, ?)`);
 const updateSeatExtra = db.prepare(`UPDATE seats SET extra = ? WHERE flight_id = ? AND seat = ?`);
 const insertPax = db.prepare(
-  `INSERT INTO passengers (record_locator, flight_id, surname, given_name, ticket_number, document_type, document_number, nationality, doc_expiry, ssr, infant, gender, dob, seat, bag_count, bag_weight_kg, checkin_status, checkin_sequence, bcbp, extra)
-   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  `INSERT INTO passengers (record_locator, flight_id, surname, given_name, ticket_number, document_type, document_number, nationality, doc_expiry, ssr, infant, gender, dob, seat, bag_count, bag_weight_kg, checkin_status, checkin_sequence, bcbp, extra, class)
+   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 );
 
 function typeCode(p: PaxSpec): string {
@@ -364,10 +370,22 @@ export function insertFlightWithRoster(flight: FlightForRoster, rosterSize: numb
     insertSeat.run(flight.id, s.seat, s.cabinClass, exitRow ? 1 : 0, assignment ? JSON.stringify(assignment.extra) : null);
   }
 
+  // This aircraft's real C/Y split — used below to book every adult into a cabin up front (before
+  // any seat is picked), in the same proportion the plane actually has.
+  const businessSeatCount = seatDefs.filter((s) => s.cabinClass === "J").length;
+  const cabinProbabilityC = seatDefs.length > 0 ? businessSeatCount / seatDefs.length : 0;
+  function pickBookedClass(): "C" | "Y" {
+    return Math.random() < cabinProbabilityC ? "C" : "Y";
+  }
+
   const roster = buildRoster(rosterSize);
   const allInfants = roster.filter((p) => p.category === "infant");
   const allChildren = roster.filter((p) => p.category === "child");
   const adults = roster.filter((p) => p.category === "adult");
+  // Booked at reservation time, independent of seat — every adult gets one now so a passenger who
+  // hasn't picked a seat yet still has a real cabin (see PaxSpec.bookedClass and classFor in the
+  // frontend's paxExtra.ts, which counts a passenger by this once there's no seat to read it from).
+  for (const a of adults) a.bookedClass = pickBookedClass();
 
   // A minority of infants travel INST (own purchased seat, needs a real placement) rather than
   // as a lap infant/INFT (never seated) — see the "Связанные места" rules doc.
@@ -377,7 +395,10 @@ export function insertFlightWithRoster(flight: FlightForRoster, rosterSize: numb
   // At most one UMNR per flight: a child with no guardian in this roster, paired with a
   // chaperone (an unrelated female adult) at seating time instead of a family member.
   const umnrChild = allChildren.length > 0 && Math.random() < 0.25 ? pick(allChildren) : null;
-  if (umnrChild) umnrChild.unaccompanied = true;
+  if (umnrChild) {
+    umnrChild.unaccompanied = true;
+    umnrChild.bookedClass = pickBookedClass(); // reconciled with the chaperone's, once one is found below
+  }
   const children = umnrChild ? allChildren.filter((c) => c !== umnrChild) : allChildren;
 
   const infantGuardians = shuffle(adults).slice(0, allInfants.length);
@@ -401,6 +422,9 @@ export function insertFlightWithRoster(flight: FlightForRoster, rosterSize: numb
     if (!infantsByGuardian.has(guardian)) infantsByGuardian.set(guardian, []);
     infantsByGuardian.get(guardian)!.push(allInfants[i]);
   }
+  // A child or infant always travels in their guardian's booked cabin, never a different one.
+  for (const [guardian, kids] of childrenByGuardian) for (const k of kids) k.bookedClass = guardian.bookedClass;
+  for (const [guardian, kids] of infantsByGuardian) for (const k of kids) k.bookedClass = guardian.bookedClass;
 
   // Who could plausibly hold a real seat at all — a lap infant never does, an INST infant always
   // might. Real occupants (checked-in) and pre-booked (not-yet-checked-in) hold markers share one
@@ -426,7 +450,10 @@ export function insertFlightWithRoster(flight: FlightForRoster, rosterSize: numb
     const seated = members.filter(hasSeatNow);
     if (seated.length === 0) return;
     const extraNeeded = seated.filter(hasExst).length;
-    const seats = takeAdjacentSeats(seatDefs, available, exitRowSeats, seated.length + extraNeeded, { excludeExitRow });
+    // Every member of a group shares one booked cabin (see the propagation above) — constrain the
+    // candidate seats to it so a passenger's seat and their booked class never end up contradicting.
+    const cabinSeatDefs = seatDefs.filter((s) => s.cabinClass === (members[0].bookedClass === "C" ? "J" : "Y"));
+    const seats = takeAdjacentSeats(cabinSeatDefs, available, exitRowSeats, seated.length + extraNeeded, { excludeExitRow });
     let cursor = 0;
     for (const p of seated) {
       if (cursor >= seats.length) break;
@@ -439,7 +466,10 @@ export function insertFlightWithRoster(flight: FlightForRoster, rosterSize: numb
 
   // UMNR: a seat-eligible female adult with no dependents of her own doubles as chaperone.
   let umnrChaperone: PaxSpec | null = null;
-  if (umnrChild) umnrChaperone = adults.find((a) => a.gender === "F" && !guardians.has(a) && hasSeatNow(a)) ?? null;
+  if (umnrChild) {
+    umnrChaperone = adults.find((a) => a.gender === "F" && !guardians.has(a) && hasSeatNow(a)) ?? null;
+    if (umnrChaperone) umnrChild.bookedClass = umnrChaperone.bookedClass;
+  }
 
   for (const guardian of shuffle([...guardians])) {
     const members = [guardian, ...(childrenByGuardian.get(guardian) ?? []), ...(infantsByGuardian.get(guardian) ?? [])];
@@ -458,12 +488,13 @@ export function insertFlightWithRoster(flight: FlightForRoster, rosterSize: numb
       placeGroup([a], false);
       continue;
     }
-    const seat = takeFarthestSeat(seatDefs, available, petcRows);
+    const cabinSeatDefs = seatDefs.filter((s) => s.cabinClass === (a.bookedClass === "C" ? "J" : "Y"));
+    const seat = takeFarthestSeat(cabinSeatDefs, available, petcRows);
     if (!seat) continue;
     assignedSeat.set(a, seat.seat);
     petcRows.push(seat.row);
     if (hasExst(a)) {
-      const [extra] = takeNearestSeats(seatDefs, available, exitRowSeats, 1, seat, {});
+      const [extra] = takeNearestSeats(cabinSeatDefs, available, exitRowSeats, 1, seat, {});
       if (extra) extraSeatFor.set(a, extra.seat);
     }
   }
@@ -477,6 +508,9 @@ export function insertFlightWithRoster(flight: FlightForRoster, rosterSize: numb
     const isCheckedIn = checkedInSet.has(p);
     const isPreBooked = !isCheckedIn && preBookedSet.has(p);
     const seat = assignedSeat.get(p) ?? null;
+    // The seat's own cabin once there is one (always matches bookedClass by construction, since
+    // placement above is constrained to it) — falls back to bookedClass for the still-unseated.
+    const bookedClass: "C" | "Y" = seat ? (seatByCode.get(seat)?.cabinClass === "J" ? "C" : "Y") : p.bookedClass ?? "Y";
     let checkinSequence: number | null = null;
     let bcbp: string | null = null;
     if (seat && isCheckedIn) {
@@ -521,7 +555,8 @@ export function insertFlightWithRoster(flight: FlightForRoster, rosterSize: numb
         type: typeCode(p),
         wl: p.category !== "infant" && Math.random() < 0.06,
         pl: p.category !== "infant" && Math.random() < 0.05,
-      })
+      }),
+      bookedClass
     );
     if (seat && isCheckedIn) {
       db.prepare("UPDATE seats SET passenger_id = ? WHERE flight_id = ? AND seat = ?").run(info.lastInsertRowid, flight.id, seat);
