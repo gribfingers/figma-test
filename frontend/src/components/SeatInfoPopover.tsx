@@ -8,9 +8,10 @@ import {
   seatState,
   seatSubtype,
 } from "../seatExtra";
+import { useLanguage } from "../i18n";
 
-const STATE_LABEL: Record<string, string> = { free: "Свободно", checked_in: "Зарегистрирован", boarded: "Посадка выполнена" };
-const SUBTYPE_LABEL: Record<string, string> = { presit: "Предрассажен", booked: "Забронировано" };
+const STATE_LABEL: Record<string, string> = { free: "Free", checked_in: "Checked-in", boarded: "Boarding complete" };
+const SUBTYPE_LABEL: Record<string, string> = { presit: "Pre-seated", booked: "Reserved" };
 
 interface Props {
   seatCell: SeatCell;
@@ -28,6 +29,7 @@ interface Props {
 const MARGIN = 8;
 
 export function SeatInfoPopover({ seatCell, x, y, onClose, onOpenHistory }: Props) {
+  const { t } = useLanguage();
   const ref = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState({ left: x, top: y, visible: false });
 
@@ -65,26 +67,26 @@ export function SeatInfoPopover({ seatCell, x, y, onClose, onOpenHistory }: Prop
 
   return (
     <div ref={ref} className="seat-info-popover" style={{ left: pos.left, top: pos.top, visibility: pos.visible ? "visible" : "hidden" }}>
-      <div className="seat-info-title">Место {formatSeatDisplay(seatCell.seat)}</div>
+      <div className="seat-info-title">{t("Seat {seat}").replace("{seat}", formatSeatDisplay(seatCell.seat))}</div>
 
       <div className="seatmap-legend-row">
         <span className={`seat seatmap-legend-swatch seat-${state.replace("_", "-")}`} />
-        {STATE_LABEL[state]}
+        {t(STATE_LABEL[state])}
       </div>
       {subtype !== "none" && (
         <div className="seatmap-legend-row">
           <span className="seatmap-legend-swatch seat-free-swatch">
             <span className={`seat-subtype-bar seat-subtype-${subtype}`} />
           </span>
-          {SUBTYPE_LABEL[subtype]}
+          {t(SUBTYPE_LABEL[subtype])}
         </div>
       )}
-      {!!seatCell.exit_row && <div className="seat-info-line">Аварийное (exit row)</div>}
+      {!!seatCell.exit_row && <div className="seat-info-line">{t("Exit row")}</div>}
 
       {seatCell.passenger_id && (
         <div className="seat-info-line">
           {seatCell.surname}/{seatCell.given_name} ({seatCell.record_locator})
-          {age != null && ` — ${age} лет`}
+          {age != null && ` — ${t("{age} y.o.").replace("{age}", String(age))}`}
         </div>
       )}
 
@@ -93,7 +95,7 @@ export function SeatInfoPopover({ seatCell, x, y, onClose, onOpenHistory }: Prop
           {activeAttrs.map((a) => (
             <div key={a.key} className="seatmap-legend-row">
               <a.icon size={14} />
-              {a.label}
+              {t(a.label)}
             </div>
           ))}
         </div>
@@ -101,14 +103,14 @@ export function SeatInfoPopover({ seatCell, x, y, onClose, onOpenHistory }: Prop
 
       {(extra.price != null || extra.rfisc) && (
         <div className="seat-info-line">
-          {extra.price != null && `Цена: ${extra.price}`}
+          {extra.price != null && `${t("Price")}: ${extra.price}`}
           {extra.price != null && extra.rfisc && " · "}
           {extra.rfisc && `RFISC: ${extra.rfisc}`}
         </div>
       )}
 
       <button type="button" className="seat-info-history-link" onClick={onOpenHistory}>
-        История изменений →
+        {t("Change history →")}
       </button>
     </div>
   );

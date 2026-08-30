@@ -8,6 +8,7 @@ import { Field } from "./Field";
 import { HideIcon, LayersIcon, MinusIcon, PlusIcon, RowsIcon, SeatChildIcon } from "./Icon";
 import { SeatInfoPopover } from "./SeatInfoPopover";
 import { SeatHistoryModal } from "./SeatHistoryModal";
+import { useLanguage } from "../i18n";
 
 interface Props {
   flightId: number;
@@ -36,8 +37,8 @@ const LEGEND_STATES: { cls: string; label: string }[] = [
 // Hold markers overlay any of the three states above (a checked-in seat can
 // also be reserved, etc.) rather than being states of their own.
 const LEGEND_HOLDS: { cls: string; label: string }[] = [
-  { cls: "seat-subtype-presit", label: "Предрассажен" },
-  { cls: "seat-subtype-booked", label: "Забронировано" },
+  { cls: "seat-subtype-presit", label: "Pre-seated" },
+  { cls: "seat-subtype-booked", label: "Reserved" },
 ];
 
 /**
@@ -63,6 +64,7 @@ export function SeatMapPanel({
   allowSeatEdit = true,
   banner,
 }: Props) {
+  const { t } = useLanguage();
   const [zoom, setZoom] = useState(100);
   const [legendOpen, setLegendOpen] = useState(false);
   const [layersOpen, setLayersOpen] = useState(false);
@@ -96,8 +98,8 @@ export function SeatMapPanel({
   }, []);
 
   const LAYER_OPTIONS: { key: "icons" | "price" | "rfisc"; label: string }[] = [
-    { key: "icons", label: "Иконки" },
-    { key: "price", label: "Цена" },
+    { key: "icons", label: "Icons" },
+    { key: "price", label: "Price" },
     { key: "rfisc", label: "RFISC" },
   ];
 
@@ -105,22 +107,22 @@ export function SeatMapPanel({
     <div className="seatmap-panel">
       <div className="seatmap-toolbar">
         <div className="seatmap-decks">
-          <button type="button" className="seatmap-deck selected">Main Deck</button>
-          <button type="button" className="seatmap-deck" disabled title="This aircraft has no upper deck">Upper Deck</button>
+          <button type="button" className="seatmap-deck selected">{t("Main Deck")}</button>
+          <button type="button" className="seatmap-deck" disabled title={t("This aircraft has no upper deck")}>{t("Upper Deck")}</button>
         </div>
         {banner && <div className="seatmap-toolbar-banner">{banner}</div>}
         <div className="seatmap-toolbar-actions">
           <div className="seatmap-zoom">
-            <button type="button" className="seatmap-zoom-btn" onClick={() => setZoom((z) => Math.max(50, z - 10))} aria-label="Zoom out">
+            <button type="button" className="seatmap-zoom-btn" onClick={() => setZoom((z) => Math.max(50, z - 10))} aria-label={t("Zoom out")}>
               <MinusIcon size={14} />
             </button>
             <span className="seatmap-zoom-value">{zoom}%</span>
-            <button type="button" className="seatmap-zoom-btn" onClick={() => setZoom((z) => Math.min(150, z + 10))} aria-label="Zoom in">
+            <button type="button" className="seatmap-zoom-btn" onClick={() => setZoom((z) => Math.min(150, z + 10))} aria-label={t("Zoom in")}>
               <PlusIcon size={14} />
             </button>
           </div>
           <div className="seatmap-popover-anchor" ref={legendRef}>
-            <button type="button" className="seatmap-tool-btn" title="Legend" onClick={() => setLegendOpen((o) => !o)}>
+            <button type="button" className="seatmap-tool-btn" title={t("Legend")} onClick={() => setLegendOpen((o) => !o)}>
               <RowsIcon size={16} />
             </button>
             {legendOpen && (
@@ -129,7 +131,7 @@ export function SeatMapPanel({
                   {LEGEND_STATES.map((s) => (
                     <div key={s.label} className="seatmap-legend-row">
                       <span className={`seat seatmap-legend-swatch ${s.cls}`} />
-                      {s.label}
+                      {t(s.label)}
                     </div>
                   ))}
                   {LEGEND_HOLDS.map((s) => (
@@ -137,7 +139,7 @@ export function SeatMapPanel({
                       <span className="seatmap-legend-swatch seat-free-swatch">
                         <span className={`seat-subtype-bar ${s.cls}`} />
                       </span>
-                      {s.label}
+                      {t(s.label)}
                     </div>
                   ))}
                 </div>
@@ -147,12 +149,12 @@ export function SeatMapPanel({
                       <SeatChildIcon size={8} />
                       <span className="seat-child-age">5</span>
                     </span>
-                    Ребёнок (2–12 лет)
+                    {t("Child (2–12 y.o.)")}
                   </div>
                   {SEAT_ATTRS.map((a) => (
                     <div key={a.key} className="seatmap-legend-row">
                       <a.icon size={14} />
-                      {a.label}
+                      {t(a.label)}
                     </div>
                   ))}
                 </div>
@@ -160,7 +162,7 @@ export function SeatMapPanel({
             )}
           </div>
           <div className="seatmap-popover-anchor" ref={layersRef}>
-            <button type="button" className="seatmap-tool-btn" title="Layers" onClick={() => setLayersOpen((o) => !o)}>
+            <button type="button" className="seatmap-tool-btn" title={t("Layers")} onClick={() => setLayersOpen((o) => !o)}>
               <LayersIcon size={16} />
             </button>
             {layersOpen && (
@@ -168,14 +170,14 @@ export function SeatMapPanel({
                 {LAYER_OPTIONS.map((l) => (
                   <li key={l.key} className="pax-columns-item" onClick={() => setActiveLayer(l.key)}>
                     <input type="radio" name="seatmap-layer" checked={activeLayer === l.key} readOnly />
-                    {l.label}
+                    {t(l.label)}
                   </li>
                 ))}
               </ul>
             )}
           </div>
           {onHide && (
-            <button type="button" className="seatmap-tool-btn" title="Hide seat map" onClick={onHide}>
+            <button type="button" className="seatmap-tool-btn" title={t("Hide seat map")} onClick={onHide}>
               <HideIcon size={16} />
             </button>
           )}
@@ -245,6 +247,7 @@ function SeatEditorModal({
   onClose: () => void;
   onSaved: (s: SeatCell) => void;
 }) {
+  const { t } = useLanguage();
   const initial = parseSeatExtra(seat);
   const [extra, setExtra] = useState<SeatExtra>(initial);
   const [exitRow, setExitRow] = useState(!!seat.exit_row);
@@ -266,38 +269,38 @@ function SeatEditorModal({
 
   return (
     <Modal
-      title={`Seat ${seat.seat}`}
+      title={t("Seat {seat}").replace("{seat}", seat.seat)}
       onClose={onClose}
       width={480}
       footer={
         <>
-          <button type="button" className="tertiary" onClick={onClose}>Close</button>
-          <button type="button" className="tertiary" disabled={saving} onClick={save}>Save</button>
+          <button type="button" className="tertiary" onClick={onClose}>{t("Close")}</button>
+          <button type="button" className="tertiary" disabled={saving} onClick={save}>{t("Save")}</button>
         </>
       }
     >
       <div className="seat-editor">
         <label className="seat-editor-check">
           <input type="checkbox" checked={exitRow} onChange={(e) => setExitRow(e.target.checked)} />
-          Аварийное (exit row)
+          {t("Exit row")}
         </label>
         {SEAT_ATTRS.map((a) => (
           <label key={a.key} className="seat-editor-check">
             <input type="checkbox" checked={!!extra[a.key]} onChange={() => toggle(a.key)} />
             <a.icon size={14} />
-            {a.label}
+            {t(a.label)}
           </label>
         ))}
         <label className="seat-editor-check">
           <input type="checkbox" checked={!!extra.preseated} onChange={() => toggle("preseated")} />
-          Предрассажен
+          {t("Pre-seated")}
         </label>
         <label className="seat-editor-check">
           <input type="checkbox" checked={!!extra.reserved} onChange={() => toggle("reserved")} />
-          Забронировано
+          {t("Reserved")}
         </label>
         <div className="seat-editor-row">
-          <Field label="Price" style={{ width: 100 }}>
+          <Field label={t("Price")} style={{ width: 100 }}>
             <input
               type="number"
               min={0}

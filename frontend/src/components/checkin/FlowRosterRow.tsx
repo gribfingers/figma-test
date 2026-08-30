@@ -159,6 +159,7 @@ export function FlowRosterRow({
   onOpenInfo,
   onSwapSeat,
 }: Props) {
+  const { t } = useLanguage();
   const ssr = p.ssr ?? [];
   const age = ageFromDob(p.dob);
   const hasRemarks = ssr.length > 0;
@@ -170,9 +171,9 @@ export function FlowRosterRow({
     </div>
   );
 
-  const seatItems = showSeat && !nested ? seatServiceItemsForSeat(seat) : [];
+  const seatItems = showSeat && !nested ? seatServiceItemsForSeat(seat, t) : [];
   // Baggage extras aren't broken out per segment (no "SVX-DME" grouping) — just a flat list, full rows on the active card and compact chips otherwise, same as seats.
-  const baggageItems = showBaggage && !nested ? baggageServiceItemsForRows(p.id, bagRows, baggageCalculated) : [];
+  const baggageItems = showBaggage && !nested ? baggageServiceItemsForRows(p.id, bagRows, baggageCalculated, t) : [];
   const serviceItems = showServices && !nested ? confirmedServices : [];
 
   return (

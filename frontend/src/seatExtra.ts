@@ -64,25 +64,25 @@ export interface SeatAttrDef {
 // attributes are set — matches how the reference map shows one glyph per
 // seat; the editor still lets every flag be set independently.
 export const SEAT_ATTRS: SeatAttrDef[] = [
-  { key: "hardBlock", label: "Жёсткий блок", icon: SeatHardBlockIcon },
-  { key: "softBlock", label: "Мягкий блок", icon: SeatSoftBlockIcon },
-  { key: "broken", label: "Сломанное", icon: SeatBrokenIcon },
-  { key: "cgBlock", label: "Блок центровки", icon: SeatCgBlockIcon },
-  { key: "crew", label: "Экипаж", icon: SeatCrewIcon },
-  { key: "stretcher", label: "Носилки", icon: SeatStretcherIcon },
-  { key: "wheelchair", label: "Кресло", icon: SeatWheelchairIcon },
-  { key: "animal", label: "Животное", icon: SeatAnimalIcon },
-  { key: "infant", label: "Младенец (INFT)", icon: SeatInftIcon },
-  { key: "inst", label: "Младенец с местом (INST)", icon: SeatInstIcon },
-  { key: "transit", label: "Транзит (SOM)", icon: SeatTransitIcon },
-  { key: "noRecline", label: "Не откидывается спинка", icon: SeatNoReclineIcon },
-  { key: "fixedArmrest", label: "Не поднимающийся подлокотник", icon: SeatFixedArmrestIcon },
-  { key: "legroom", label: "Место для ног", icon: SeatLegroomIcon },
+  { key: "hardBlock", label: "Hard block", icon: SeatHardBlockIcon },
+  { key: "softBlock", label: "Soft block", icon: SeatSoftBlockIcon },
+  { key: "broken", label: "Broken", icon: SeatBrokenIcon },
+  { key: "cgBlock", label: "CG block", icon: SeatCgBlockIcon },
+  { key: "crew", label: "Crew", icon: SeatCrewIcon },
+  { key: "stretcher", label: "Stretcher", icon: SeatStretcherIcon },
+  { key: "wheelchair", label: "Wheelchair", icon: SeatWheelchairIcon },
+  { key: "animal", label: "Animal", icon: SeatAnimalIcon },
+  { key: "infant", label: "Infant (INFT)", icon: SeatInftIcon },
+  { key: "inst", label: "Infant with seat (INST)", icon: SeatInstIcon },
+  { key: "transit", label: "Transit (SOM)", icon: SeatTransitIcon },
+  { key: "noRecline", label: "No recline", icon: SeatNoReclineIcon },
+  { key: "fixedArmrest", label: "Fixed armrest", icon: SeatFixedArmrestIcon },
+  { key: "legroom", label: "Legroom", icon: SeatLegroomIcon },
 ];
 
 /** Exit-row is its own seats.exit_row column rather than a SeatExtra flag, but shows an icon on the seat
  *  cell the same way — lowest priority, so any real attribute icon still wins if the seat has one too. */
-export const EXIT_ROW_ATTR: SeatAttrDef = { key: "exitRow" as keyof SeatExtra, label: "Аварийное (exit row)", icon: SeatEmergencyIcon };
+export const EXIT_ROW_ATTR: SeatAttrDef = { key: "exitRow" as keyof SeatExtra, label: "Exit row", icon: SeatEmergencyIcon };
 
 /** The one attribute icon to show on a seat cell, by SEAT_ATTRS priority. */
 export function primaryAttr(extra: SeatExtra): SeatAttrDef | null {

@@ -3,6 +3,7 @@ import { SeatCell } from "../api";
 import { CabinFeature, CabinFeatureType } from "../cabinLayout";
 import { GalleyIcon, SeatChildIcon } from "./Icon";
 import { EXIT_ROW_ATTR, occupantAge, parseSeatExtra, primaryAttr, seatState, seatSubtype } from "../seatExtra";
+import { useLanguage } from "../i18n";
 
 interface Props {
   seats: SeatCell[];
@@ -97,6 +98,7 @@ export function SeatMapGrid({
   ineligibleSeats,
   undesirableSeats,
 }: Props) {
+  const { t } = useLanguage();
   const rows = new Map<number, SeatCell[]>();
   for (const s of seats) {
     const row = Number(s.seat.slice(0, 3));
@@ -141,7 +143,7 @@ export function SeatMapGrid({
             {sectionChanged && cls && (
               <div className="seatrow cabin-section-row">
                 <span className="seat-exit-slot" />
-                <span className="cabin-section-label">{CABIN_CLASS_LABEL[cls] ?? cls}</span>
+                <span className="cabin-section-label">{t(CABIN_CLASS_LABEL[cls] ?? cls)}</span>
                 <span className="seat-exit-slot" />
               </div>
             )}
@@ -171,9 +173,9 @@ export function SeatMapGrid({
                 ].filter(Boolean).join(" ");
                 const showAisle = letter === "C"; // 3-3 narrow-body layout aisle after column C
                 const Icon = isChild ? SeatChildIcon : attr?.icon;
-                const holdLabel = effectiveSubtype === "presit" ? "Pre-seated" : effectiveSubtype === "booked" ? "Reserved" : "";
+                const holdLabel = effectiveSubtype === "presit" ? t("Pre-seated") : effectiveSubtype === "booked" ? t("Reserved") : "";
                 const priceLabel = extra.price != null ? `${extra.price}` : "";
-                const titleBits = [isChild ? "Child" : attr?.label, holdLabel, extra.rfisc, priceLabel].filter(Boolean).join(", ");
+                const titleBits = [isChild ? t("Child") : attr && t(attr.label), holdLabel, extra.rfisc, priceLabel].filter(Boolean).join(", ");
                 const priceStr = extra.price != null ? String(extra.price) : "";
                 const priceTwoLine = priceStr.length > 3;
                 return (

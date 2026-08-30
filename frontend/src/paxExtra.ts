@@ -196,10 +196,10 @@ export interface SeatServiceItem {
 // IATA PADIS 9825 seat-characteristic letters (window/aisle) confirmed across multiple GDS/NDC
 // references.
 const SEAT_POSITION: Record<string, { label: string; code: string }> = {
-  A: { label: "У окна", code: "W" },
-  F: { label: "У окна", code: "W" },
-  C: { label: "У прохода", code: "A" },
-  D: { label: "У прохода", code: "A" },
+  A: { label: "Window", code: "W" },
+  F: { label: "Window", code: "W" },
+  C: { label: "Aisle", code: "A" },
+  D: { label: "Aisle", code: "A" },
 };
 
 // Best-effort per-attribute codes for when the seat has no price at all (so no real purchased
@@ -223,7 +223,10 @@ const SEAT_ATTR_CODE: { [K in keyof SeatExtra]?: string } = {
  * characteristic code instead (see SEAT_ATTR_CODE) — every row always
  * carries a code, but price/RFISC-as-purchase only appear when real.
  */
-export function seatServiceItemsForSeat(seat: SeatCell | undefined | null): SeatServiceItem[] {
+export function seatServiceItemsForSeat(
+  seat: SeatCell | undefined | null,
+  t: (text: string) => string = (s) => s
+): SeatServiceItem[] {
   if (!seat) return [];
   const extra = parseSeatExtra(seat);
   // "paid" here really means "nothing owed" — a free amenity (no price at all) shows green (no
@@ -234,13 +237,13 @@ export function seatServiceItemsForSeat(seat: SeatCell | undefined | null): Seat
   const items: SeatServiceItem[] = [];
 
   const position = SEAT_POSITION[seat.seat.slice(-1)];
-  if (position) items.push({ rfisc: purchasedRfisc ?? position.code, label: position.label, price, paid });
+  if (position) items.push({ rfisc: purchasedRfisc ?? position.code, label: t(position.label), price, paid });
 
   for (const attr of SEAT_ATTRS) {
     if (!extra[attr.key]) continue;
     const code = SEAT_ATTR_CODE[attr.key];
     if (!code) continue;
-    items.push({ rfisc: purchasedRfisc ?? code, label: attr.label, price, paid });
+    items.push({ rfisc: purchasedRfisc ?? code, label: t(attr.label), price, paid });
   }
 
   return items;
@@ -264,14 +267,19 @@ function bagRowPaid(seed: string): boolean {
  * once Calculate has actually run for this passenger, same "neutral until real" rule the Baggage
  * step itself uses for the Type field's color.
  */
-export function baggageServiceItemsForRows(passengerId: number, rows: BagRow[], calculated: boolean): SeatServiceItem[] {
+export function baggageServiceItemsForRows(
+  passengerId: number,
+  rows: BagRow[],
+  calculated: boolean,
+  t: (text: string) => string = (s) => s
+): SeatServiceItem[] {
   return rows
     .filter((r) => r.typeId)
     .map((r) => {
       const opt = baggageTypeById(r.typeId);
       const price = calculated ? 12500 : null;
       const paid = price == null ? true : bagRowPaid(`${passengerId}-${r.id}-${r.weight}-${r.typeId}`);
-      return { rfisc: opt?.code ?? "", label: opt?.label ?? "", price, paid };
+      return { rfisc: opt?.code ?? "", label: opt ? t(opt.label) : "", price, paid };
     });
 }
 

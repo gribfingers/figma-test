@@ -614,4 +614,43 @@ export const RU: Record<string, string> = {
   WEAP: "Оружие",
   Weelchair: "Инвалидное кресло",
   Stroller: "Коляска",
+
+  // ---- seatExtra.ts / paxExtra.ts (seat attributes/positions) ----
+  "Hard block": "Жёсткий блок",
+  "Soft block": "Мягкий блок",
+  Broken: "Сломанное",
+  "CG block": "Блок центровки",
+  Stretcher: "Носилки",
+  Wheelchair: "Кресло",
+  Animal: "Животное",
+  "Infant (INFT)": "Младенец (INFT)",
+  "Infant with seat (INST)": "Младенец с местом (INST)",
+  "Transit (SOM)": "Транзит (SOM)",
+  "No recline": "Не откидывается спинка",
+  "Fixed armrest": "Не поднимающийся подлокотник",
+  Legroom: "Место для ног",
+  "Exit row": "Аварийное (exit row)",
+  Window: "У окна",
+  Aisle: "У прохода",
+
+  // ---- SeatInfoPopover.tsx ----
+  Free: "Свободно",
+  "Boarding complete": "Посадка выполнена",
+  "Seat {seat}": "Место {seat}",
+  "{age} y.o.": "{age} лет",
+  Price: "Цена",
+  "Change history →": "История изменений →",
+
+  // ---- SeatMapPanel.tsx / SeatMapGrid.tsx ----
+  "Main Deck": "Главная палуба",
+  "Upper Deck": "Верхняя палуба",
+  "This aircraft has no upper deck": "У этого самолёта нет верхней палубы",
+  "Zoom out": "Уменьшить",
+  "Zoom in": "Увеличить",
+  Legend: "Легенда",
+  "Child (2–12 y.o.)": "Ребёнок (2–12 лет)",
+  Layers: "Слои",
+  Icons: "Иконки",
+  "Hide seat map": "Скрыть карту мест",
+  Child: "Ребёнок",
 };
