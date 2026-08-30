@@ -2326,6 +2326,9 @@ tr.row-hover { cursor: pointer; }
 .pax-quick-filter.selected { background: var(--paper); color: var(--field-value); box-shadow: 0 1px 2px rgba(24, 31, 36, 0.12); }
 .pax-quick-filters .pax-quick-filter.selected:hover { background: var(--paper); }
 
+.pax-selection-bar { display: flex; align-items: center; gap: 12px; margin: 0 16px 10px 0; padding: 8px 12px; background: var(--accent-soft); border-radius: 6px; }
+.pax-selection-count { font-size: 13px; font-weight: 600; color: var(--field-value); }
+
 .pax-class-counts { display: inline-flex; gap: 8px; }
 .pax-class-count { display: inline-flex; align-items: center; gap: 6px; padding: 0 10px; height: 30px; border-radius: 4px; font-size: 13px; font-weight: 600; color: var(--field-value); font-family: var(--mono); }
 .pax-class-count-label { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border: 1px solid var(--field-border); border-radius: 3px; font-size: 11px; color: var(--muted); font-family: var(--font); }

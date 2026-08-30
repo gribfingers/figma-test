@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { api, Flight, Passenger, SeatCell } from "../../api";
 import { cabinFeaturesFor } from "../../cabinLayout";
 import { SeatMapPanel } from "../SeatMapPanel";
-import { ArrowBackIcon, ArrowNestedIcon, ChildIcon, InfantIcon } from "../Icon";
+import { ArrowBackIcon, ArrowNestedIcon, ChevronDownIcon, ChildIcon, InfantIcon } from "../Icon";
 import { SortTh, useSort } from "../SortTh";
 import { FlagStatus, ageFromDob, ageYears, asvcForPassenger, asvcStatus, commentsStatus, etStatus, ffpStatus, isInfant, parsePassengerExtra, trStatus } from "../../paxExtra";
 import { FlagKind, FlagModal, PassengerDetailModal } from "./PassengerModals";
@@ -23,6 +24,9 @@ import { PASSENGER_COLUMNS, PassengersToolbar, QuickFilter } from "./PassengersT
 import { SegmentToggle } from "../SegmentToggle";
 import { segmentsForFlight } from "../../flightSegments";
 import { useLanguage } from "../../i18n";
+import { usePopoverPosition } from "../../usePopoverPosition";
+import { useRetainedPanelTransition } from "../../usePanelMounted";
+import { ACTIONS_MENU_ITEMS, ActionsPanel, ActionsPanelKind } from "../checkin/ActionsPanel";
 
 interface Props {
   flight: Flight;
@@ -142,6 +146,25 @@ export function PassengersTab({ flight }: Props) {
   const cabinFeatures = useMemo(() => cabinFeaturesFor(flight.aircraft_type), [flight.aircraft_type]);
   const rowRefs = useRef(new Map<number, HTMLTableRowElement>());
   const seatmapRef = useRef<HTMLDivElement>(null);
+
+  // Bulk selection — same 7-action menu the PNR roster's Actions dropdown uses, just aimed at
+  // whichever rows are checked here (which can span multiple PNRs, unlike a PNR view's roster).
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [selectionMenuOpen, setSelectionMenuOpen] = useState(false);
+  const [selectionActionKind, setSelectionActionKind] = useState<ActionsPanelKind | null>(null);
+  const selectionBtnRef = useRef<HTMLButtonElement>(null);
+  const selectionMenuRef = useRef<HTMLUListElement>(null);
+  const selectionMenuRect = usePopoverPosition(selectionBtnRef, selectionMenuOpen);
+  const selectionPanelTransition = useRetainedPanelTransition(selectionActionKind);
+
+  function toggleSelected(id: number) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
 
   function handleSeatUpdated(updated: SeatCell) {
     setSeats((prev) => prev.map((s) => (s.seat === updated.seat ? updated : s)));
@@ -287,6 +310,25 @@ export function PassengersTab({ flight }: Props) {
   }, [contextMenu]);
 
   useEffect(() => {
+    if (!selectionMenuOpen) return;
+    function onDocMouseDown(e: MouseEvent) {
+      const target = e.target as Node;
+      if (selectionBtnRef.current?.contains(target)) return;
+      if (selectionMenuRef.current?.contains(target)) return;
+      setSelectionMenuOpen(false);
+    }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setSelectionMenuOpen(false);
+    }
+    document.addEventListener("mousedown", onDocMouseDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onDocMouseDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [selectionMenuOpen]);
+
+  useEffect(() => {
     if (!seatAction) return;
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") setSeatAction(null);
@@ -298,6 +340,9 @@ export function PassengersTab({ flight }: Props) {
   useEffect(() => {
     loadPassengers();
   }, [flight.id, query]);
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [flight.id]);
   useEffect(() => {
     api.seatmap(flight.id).then(setSeats);
   }, [flight.id]);
@@ -367,6 +412,14 @@ export function PassengersTab({ flight }: Props) {
   const rows = buildRows(sortedPassengers);
   const visibleColCount = 2 + visibleColumns.size;
 
+  const rowPassengers = rows.map((r) => r.passenger);
+  const allRowsSelected = rowPassengers.length > 0 && rowPassengers.every((p) => selectedIds.has(p.id));
+  const someRowsSelected = rowPassengers.some((p) => selectedIds.has(p.id));
+  function toggleAllSelected() {
+    setSelectedIds(allRowsSelected ? new Set() : new Set(rowPassengers.map((p) => p.id)));
+  }
+  const selectedPassengers = passengers.filter((p) => selectedIds.has(p.id));
+
   return (
     <div className={`passengers-tab ${mapHidden ? "map-hidden" : ""}`}>
       <div className="passengers-list">
@@ -388,11 +441,64 @@ export function PassengersTab({ flight }: Props) {
           totalCount={filteredPassengers.length}
           onAddPassenger={openAdd}
         />
+        {selectedIds.size > 0 && (
+          <div className="pax-selection-bar">
+            <span className="pax-selection-count">{t("{n} selected").replace("{n}", String(selectedIds.size))}</span>
+            <button type="button" className="link-btn" onClick={() => setSelectedIds(new Set())}>
+              {t("Clear")}
+            </button>
+            <div className="spacer" />
+            <button
+              ref={selectionBtnRef}
+              type="button"
+              className="secondary actions-menu-btn"
+              aria-haspopup="menu"
+              aria-expanded={selectionMenuOpen}
+              onClick={() => setSelectionMenuOpen((o) => !o)}
+            >
+              {t("Actions")}
+              <ChevronDownIcon size={16} className={selectionMenuOpen ? "chevron-rotated" : ""} />
+            </button>
+            {selectionMenuOpen &&
+              selectionMenuRect &&
+              createPortal(
+                <ul
+                  ref={selectionMenuRef}
+                  className="select-menu actions-menu"
+                  role="menu"
+                  style={{ position: "fixed", top: selectionMenuRect.top, right: window.innerWidth - (selectionMenuRect.left + selectionMenuRect.width) }}
+                >
+                  {ACTIONS_MENU_ITEMS.map(({ label, kind }) => (
+                    <li
+                      key={label}
+                      role="menuitem"
+                      onClick={() => {
+                        setSelectionMenuOpen(false);
+                        setSelectionActionKind(kind);
+                      }}
+                    >
+                      {t(label)}
+                    </li>
+                  ))}
+                </ul>,
+                document.body
+              )}
+          </div>
+        )}
         <div className="table-scroll">
           <table className="passengers-table">
             <thead>
               <tr>
-                <th></th>
+                <th>
+                  <input
+                    type="checkbox"
+                    checked={allRowsSelected}
+                    ref={(el) => {
+                      if (el) el.indeterminate = someRowsSelected && !allRowsSelected;
+                    }}
+                    onChange={toggleAllSelected}
+                  />
+                </th>
                 <SortTh id="name" label={t("Name")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
                 {visibleColumns.has("pnr") && <SortTh id="pnr" label="PNR" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />}
                 {visibleColumns.has("flags") && <th>{t("Flags")}</th>}
@@ -434,7 +540,12 @@ export function PassengersTab({ flight }: Props) {
                     }}
                   >
                     <td>
-                      <input type="checkbox" onClick={(e) => e.stopPropagation()} />
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(p.id)}
+                        onChange={() => toggleSelected(p.id)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
                     </td>
                     <td>
                       <div className="pax-name-cell">
@@ -554,6 +665,19 @@ export function PassengersTab({ flight }: Props) {
           />
           <div className="panel-hint">{t("Right-click a seat to edit its properties.")}</div>
         </div>
+      )}
+
+      {selectionPanelTransition.mounted && selectionPanelTransition.retained && (
+        <ActionsPanel
+          kind={selectionPanelTransition.retained}
+          flight={flight}
+          passengers={selectedPassengers}
+          segments={segments}
+          open={selectionPanelTransition.entered}
+          onClose={() => setSelectionActionKind(null)}
+          onPassengerUpdated={handleUpdated}
+          onSeatsChanged={refreshSeating}
+        />
       )}
 
       {modal && (

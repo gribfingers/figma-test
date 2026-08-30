@@ -13,6 +13,18 @@ import { useLanguage } from "../../i18n";
 
 export type ActionsPanelKind = "cancel" | "move" | "print" | "priority" | "remarks" | "quick" | "transfer";
 
+/** The 7 actions available anywhere a group of passengers can be selected — the PNR roster's Actions
+ *  dropdown and the flight card's Pax tab both list these against whichever passengers are checked. */
+export const ACTIONS_MENU_ITEMS: { label: string; kind: ActionsPanelKind }[] = [
+  { label: "Quick check-in", kind: "quick" },
+  { label: "Cancel check-in", kind: "cancel" },
+  { label: "Move to another flight", kind: "move" },
+  { label: "Priority List", kind: "priority" },
+  { label: "Add/remove remark", kind: "remarks" },
+  { label: "Transfer", kind: "transfer" },
+  { label: "Print boarding pass", kind: "print" },
+];
+
 interface Props {
   kind: ActionsPanelKind;
   flight: Flight;

@@ -237,6 +237,8 @@ export const RU: Record<string, string> = {
   "Child (travelling with a guardian on this PNR)": "Ребёнок (летит с сопровождающим по этому PNR)",
   "Travelling with an infant": "Летит с младенцем",
   "No pax found.": "Пассажиры не найдены.",
+  "{n} selected": "Выбрано: {n}",
+  "Clear": "Очистить",
   "Right-click a row to assign/change or swap the seat, edit the passenger, or delete them.":
     "Щёлкните правой кнопкой по строке, чтобы назначить/изменить или поменять место, отредактировать пассажира или удалить его.",
   "Show seat map": "Показать карту мест",

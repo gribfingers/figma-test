@@ -24,7 +24,7 @@ import { FlightInfoPanel } from "../components/checkin/FlightInfoPanel";
 import { CartPanel } from "../components/checkin/CartPanel";
 import { FlagKind, FlagModal } from "../components/flightcard/PassengerModals";
 import { PassengerDocPanel } from "../components/PassengerDocPanel";
-import { ActionsPanel, ActionsPanelKind } from "../components/checkin/ActionsPanel";
+import { ACTIONS_MENU_ITEMS, ActionsPanel, ActionsPanelKind } from "../components/checkin/ActionsPanel";
 import { Modal } from "../components/Modal";
 import { FLOW_STEPS, FLOW_STEP_LABEL, FlowStep, useCheckinFlow } from "../checkinFlow";
 import { usePersistentState } from "../usePersistentState";
@@ -44,16 +44,6 @@ const extraPassengersCache = new Map<number, Passenger[]>();
 const CHECKIN_FROM_MIN = -180;
 const BOARDING_FROM_MIN = -45;
 const BOARDING_TO_MIN = -15;
-
-const ACTIONS_MENU_ITEMS: { label: string; kind: ActionsPanelKind }[] = [
-  { label: "Quick check-in", kind: "quick" },
-  { label: "Cancel check-in", kind: "cancel" },
-  { label: "Move to another flight", kind: "move" },
-  { label: "Priority List", kind: "priority" },
-  { label: "Add/remove remark", kind: "remarks" },
-  { label: "Transfer", kind: "transfer" },
-  { label: "Print boarding pass", kind: "print" },
-];
 
 function fmtOffsetTime(std: string, min: number): string {
   const t = new Date(new Date(std).getTime() + min * 60000);
