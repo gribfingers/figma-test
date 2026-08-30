@@ -12,6 +12,7 @@ import {
 } from "../components/Icon";
 import { useRegisterTab } from "../tabs";
 import { useToast } from "../toast";
+import { useLanguage } from "../i18n";
 import { FlagKind, FlagModal } from "../components/flightcard/PassengerModals";
 import { PassengerDocPanel } from "../components/PassengerDocPanel";
 import { useRetainedPanelTransition } from "../usePanelMounted";
@@ -137,6 +138,7 @@ const FACETS: { key: FacetKey; label: string; test: (p: Passenger) => boolean }[
  * boarding pass, or boards/offloads directly.
  */
 export function Boarding() {
+  const { t } = useLanguage();
   const { flightId } = useParams();
   const fid = Number(flightId);
   const navigate = useNavigate();
@@ -239,7 +241,7 @@ export function Boarding() {
     if (!scanValue.trim()) return;
     try {
       const { passenger } = await api.scanBoardingPass(scanValue.trim());
-      setMessage({ kind: "ok", text: `Cleared to board: ${passenger.surname}/${passenger.given_name}, seat ${passenger.seat}` });
+      setMessage({ kind: "ok", text: t("Cleared to board: {surname}/{name}, seat {seat}").replace("{surname}", passenger.surname).replace("{name}", passenger.given_name).replace("{seat}", String(passenger.seat)) });
       setScanValue("");
       refresh();
     } catch (e: any) {
@@ -250,21 +252,21 @@ export function Boarding() {
   async function startBoarding() {
     const updated = await api.startBoarding(fid);
     setFlight(updated);
-    showToast("Boarding started");
+    showToast(t("Boarding started"));
   }
   async function closeFlight() {
-    if (!confirm("Close the flight? Pax checked in but not boarded will be marked NO SHOW.")) return;
+    if (!confirm(t("Close the flight? Pax checked in but not boarded will be marked NO SHOW."))) return;
     const { flight: updated, pfs } = await api.closeFlight(fid);
     setFlight(updated);
-    setManifest({ label: "PFS (final list after flight close-out)", text: pfs });
+    setManifest({ label: t("PFS (final list after flight close-out)"), text: pfs });
     refresh();
-    showToast("Flight closed");
+    showToast(t("Flight closed"));
   }
   async function showPnl() {
-    setManifest({ label: "PNL (passenger name list)", text: await api.pnl(fid) });
+    setManifest({ label: t("PNL (passenger name list)"), text: await api.pnl(fid) });
   }
   async function showPfs() {
-    setManifest({ label: "PFS (current preliminary summary)", text: await api.pfs(fid) });
+    setManifest({ label: t("PFS (current preliminary summary)"), text: await api.pfs(fid) });
   }
 
   function toggleSelected(id: number) {
@@ -280,8 +282,8 @@ export function Boarding() {
     setSelected(allSelected ? new Set() : new Set(rows.map((r) => r.passenger.id)));
   }
 
-  if (notFound) return <EntityNotFound label="This flight" />;
-  if (!flight) return <div className="content">Loading…</div>;
+  if (notFound) return <EntityNotFound label={t("This flight")} />;
+  if (!flight) return <div className="content">{t("Loading…")}</div>;
   const closed = flight.status === "CLOSED" || flight.status === "DEPARTED";
 
   return (
@@ -292,7 +294,7 @@ export function Boarding() {
           <div className="pnr-head-id-meta">
             <span className="pnr-route">{flight.origin} → {flight.destination}</span>
             <div className="pnr-date">{fmtCardDate(flight.std)}</div>
-            <div className="pnr-date">Gate {flight.gate ?? "—"}</div>
+            <div className="pnr-date">{t("Gate {gate}").replace("{gate}", flight.gate ?? "—")}</div>
           </div>
         </div>
 
@@ -304,13 +306,13 @@ export function Boarding() {
         </div>
 
         <div className="pnr-side">
-          <button type="button" className="icon-button" data-tooltip="Scan a boarding pass" onClick={() => setScanOpen((v) => !v)}>
+          <button type="button" className="icon-button" data-tooltip={t("Scan a boarding pass")} onClick={() => setScanOpen((v) => !v)}>
             <HandIcon size={20} />
           </button>
           {flight.status === "BOARDING" ? (
-            <button type="button" className="danger boarding-start-btn" onClick={closeFlight} disabled={closed}>Close flight</button>
+            <button type="button" className="danger boarding-start-btn" onClick={closeFlight} disabled={closed}>{t("Close flight")}</button>
           ) : (
-            <button type="button" className="secondary boarding-start-btn" disabled={closed} onClick={startBoarding}>Start boarding</button>
+            <button type="button" className="secondary boarding-start-btn" disabled={closed} onClick={startBoarding}>{t("Start boarding")}</button>
           )}
         </div>
       </div>
@@ -319,18 +321,18 @@ export function Boarding() {
         <div className="panel">
           <form onSubmit={handleScan} className="toolbar" style={{ alignItems: "flex-end" }}>
             <div style={{ flex: 1 }}>
-              <label>Scan boarding pass (BCBP)</label>
+              <label>{t("Scan boarding pass (BCBP)")}</label>
               <div className="input-box">
                 <input
                   className="mono"
-                  placeholder="Paste the boarding pass BCBP string…"
+                  placeholder={t("Paste the boarding pass BCBP string…")}
                   value={scanValue}
                   disabled={closed}
                   onChange={(e) => setScanValue(e.target.value)}
                 />
               </div>
             </div>
-            <button type="submit" disabled={closed}>Scan</button>
+            <button type="submit" disabled={closed}>{t("Scan")}</button>
           </form>
         </div>
       )}
@@ -340,19 +342,19 @@ export function Boarding() {
       <div className="panel panel--flush boarding-table-panel">
         <div className="toolbar panel-head">
           <button type="button" className={`quick-status-pill ${quickFilter === "all" ? "selected" : ""}`} onClick={() => setQuickFilter("all")}>
-            All ({passengers.length})
+            {t("All")} ({passengers.length})
           </button>
           <button type="button" className={`quick-status-pill ${quickFilter === "yet" ? "selected" : ""}`} onClick={() => setQuickFilter("yet")}>
-            Yet to board ({yetToBoardCount})
+            {t("Yet to board")} ({yetToBoardCount})
           </button>
           <button type="button" className={`quick-status-pill ${quickFilter === "boarded" ? "selected" : ""}`} onClick={() => setQuickFilter("boarded")}>
-            Boarded ({boardedCount})
+            {t("Boarded")} ({boardedCount})
           </button>
           <div className="spacer" />
           {selected.size > 0 && (
             <>
-              <button type="button" className="secondary small" disabled={closed} onClick={boardSelected}>Board ({selected.size})</button>
-              <button type="button" className="danger small" disabled={closed} onClick={offloadSelected}>Offload ({selected.size})</button>
+              <button type="button" className="secondary small" disabled={closed} onClick={boardSelected}>{t("Board")} ({selected.size})</button>
+              <button type="button" className="danger small" disabled={closed} onClick={offloadSelected}>{t("Offload")} ({selected.size})</button>
             </>
           )}
           <button type="button" className="tertiary" onClick={showPnl}>PNL</button>
@@ -362,15 +364,15 @@ export function Boarding() {
         <div className="toolbar panel-head">
           <div className="search-mode-bar" style={{ flex: 1 }}>
             <div className="search-mode-tabs">
-              <button type="button" className={`search-mode-tab ${searchMode === "seq" ? "selected" : ""}`} onClick={() => setSearchMode("seq")}>Sq №</button>
-              <button type="button" className={`search-mode-tab ${searchMode === "seat" ? "selected" : ""}`} onClick={() => setSearchMode("seat")}>Seat</button>
-              <button type="button" className={`search-mode-tab ${searchMode === "lastname" ? "selected" : ""}`} onClick={() => setSearchMode("lastname")}>Last Name</button>
+              <button type="button" className={`search-mode-tab ${searchMode === "seq" ? "selected" : ""}`} onClick={() => setSearchMode("seq")}>{t("Sq №")}</button>
+              <button type="button" className={`search-mode-tab ${searchMode === "seat" ? "selected" : ""}`} onClick={() => setSearchMode("seat")}>{t("Seat")}</button>
+              <button type="button" className={`search-mode-tab ${searchMode === "lastname" ? "selected" : ""}`} onClick={() => setSearchMode("lastname")}>{t("Last Name")}</button>
             </div>
             <input
               className="search-mode-input"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search"
+              placeholder={t("Search")}
             />
           </div>
           <div className="pax-quick-filters">
@@ -381,7 +383,7 @@ export function Boarding() {
                 className={`pax-quick-filter ${facet === f.key ? "selected" : ""}`}
                 onClick={() => setFacet(f.key)}
               >
-                {f.label} ({passengers.filter(f.test).length})
+                {t(f.label)} ({passengers.filter(f.test).length})
               </button>
             ))}
           </div>
@@ -394,16 +396,16 @@ export function Boarding() {
                 <th>
                   <input type="checkbox" checked={allSelected} onChange={toggleAllSelected} />
                 </th>
-                <th>Name</th>
-                <th>Remarks</th>
-                <th>Route</th>
-                <th>Class</th>
+                <th>{t("Name")}</th>
+                <th>{t("Remarks")}</th>
+                <th>{t("Route")}</th>
+                <th>{t("Class")}</th>
                 <th>PNR</th>
-                <th>Gender</th>
-                <th>Status</th>
-                <th>Docs</th>
-                <th>Baggage</th>
-                <th>Seat</th>
+                <th>{t("Gender")}</th>
+                <th>{t("Status")}</th>
+                <th>{t("Docs")}</th>
+                <th>{t("Baggage")}</th>
+                <th>{t("Seat")}</th>
               </tr>
             </thead>
             <tbody>
@@ -456,13 +458,13 @@ export function Boarding() {
                     <td>{cls ?? "—"}</td>
                     <td className="mono">{p.record_locator}</td>
                     <td>{p.gender ?? "—"}</td>
-                    <td><span className={`chip middle ${statusChipClass(p)}`}>{statusLabel(p)}</span></td>
+                    <td><span className={`chip middle ${statusChipClass(p)}`}>{t(statusLabel(p))}</span></td>
                     <td>
                       <span className="pnr-doc-icons">
-                        <span title="Documents verified against the booking">
+                        <span title={t("Documents verified against the booking")}>
                           <DocVerifiedIcon size={16} className={extra.docVerified ? "pnr-doc-icon-on" : "pnr-doc-icon-off"} />
                         </span>
-                        <span title="Documents scanned">
+                        <span title={t("Documents scanned")}>
                           <DocScannedIcon size={16} className={extra.docScanned ? "pnr-doc-icon-on" : "pnr-doc-icon-off"} />
                         </span>
                       </span>
@@ -476,7 +478,7 @@ export function Boarding() {
                 );
               })}
               {rows.length === 0 && (
-                <tr><td colSpan={11} style={{ color: "var(--muted)" }}>No pax match.</td></tr>
+                <tr><td colSpan={11} style={{ color: "var(--muted)" }}>{t("No pax match.")}</td></tr>
               )}
             </tbody>
           </table>
@@ -487,7 +489,7 @@ export function Boarding() {
         <div className="panel">
           <div className="manifest-head">
             <h3>{manifest.label}</h3>
-            <button type="button" className="icon-button" aria-label="Close" onClick={() => setManifest(null)}>
+            <button type="button" className="icon-button" aria-label={t("Close")} onClick={() => setManifest(null)}>
               <CloseIcon size={16} />
             </button>
           </div>

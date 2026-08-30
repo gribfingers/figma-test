@@ -507,4 +507,19 @@ export const RU: Record<string, string> = {
   "Matches found. Please select the correct passengers:": "Найдены совпадения. Выберите нужных пассажиров:",
   "Remove transfer": "Удалить трансфер",
   "No passengers selected to match.": "Нет пассажиров для сопоставления.",
+
+  // ---- Boarding.tsx ----
+  "Not checked-in": "Не зарегистрирован",
+  "Cleared to board: {surname}/{name}, seat {seat}": "Допущен к посадке: {surname}/{name}, место {seat}",
+  "Boarding started": "Посадка начата",
+  "Scan a boarding pass": "Сканировать посадочный талон",
+  "Scan boarding pass (BCBP)": "Сканировать посадочный талон (BCBP)",
+  "Paste the boarding pass BCBP string…": "Вставьте строку BCBP посадочного талона…",
+  "Start boarding": "Начать посадку",
+  "Yet to board": "Ожидают посадки",
+  Board: "Посадить",
+  "Sq №": "Пор. №",
+  "Docs to verify": "Документы для проверки",
+  "Services to pay": "Услуги к оплате",
+  "No pax match.": "Нет совпадений.",
 };
