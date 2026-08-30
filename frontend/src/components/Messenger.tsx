@@ -3,6 +3,7 @@ import { api, Contact, Message } from "../api";
 import { useAuth } from "../auth";
 import { resizeDataUrl, resizeImageToDataUrl, userAvatarColor, userInitials } from "../userDisplay";
 import { ArrowBackIcon, AttachIcon, CameraIcon, CloseIcon, SendIcon } from "./Icon";
+import { useLanguage } from "../i18n";
 
 interface Props {
   open: boolean;
@@ -14,10 +15,10 @@ function timeLabel(iso: string): string {
   return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 }
 
-function previewText(m: Message | null): string {
-  if (!m) return "No messages yet";
+function previewText(m: Message | null, t: (text: string) => string): string {
+  if (!m) return t("No messages yet");
   if (m.body) return m.body;
-  if (m.image) return "📷 Photo";
+  if (m.image) return t("📷 Photo");
   return "";
 }
 
@@ -50,6 +51,7 @@ async function captureScreenshot(): Promise<string> {
 }
 
 export function Messenger({ open, onClose }: Props) {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [query, setQuery] = useState("");
@@ -172,13 +174,13 @@ export function Messenger({ open, onClose }: Props) {
         {!activeContact ? (
           <>
             <div className="messenger-header">
-              <div className="messenger-title" style={{ flex: 1 }}>Messages</div>
-              <button type="button" className="icon-button" onClick={onClose} aria-label="Close">
+              <div className="messenger-title" style={{ flex: 1 }}>{t("Messages")}</div>
+              <button type="button" className="icon-button" onClick={onClose} aria-label={t("Close")}>
                 <CloseIcon size={16} />
               </button>
             </div>
             <div className="messenger-search">
-              <input placeholder="Search people…" value={query} onChange={(e) => setQuery(e.target.value)} />
+              <input placeholder={t("Search people…")} value={query} onChange={(e) => setQuery(e.target.value)} />
             </div>
             <div className="messenger-contacts">
               {filteredContacts.map((c) => (
@@ -193,7 +195,7 @@ export function Messenger({ open, onClose }: Props) {
                     <span className="messenger-contact-name">
                       {c.first_name} {c.last_name}
                     </span>
-                    <span className="messenger-contact-preview">{previewText(c.lastMessage)}</span>
+                    <span className="messenger-contact-preview">{previewText(c.lastMessage, t)}</span>
                   </span>
                   <span className="messenger-contact-meta">
                     {c.lastMessage && <span className="messenger-contact-time">{timeLabel(c.lastMessage.created_at)}</span>}
@@ -203,7 +205,7 @@ export function Messenger({ open, onClose }: Props) {
               ))}
               {filteredContacts.length === 0 && (
                 <div className="messenger-empty">
-                  {contacts.length === 0 ? "No other users yet — ask your superadmin to create accounts." : "No matches."}
+                  {contacts.length === 0 ? t("No other users yet — ask your superadmin to create accounts.") : t("No matches")}
                 </div>
               )}
             </div>
@@ -211,7 +213,7 @@ export function Messenger({ open, onClose }: Props) {
         ) : (
           <>
             <div className="messenger-header">
-              <button type="button" className="icon-button" onClick={backToList} aria-label="Back">
+              <button type="button" className="icon-button" onClick={backToList} aria-label={t("Back")}>
                 <ArrowBackIcon size={18} />
               </button>
               <span
@@ -223,7 +225,7 @@ export function Messenger({ open, onClose }: Props) {
               <div className="messenger-title" style={{ flex: 1 }}>
                 {activeContact.first_name} {activeContact.last_name}
               </div>
-              <button type="button" className="icon-button" onClick={onClose} aria-label="Close">
+              <button type="button" className="icon-button" onClick={onClose} aria-label={t("Close")}>
                 <CloseIcon size={16} />
               </button>
             </div>
@@ -248,14 +250,14 @@ export function Messenger({ open, onClose }: Props) {
                   </div>
                 );
               })}
-              {messages.length === 0 && <div className="messenger-empty">Say hello 👋</div>}
+              {messages.length === 0 && <div className="messenger-empty">{t("Say hello 👋")}</div>}
             </div>
 
             <div className="messenger-composer">
               {pendingImage && (
                 <div className="messenger-pending-image">
                   <img src={pendingImage} alt="" />
-                  <button type="button" className="messenger-pending-remove" onClick={() => setPendingImage(null)} aria-label="Remove image">
+                  <button type="button" className="messenger-pending-remove" onClick={() => setPendingImage(null)} aria-label={t("Remove image")}>
                     <CloseIcon size={12} />
                   </button>
                 </div>
@@ -266,20 +268,20 @@ export function Messenger({ open, onClose }: Props) {
                   onChange={(e) => setDraft(e.target.value)}
                   onKeyDown={onComposerKeyDown}
                   onPaste={onPaste}
-                  placeholder="Write a message…"
+                  placeholder={t("Write a message…")}
                   rows={1}
                 />
                 <input ref={fileInputRef} type="file" accept="image/*" hidden onChange={onFilePick} />
-                <button type="button" className="icon-button" title="Attach image" onClick={() => fileInputRef.current?.click()}>
+                <button type="button" className="icon-button" title={t("Attach image")} onClick={() => fileInputRef.current?.click()}>
                   <AttachIcon size={18} />
                 </button>
-                <button type="button" className="icon-button" title="Take a screenshot" disabled={capturing} onClick={onScreenshot}>
+                <button type="button" className="icon-button" title={t("Take a screenshot")} disabled={capturing} onClick={onScreenshot}>
                   <CameraIcon size={18} />
                 </button>
                 <button
                   type="button"
                   className="icon-button messenger-send"
-                  title="Send"
+                  title={t("Send")}
                   disabled={sending || (!draft.trim() && !pendingImage)}
                   onClick={send}
                 >

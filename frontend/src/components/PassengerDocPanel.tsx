@@ -1,6 +1,7 @@
 import { api, Passenger } from "../api";
 import { parsePassengerExtra } from "../paxExtra";
 import { CloseIcon } from "./Icon";
+import { useLanguage } from "../i18n";
 
 const DOC_TYPE_LABELS: Record<string, string> = { P: "Passport", V: "Visa", ID: "ID card" };
 
@@ -25,6 +26,7 @@ interface Props {
  * step's own "Verify docs" action.
  */
 export function PassengerDocPanel({ flightId, passenger, open, onClose, onUpdated }: Props) {
+  const { t } = useLanguage();
   const extra = parsePassengerExtra(passenger);
   const fullName = [passenger.surname, passenger.given_name, passenger.middle_name].filter(Boolean).join(" ");
 
@@ -41,47 +43,47 @@ export function PassengerDocPanel({ flightId, passenger, open, onClose, onUpdate
       <div className="pax-doc-panel" onClick={(e) => e.stopPropagation()}>
         <div className="pax-doc-panel-header">
           <div className="pax-doc-panel-name">{fullName}</div>
-          <button type="button" className="icon-button" onClick={onClose} aria-label="Close">
+          <button type="button" className="icon-button" onClick={onClose} aria-label={t("Close")}>
             <CloseIcon size={16} />
           </button>
         </div>
 
         <div className="pax-doc-fields">
           <div className="pax-doc-field">
-            <span className="pax-doc-field-label">Document Type</span>
-            <span className="pax-doc-field-value">{DOC_TYPE_LABELS[passenger.document_type ?? ""] ?? passenger.document_type ?? "—"}</span>
+            <span className="pax-doc-field-label">{t("Document Type")}</span>
+            <span className="pax-doc-field-value">{t(DOC_TYPE_LABELS[passenger.document_type ?? ""] ?? passenger.document_type ?? "—")}</span>
           </div>
           <div className="pax-doc-field">
-            <span className="pax-doc-field-label">Document Number</span>
+            <span className="pax-doc-field-label">{t("Document Number")}</span>
             <span className="pax-doc-field-value mono">{passenger.document_number ?? "—"}</span>
           </div>
           <div className="pax-doc-field">
-            <span className="pax-doc-field-label">Valid till</span>
+            <span className="pax-doc-field-label">{t("Valid Till")}</span>
             <span className="pax-doc-field-value">{fmtDMY(passenger.doc_expiry)}</span>
           </div>
           <div className="pax-doc-field">
-            <span className="pax-doc-field-label">Issue Country</span>
+            <span className="pax-doc-field-label">{t("Issue Country")}</span>
             <span className="pax-doc-field-value">{passenger.nationality ?? "—"}</span>
           </div>
           <div className="pax-doc-field">
-            <span className="pax-doc-field-label">Name</span>
+            <span className="pax-doc-field-label">{t("Name")}</span>
             <span className="pax-doc-field-value">{fullName}</span>
           </div>
           <div className="pax-doc-field">
-            <span className="pax-doc-field-label">Birth Date</span>
+            <span className="pax-doc-field-label">{t("Birth Date")}</span>
             <span className="pax-doc-field-value">{fmtDMY(passenger.dob)}</span>
           </div>
           <div className="pax-doc-field">
-            <span className="pax-doc-field-label">Gender</span>
+            <span className="pax-doc-field-label">{t("Gender")}</span>
             <span className="pax-doc-field-value">{passenger.gender ?? "—"}</span>
           </div>
           <div className="pax-doc-field">
-            <span className="pax-doc-field-label">Nationality</span>
+            <span className="pax-doc-field-label">{t("Nationality")}</span>
             <span className="pax-doc-field-value">{passenger.nationality ?? "—"}</span>
           </div>
         </div>
 
-        <button type="button" className="pax-doc-confirm-btn" onClick={confirm}>Confirm</button>
+        <button type="button" className="pax-doc-confirm-btn" onClick={confirm}>{t("Confirm")}</button>
       </div>
     </div>
   );

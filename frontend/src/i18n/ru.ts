@@ -570,4 +570,22 @@ export const RU: Record<string, string> = {
   "Flight number": "Номер рейса",
   "Manual entry — for flights without a preloaded schedule": "Ручной ввод — для рейсов без предзагруженного расписания",
   "Create flight": "Создать рейс",
+
+  // ---- PassengerDocPanel.tsx ----
+  Passport: "Паспорт",
+  Visa: "Виза",
+  "ID card": "Удостоверение личности",
+  Nationality: "Гражданство",
+
+  // ---- Messenger.tsx ----
+  "No messages yet": "Пока нет сообщений",
+  "📷 Photo": "📷 Фото",
+  "Search people…": "Поиск людей…",
+  "No other users yet — ask your superadmin to create accounts.": "Пока нет других пользователей — попросите суперадминистратора создать учётные записи.",
+  "Say hello 👋": "Поздоровайтесь 👋",
+  "Write a message…": "Напишите сообщение…",
+  "Remove image": "Удалить изображение",
+  "Attach image": "Прикрепить изображение",
+  "Take a screenshot": "Сделать скриншот",
+  Send: "Отправить",
 };
