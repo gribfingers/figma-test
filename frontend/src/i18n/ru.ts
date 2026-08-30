@@ -8,6 +8,10 @@ export const RU: Record<string, string> = {
   Close: "Закрыть",
   Cancel: "Отмена",
   Save: "Сохранить",
+  "This action isn't available right now.": "Это действие сейчас недоступно.",
+  "You have read-only access": "У вас доступ только для просмотра",
+  "You're signed in with a test account and don't have edit rights — everything here is read-only.":
+    "Вы вошли под тестовым аккаунтом и у вас нет прав на редактирование — здесь всё доступно только для просмотра.",
   Search: "Поиск",
   OK: "ОК",
   Loading: "Загрузка…",

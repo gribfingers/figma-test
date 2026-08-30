@@ -13,6 +13,7 @@ import { PassengerDocPanel } from "../components/PassengerDocPanel";
 import { usePanelTransition } from "../usePanelMounted";
 import { EntityNotFound } from "../components/EntityNotFound";
 import { useLanguage } from "../i18n";
+import { useCanEdit } from "../auth";
 
 // Matches Boarding.tsx's fmtCardDate/parseVersion/StatBar/statusLabel/statusChipClass — same
 // light duplication this session's other pages already use rather than a shared module
@@ -100,6 +101,7 @@ export function BoardingPax() {
   const docPanelTransition = usePanelTransition(docPanelOpen);
   const { showToast } = useToast();
   const { closeTab } = useTabs();
+  const canEdit = useCanEdit();
 
   const [notFound, setNotFound] = useState(false);
   function refresh() {
@@ -132,7 +134,7 @@ export function BoardingPax() {
   }
 
   async function boardThis() {
-    if (!passenger?.bcbp) return;
+    if (!canEdit || !passenger?.bcbp) return;
     try {
       await api.scanBoardingPass(passenger.bcbp);
       // Tab closes once the toast itself dismisses (same pattern as PnrView's
@@ -143,7 +145,7 @@ export function BoardingPax() {
     }
   }
   async function unboardThis() {
-    if (!passenger) return;
+    if (!canEdit || !passenger) return;
     try {
       await api.unboard(fid, passenger.id);
       refresh();
@@ -222,22 +224,24 @@ export function BoardingPax() {
           <div className="boarding-pax-name" onClick={() => setDocPanelOpen(true)} style={{ cursor: "pointer" }}>
             {passenger.surname} {passenger.given_name}
           </div>
-          <div className="boarding-pax-steps">
-            {STEP_ICONS.map(({ step, icon, tooltip }) => (
-              <Link
-                key={step}
-                to={`/checkin/${fid}/pnr/${passenger.id}`}
-                target="_blank"
-                data-tooltip={t(tooltip)}
-                onClick={() => {
-                  presetFlowSelection(passenger.id);
-                  presetCheckinStep(passenger.id, step);
-                }}
-              >
-                {icon(28)}
-              </Link>
-            ))}
-          </div>
+          {canEdit && (
+            <div className="boarding-pax-steps">
+              {STEP_ICONS.map(({ step, icon, tooltip }) => (
+                <Link
+                  key={step}
+                  to={`/checkin/${fid}/pnr/${passenger.id}`}
+                  target="_blank"
+                  data-tooltip={t(tooltip)}
+                  onClick={() => {
+                    presetFlowSelection(passenger.id);
+                    presetCheckinStep(passenger.id, step);
+                  }}
+                >
+                  {icon(28)}
+                </Link>
+              ))}
+            </div>
+          )}
 
           <div className="boarding-pax-seat-row">
             <span className="boarding-pax-seat-box mono">{passenger.seat ? formatSeatDisplay(passenger.seat) : "—"}</span>
@@ -250,23 +254,25 @@ export function BoardingPax() {
 
           {comment && <div className="boarding-pax-comment">{comment}</div>}
 
-          <div className="boarding-pax-actions">
-            {passenger.boarding_status === "BOARDED" ? (
-              <button type="button" className="secondary boarding-pax-action-btn" onClick={unboardThis}>
-                {t("Unboard")}
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="boarding-pax-action-btn"
-                disabled={passenger.checkin_status !== "CHECKED_IN"}
-                onClick={boardThis}
-              >
-                {t("Board")}
-              </button>
-            )}
-            <button type="button" className="secondary boarding-pax-action-btn">{t("Reprint BP")}</button>
-          </div>
+          {canEdit && (
+            <div className="boarding-pax-actions">
+              {passenger.boarding_status === "BOARDED" ? (
+                <button type="button" className="secondary boarding-pax-action-btn" onClick={unboardThis}>
+                  {t("Unboard")}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="boarding-pax-action-btn"
+                  disabled={passenger.checkin_status !== "CHECKED_IN"}
+                  onClick={boardThis}
+                >
+                  {t("Board")}
+                </button>
+              )}
+              <button type="button" className="secondary boarding-pax-action-btn">{t("Reprint BP")}</button>
+            </div>
+          )}
         </div>
 
         <div className="panel boarding-pax-map">
@@ -288,6 +294,7 @@ export function BoardingPax() {
           open={docPanelTransition.entered}
           onClose={() => setDocPanelOpen(false)}
           onUpdated={() => refresh()}
+          readOnly={!canEdit}
         />
       )}
     </div>

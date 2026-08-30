@@ -70,6 +70,14 @@ export function useAuth() {
   return ctx;
 }
 
+/** Whether the logged-in user can perform mutating actions (create/change/delete flights,
+ *  passengers, seats, boarding) — mirrors the backend's requireEdit middleware: a superadmin
+ *  always can, a regular user only if their can_edit flag is set. Read-only otherwise. */
+export function useCanEdit(): boolean {
+  const { user } = useAuth();
+  return user?.role === "superadmin" || !!user?.can_edit;
+}
+
 /** Route guard: renders the nested routes only once logged in, otherwise sends to /login. */
 export function RequireAuth() {
   const { user, loading } = useAuth();

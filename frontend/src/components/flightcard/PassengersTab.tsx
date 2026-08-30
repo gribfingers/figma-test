@@ -30,6 +30,9 @@ import { ACTIONS_MENU_ITEMS, ActionsPanel, ActionsPanelKind } from "../checkin/A
 
 interface Props {
   flight: Flight;
+  /** Whether the logged-in user lacks edit rights (see useCanEdit) — hides every action that would
+   *  mutate a passenger, seat, or the flight itself, leaving the roster and seat map browsable. */
+  readOnly?: boolean;
 }
 
 type ModalKind = "summary" | "documents" | "remarks" | "baggage" | FlagKind;
@@ -119,7 +122,7 @@ const STATUS_CLASS: Record<FlagStatus, string> = {
   conflict: "danger",
 };
 
-export function PassengersTab({ flight }: Props) {
+export function PassengersTab({ flight, readOnly }: Props) {
   const { t } = useLanguage();
   const [passengers, setPassengers] = useState<Passenger[]>([]);
   const [seats, setSeats] = useState<SeatCell[]>([]);
@@ -194,12 +197,14 @@ export function PassengersTab({ flight }: Props) {
   }
 
   function startAssignSeat(p: Passenger) {
+    if (readOnly) return;
     setContextMenu(null);
     setMapHidden(false);
     setSeatAction({ passenger: p, mode: "assign" });
   }
 
   function startSwapSeat(p: Passenger) {
+    if (readOnly) return;
     setContextMenu(null);
     setMapHidden(false);
     setSeatAction({ passenger: p, mode: "swap" });
@@ -258,6 +263,7 @@ export function PassengersTab({ flight }: Props) {
   }
 
   async function deletePassenger(p: Passenger) {
+    if (readOnly) return;
     setContextMenu(null);
     if (!(await confirmDialog(t("Delete pax {name}?").replace("{name}", `${p.surname} ${p.given_name}`), { danger: true }))) return;
     try {
@@ -270,6 +276,7 @@ export function PassengersTab({ flight }: Props) {
   }
 
   function openAdd() {
+    if (readOnly) return;
     setAddDraft(EMPTY_PAX_DRAFT);
     setError("");
     setAddOpen(true);
@@ -440,8 +447,9 @@ export function PassengersTab({ flight }: Props) {
           onToggleColumn={toggleColumn}
           totalCount={filteredPassengers.length}
           onAddPassenger={openAdd}
+          hideAddPassenger={readOnly}
         />
-        {selectedIds.size > 0 && (
+        {!readOnly && selectedIds.size > 0 && (
           <div className="pax-selection-bar">
             <span className="pax-selection-count">{t("{n} selected").replace("{n}", String(selectedIds.size))}</span>
             <button type="button" className="link-btn" onClick={() => setSelectedIds(new Set())}>
@@ -490,14 +498,16 @@ export function PassengersTab({ flight }: Props) {
             <thead>
               <tr>
                 <th>
-                  <input
-                    type="checkbox"
-                    checked={allRowsSelected}
-                    ref={(el) => {
-                      if (el) el.indeterminate = someRowsSelected && !allRowsSelected;
-                    }}
-                    onChange={toggleAllSelected}
-                  />
+                  {!readOnly && (
+                    <input
+                      type="checkbox"
+                      checked={allRowsSelected}
+                      ref={(el) => {
+                        if (el) el.indeterminate = someRowsSelected && !allRowsSelected;
+                      }}
+                      onChange={toggleAllSelected}
+                    />
+                  )}
                 </th>
                 <SortTh id="name" label={t("Name")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
                 {visibleColumns.has("pnr") && <SortTh id="pnr" label="PNR" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />}
@@ -533,19 +543,25 @@ export function PassengersTab({ flight }: Props) {
                     }}
                     className={`clickable ${nested ? "pax-row-nested" : ""} ${p.id === activeId ? "pax-row-active" : ""}`}
                     onClick={() => setActiveId(p.id)}
-                    onContextMenu={(e) => {
-                      e.preventDefault();
-                      setActiveId(p.id);
-                      setContextMenu({ x: e.clientX, y: e.clientY, passenger: p });
-                    }}
+                    onContextMenu={
+                      readOnly
+                        ? undefined
+                        : (e) => {
+                            e.preventDefault();
+                            setActiveId(p.id);
+                            setContextMenu({ x: e.clientX, y: e.clientY, passenger: p });
+                          }
+                    }
                   >
                     <td>
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.has(p.id)}
-                        onChange={() => toggleSelected(p.id)}
-                        onClick={(e) => e.stopPropagation()}
-                      />
+                      {!readOnly && (
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(p.id)}
+                          onChange={() => toggleSelected(p.id)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      )}
                     </td>
                     <td>
                       <div className="pax-name-cell">
@@ -659,7 +675,7 @@ export function PassengersTab({ flight }: Props) {
             onHide={() => setMapHidden(true)}
             cabinFeatures={cabinFeatures}
             onSelectOccupied={handleOccupiedSeatClick}
-            onUnassign={seatAction ? undefined : handleUnassignSeatClick}
+            onUnassign={readOnly || seatAction ? undefined : handleUnassignSeatClick}
             ineligibleSeats={ineligibleSeats}
             undesirableSeats={undesirableSeats}
           />
@@ -688,6 +704,7 @@ export function PassengersTab({ flight }: Props) {
             passenger={modal.passenger}
             onClose={() => setModal(null)}
             onUpdated={handleUpdated}
+            readOnly={readOnly}
           />
         ) : (
           <PassengerDetailModal
@@ -698,6 +715,7 @@ export function PassengersTab({ flight }: Props) {
             onSeatUpdated={handleSeatUpdated}
             onClose={() => setModal(null)}
             onUpdated={handleUpdated}
+            readOnly={readOnly}
           />
         )
       )}

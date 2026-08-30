@@ -17,6 +17,8 @@ interface Props {
   open: boolean;
   onClose: () => void;
   onUpdated: (p: Passenger) => void;
+  /** A read-only user (see useCanEdit) can still look at the document, just not confirm it. */
+  readOnly?: boolean;
 }
 
 /**
@@ -25,7 +27,7 @@ interface Props {
  * as a link. Confirm marks the document verified, same as the Documents
  * step's own "Verify docs" action.
  */
-export function PassengerDocPanel({ flightId, passenger, open, onClose, onUpdated }: Props) {
+export function PassengerDocPanel({ flightId, passenger, open, onClose, onUpdated, readOnly }: Props) {
   const { t } = useLanguage();
   const extra = parsePassengerExtra(passenger);
   const fullName = [passenger.surname, passenger.given_name, passenger.middle_name].filter(Boolean).join(" ");
@@ -83,7 +85,9 @@ export function PassengerDocPanel({ flightId, passenger, open, onClose, onUpdate
           </div>
         </div>
 
-        <button type="button" className="pax-doc-confirm-btn" onClick={confirm}>{t("Confirm")}</button>
+        {!readOnly && (
+          <button type="button" className="pax-doc-confirm-btn" onClick={confirm}>{t("Confirm")}</button>
+        )}
       </div>
     </div>
   );

@@ -13,9 +13,12 @@ import { useLanguage } from "../../i18n";
 interface Props {
   flight: Flight;
   /** A departed flight's own record can't be changed anymore (see FlightCard.tsx's isFlightDeparted) —
-   *  same rule as the Main tab. The danger zone stays interactive regardless: deleting the flight
-   *  record is independent of whether it has already flown. */
+   *  same rule as the Main tab. The danger zone stays interactive regardless of this flag: deleting the
+   *  flight record is independent of whether it has already flown. */
   readOnly?: boolean;
+  /** Whether the logged-in user has edit rights at all (see useCanEdit). Unlike `readOnly`, this also
+   *  covers the danger zone — a read-only user must never be able to delete the flight, departed or not. */
+  canEdit: boolean;
   onFlightUpdated: (flight: Flight) => void;
 }
 
@@ -50,7 +53,7 @@ function overbookingFromFlight(flight: Flight): OverbookingSettings {
  * flight record itself (cancelling it is already a status, not a delete —
  * see ops_status "canceled_no_host" on FlightStatusSelect).
  */
-export function SettingsTab({ flight, readOnly, onFlightUpdated }: Props) {
+export function SettingsTab({ flight, readOnly, canEdit, onFlightUpdated }: Props) {
   const { t } = useLanguage();
   const { showToast } = useToast();
   const { confirmDialog } = useConfirmDialog();
@@ -86,7 +89,7 @@ export function SettingsTab({ flight, readOnly, onFlightUpdated }: Props) {
   const extraY = Number(overbookY) || 0;
 
   async function save() {
-    if (readOnly) return;
+    if (readOnly || !canEdit) return;
     setError("");
     const nums = [checkinMin, boardingMin, closingMin, flyingMin].map(Number);
     if (nums.some((n) => !Number.isFinite(n))) {
@@ -114,6 +117,7 @@ export function SettingsTab({ flight, readOnly, onFlightUpdated }: Props) {
   }
 
   async function deleteFlight() {
+    if (!canEdit) return;
     if (!(await confirmDialog(t("Permanently delete this flight and every passenger on it? This cannot be undone."), { danger: true }))) return;
     setDeleting(true);
     setError("");
@@ -131,7 +135,7 @@ export function SettingsTab({ flight, readOnly, onFlightUpdated }: Props) {
     <div className="settings-tab">
       {error && <div className="error-box">{error}</div>}
 
-      <div className={readOnly ? "settings-readonly" : undefined}>
+      <div className={readOnly || !canEdit ? "settings-readonly" : undefined}>
         <div className="settings-section">
           <h3>{t("Check-in / boarding windows")}</h3>
           <p className="subtitle">{t("Minutes before departure (STD) that each phase begins.")}</p>
@@ -169,20 +173,22 @@ export function SettingsTab({ flight, readOnly, onFlightUpdated }: Props) {
           </p>
         </div>
 
-        {!readOnly && (
+        {!readOnly && canEdit && (
           <button type="button" className="settings-save" disabled={saving} onClick={save}>
             {t("Save")}
           </button>
         )}
       </div>
 
-      <div className="danger-zone">
-        <h3>{t("Danger zone")}</h3>
-        <p className="subtitle">{t("Permanently deletes the flight, its passengers, and its seat map. This cannot be undone.")}</p>
-        <button type="button" className="danger" disabled={deleting} onClick={deleteFlight}>
-          {t("Delete flight")}
-        </button>
-      </div>
+      {canEdit && (
+        <div className="danger-zone">
+          <h3>{t("Danger zone")}</h3>
+          <p className="subtitle">{t("Permanently deletes the flight, its passengers, and its seat map. This cannot be undone.")}</p>
+          <button type="button" className="danger" disabled={deleting} onClick={deleteFlight}>
+            {t("Delete flight")}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

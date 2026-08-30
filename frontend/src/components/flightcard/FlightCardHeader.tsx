@@ -10,6 +10,7 @@ interface Props {
   flight: Flight;
   activeTab: string;
   dirty: boolean;
+  canEdit: boolean;
   onSave: () => void;
   onAction: (action: FlightAction) => void;
   onStatusChange: (key: string) => void;
@@ -31,7 +32,7 @@ function fmtCardDate(std: string): string {
   return `${day}${month}${year} · ${time}`;
 }
 
-export function FlightCardHeader({ flight, activeTab, dirty, onSave, onAction, onStatusChange }: Props) {
+export function FlightCardHeader({ flight, activeTab, dirty, canEdit, onSave, onAction, onStatusChange }: Props) {
   const { t } = useLanguage();
   // Ticks so the highlighted phase keeps up with real time even if nothing
   // else on the page changes (not just right after editing std/sta).
@@ -61,7 +62,7 @@ export function FlightCardHeader({ flight, activeTab, dirty, onSave, onAction, o
           <div className="flight-card-date">{fmtCardDate(flight.std)}</div>
         </div>
 
-        <FlightStatusSelect value={statusKey} onChange={onStatusChange} disabled={departed} />
+        <FlightStatusSelect value={statusKey} onChange={onStatusChange} disabled={departed || !canEdit} />
       </div>
 
       <div className="flight-status-group">
@@ -77,9 +78,22 @@ export function FlightCardHeader({ flight, activeTab, dirty, onSave, onAction, o
       </div>
 
       <div className="flight-card-actions">
-        <FlightActionsMenu onAction={onAction} disabledActions={departed ? new Set<FlightAction>(["checkin", "boarding"]) : undefined} />
+        <FlightActionsMenu
+          onAction={onAction}
+          disabledActions={
+            new Set<FlightAction>([
+              ...(departed ? (["checkin", "boarding"] as const) : []),
+              ...(!canEdit ? (["close"] as const) : []),
+            ])
+          }
+        />
         {activeTab === "main" && (
-          <button type="button" disabled={!dirty || departed} title={departed ? t("A departed flight's record can't be changed") : undefined} onClick={onSave}>
+          <button
+            type="button"
+            disabled={!dirty || departed || !canEdit}
+            title={departed ? t("A departed flight's record can't be changed") : !canEdit ? t("You have read-only access") : undefined}
+            onClick={onSave}
+          >
             {t("Save")}
           </button>
         )}

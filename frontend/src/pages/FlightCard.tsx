@@ -18,6 +18,7 @@ import { SettingsTab } from "../components/flightcard/SettingsTab";
 import { combineDateAndTime, draftFromFlight, draftsEqual, MainDraft, parseFlightExtra } from "../components/flightcard/mainDraft";
 import { useLanguage } from "../i18n";
 import { useConfirmDialog } from "../confirmDialog";
+import { useCanEdit } from "../auth";
 
 const TABS = [
   { key: "main", label: "Main" },
@@ -43,6 +44,7 @@ export function FlightCard() {
   const [notFound, setNotFound] = useState(false);
   const { showToast } = useToast();
   const { confirmDialog } = useConfirmDialog();
+  const canEdit = useCanEdit();
 
   useEffect(() => {
     api
@@ -61,7 +63,7 @@ export function FlightCard() {
   const departed = isFlightDeparted(flight, new Date());
 
   async function handleStatusChange(key: string) {
-    if (!flight) return;
+    if (!flight || !canEdit) return;
     const now = new Date();
     const currentKey = flight.ops_status && flight.ops_status !== OPS_STATUS_UNSET ? flight.ops_status : phaseBasedStatusKey(flight, now);
     if (key === currentKey) return;
@@ -79,7 +81,7 @@ export function FlightCard() {
   }
 
   async function handleSave() {
-    if (!flight || !draft || departed) return;
+    if (!flight || !draft || departed || !canEdit) return;
     setError("");
     const first = draft.segments[0];
     const std = combineDateAndTime(flight.std, first.depDate, first.depTime);
@@ -147,6 +149,7 @@ export function FlightCard() {
         return;
       }
       if (action === "close") {
+        if (!canEdit) return;
         if (!(await confirmDialog(t("Close the flight? Pax checked in but not boarded will be marked NO SHOW."), { danger: true }))) return;
         const { flight: updated, pfs } = await api.closeFlight(flight.id);
         setFlight(updated);
@@ -167,6 +170,7 @@ export function FlightCard() {
           flight={flight}
           activeTab={tab}
           dirty={dirty}
+          canEdit={canEdit}
           onSave={handleSave}
           onAction={handleAction}
           onStatusChange={handleStatusChange}
@@ -189,16 +193,17 @@ export function FlightCard() {
               flight={flight}
               draft={draft}
               onChange={(patch) => setDraft((d) => (d ? { ...d, ...patch } : d))}
-              readOnly={departed}
+              readOnly={departed || !canEdit}
             />
           )}
           {tab === "counters" && <CountersTab />}
-          {tab === "passengers" && <PassengersTab flight={flight} />}
+          {tab === "passengers" && <PassengersTab flight={flight} readOnly={!canEdit} />}
           {tab === "transfers" && <TransfersTab />}
           {tab === "settings" && (
             <SettingsTab
               flight={flight}
               readOnly={departed}
+              canEdit={canEdit}
               onFlightUpdated={(updated) => {
                 setFlight(updated);
                 setDraft(draftFromFlight(updated));

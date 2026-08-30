@@ -29,6 +29,7 @@ import { Modal } from "../components/Modal";
 import { FLOW_STEPS, FLOW_STEP_LABEL, FlowStep, useCheckinFlow } from "../checkinFlow";
 import { usePersistentState } from "../usePersistentState";
 import { useLanguage } from "../i18n";
+import { useCanEdit } from "../auth";
 
 // Last-fetched flight/passengers per flight, kept outside component state so
 // it survives this component unmounting when the agent switches to another
@@ -276,6 +277,7 @@ export function PnrView() {
   const { closeTab } = useTabs();
   const { showToast } = useToast();
   const { t } = useLanguage();
+  const canEdit = useCanEdit();
 
   // Re-visiting a tab that's already open remounts this component from
   // scratch (React Router only keeps the matched route mounted), which
@@ -400,6 +402,13 @@ export function PnrView() {
     if (!hasAnyChecked) setFlowStep(null);
   }, [clicked, flowStep, passengers, extraPassengers, checkedArr]);
 
+  // A read-only user has no way into the flow (the Check-in button below is disabled) — but if their
+  // edit right was revoked while a flow was already open/persisted (see usePersistentState above), drop
+  // them back to the plain roster rather than leaving mutating step UI reachable.
+  useEffect(() => {
+    if (!canEdit && flowStep) setFlowStep(null);
+  }, [canEdit, flowStep]);
+
   if (notFound) return <EntityNotFound label={t("This flight")} />;
   if (!flight || !clicked) return <div className="content">{t("Loading…")}</div>;
 
@@ -475,7 +484,7 @@ export function PnrView() {
   const checkInDisabled = flowStep === "docs" || flowStep === "seats";
 
   function startCheckinFlow() {
-    if (flowPassengers.length === 0) return;
+    if (!canEdit || flowPassengers.length === 0) return;
     setFlowStep("docs");
     setFlowActiveId(flowPassengers[0]?.id ?? null);
   }
@@ -716,6 +725,7 @@ export function PnrView() {
         </div>
       </div>
 
+      {canEdit && (
       <div className="pnr-actions">
         <AddPaxButton
           flightId={fid}
@@ -768,6 +778,7 @@ export function PnrView() {
             document.body
           )}
       </div>
+      )}
 
       <div className="panel panel--flush">
         <div className="table-scroll">
@@ -856,6 +867,7 @@ export function PnrView() {
           open={docPanelTransition.entered}
           onClose={() => setDocPanelPassenger(null)}
           onUpdated={handlePassengerUpdated}
+          readOnly={!canEdit}
         />
       )}
       {actionsPanelTransition.mounted && actionsPanelTransition.retained && (

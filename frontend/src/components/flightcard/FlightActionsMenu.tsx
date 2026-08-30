@@ -65,7 +65,7 @@ export function FlightActionsMenu({ onAction, disabledActions }: Props) {
                 key={a.key}
                 className={`${a.danger ? "danger" : ""} ${disabled ? "disabled" : ""}`}
                 aria-disabled={disabled}
-                title={disabled ? t("A departed flight can't reopen check-in or boarding") : undefined}
+                title={disabled ? t("This action isn't available right now.") : undefined}
                 onClick={() => {
                   if (disabled) return;
                   setOpen(false);

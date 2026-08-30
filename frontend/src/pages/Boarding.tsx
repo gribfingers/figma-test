@@ -27,6 +27,7 @@ import {
   parsePassengerExtra,
   trStatus,
 } from "../paxExtra";
+import { useCanEdit } from "../auth";
 
 // Matches PnrView's fmtCardDate — same UTC wall-clock convention as the rest of the app.
 function fmtCardDate(std: string): string {
@@ -160,6 +161,7 @@ export function Boarding() {
   const docPanelTransition = useRetainedPanelTransition(docPanelPassenger);
   const { showToast } = useToast();
   const { confirmDialog } = useConfirmDialog();
+  const canEdit = useCanEdit();
 
   const [notFound, setNotFound] = useState(false);
   function refresh() {
@@ -204,7 +206,7 @@ export function Boarding() {
   const rows = useMemo(() => buildRows(filteredPassengers), [filteredPassengers]);
 
   async function boardDirectly(p: Passenger) {
-    if (!p.bcbp) return;
+    if (!canEdit || !p.bcbp) return;
     try {
       await api.scanBoardingPass(p.bcbp);
       refresh();
@@ -213,6 +215,7 @@ export function Boarding() {
     }
   }
   async function offload(p: Passenger) {
+    if (!canEdit) return;
     try {
       await api.offload(fid, p.id);
       refresh();
@@ -239,7 +242,7 @@ export function Boarding() {
 
   async function handleScan(e: React.FormEvent) {
     e.preventDefault();
-    if (!scanValue.trim()) return;
+    if (!canEdit || !scanValue.trim()) return;
     try {
       const { passenger } = await api.scanBoardingPass(scanValue.trim());
       setMessage({ kind: "ok", text: t("Cleared to board: {surname}/{name}, seat {seat}").replace("{surname}", passenger.surname).replace("{name}", passenger.given_name).replace("{seat}", String(passenger.seat)) });
@@ -251,11 +254,13 @@ export function Boarding() {
   }
 
   async function startBoarding() {
+    if (!canEdit) return;
     const updated = await api.startBoarding(fid);
     setFlight(updated);
     showToast(t("Boarding started"));
   }
   async function closeFlight() {
+    if (!canEdit) return;
     if (!(await confirmDialog(t("Close the flight? Pax checked in but not boarded will be marked NO SHOW."), { danger: true }))) return;
     const { flight: updated, pfs } = await api.closeFlight(fid);
     setFlight(updated);
@@ -307,18 +312,22 @@ export function Boarding() {
         </div>
 
         <div className="pnr-side">
-          <button type="button" className="icon-button" data-tooltip={t("Scan a boarding pass")} onClick={() => setScanOpen((v) => !v)}>
-            <HandIcon size={20} />
-          </button>
-          {flight.status === "BOARDING" ? (
-            <button type="button" className="danger boarding-start-btn" onClick={closeFlight} disabled={closed}>{t("Close flight")}</button>
-          ) : (
-            <button type="button" className="secondary boarding-start-btn" disabled={closed} onClick={startBoarding}>{t("Start boarding")}</button>
+          {canEdit && (
+            <button type="button" className="icon-button" data-tooltip={t("Scan a boarding pass")} onClick={() => setScanOpen((v) => !v)}>
+              <HandIcon size={20} />
+            </button>
+          )}
+          {canEdit && (
+            flight.status === "BOARDING" ? (
+              <button type="button" className="danger boarding-start-btn" onClick={closeFlight} disabled={closed}>{t("Close flight")}</button>
+            ) : (
+              <button type="button" className="secondary boarding-start-btn" disabled={closed} onClick={startBoarding}>{t("Start boarding")}</button>
+            )
           )}
         </div>
       </div>
 
-      {scanOpen && (
+      {scanOpen && canEdit && (
         <div className="panel">
           <form onSubmit={handleScan} className="toolbar" style={{ alignItems: "flex-end" }}>
             <div style={{ flex: 1 }}>
@@ -352,7 +361,7 @@ export function Boarding() {
             {t("Boarded")} ({boardedCount})
           </button>
           <div className="spacer" />
-          {selected.size > 0 && (
+          {canEdit && selected.size > 0 && (
             <>
               <button type="button" className="secondary small" disabled={closed} onClick={boardSelected}>{t("Board")} ({selected.size})</button>
               <button type="button" className="danger small" disabled={closed} onClick={offloadSelected}>{t("Offload")} ({selected.size})</button>
@@ -395,7 +404,7 @@ export function Boarding() {
             <thead>
               <tr>
                 <th>
-                  <input type="checkbox" checked={allSelected} onChange={toggleAllSelected} />
+                  {canEdit && <input type="checkbox" checked={allSelected} onChange={toggleAllSelected} />}
                 </th>
                 <th>{t("Name")}</th>
                 <th>{t("Remarks")}</th>
@@ -417,12 +426,14 @@ export function Boarding() {
                 return (
                   <tr key={p.id} className={`clickable ${selected.has(p.id) ? "pax-row-active" : ""}`} onClick={() => navigate(`/boarding/${fid}/pax/${p.id}`)}>
                     <td>
-                      <input
-                        type="checkbox"
-                        checked={selected.has(p.id)}
-                        onChange={() => toggleSelected(p.id)}
-                        onClick={(e) => e.stopPropagation()}
-                      />
+                      {canEdit && (
+                        <input
+                          type="checkbox"
+                          checked={selected.has(p.id)}
+                          onChange={() => toggleSelected(p.id)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      )}
                     </td>
                     <td>
                       <div className="pax-name-cell">
@@ -505,6 +516,7 @@ export function Boarding() {
             setPassengers((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
             setFlagsModal((prev) => (prev && prev.passenger.id === updated.id ? { ...prev, passenger: updated } : prev));
           }}
+          readOnly={!canEdit}
         />
       )}
 
@@ -515,6 +527,7 @@ export function Boarding() {
           open={docPanelTransition.entered}
           onClose={() => setDocPanelPassenger(null)}
           onUpdated={(updated) => setPassengers((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))}
+          readOnly={!canEdit}
         />
       )}
     </div>

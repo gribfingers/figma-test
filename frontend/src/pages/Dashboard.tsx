@@ -10,6 +10,7 @@ import { useRegisterTab } from "../tabs";
 import { fullRouteLabel, routeLabel } from "../flightSegments";
 import { currentPhaseIndex, phaseStatusLabel } from "../flightPhase";
 import { useLanguage } from "../i18n";
+import { useCanEdit } from "../auth";
 
 function formatTime(iso: string | null): string {
   if (!iso) return "";
@@ -71,6 +72,7 @@ export function Dashboard() {
   const { t } = useLanguage();
   useRegisterTab(t("Flights"));
   const navigate = useNavigate();
+  const canEdit = useCanEdit();
   const [flights, setFlights] = useState<Flight[]>([]);
   const [error, setError] = useState("");
   // Ticks so the Status column's phase-derived label (Check-in/Boarding/…)
@@ -182,7 +184,9 @@ export function Dashboard() {
             />
             <button type="submit" disabled={searchIsUnchanged}>{t("Search")}</button>
             <div className="spacer" />
-            <Link to="/flights/new"><button type="button" className="secondary">{t("New flight")}</button></Link>
+            {canEdit && (
+              <Link to="/flights/new"><button type="button" className="secondary">{t("New flight")}</button></Link>
+            )}
             <button type="button" className="icon-button" onClick={load} title={t("Refresh")}>
               <RefreshIcon size={20} />
             </button>

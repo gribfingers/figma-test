@@ -31,6 +31,8 @@ interface Props {
   onSeatUpdated: (s: SeatCell) => void;
   onClose: () => void;
   onUpdated: (p: Passenger) => void;
+  /** A read-only user (see useCanEdit) can still open these to look, just not save any change. */
+  readOnly?: boolean;
 }
 
 function paxName(p: Passenger) {
@@ -56,7 +58,7 @@ function trConflict(inboundTime: string, outboundTime: string): boolean {
  * the five Flags-column chips (TR/AUX/COM/FFP/ET) opens its own small
  * modal instead — see FlagModal below.
  */
-export function PassengerDetailModal({ kind, flightId, passenger, seats, onSeatUpdated, onClose, onUpdated }: Props) {
+export function PassengerDetailModal({ kind, flightId, passenger, seats, onSeatUpdated, onClose, onUpdated, readOnly }: Props) {
   const { t } = useLanguage();
   const [draft, setDraft] = useState<PaxDraft>(() => paxDraftFrom(passenger));
   const [saving, setSaving] = useState(false);
@@ -114,7 +116,9 @@ export function PassengerDetailModal({ kind, flightId, passenger, seats, onSeatU
       footer={
         <>
           <button type="button" className="tertiary" onClick={onClose}>{t("Close")}</button>
-          <button type="button" className="tertiary" disabled={saving} onClick={save}>{t("Save")}</button>
+          {!readOnly && (
+            <button type="button" className="tertiary" disabled={saving} onClick={save}>{t("Save")}</button>
+          )}
         </>
       }
     >
@@ -129,19 +133,21 @@ interface FlagModalProps {
   passenger: Passenger;
   onClose: () => void;
   onUpdated: (p: Passenger) => void;
+  /** A read-only user (see useCanEdit) can still open these to look, just not save any change. */
+  readOnly?: boolean;
 }
 
 /** Each Flags-column chip (TR/AUX/COM/FFP/ET) opens its own small, single-purpose modal. */
-export function FlagModal({ kind, flightId, passenger, onClose, onUpdated }: FlagModalProps) {
+export function FlagModal({ kind, flightId, passenger, onClose, onUpdated, readOnly }: FlagModalProps) {
   switch (kind) {
     case "tr":
-      return <TrModal flightId={flightId} passenger={passenger} onClose={onClose} onUpdated={onUpdated} />;
+      return <TrModal flightId={flightId} passenger={passenger} onClose={onClose} onUpdated={onUpdated} readOnly={readOnly} />;
     case "aux":
       return <AuxModal passenger={passenger} onClose={onClose} />;
     case "com":
-      return <ComModal flightId={flightId} passenger={passenger} onClose={onClose} onUpdated={onUpdated} />;
+      return <ComModal flightId={flightId} passenger={passenger} onClose={onClose} onUpdated={onUpdated} readOnly={readOnly} />;
     case "ffp":
-      return <FfpModal flightId={flightId} passenger={passenger} onClose={onClose} onUpdated={onUpdated} />;
+      return <FfpModal flightId={flightId} passenger={passenger} onClose={onClose} onUpdated={onUpdated} readOnly={readOnly} />;
     case "et":
       return <EtModal passenger={passenger} onClose={onClose} />;
   }
@@ -152,11 +158,13 @@ function TrModal({
   passenger,
   onClose,
   onUpdated,
+  readOnly,
 }: {
   flightId: number;
   passenger: Passenger;
   onClose: () => void;
   onUpdated: (p: Passenger) => void;
+  readOnly?: boolean;
 }) {
   const { t } = useLanguage();
   const extra = parsePassengerExtra(passenger);
@@ -187,7 +195,9 @@ function TrModal({
       footer={
         <>
           <button type="button" className="tertiary" onClick={onClose}>{t("Close")}</button>
-          <button type="button" className="tertiary" disabled={saving} onClick={save}>{t("Save")}</button>
+          {!readOnly && (
+            <button type="button" className="tertiary" disabled={saving} onClick={save}>{t("Save")}</button>
+          )}
         </>
       }
     >
@@ -247,11 +257,13 @@ function ComModal({
   passenger,
   onClose,
   onUpdated,
+  readOnly,
 }: {
   flightId: number;
   passenger: Passenger;
   onClose: () => void;
   onUpdated: (p: Passenger) => void;
+  readOnly?: boolean;
 }) {
   const { t } = useLanguage();
   return (
@@ -261,7 +273,7 @@ function ComModal({
       footer={<button type="button" className="tertiary" onClick={onClose}>{t("Close")}</button>}
     >
       <div className="modal-section-label">{t("Comments")}</div>
-      <CommentsSection flightId={flightId} passenger={passenger} onUpdated={onUpdated} />
+      <CommentsSection flightId={flightId} passenger={passenger} onUpdated={onUpdated} readOnly={readOnly} />
     </Modal>
   );
 }
@@ -271,11 +283,13 @@ function FfpModal({
   passenger,
   onClose,
   onUpdated,
+  readOnly,
 }: {
   flightId: number;
   passenger: Passenger;
   onClose: () => void;
   onUpdated: (p: Passenger) => void;
+  readOnly?: boolean;
 }) {
   const { t } = useLanguage();
   const extra = parsePassengerExtra(passenger);
@@ -303,7 +317,9 @@ function FfpModal({
       footer={
         <>
           <button type="button" className="tertiary" onClick={onClose}>{t("Close")}</button>
-          <button type="button" className="tertiary" disabled={saving} onClick={save}>{t("Save")}</button>
+          {!readOnly && (
+            <button type="button" className="tertiary" disabled={saving} onClick={save}>{t("Save")}</button>
+          )}
         </>
       }
     >
@@ -376,10 +392,12 @@ function CommentsSection({
   flightId,
   passenger,
   onUpdated,
+  readOnly,
 }: {
   flightId: number;
   passenger: Passenger;
   onUpdated: (p: Passenger) => void;
+  readOnly?: boolean;
 }) {
   const { t } = useLanguage();
   const [tab, setTab] = useState<CommentTab>("CHECK-IN");
@@ -428,20 +446,24 @@ function CommentsSection({
         {comments[key].map((c, i) => (
           <div key={i} className="comment-card">
             <span>{c}</span>
-            <button type="button" className="comment-delete" aria-label={t("Delete comment")} onClick={() => remove(i)}>
-              <CloseIcon size={12} />
-            </button>
+            {!readOnly && (
+              <button type="button" className="comment-delete" aria-label={t("Delete comment")} onClick={() => remove(i)}>
+                <CloseIcon size={12} />
+              </button>
+            )}
           </div>
         ))}
         {comments[key].length === 0 && <div className="comment-card muted">{t("No comments yet.")}</div>}
       </div>
-      <div style={{ display: "flex", gap: 8, marginTop: 12, alignItems: "flex-end" }}>
-        <div className="field2 tall" style={{ flex: 1, marginBottom: 0 }}>
-          <textarea value={draft} onChange={(e) => setDraft(e.target.value)} placeholder=" " rows={2} />
-          <label>{t("New comment")}</label>
+      {!readOnly && (
+        <div style={{ display: "flex", gap: 8, marginTop: 12, alignItems: "flex-end" }}>
+          <div className="field2 tall" style={{ flex: 1, marginBottom: 0 }}>
+            <textarea value={draft} onChange={(e) => setDraft(e.target.value)} placeholder=" " rows={2} />
+            <label>{t("New comment")}</label>
+          </div>
+          <button type="button" className="tertiary" disabled={busy} onClick={add}>{t("Add")}</button>
         </div>
-        <button type="button" className="tertiary" disabled={busy} onClick={add}>{t("Add")}</button>
-      </div>
+      )}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { api } from "../api";
 import { Field } from "../components/Field";
 import { Select } from "../components/Select";
@@ -11,6 +11,7 @@ import { useToast } from "../toast";
 import { MAX_SEGMENTS } from "../flightSegments";
 import { alphanumericUpper, digitsOnly } from "../validation";
 import { useLanguage } from "../i18n";
+import { useCanEdit } from "../auth";
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^\d{2}:\d{2}$/;
@@ -45,6 +46,7 @@ export function NewFlight() {
   useRegisterTab("New flight");
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const canEdit = useCanEdit();
   const [error, setError] = useState("");
 
   const [carrierCode, setCarrierCode] = useState("SU");
@@ -75,6 +77,7 @@ export function NewFlight() {
 
   async function createFlight(e: React.FormEvent) {
     e.preventDefault();
+    if (!canEdit) return;
     setError("");
     const first = segments[0];
     if (!first.depAirport || !first.arrAirport) return setError(t("Origin and destination airports are required"));
@@ -127,6 +130,8 @@ export function NewFlight() {
       setError(e.message);
     }
   }
+
+  if (!canEdit) return <Navigate to="/" replace />;
 
   return (
     <form onSubmit={createFlight}>

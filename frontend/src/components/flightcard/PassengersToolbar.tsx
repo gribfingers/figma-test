@@ -60,6 +60,8 @@ interface Props {
   onToggleColumn: (key: string) => void;
   totalCount: number;
   onAddPassenger: () => void;
+  /** Hides "Add pax" for a read-only user (see useCanEdit) — column visibility and filters stay available. */
+  hideAddPassenger?: boolean;
 }
 
 export function PassengersToolbar({
@@ -78,6 +80,7 @@ export function PassengersToolbar({
   onToggleColumn,
   totalCount,
   onAddPassenger,
+  hideAddPassenger,
 }: Props) {
   const { t } = useLanguage();
   const [servicesOpen, setServicesOpen] = useState(false);
@@ -171,7 +174,9 @@ export function PassengersToolbar({
 
         <span className="passengers-count">{totalCount} {t("pax")}</span>
 
-        <button type="button" className="tertiary" onClick={onAddPassenger}>{t("Add pax")}</button>
+        {!hideAddPassenger && (
+          <button type="button" className="tertiary" onClick={onAddPassenger}>{t("Add pax")}</button>
+        )}
 
         <div className="pax-columns-menu" ref={columnsRef}>
           <button type="button" className="icon-button pax-columns-trigger" title={t("Columns")} onClick={() => setColumnsOpen((o) => !o)}>
