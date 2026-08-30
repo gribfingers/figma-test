@@ -9,6 +9,7 @@ import { Field } from "../Field";
 import { Select, SelectOption } from "../Select";
 import { DateField } from "../DateField";
 import { ChevronDownIcon, CloseIcon, MinusIcon, PlusIcon, RefreshIcon, SearchIcon, TrashIcon } from "../Icon";
+import { useLanguage } from "../../i18n";
 
 export type ActionsPanelKind = "cancel" | "move" | "print" | "priority" | "remarks" | "quick" | "transfer";
 
@@ -46,13 +47,14 @@ function paxName(p: Passenger): string {
 
 /** Slide-out side panel shell (same shape as PassengerDocPanel/UserPanel) shared by every Actions-menu panel below. */
 function Shell({ title, onClose, footer, children }: { title: string; onClose: () => void; footer?: ReactNode; children: ReactNode }) {
+  const { t } = useLanguage();
   const open = useContext(OpenContext);
   return (
     <div className={`actions-panel-overlay ${open ? "open" : ""}`} onClick={onClose}>
       <div className="actions-panel" onClick={(e) => e.stopPropagation()}>
         <div className="actions-panel-header">
           <div className="actions-panel-title">{title}</div>
-          <button type="button" className="icon-button" onClick={onClose} aria-label="Close">
+          <button type="button" className="icon-button" onClick={onClose} aria-label={t("Close")}>
             <CloseIcon size={16} />
           </button>
         </div>
@@ -65,10 +67,11 @@ function Shell({ title, onClose, footer, children }: { title: string; onClose: (
 
 /** "All" + one pill per leg — hidden for single-segment (direct) flights, same as SegmentToggle. */
 function SegmentAllTabs({ segments, selected, onSelect }: { segments: FlightSegment[]; selected: number; onSelect: (i: number) => void }) {
+  const { t } = useLanguage();
   if (segments.length <= 1) return null;
   return (
     <div className="actions-tab-row">
-      <button type="button" className={`actions-tab ${selected === -1 ? "selected" : ""}`} onClick={() => onSelect(-1)}>All</button>
+      <button type="button" className={`actions-tab ${selected === -1 ? "selected" : ""}`} onClick={() => onSelect(-1)}>{t("All")}</button>
       {segments.map((s, i) => (
         <button key={i} type="button" className={`actions-tab ${selected === i ? "selected" : ""}`} onClick={() => onSelect(i)}>
           {s.origin} → {s.destination}
@@ -154,6 +157,7 @@ function CancelCheckinPanel({
   onPassengerUpdated?: (p: Passenger) => void;
   onSeatsChanged?: () => void;
 }) {
+  const { t } = useLanguage();
   const [segIndex, setSegIndex] = useState(-1);
   const [option, setOption] = useState("offload");
   const [reason, setReason] = useState("lated_gate");
@@ -168,7 +172,7 @@ function CancelCheckinPanel({
 
   async function save() {
     if (eligible.length === 0) {
-      showToast("No checked-in passengers selected", "error");
+      showToast(t("No checked-in passengers selected"), "error");
       onClose();
       return;
     }
@@ -187,30 +191,33 @@ function CancelCheckinPanel({
     if (succeeded > 0) onSeatsChanged?.();
     const failed = eligible.length - succeeded;
     if (failed === 0) {
-      showToast(succeeded === 1 ? "Check-in cancelled" : `Check-in cancelled for ${succeeded} passengers`);
+      showToast(succeeded === 1 ? t("Check-in cancelled") : t("Check-in cancelled for {n} passengers").replace("{n}", String(succeeded)));
     } else {
-      showToast(`Check-in cancelled for ${succeeded}, failed for ${failed}`, succeeded > 0 ? "info" : "error");
+      showToast(
+        t("Check-in cancelled for {ok}, failed for {failed}").replace("{ok}", String(succeeded)).replace("{failed}", String(failed)),
+        succeeded > 0 ? "info" : "error"
+      );
     }
     onClose();
   }
 
   return (
     <Shell
-      title="Check-in Cancelling"
+      title={t("Check-in Cancelling")}
       onClose={onClose}
-      footer={<button type="button" className="tertiary" onClick={save} disabled={saving}>Save</button>}
+      footer={<button type="button" className="tertiary" onClick={save} disabled={saving}>{t("Save")}</button>}
     >
       <SegmentAllTabs segments={segments} selected={segIndex} onSelect={setSegIndex} />
       <div className="actions-checkbox-list">
         {CANCEL_OPTIONS.map((o) => (
           <label key={o.key} className="actions-checkbox-row">
             <input type="checkbox" checked={option === o.key} onChange={() => setOption(o.key)} />
-            {o.label}
+            {t(o.label)}
           </label>
         ))}
       </div>
       <div>
-        <Select label="Reason for offload" value={reason} onChange={setReason} options={CANCEL_REASONS} />
+        <Select label={t("Reason for offload")} value={reason} onChange={setReason} options={CANCEL_REASONS.map((o) => ({ ...o, label: t(o.label) }))} />
         {reason === "other" && (
           <div className="field2 tall" style={{ marginTop: 12 }}>
             <textarea value={otherReason} onChange={(e) => setOtherReason(e.target.value)} placeholder=" " rows={4} />
@@ -229,23 +236,25 @@ const MOVE_FLIGHT_OPTIONS: SelectOption[] = [
 const MOVE_SEATS_LEFT: Record<string, number> = { "XX-1234": 76, "XX-5678": 12, "XX-9012": 143 };
 
 function MoveFlightPanel({ onClose }: { onClose: () => void }) {
+  const { t } = useLanguage();
   const [flightNumber, setFlightNumber] = useState("XX-1234");
   const { showToast } = useToast();
 
   function save() {
-    showToast(`Moved to flight ${flightNumber}`);
+    showToast(t("Moved to flight {flight}").replace("{flight}", flightNumber));
     onClose();
   }
 
   return (
-    <Shell title="Move to another flight" onClose={onClose} footer={<button type="button" className="tertiary" onClick={save}>Save</button>}>
-      <Select label="Flight Number" value={flightNumber} onChange={setFlightNumber} options={MOVE_FLIGHT_OPTIONS} />
-      <div className="actions-hint-text">{MOVE_SEATS_LEFT[flightNumber] ?? 0} seats left</div>
+    <Shell title={t("Move to another flight")} onClose={onClose} footer={<button type="button" className="tertiary" onClick={save}>{t("Save")}</button>}>
+      <Select label={t("Flight Number")} value={flightNumber} onChange={setFlightNumber} options={MOVE_FLIGHT_OPTIONS} />
+      <div className="actions-hint-text">{t("{n} seats left").replace("{n}", String(MOVE_SEATS_LEFT[flightNumber] ?? 0))}</div>
     </Shell>
   );
 }
 
 function PrintBoardingPassPanel({ passengers, segments, onClose }: { passengers: Passenger[]; segments: FlightSegment[]; onClose: () => void }) {
+  const { t } = useLanguage();
   const legs = segments.length > 0 ? segments : null;
   const [checkedKeys, setCheckedKeys] = useState<Set<string>>(() => {
     const all = new Set<string>();
@@ -264,15 +273,15 @@ function PrintBoardingPassPanel({ passengers, segments, onClose }: { passengers:
   }
 
   function print() {
-    showToast("Boarding passes sent to printer");
+    showToast(t("Boarding passes sent to printer"));
     onClose();
   }
 
   return (
-    <Shell title="Print boarding pass" onClose={onClose} footer={<button type="button" className="tertiary" onClick={print}>Print</button>}>
+    <Shell title={t("Print boarding pass")} onClose={onClose} footer={<button type="button" className="tertiary" onClick={print}>{t("Print")}</button>}>
       {(legs ?? [null]).map((seg, si) => (
         <div key={si} className="actions-print-segment">
-          <div className="actions-print-segment-head">{seg ? `${seg.origin} → ${seg.destination}` : `${flightRouteFallback(passengers)}`}</div>
+          <div className="actions-print-segment-head">{seg ? `${seg.origin} → ${seg.destination}` : t(flightRouteFallback(passengers))}</div>
           {passengers.map((p) => {
             const key = `${si}-${p.id}`;
             return (
@@ -282,7 +291,7 @@ function PrintBoardingPassPanel({ passengers, segments, onClose }: { passengers:
               </label>
             );
           })}
-          {passengers.length === 0 && <div className="actions-hint-text">No passengers selected.</div>}
+          {passengers.length === 0 && <div className="actions-hint-text">{t("No passengers selected.")}</div>}
         </div>
       ))}
     </Shell>
@@ -310,6 +319,7 @@ const CABIN_OPTIONS: SelectOption[] = [
 ];
 
 function PriorityListPanel({ segments, onClose }: { segments: FlightSegment[]; onClose: () => void }) {
+  const { t } = useLanguage();
   const [segIndex, setSegIndex] = useState(-1);
   const [paxType, setPaxType] = useState("PS");
   const [priorityCode, setPriorityCode] = useState("");
@@ -320,22 +330,22 @@ function PriorityListPanel({ segments, onClose }: { segments: FlightSegment[]; o
   const { showToast } = useToast();
 
   function save() {
-    showToast("Priority list updated");
+    showToast(t("Priority list updated"));
     onClose();
   }
 
   return (
-    <Shell title="Priority List" onClose={onClose} footer={<button type="button" className="tertiary" onClick={save}>Save</button>}>
+    <Shell title={t("Priority List")} onClose={onClose} footer={<button type="button" className="tertiary" onClick={save}>{t("Save")}</button>}>
       <SegmentAllTabs segments={segments} selected={segIndex} onSelect={setSegIndex} />
-      <Select label="Passenger Type" value={paxType} onChange={setPaxType} options={PAX_TYPE_OPTIONS} />
-      <Select label="Priority code" value={priorityCode} onChange={setPriorityCode} options={PRIORITY_CODE_OPTIONS} />
+      <Select label={t("Passenger Type")} value={paxType} onChange={setPaxType} options={PAX_TYPE_OPTIONS} />
+      <Select label={t("Priority code")} value={priorityCode} onChange={setPriorityCode} options={PRIORITY_CODE_OPTIONS.map((o) => ({ ...o, label: t(o.label) }))} />
       <Field label="FFP"><input value={ffp} onChange={(e) => setFfp(e.target.value)} placeholder=" " /></Field>
-      <Select label="Cabin" value={cabin} onChange={setCabin} options={CABIN_OPTIONS} />
-      <DateField label="Date of hire" value={dateOfHire} onChange={setDateOfHire} />
-      <button type="button" className="tertiary actions-priority-link">Priority List</button>
+      <Select label={t("Cabin class")} value={cabin} onChange={setCabin} options={CABIN_OPTIONS.map((o) => ({ ...o, label: t(o.label) }))} />
+      <DateField label={t("Date of hire")} value={dateOfHire} onChange={setDateOfHire} />
+      <button type="button" className="tertiary actions-priority-link">{t("Priority List")}</button>
       <div className="field2 tall">
         <textarea value={comments} onChange={(e) => setComments(e.target.value)} placeholder=" " rows={3} />
-        <label>Comments</label>
+        <label>{t("Comments")}</label>
       </div>
     </Shell>
   );
@@ -376,6 +386,7 @@ const REMARK_SECTION_DEFS: RemarkSectionDef[] = [
 
 /** Rich code picker for the remark-add form — each option shows the code plus its full description, unlike the plain generic Select. */
 function RemarkCodeField({ value, onSelect }: { value: RemarkEntry | null; onSelect: (e: RemarkEntry) => void }) {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLUListElement>(null);
@@ -398,7 +409,7 @@ function RemarkCodeField({ value, onSelect }: { value: RemarkEntry | null; onSel
       <button type="button" className="select-trigger" aria-haspopup="listbox" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
         {value?.code ?? ""}
       </button>
-      <label>{value ? "Code" : "Remark"}</label>
+      <label>{value ? t("Code") : t("Remark")}</label>
       <ChevronDownIcon size={16} className="select-chevron" />
       {open &&
         rect &&
@@ -418,6 +429,7 @@ function RemarkCodeField({ value, onSelect }: { value: RemarkEntry | null; onSel
 }
 
 function RemarksSection({ title, initialEntries }: { title: string; initialEntries: RemarkEntry[] }) {
+  const { t } = useLanguage();
   const [entries, setEntries] = useState(initialEntries);
   const [formOpen, setFormOpen] = useState(false);
   const [code, setCode] = useState<RemarkEntry | null>(null);
@@ -447,7 +459,7 @@ function RemarksSection({ title, initialEntries }: { title: string; initialEntri
         <button
           type="button"
           className="icon-button"
-          aria-label={formOpen ? `Close ${title}` : `Add ${title} remark`}
+          aria-label={formOpen ? t("Close {title}").replace("{title}", title) : t("Add {title} remark").replace("{title}", title)}
           onClick={() => {
             setFormOpen((o) => !o);
             setCode(null);
@@ -463,9 +475,9 @@ function RemarksSection({ title, initialEntries }: { title: string; initialEntri
           <RemarkCodeField value={code} onSelect={pickCode} />
           <div className="field2 tall">
             <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder=" " rows={2} />
-            <label>Description</label>
+            <label>{t("Description")}</label>
           </div>
-          <button type="button" className="tertiary actions-remark-save" disabled={!code} onClick={save}>Save</button>
+          <button type="button" className="tertiary actions-remark-save" disabled={!code} onClick={save}>{t("Save")}</button>
         </div>
       )}
 
@@ -475,7 +487,7 @@ function RemarksSection({ title, initialEntries }: { title: string; initialEntri
             <div className="actions-remark-code">{e.code}</div>
             <div className="actions-remark-text">{e.text}</div>
           </div>
-          <button type="button" className="icon-button actions-remark-delete" aria-label="Delete remark" onClick={() => remove(i)}>
+          <button type="button" className="icon-button actions-remark-delete" aria-label={t("Delete remark")} onClick={() => remove(i)}>
             <TrashIcon size={16} />
           </button>
         </div>
@@ -485,23 +497,25 @@ function RemarksSection({ title, initialEntries }: { title: string; initialEntri
 }
 
 function RemarksPanel({ onClose }: { onClose: () => void }) {
+  const { t } = useLanguage();
   const { showToast } = useToast();
 
   function save() {
-    showToast("Remarks saved");
+    showToast(t("Remarks saved"));
     onClose();
   }
 
   return (
-    <Shell title="Remarks" onClose={onClose} footer={<button type="button" className="tertiary" onClick={save}>Save</button>}>
+    <Shell title={t("Remarks")} onClose={onClose} footer={<button type="button" className="tertiary" onClick={save}>{t("Save")}</button>}>
       {REMARK_SECTION_DEFS.map((section) => (
-        <RemarksSection key={section.key} title={section.title} initialEntries={section.entries} />
+        <RemarksSection key={section.key} title={t(section.title)} initialEntries={section.entries} />
       ))}
     </Shell>
   );
 }
 
 function QuickCheckinPanel({ flight, passengers, segments, onClose }: { flight: Flight; passengers: Passenger[]; segments: FlightSegment[]; onClose: () => void }) {
+  const { t } = useLanguage();
   const legs = segments.length > 0 ? segments : [];
   const allKeys = legs.flatMap((_, si) => passengers.map((p) => `${si}-${p.id}`));
   const [printFlags, setPrintFlags] = useState<Set<string>>(() => new Set(allKeys));
@@ -525,7 +539,7 @@ function QuickCheckinPanel({ flight, passengers, segments, onClose }: { flight: 
   }
 
   function printPasses() {
-    showToast("Boarding passes printed");
+    showToast(t("Boarding passes printed"));
     onClose();
   }
 
@@ -534,32 +548,32 @@ function QuickCheckinPanel({ flight, passengers, segments, onClose }: { flight: 
 
   return (
     <Shell
-      title="Quick check-in"
+      title={t("Quick check-in")}
       onClose={onClose}
       footer={
         <div className="actions-quick-footer">
           <label>
             <input type="checkbox" checked={remote} onChange={(e) => setRemote(e.target.checked)} />
-            Remote
+            {t("Remote")}
           </label>
-          <button type="button" className="tertiary" onClick={printPasses}>Print boarding passes</button>
+          <button type="button" className="tertiary" onClick={printPasses}>{t("Print boarding passes")}</button>
         </div>
       }
     >
       <div className="actions-quick-flight-row">
-        <span className="actions-quick-checked-in">Checked-in</span>
+        <span className="actions-quick-checked-in">{t("Checked-in")}</span>
         <label className="actions-quick-print-all">
           <input type="checkbox" checked={printAllChecked} onChange={(e) => togglePrintAll(e.target.checked)} />
-          Print all boarding pass
+          {t("Print all boarding pass")}
         </label>
       </div>
       <div className="actions-quick-flight-row">
         <span>{flight.carrier_code}{flight.flight_number}</span>
-        <span className="actions-muted-text">Boarding time {fmtTime(flight.std, -45)}</span>
+        <span className="actions-muted-text">{t("Boarding time {time}").replace("{time}", fmtTime(flight.std, -45))}</span>
       </div>
       <div className="actions-quick-flight-row">
         <span className="actions-muted-text">{overallOrigin} → {overallDestination} {fmtTime(flight.std)}</span>
-        <span className="actions-muted-text">Gate {flight.gate ?? "—"}</span>
+        <span className="actions-muted-text">{t("Gate {gate}").replace("{gate}", flight.gate ?? "—")}</span>
       </div>
 
       {legs.map((seg, si) => {
@@ -581,12 +595,12 @@ function QuickCheckinPanel({ flight, passengers, segments, onClose }: { flight: 
                     </div>
                     <label className="actions-quick-pax-print">
                       <input type="checkbox" checked={printFlags.has(key)} onChange={() => toggle(key)} />
-                      Print boarding pass
+                      {t("Print boarding pass")}
                     </label>
                   </div>
                 );
               })}
-            {isOpen && passengers.length === 0 && <div className="actions-quick-pax-card actions-muted-text">No passengers selected.</div>}
+            {isOpen && passengers.length === 0 && <div className="actions-quick-pax-card actions-muted-text">{t("No passengers selected.")}</div>}
           </div>
         );
       })}
@@ -617,6 +631,7 @@ function shiftYears(dob: string | null, years: number): string | null {
 }
 
 function GroupTransferPanel({ passengers, onClose }: { passengers: Passenger[]; onClose: () => void }) {
+  const { t } = useLanguage();
   const [transfers, setTransfers] = useState<TransferEntry[]>([]);
   const [activeRow, setActiveRow] = useState<{ flight: string; date: string } | null>({ flight: "", date: "" });
   const [phase, setPhase] = useState<"idle" | "loading" | "results">("idle");
@@ -673,36 +688,36 @@ function GroupTransferPanel({ passengers, onClose }: { passengers: Passenger[]; 
   }
 
   function save() {
-    showToast("Group transfer saved");
+    showToast(t("Group transfer saved"));
     onClose();
   }
 
   return (
     <Shell
-      title="Group Transfer"
+      title={t("Group Transfer")}
       onClose={onClose}
       footer={
         <>
-          <button type="button" className="tertiary" disabled={!!activeRow} onClick={addTransferRow}>Add Transfer</button>
-          <button type="button" className="tertiary" disabled={transfers.length === 0} onClick={save}>Save</button>
+          <button type="button" className="tertiary" disabled={!!activeRow} onClick={addTransferRow}>{t("Add Transfer")}</button>
+          <button type="button" className="tertiary" disabled={transfers.length === 0} onClick={save}>{t("Save")}</button>
         </>
       }
     >
-      {transfers.map((t) => (
-        <div key={t.id} className="actions-transfer-card">
+      {transfers.map((tr) => (
+        <div key={tr.id} className="actions-transfer-card">
           <div className="actions-transfer-card-col">
-            <div>{t.flightNumber}</div>
-            <div className="actions-muted-text">{fmtDMY(t.date)}</div>
+            <div>{tr.flightNumber}</div>
+            <div className="actions-muted-text">{fmtDMY(tr.date)}</div>
           </div>
           <div className="actions-transfer-card-col">
-            <div>{t.origin}</div>
-            <div className="actions-muted-text">{t.destination}</div>
+            <div>{tr.origin}</div>
+            <div className="actions-muted-text">{tr.destination}</div>
           </div>
           <div className="actions-transfer-card-col actions-transfer-card-times">
-            <div>{t.std} <span className="actions-transfer-etd">ETD {t.etd}</span></div>
-            <div className="actions-muted-text">{t.sta}</div>
+            <div>{tr.std} <span className="actions-transfer-etd">{t("ETD {time}").replace("{time}", tr.etd)}</span></div>
+            <div className="actions-muted-text">{tr.sta}</div>
           </div>
-          <button type="button" className="icon-button" aria-label="Remove transfer" onClick={() => removeTransfer(t.id)}>
+          <button type="button" className="icon-button" aria-label={t("Remove transfer")} onClick={() => removeTransfer(tr.id)}>
             <TrashIcon size={16} />
           </button>
         </div>
@@ -711,20 +726,20 @@ function GroupTransferPanel({ passengers, onClose }: { passengers: Passenger[]; 
       {activeRow && (
         <div className="actions-transfer-search">
           <div className="actions-transfer-search-row">
-            <Field label="Flight" style={{ flex: 1 }}>
+            <Field label={t("Flight")} style={{ flex: 1 }}>
               <input
                 value={activeRow.flight}
                 onChange={(e) => setActiveRow({ ...activeRow, flight: e.target.value.toUpperCase() })}
                 placeholder=" "
               />
             </Field>
-            <DateField label="Date" value={activeRow.date} onChange={(v) => setActiveRow({ ...activeRow, date: v })} style={{ flex: 1 }} />
+            <DateField label={t("Date")} value={activeRow.date} onChange={(v) => setActiveRow({ ...activeRow, date: v })} style={{ flex: 1 }} />
             <button
               type="button"
               className="actions-transfer-search-btn"
               disabled={phase === "loading" || !activeRow.flight.trim()}
               onClick={runSearch}
-              aria-label="Search"
+              aria-label={t("Search")}
             >
               {phase === "loading" ? <RefreshIcon size={18} className="spin" /> : <SearchIcon size={18} />}
             </button>
@@ -742,11 +757,11 @@ function GroupTransferPanel({ passengers, onClose }: { passengers: Passenger[]; 
                   <div className="actions-muted-text">FER</div>
                 </div>
                 <div className="actions-transfer-card-col actions-transfer-card-times">
-                  <div>12:00 <span className="actions-transfer-etd">ETD 13:00</span></div>
+                  <div>12:00 <span className="actions-transfer-etd">{t("ETD {time}").replace("{time}", "13:00")}</span></div>
                   <div className="actions-muted-text">14:00</div>
                 </div>
               </div>
-              <div className="actions-transfer-match-hint">Matches found. Please select the correct passengers:</div>
+              <div className="actions-transfer-match-hint">{t("Matches found. Please select the correct passengers:")}</div>
               {candidateGroups.map((g) => (
                 <div key={g.passenger.id} className="actions-transfer-match-group">
                   {g.candidates.map((c, i) => (
@@ -765,9 +780,9 @@ function GroupTransferPanel({ passengers, onClose }: { passengers: Passenger[]; 
                   ))}
                 </div>
               ))}
-              {candidateGroups.length === 0 && <div className="actions-hint-text">No passengers selected to match.</div>}
+              {candidateGroups.length === 0 && <div className="actions-hint-text">{t("No passengers selected to match.")}</div>}
               <div className="actions-transfer-ok">
-                <button type="button" className="tertiary" onClick={confirmResults}>OK</button>
+                <button type="button" className="tertiary" onClick={confirmResults}>{t("OK")}</button>
               </div>
             </div>
           )}
