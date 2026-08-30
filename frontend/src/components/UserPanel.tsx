@@ -34,7 +34,7 @@ interface Props {
 
 export function UserPanel({ open, onClose }: Props) {
   const { user, logout, updateUser } = useAuth();
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, contrast, setContrast } = useTheme();
   const { fontSize, increase, decrease } = useFontSize();
   const { enabled: tabIconsEnabled, setEnabled: setTabIconsEnabled } = useTabIcons();
   const { language, setLanguage, t } = useLanguage();
@@ -132,6 +132,16 @@ export function UserPanel({ open, onClose }: Props) {
                   <button type="button" className={theme === "light" ? "selected" : ""} onClick={() => setTheme("light")}>{t("Light")}</button>
                   <button type="button" className={theme === "dark" ? "selected" : ""} onClick={() => setTheme("dark")}>{t("Dark")}</button>
                 </div>
+              </div>
+              <div className="user-panel-theme-row">
+                <span>{t("Contrast")}</span>
+                <label className="checkbox-row">
+                  <input
+                    type="checkbox"
+                    checked={contrast}
+                    onChange={(e) => setContrast(e.target.checked)}
+                  />
+                </label>
               </div>
               <div className="user-panel-theme-row">
                 <span>{t("Font size")}</span>

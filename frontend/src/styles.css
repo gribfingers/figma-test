@@ -136,6 +136,132 @@
   --ok-border: rgba(71, 218, 0, 0.4);
 }
 
+/* High-contrast variants for low-vision users (User settings -> Contrast) — pure black/white
+   base, near-black/white text and borders, and darker/brighter accent & status colors so every
+   token still used everywhere else (chips, fields, seat map, tooltips) reads at a much higher
+   contrast ratio without touching a single component's own CSS. */
+[data-theme="light"][data-contrast="true"] {
+  --bg: #ffffff;
+  --panel: #ffffff;
+  --ink: #000000;
+  --muted: #2b2b2b;
+  --muted-2: #3d3d3d;
+  --muted-text: #262626;
+  --border: #000000;
+  --border-strong: #000000;
+  --panel-border: #000000;
+  --panel-outer-border: #000000;
+  --accent: #0030a8;
+  --accent-hover: #001d6e;
+  --accent-soft: #dce6ff;
+  --accent-selected: #b8cdff;
+  --accent-ink: #ffffff;
+  --ok: #005c1f;
+  --ok-bg: #d7f2dd;
+  --warn: #6b3d00;
+  --warn-bg: #ffe6b3;
+  --danger: #a4001e;
+  --danger-hover: #7a0016;
+  --danger-soft: #ffd9de;
+  --danger-border: #a4001e;
+  --success-icon: #005c1f;
+  --tooltip-bg: #000000;
+  --tooltip-ink: #ffffff;
+  --paper: #ffffff;
+  --shadow-popover: rgba(0, 0, 0, 0.35);
+
+  --btn-disabled-stroke: rgba(0, 0, 0, 0.5);
+  --btn-disabled-text: rgba(0, 0, 0, 0.6);
+
+  --field-bg: #ffffff;
+  --field-bg-focus: #ffffff;
+  --field-bg-disabled: #e0e0e0;
+  --field-border: #000000;
+  --field-border-hover: #000000;
+  --field-border-focus: #0030a8;
+  --field-border-error: #a4001e;
+  --field-placeholder: #4d4d4d;
+  --field-value: #000000;
+  --field-label-focus: #0030a8;
+  --field-label-error: #a4001e;
+
+  --chip-grey-bg: #d9d9d9;
+  --chip-green-bg: #bdf0c7;
+  --chip-red-bg: #ffc9d1;
+  --chip-blue-bg: #c3d8ff;
+  --status-past-bg: #bdf0c7;
+  --status-active-bg: #c3d8ff;
+
+  --seat-free-bg: #ffffff;
+  --seat-border: #000000;
+  --seat-busy-bg: #6e6e6e;
+  --seat-boarded-bg: #005c1f;
+  --seat-active-bg: #0030a8;
+  --seat-active-ink: #ffffff;
+  --hover-bg: #e6e6e6;
+  --ok-border: #005c1f;
+}
+
+[data-theme="dark"][data-contrast="true"] {
+  --bg: #000000;
+  --panel: #000000;
+  --ink: #ffffff;
+  --muted: #e6e6e6;
+  --muted-2: #d0d0d0;
+  --muted-text: #e6e6e6;
+  --border: #ffffff;
+  --border-strong: #ffffff;
+  --panel-border: #ffffff;
+  --panel-outer-border: #ffffff;
+  --accent: #66a3ff;
+  --accent-hover: #99c2ff;
+  --accent-soft: #002a5c;
+  --accent-selected: #003d80;
+  --accent-ink: #000000;
+  --ok: #4ade80;
+  --ok-bg: #003300;
+  --warn: #ffd60a;
+  --warn-bg: #4d3800;
+  --danger: #ff6b6b;
+  --danger-hover: #ff8f8f;
+  --danger-soft: #4d0000;
+  --danger-border: #ff6b6b;
+  --success-icon: #4ade80;
+  --tooltip-bg: #ffffff;
+  --tooltip-ink: #000000;
+  --paper: #000000;
+  --shadow-popover: rgba(255, 255, 255, 0.25);
+
+  --btn-disabled-stroke: rgba(255, 255, 255, 0.5);
+  --btn-disabled-text: rgba(255, 255, 255, 0.6);
+
+  --field-bg: #000000;
+  --field-bg-focus: #000000;
+  --field-bg-disabled: #333333;
+  --field-border: #ffffff;
+  --field-border-hover: #ffffff;
+  --field-border-focus: #66a3ff;
+  --field-border-error: #ff6b6b;
+  --field-placeholder: #cccccc;
+  --field-value: #ffffff;
+  --field-label-focus: #66a3ff;
+  --field-label-error: #ff6b6b;
+
+  --chip-grey-bg: #333333;
+  --chip-green-bg: #0a4d0a;
+  --chip-red-bg: #4d0a0a;
+  --chip-blue-bg: #0a2f4d;
+  --status-past-bg: #0a4d0a;
+  --status-active-bg: #0a2f4d;
+
+  --seat-free-bg: #000000;
+  --seat-border: #ffffff;
+  --seat-busy-bg: #8f8f8f;
+  --seat-boarded-bg: #4ade80;
+  --hover-bg: #262626;
+  --ok-border: #4ade80;
+}
+
 input[type="radio"] { accent-color: var(--accent); }
 /* Native checkboxes ignore border-radius entirely (Chromium keeps its own fixed shape
    unless appearance is reset), so this is a fully custom box + hand-drawn checkmark

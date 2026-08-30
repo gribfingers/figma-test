@@ -32,6 +32,7 @@ export const RU: Record<string, string> = {
   Theme: "Тема",
   Light: "Светлая",
   Dark: "Тёмная",
+  Contrast: "Контрастность",
   "Font size": "Размер шрифта",
   "Decrease font size": "Уменьшить шрифт",
   "Increase font size": "Увеличить шрифт",
