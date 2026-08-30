@@ -5,7 +5,7 @@ import { api, Flight, Passenger, PassengerSearchMode, SeatCell } from "../api";
 import { formatSeatDisplay } from "../seatExtra";
 import { parsePassengerExtra, SeatServiceItem } from "../paxExtra";
 import { BagRow } from "../baggageTypes";
-import { ChevronDownIcon, DocScannedIcon, DocVerifiedIcon, RefreshIcon } from "../components/Icon";
+import { ChevronDownIcon, CloseIcon, DocScannedIcon, DocVerifiedIcon, RefreshIcon } from "../components/Icon";
 import { EntityNotFound } from "../components/EntityNotFound";
 import { SEARCH_MODES } from "./Search";
 import { useRegisterTab, useTabs } from "../tabs";
@@ -210,54 +210,68 @@ function AddPaxButton({ flightId, excludeIds, onAdd }: AddPaxButtonProps) {
 
   const shown = results.filter((p) => !excludeIds.has(p.id));
 
+  function close() {
+    setOpen(false);
+    setQuery("");
+    setResults([]);
+  }
+
+  if (!open) {
+    return (
+      <div className="pnr-add-pax" ref={rootRef}>
+        <button type="button" className="secondary" onClick={() => setOpen(true)}>
+          Add pax
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="pnr-add-pax" ref={rootRef}>
-      <button type="button" className="secondary" onClick={() => setOpen((o) => !o)}>
-        Add pax
-      </button>
-      {open && (
-        <div className="pnr-add-pax-inline">
-          <div className="search-mode-bar">
-            <div className="search-mode-tabs">
-              {ADD_PAX_MODES.map((m) => (
-                <button
-                  key={m.key}
-                  type="button"
-                  className={`search-mode-tab ${mode === m.key ? "selected" : ""}`}
-                  onClick={() => setMode(m.key)}
-                >
-                  {m.label}
-                </button>
-              ))}
-            </div>
-            <input
-              className="search-mode-input"
-              autoFocus
-              placeholder={ADD_PAX_MODES.find((m) => m.key === mode)?.placeholder ?? "Search"}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
+    <div className="pnr-add-pax pnr-add-pax-open" ref={rootRef}>
+      <div className="pnr-add-pax-inline">
+        <div className="search-mode-bar">
+          <div className="search-mode-tabs">
+            {ADD_PAX_MODES.map((m) => (
+              <button
+                key={m.key}
+                type="button"
+                className={`search-mode-tab ${mode === m.key ? "selected" : ""}`}
+                onClick={() => setMode(m.key)}
+              >
+                {m.label}
+              </button>
+            ))}
           </div>
-          {query.trim() && (
-            <ul className="pnr-add-pax-results">
-              {shown.map((p) => (
-                <li
-                  key={p.id}
-                  onClick={() => {
-                    onAdd(p);
-                    setQuery("");
-                    setResults([]);
-                  }}
-                >
-                  <span>{p.surname} {p.given_name}</span>
-                  <span className="mono">{p.record_locator}</span>
-                </li>
-              ))}
-              {shown.length === 0 && <li className="pnr-add-pax-empty">No matches</li>}
-            </ul>
-          )}
+          <input
+            className="search-mode-input"
+            autoFocus
+            placeholder={ADD_PAX_MODES.find((m) => m.key === mode)?.placeholder ?? "Search"}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
         </div>
-      )}
+        <button type="button" className="icon-button" aria-label="Close" onClick={close}>
+          <CloseIcon size={16} />
+        </button>
+        {query.trim() && (
+          <ul className="pnr-add-pax-results">
+            {shown.map((p) => (
+              <li
+                key={p.id}
+                onClick={() => {
+                  onAdd(p);
+                  setQuery("");
+                  setResults([]);
+                }}
+              >
+                <span>{p.surname} {p.given_name}</span>
+                <span className="mono">{p.record_locator}</span>
+              </li>
+            ))}
+            {shown.length === 0 && <li className="pnr-add-pax-empty">No matches</li>}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }
