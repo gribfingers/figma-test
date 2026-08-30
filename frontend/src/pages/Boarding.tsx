@@ -11,6 +11,7 @@ import {
 } from "../components/Icon";
 import { useRegisterTab } from "../tabs";
 import { useToast } from "../toast";
+import { useConfirmDialog } from "../confirmDialog";
 import { useLanguage } from "../i18n";
 import { FlagKind, FlagModal } from "../components/flightcard/PassengerModals";
 import { PassengerDocPanel } from "../components/PassengerDocPanel";
@@ -158,6 +159,7 @@ export function Boarding() {
   const [docPanelPassenger, setDocPanelPassenger] = useState<Passenger | null>(null);
   const docPanelTransition = useRetainedPanelTransition(docPanelPassenger);
   const { showToast } = useToast();
+  const { confirmDialog } = useConfirmDialog();
 
   const [notFound, setNotFound] = useState(false);
   function refresh() {
@@ -254,7 +256,7 @@ export function Boarding() {
     showToast(t("Boarding started"));
   }
   async function closeFlight() {
-    if (!confirm(t("Close the flight? Pax checked in but not boarded will be marked NO SHOW."))) return;
+    if (!(await confirmDialog(t("Close the flight? Pax checked in but not boarded will be marked NO SHOW."), { danger: true }))) return;
     const { flight: updated, pfs } = await api.closeFlight(fid);
     setFlight(updated);
     setManifest({ label: t("PFS (final list after flight close-out)"), text: pfs });

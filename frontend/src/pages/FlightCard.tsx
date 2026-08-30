@@ -17,6 +17,7 @@ import { TransfersTab } from "../components/flightcard/TransfersTab";
 import { SettingsTab } from "../components/flightcard/SettingsTab";
 import { combineDateAndTime, draftFromFlight, draftsEqual, MainDraft, parseFlightExtra } from "../components/flightcard/mainDraft";
 import { useLanguage } from "../i18n";
+import { useConfirmDialog } from "../confirmDialog";
 
 const TABS = [
   { key: "main", label: "Main" },
@@ -41,6 +42,7 @@ export function FlightCard() {
   const [error, setError] = useState("");
   const [notFound, setNotFound] = useState(false);
   const { showToast } = useToast();
+  const { confirmDialog } = useConfirmDialog();
 
   useEffect(() => {
     api
@@ -145,7 +147,7 @@ export function FlightCard() {
         return;
       }
       if (action === "close") {
-        if (!confirm(t("Close the flight? Pax checked in but not boarded will be marked NO SHOW."))) return;
+        if (!(await confirmDialog(t("Close the flight? Pax checked in but not boarded will be marked NO SHOW."), { danger: true }))) return;
         const { flight: updated, pfs } = await api.closeFlight(flight.id);
         setFlight(updated);
         setDraft(draftFromFlight(updated));

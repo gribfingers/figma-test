@@ -6,6 +6,7 @@ import { parseFlightExtra } from "./mainDraft";
 import { Field } from "../Field";
 import { digitsOnly } from "../../validation";
 import { useToast } from "../../toast";
+import { useConfirmDialog } from "../../confirmDialog";
 import { useTabs } from "../../tabs";
 import { useLanguage } from "../../i18n";
 
@@ -48,6 +49,7 @@ function overbookingFromFlight(flight: Flight): OverbookingSettings {
 export function SettingsTab({ flight, onFlightUpdated }: Props) {
   const { t } = useLanguage();
   const { showToast } = useToast();
+  const { confirmDialog } = useConfirmDialog();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { closeTab } = useTabs();
@@ -107,7 +109,7 @@ export function SettingsTab({ flight, onFlightUpdated }: Props) {
   }
 
   async function deleteFlight() {
-    if (!confirm(t("Permanently delete this flight and every passenger on it? This cannot be undone."))) return;
+    if (!(await confirmDialog(t("Permanently delete this flight and every passenger on it? This cannot be undone."), { danger: true }))) return;
     setDeleting(true);
     setError("");
     try {

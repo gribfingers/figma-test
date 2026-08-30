@@ -5,6 +5,7 @@ import { useTabs } from "../tabs";
 import { useAuth } from "../auth";
 import { useCheckinFlow, pnrFlowPidFromPath } from "../checkinFlow";
 import { useToast } from "../toast";
+import { useConfirmDialog } from "../confirmDialog";
 import { usePanelTransition } from "../usePanelMounted";
 import { userAvatarColor, userInitials } from "../userDisplay";
 import { tabKindForPath, TabKind } from "../tabKind";
@@ -51,6 +52,7 @@ export function TopTabs() {
   const { user } = useAuth();
   const { flowStepFor, setFlowStep } = useCheckinFlow();
   const { showToast } = useToast();
+  const { confirmDialog } = useConfirmDialog();
   const { enabled: tabIconsEnabled } = useTabIcons();
   const { t } = useLanguage();
   const [panelOpen, setPanelOpen] = useState(false);
@@ -77,8 +79,8 @@ export function TopTabs() {
     }
   }
 
-  function handleCloseAll() {
-    if (!window.confirm(t("Close all {n} tabs?").replace("{n}", String(tabs.length)))) return;
+  async function handleCloseAll() {
+    if (!(await confirmDialog(t("Close all {n} tabs?").replace("{n}", String(tabs.length))))) return;
     closeAllTabs();
   }
 

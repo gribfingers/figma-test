@@ -6,6 +6,7 @@ import { Field } from "../components/Field";
 import { Select } from "../components/Select";
 import { Modal } from "../components/Modal";
 import { useLanguage } from "../i18n";
+import { useConfirmDialog } from "../confirmDialog";
 
 type Draft = {
   login: string;
@@ -20,6 +21,7 @@ const EMPTY_DRAFT: Draft = { login: "", first_name: "", last_name: "", role: "us
 
 export function UserAdmin() {
   const { t } = useLanguage();
+  const { confirmDialog, alertDialog } = useConfirmDialog();
   useRegisterTab("User administration", true);
   const { user: me } = useAuth();
 
@@ -112,7 +114,7 @@ export function UserAdmin() {
   }
 
   async function resetPassword(u: User) {
-    if (!window.confirm(t("Generate a new password for {login}? Their current password stops working immediately.").replace("{login}", u.login))) return;
+    if (!(await confirmDialog(t("Generate a new password for {login}? Their current password stops working immediately.").replace("{login}", u.login)))) return;
     setError("");
     try {
       const { password } = await api.resetUserPassword(u.id);
@@ -123,7 +125,7 @@ export function UserAdmin() {
   }
 
   async function deleteUser(u: User) {
-    if (!window.confirm(t("Delete user {login}?").replace("{login}", u.login))) return;
+    if (!(await confirmDialog(t("Delete user {login}?").replace("{login}", u.login), { danger: true }))) return;
     setError("");
     try {
       await api.deleteUser(u.id);
@@ -134,19 +136,18 @@ export function UserAdmin() {
   }
 
   async function regenerateTodaySchedule() {
-    if (
-      !window.confirm(
-        t(
-          "Rebuild today's auto-generated demo flights from scratch? This deletes and recreates them with the current generator logic, so any open tabs pointing at today's flights/passengers will go stale."
-        )
-      )
-    )
-      return;
+    const proceed = await confirmDialog(
+      t(
+        "Rebuild today's auto-generated demo flights from scratch? This deletes and recreates them with the current generator logic, so any open tabs pointing at today's flights/passengers will go stale."
+      ),
+      { danger: true }
+    );
+    if (!proceed) return;
     setRegenerating(true);
     setError("");
     try {
       const result = await api.regenerateTodaySchedule();
-      window.alert(
+      await alertDialog(
         t("Regenerated {flights} flights / {passengers} passengers for today.")
           .replace("{flights}", String(result.flights))
           .replace("{passengers}", String(result.passengers))

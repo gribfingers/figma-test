@@ -8,6 +8,7 @@ import { FlagStatus, ageFromDob, ageYears, asvcForPassenger, asvcStatus, comment
 import { FlagKind, FlagModal, PassengerDetailModal } from "./PassengerModals";
 import { formatSeatDisplay, parseSeatExtra } from "../../seatExtra";
 import { useToast } from "../../toast";
+import { useConfirmDialog } from "../../confirmDialog";
 import {
   BaggageFields,
   DocumentsFields,
@@ -129,6 +130,7 @@ export function PassengersTab({ flight }: Props) {
   const [error, setError] = useState("");
   const contextMenuRef = useRef<HTMLUListElement>(null);
   const { showToast } = useToast();
+  const { confirmDialog, alertDialog } = useConfirmDialog();
 
   const [quickFilter, setQuickFilter] = useState<QuickFilter>("all");
   const [serviceFilter, setServiceFilter] = useState<string[]>([]);
@@ -193,7 +195,7 @@ export function PassengersTab({ flight }: Props) {
           : t("Seat {seat} assigned").replace("{seat}", formatSeatDisplay(seatCode))
       );
     } catch (e: any) {
-      alert(e.message);
+      await alertDialog(e.message);
     }
   }
 
@@ -210,7 +212,7 @@ export function PassengersTab({ flight }: Props) {
         setSeatAction(null);
         showToast(t("Seats swapped"));
       } catch (e: any) {
-        alert(e.message);
+        await alertDialog(e.message);
       }
       return;
     }
@@ -228,19 +230,19 @@ export function PassengersTab({ flight }: Props) {
       refreshSeating();
       showToast(t("Seat {seat} unassigned").replace("{seat}", formatSeatDisplay(passenger.seat)));
     } catch (e: any) {
-      alert(e.message);
+      await alertDialog(e.message);
     }
   }
 
   async function deletePassenger(p: Passenger) {
     setContextMenu(null);
-    if (!window.confirm(t("Delete pax {name}?").replace("{name}", `${p.surname} ${p.given_name}`))) return;
+    if (!(await confirmDialog(t("Delete pax {name}?").replace("{name}", `${p.surname} ${p.given_name}`), { danger: true }))) return;
     try {
       await api.deletePassenger(flight.id, p.id);
       loadPassengers();
       showToast(t("Passenger deleted"));
     } catch (e: any) {
-      alert(e.message);
+      await alertDialog(e.message);
     }
   }
 
