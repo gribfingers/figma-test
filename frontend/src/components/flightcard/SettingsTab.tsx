@@ -12,6 +12,10 @@ import { useLanguage } from "../../i18n";
 
 interface Props {
   flight: Flight;
+  /** A departed flight's own record can't be changed anymore (see FlightCard.tsx's isFlightDeparted) —
+   *  same rule as the Main tab. The danger zone stays interactive regardless: deleting the flight
+   *  record is independent of whether it has already flown. */
+  readOnly?: boolean;
   onFlightUpdated: (flight: Flight) => void;
 }
 
@@ -46,7 +50,7 @@ function overbookingFromFlight(flight: Flight): OverbookingSettings {
  * flight record itself (cancelling it is already a status, not a delete —
  * see ops_status "canceled_no_host" on FlightStatusSelect).
  */
-export function SettingsTab({ flight, onFlightUpdated }: Props) {
+export function SettingsTab({ flight, readOnly, onFlightUpdated }: Props) {
   const { t } = useLanguage();
   const { showToast } = useToast();
   const { confirmDialog } = useConfirmDialog();
@@ -82,6 +86,7 @@ export function SettingsTab({ flight, onFlightUpdated }: Props) {
   const extraY = Number(overbookY) || 0;
 
   async function save() {
+    if (readOnly) return;
     setError("");
     const nums = [checkinMin, boardingMin, closingMin, flyingMin].map(Number);
     if (nums.some((n) => !Number.isFinite(n))) {
@@ -126,46 +131,50 @@ export function SettingsTab({ flight, onFlightUpdated }: Props) {
     <div className="settings-tab">
       {error && <div className="error-box">{error}</div>}
 
-      <div className="settings-section">
-        <h3>{t("Check-in / boarding windows")}</h3>
-        <p className="subtitle">{t("Minutes before departure (STD) that each phase begins.")}</p>
-        <div className="grid-2">
-          <Field label={t("Check-in opens")}>
-            <input value={checkinMin} onChange={(e) => setCheckinMin(digitsOnly(e.target.value, 4))} placeholder=" " />
-          </Field>
-          <Field label={t("Boarding starts")}>
-            <input value={boardingMin} onChange={(e) => setBoardingMin(digitsOnly(e.target.value, 4))} placeholder=" " />
-          </Field>
-          <Field label={t("Gate closing starts")}>
-            <input value={closingMin} onChange={(e) => setClosingMin(digitsOnly(e.target.value, 4))} placeholder=" " />
-          </Field>
-          <Field label={t("Final call")}>
-            <input value={flyingMin} onChange={(e) => setFlyingMin(digitsOnly(e.target.value, 4))} placeholder=" " />
-          </Field>
+      <div className={readOnly ? "settings-readonly" : undefined}>
+        <div className="settings-section">
+          <h3>{t("Check-in / boarding windows")}</h3>
+          <p className="subtitle">{t("Minutes before departure (STD) that each phase begins.")}</p>
+          <div className="grid-2">
+            <Field label={t("Check-in opens")}>
+              <input value={checkinMin} onChange={(e) => setCheckinMin(digitsOnly(e.target.value, 4))} placeholder=" " />
+            </Field>
+            <Field label={t("Boarding starts")}>
+              <input value={boardingMin} onChange={(e) => setBoardingMin(digitsOnly(e.target.value, 4))} placeholder=" " />
+            </Field>
+            <Field label={t("Gate closing starts")}>
+              <input value={closingMin} onChange={(e) => setClosingMin(digitsOnly(e.target.value, 4))} placeholder=" " />
+            </Field>
+            <Field label={t("Final call")}>
+              <input value={flyingMin} onChange={(e) => setFlyingMin(digitsOnly(e.target.value, 4))} placeholder=" " />
+            </Field>
+          </div>
         </div>
-      </div>
 
-      <div className="settings-section">
-        <h3>{t("Overbooking")}</h3>
-        <p className="subtitle">
-          {t("Extra seats sellable beyond configured capacity: C {c} · Y {y}").replace("{c}", String(capacity.C)).replace("{y}", String(capacity.Y))}
-        </p>
-        <div className="grid-2">
-          <Field label={t("Overbooking limit — Business (C)")}>
-            <input value={overbookC} onChange={(e) => setOverbookC(digitsOnly(e.target.value, 3))} placeholder=" " />
-          </Field>
-          <Field label={t("Overbooking limit — Economy (Y)")}>
-            <input value={overbookY} onChange={(e) => setOverbookY(digitsOnly(e.target.value, 3))} placeholder=" " />
-          </Field>
+        <div className="settings-section">
+          <h3>{t("Overbooking")}</h3>
+          <p className="subtitle">
+            {t("Extra seats sellable beyond configured capacity: C {c} · Y {y}").replace("{c}", String(capacity.C)).replace("{y}", String(capacity.Y))}
+          </p>
+          <div className="grid-2">
+            <Field label={t("Overbooking limit — Business (C)")}>
+              <input value={overbookC} onChange={(e) => setOverbookC(digitsOnly(e.target.value, 3))} placeholder=" " />
+            </Field>
+            <Field label={t("Overbooking limit — Economy (Y)")}>
+              <input value={overbookY} onChange={(e) => setOverbookY(digitsOnly(e.target.value, 3))} placeholder=" " />
+            </Field>
+          </div>
+          <p className="settings-hint">
+            {t("Max sellable with overbooking: C {c} · Y {y}").replace("{c}", String(capacity.C + extraC)).replace("{y}", String(capacity.Y + extraY))}
+          </p>
         </div>
-        <p className="settings-hint">
-          {t("Max sellable with overbooking: C {c} · Y {y}").replace("{c}", String(capacity.C + extraC)).replace("{y}", String(capacity.Y + extraY))}
-        </p>
-      </div>
 
-      <button type="button" className="settings-save" disabled={saving} onClick={save}>
-        {t("Save")}
-      </button>
+        {!readOnly && (
+          <button type="button" className="settings-save" disabled={saving} onClick={save}>
+            {t("Save")}
+          </button>
+        )}
+      </div>
 
       <div className="danger-zone">
         <h3>{t("Danger zone")}</h3>

@@ -2012,6 +2012,10 @@ a { color: var(--accent); }
 .settings-section { padding-bottom: 24px; margin-bottom: 24px; border-bottom: 1px solid var(--panel-border); }
 .settings-hint { color: var(--muted); font-size: 13px; margin: 12px 0 0; }
 .settings-save { align-self: flex-start; margin-bottom: 24px; }
+/* Departed flight's Settings tab — visible but not editable (see FlightCard.tsx's isFlightDeparted),
+   same treatment as .flight-main-grid-readonly. The danger zone lives outside this wrapper, so
+   deleting a departed flight's record is still possible. */
+.settings-readonly { pointer-events: none; opacity: 0.6; }
 .danger-zone { border: 1px solid var(--danger-border); border-radius: var(--radius); padding: 16px 18px; }
 .danger-zone .subtitle { margin-bottom: 14px; }
 .segment-card { position: relative; border: 1px solid var(--panel-border); border-radius: 4px; padding: 16px; }

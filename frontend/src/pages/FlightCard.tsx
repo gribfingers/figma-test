@@ -198,6 +198,7 @@ export function FlightCard() {
           {tab === "settings" && (
             <SettingsTab
               flight={flight}
+              readOnly={departed}
               onFlightUpdated={(updated) => {
                 setFlight(updated);
                 setDraft(draftFromFlight(updated));
