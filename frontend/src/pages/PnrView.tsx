@@ -28,6 +28,7 @@ import { ActionsPanel, ActionsPanelKind } from "../components/checkin/ActionsPan
 import { Modal } from "../components/Modal";
 import { FLOW_STEPS, FLOW_STEP_LABEL, FlowStep, useCheckinFlow } from "../checkinFlow";
 import { usePersistentState } from "../usePersistentState";
+import { useLanguage } from "../i18n";
 
 // Last-fetched flight/passengers per flight, kept outside component state so
 // it survives this component unmounting when the agent switches to another
@@ -163,6 +164,7 @@ const ADD_PAX_MODES = SEARCH_MODES.filter((m) => m.key !== "flight");
  * batch.
  */
 function AddPaxButton({ flightId, excludeIds, onAdd }: AddPaxButtonProps) {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<PassengerSearchMode>("surname");
   const [query, setQuery] = useState("");
@@ -214,7 +216,7 @@ function AddPaxButton({ flightId, excludeIds, onAdd }: AddPaxButtonProps) {
     return (
       <div className="pnr-add-pax" ref={rootRef}>
         <button type="button" className="secondary" onClick={() => setOpen(true)}>
-          Add pax
+          {t("Add pax")}
         </button>
       </div>
     );
@@ -232,19 +234,19 @@ function AddPaxButton({ flightId, excludeIds, onAdd }: AddPaxButtonProps) {
                 className={`search-mode-tab ${mode === m.key ? "selected" : ""}`}
                 onClick={() => setMode(m.key)}
               >
-                {m.label}
+                {t(m.label)}
               </button>
             ))}
           </div>
           <input
             className="search-mode-input"
             autoFocus
-            placeholder={ADD_PAX_MODES.find((m) => m.key === mode)?.placeholder ?? "Search"}
+            placeholder={t(ADD_PAX_MODES.find((m) => m.key === mode)?.placeholder ?? "Search")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
         </div>
-        <button type="button" className="icon-button" aria-label="Close" onClick={close}>
+        <button type="button" className="icon-button" aria-label={t("Close")} onClick={close}>
           <CloseIcon size={16} />
         </button>
         {query.trim() && (
@@ -262,7 +264,7 @@ function AddPaxButton({ flightId, excludeIds, onAdd }: AddPaxButtonProps) {
                 <span className="mono">{p.record_locator}</span>
               </li>
             ))}
-            {shown.length === 0 && <li className="pnr-add-pax-empty">No matches</li>}
+            {shown.length === 0 && <li className="pnr-add-pax-empty">{t("No matches")}</li>}
           </ul>
         )}
       </div>
@@ -283,6 +285,7 @@ export function PnrView() {
   const { pathname } = useLocation();
   const { closeTab } = useTabs();
   const { showToast } = useToast();
+  const { t } = useLanguage();
 
   // Re-visiting a tab that's already open remounts this component from
   // scratch (React Router only keeps the matched route mounted), which
@@ -407,8 +410,8 @@ export function PnrView() {
     if (!hasAnyChecked) setFlowStep(null);
   }, [clicked, flowStep, passengers, extraPassengers, checkedArr]);
 
-  if (notFound) return <EntityNotFound label="This flight" />;
-  if (!flight || !clicked) return <div className="content">Loading…</div>;
+  if (notFound) return <EntityNotFound label={t("This flight")} />;
+  if (!flight || !clicked) return <div className="content">{t("Loading…")}</div>;
 
   const seatByCode = new Map(seats.map((s) => [s.seat, s]));
   const pnrPassengers = passengers.filter((p) => p.record_locator === clicked.record_locator);
@@ -499,7 +502,7 @@ export function PnrView() {
   // same way Finish does once its confirm is accepted.
   function completeCheckin() {
     const names = flowPassengers.map((p) => `${p.surname} ${p.given_name}`).join(", ");
-    showToast(`${names} checked in`, "success", () => closeTab(pathname));
+    showToast(t("{names} checked in").replace("{names}", names), "success", () => closeTab(pathname));
   }
 
   if (flowStep) {
@@ -516,10 +519,10 @@ export function PnrView() {
           <div className="spacer" />
           <div className="pnr-flow-actions">
             {/* No action wired up yet — present for layout. */}
-            <button type="button" className="icon-button" aria-label="Refresh">
+            <button type="button" className="icon-button" aria-label={t("Refresh")}>
               <RefreshIcon size={18} />
             </button>
-            <button type="button" className="tertiary" onClick={() => setFinishConfirmOpen(true)}>Finish</button>
+            <button type="button" className="tertiary" onClick={() => setFinishConfirmOpen(true)}>{t("Finish")}</button>
             <span className="pnr-flow-checkin-wrap">
               <button
                 type="button"
@@ -527,13 +530,13 @@ export function PnrView() {
                 disabled={checkInDisabled}
                 onClick={completeCheckin}
               >
-                Check-in
+                {t("Check-in")}
               </button>
               {checkInDisabled && (
-                <span className="pnr-flow-checkin-tooltip">Seat and verify documents for all passengers first</span>
+                <span className="pnr-flow-checkin-tooltip">{t("Seat and verify documents for all passengers first")}</span>
               )}
             </span>
-            <button type="button" className="tertiary" disabled={flowStep === "services"} onClick={nextFlowStep}>Next</button>
+            <button type="button" className="tertiary" disabled={flowStep === "services"} onClick={nextFlowStep}>{t("Next")}</button>
           </div>
         </div>
 
@@ -609,7 +612,7 @@ export function PnrView() {
               />
             )}
             {flowStep !== "docs" && flowStep !== "seats" && flowStep !== "baggage" && flowStep !== "services" && (
-              <div className="pnr-flow-placeholder">{FLOW_STEP_LABEL[flowStep]} step is coming soon.</div>
+              <div className="pnr-flow-placeholder">{t("{step} step is coming soon.").replace("{step}", t(FLOW_STEP_LABEL[flowStep]))}</div>
             )}
           </div>
         </div>
@@ -653,11 +656,11 @@ export function PnrView() {
         )}
         {finishConfirmOpen && (
           <Modal
-            title="Exit check-in"
+            title={t("Exit check-in")}
             onClose={() => setFinishConfirmOpen(false)}
             footer={
               <>
-                <button type="button" className="tertiary" onClick={() => setFinishConfirmOpen(false)}>Cancel</button>
+                <button type="button" className="tertiary" onClick={() => setFinishConfirmOpen(false)}>{t("Cancel")}</button>
                 <button
                   type="button"
                   className="tertiary"
@@ -666,12 +669,12 @@ export function PnrView() {
                     finishFlow();
                   }}
                 >
-                  OK
+                  {t("OK")}
                 </button>
               </>
             }
           >
-            You are about to exit the check-in process. Unsaved progress on the current step will be lost.
+            {t("You are about to exit the check-in process. Unsaved progress on the current step will be lost.")}
           </Modal>
         )}
       </div>
@@ -691,17 +694,17 @@ export function PnrView() {
 
         <div className="pnr-stats">
           <div className="pnr-stat-col">
-            <div className="pnr-stat-col-title">Version</div>
+            <div className="pnr-stat-col-title">{t("Version")}</div>
             <StatBar label="C" count={capacity.C} total={totalCapacity} />
             <StatBar label="Y" count={capacity.Y} total={totalCapacity} />
           </div>
           <div className="pnr-stat-col">
-            <div className="pnr-stat-col-title">Booked</div>
+            <div className="pnr-stat-col-title">{t("Booked")}</div>
             <StatBar label="C" count={booked.C} total={capacity.C} />
             <StatBar label="Y" count={booked.Y} total={capacity.Y} />
           </div>
           <div className="pnr-stat-col">
-            <div className="pnr-stat-col-title">Checked</div>
+            <div className="pnr-stat-col-title">{t("Checked")}</div>
             <StatBar label="C" count={checkedIn.C} total={booked.C} />
             <StatBar label="Y" count={checkedIn.Y} total={booked.Y} />
           </div>
@@ -709,12 +712,12 @@ export function PnrView() {
 
         <div className="pnr-side">
           <div className="pnr-chips">
-            <button type="button" className="tertiary">RESEAT: {reseatCount}</button>
-            <button type="button" className="tertiary">PRIORITY: {priorityCount}</button>
+            <button type="button" className="tertiary">{t("RESEAT")}: {reseatCount}</button>
+            <button type="button" className="tertiary">{t("PRIORITY")}: {priorityCount}</button>
           </div>
           <div className="pnr-gate">
             <span className="pnr-gate-num">{flight.gate ?? "—"}</span>
-            <span className="pnr-gate-label">Gate</span>
+            <span className="pnr-gate-label">{t("Gate")}</span>
           </div>
           <div className="pnr-times">
             <div>CH-IN {fmtOffsetTime(flight.std, CHECKIN_FROM_MIN)}</div>
@@ -737,7 +740,7 @@ export function PnrView() {
           }}
         />
         <div className="spacer" />
-        <button type="button" className="secondary" disabled={flowPassengers.length === 0} onClick={startCheckinFlow}>Check-in</button>
+        <button type="button" className="secondary" disabled={flowPassengers.length === 0} onClick={startCheckinFlow}>{t("Check-in")}</button>
         <button
           ref={actionsBtnRef}
           type="button"
@@ -747,7 +750,7 @@ export function PnrView() {
           aria-expanded={actionsMenuOpen}
           onClick={() => setActionsMenuOpen((o) => !o)}
         >
-          Actions
+          {t("Actions")}
           <ChevronDownIcon size={16} className={actionsMenuOpen ? "chevron-rotated" : ""} />
         </button>
         {actionsMenuOpen &&
@@ -768,7 +771,7 @@ export function PnrView() {
                     setActionsPanelKind(kind);
                   }}
                 >
-                  {label}
+                  {t(label)}
                 </li>
               ))}
             </ul>,
@@ -791,16 +794,16 @@ export function PnrView() {
                     onChange={toggleAllChecked}
                   />
                 </th>
-                <th>Name</th>
-                <th>Remarks</th>
-                <th>Route</th>
-                <th>Class</th>
+                <th>{t("Name")}</th>
+                <th>{t("Remarks")}</th>
+                <th>{t("Route")}</th>
+                <th>{t("Class")}</th>
                 <th>PNR</th>
-                <th>Gender</th>
-                <th>Status</th>
-                <th>Docs</th>
-                <th>Baggage</th>
-                <th>Seat</th>
+                <th>{t("Gender")}</th>
+                <th>{t("Status")}</th>
+                <th>{t("Docs")}</th>
+                <th>{t("Baggage")}</th>
+                <th>{t("Seat")}</th>
               </tr>
             </thead>
             <tbody>
@@ -835,13 +838,13 @@ export function PnrView() {
                     <td>{cls ?? "—"}</td>
                     <td className="mono">{p.record_locator}</td>
                     <td>{p.gender ?? "—"}</td>
-                    <td><span className={`chip middle ${statusChipClass(p)}`}>{statusLabel(p)}</span></td>
+                    <td><span className={`chip middle ${statusChipClass(p)}`}>{t(statusLabel(p))}</span></td>
                     <td>
                       <span className="pnr-doc-icons">
-                        <span title="Documents verified against the booking">
+                        <span title={t("Documents verified against the booking")}>
                           <DocVerifiedIcon size={16} className={extra.docVerified ? "pnr-doc-icon-on" : "pnr-doc-icon-off"} />
                         </span>
-                        <span title="Documents scanned">
+                        <span title={t("Documents scanned")}>
                           <DocScannedIcon size={16} className={extra.docScanned ? "pnr-doc-icon-on" : "pnr-doc-icon-off"} />
                         </span>
                       </span>

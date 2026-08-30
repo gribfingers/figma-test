@@ -6,10 +6,12 @@ import { formatSeatDisplay } from "../../seatExtra";
 import { FlightSegment } from "../../flightSegments";
 import { ChevronDownIcon, InfantIcon, InfoIcon } from "../Icon";
 import { EmdModal } from "./EmdModal";
+import { useLanguage } from "../../i18n";
 
 /** "Swap seat…" (Seats step, once seated) and "Reprint BP" tucked under one menu, same
  *  trigger/list pattern as the flight card header's Actions menu (FlightActionsMenu). */
 function RowActionsMenu({ onSwapSeat }: { onSwapSeat?: () => void }) {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -36,15 +38,15 @@ function RowActionsMenu({ onSwapSeat }: { onSwapSeat?: () => void }) {
       onClick={(e) => e.stopPropagation()}
     >
       <button type="button" className="tertiary" aria-haspopup="listbox" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
-        Actions <ChevronDownIcon size={16} className="chevron-flip" />
+        {t("Actions")} <ChevronDownIcon size={16} className="chevron-flip" />
       </button>
       {open && (
         <ul className="actions-menu" role="listbox">
           {onSwapSeat && (
-            <li onClick={() => { setOpen(false); onSwapSeat(); }}>Swap seat…</li>
+            <li onClick={() => { setOpen(false); onSwapSeat(); }}>{t("Swap seat…")}</li>
           )}
           {/* No boarding-pass printer wired up — present for layout, no action yet. */}
-          <li onClick={() => setOpen(false)}>Reprint BP</li>
+          <li onClick={() => setOpen(false)}>{t("Reprint BP")}</li>
         </ul>
       )}
     </div>

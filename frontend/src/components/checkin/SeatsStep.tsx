@@ -5,6 +5,7 @@ import { isInfant, parsePassengerExtra } from "../../paxExtra";
 import { formatSeatDisplay, parseSeatExtra } from "../../seatExtra";
 import { useToast } from "../../toast";
 import { SeatMapPanel } from "../SeatMapPanel";
+import { useLanguage } from "../../i18n";
 
 interface Props {
   flightId: number;
@@ -37,6 +38,7 @@ export function SeatsStep({
   swapping,
   onSwappingChange,
 }: Props) {
+  const { t } = useLanguage();
   const [error, setError] = useState("");
   const { showToast } = useToast();
   const cabinFeatures = useMemo(() => cabinFeaturesFor(aircraftType), [aircraftType]);
@@ -105,7 +107,7 @@ export function SeatsStep({
       onPassengerUpdated(b);
       onSwappingChange(false);
       await refreshSeating();
-      showToast("Seats swapped");
+      showToast(t("Seats swapped"));
     } catch (e: any) {
       setError(e.message);
     }
@@ -131,10 +133,10 @@ export function SeatsStep({
             swapping ? (
               <>
                 <span>
-                  Select a pax's seat to swap with <b>{passenger.surname} {passenger.given_name}</b> ({formatSeatDisplay(passenger.seat!)})
+                  {t("Select a pax's seat to swap with ")}<b>{passenger.surname} {passenger.given_name}</b> ({formatSeatDisplay(passenger.seat!)})
                 </span>
                 <button type="button" className="tertiary" onClick={() => onSwappingChange(false)}>
-                  Cancel
+                  {t("Cancel")}
                 </button>
               </>
             ) : undefined

@@ -12,6 +12,7 @@ import { McoModal } from "./McoModal";
 import { TagManualModal } from "./TagManualModal";
 import { TransferBagModal } from "./TransferBagModal";
 import { useToast } from "../../toast";
+import { useLanguage } from "../../i18n";
 
 interface CarryOnRow {
   id: number;
@@ -83,6 +84,7 @@ interface Props {
  * remove action becomes "undo") or, occasionally, error (red, retry).
  */
 export function BaggageStep({ flight, passenger, passengers, segments, initialRows, onRowsChange, onCalculate }: Props) {
+  const { t } = useLanguage();
   const [rows, setRows] = useState<BagRow[]>(() => (initialRows.length > 0 ? initialRows : [emptyBagRow(flight.destination)]));
   const [carryOn, setCarryOn] = useState<CarryOnRow[]>([]);
 
@@ -121,11 +123,11 @@ export function BaggageStep({ flight, passenger, passengers, segments, initialRo
     const seed = `${seedRef.current}-${row.id}-${row.weight}-${row.typeId}`;
     if (!isRetry && !printSucceeds(seed)) {
       updateRow(row.id, { printStatus: "error" });
-      showToast("Print failed: Error 111, out of ink", "error");
+      showToast(t("Print failed: Error 111, out of ink"), "error");
       return;
     }
     updateRow(row.id, { printStatus: "printed", tagNumber: row.tagNumber || autoTagNumber(seed) });
-    showToast(isRetry ? "Bag tag reprinted" : "Bag tag printed");
+    showToast(isRetry ? t("Bag tag reprinted") : t("Bag tag printed"));
   }
 
   function updateCarryOn(id: number, patch: Partial<CarryOnRow>) {
@@ -139,14 +141,14 @@ export function BaggageStep({ flight, passenger, passengers, segments, initialRo
     <div className="baggage-step">
       <div className="docs-step-top">
         <button type="button" className="tertiary docs-add-link" onClick={() => mutateRows((prev) => [...prev, emptyBagRow(flight.destination)])}>
-          Add baggage
+          {t("Add baggage")}
         </button>
         <div className="baggage-step-actions">
-          <button type="button" className="icon-button" aria-label="Baggage allowance" onClick={() => setInfoOpen(true)}>
+          <button type="button" className="icon-button" aria-label={t("Baggage allowance")} onClick={() => setInfoOpen(true)}>
             <InfoIcon size={18} />
           </button>
           {/* No bag-tag print preview wired up — present for layout, no action yet. */}
-          <button type="button" className="icon-button" aria-label="Bag tag">
+          <button type="button" className="icon-button" aria-label={t("Bag tag")}>
             <TagIcon size={18} />
           </button>
           <button
@@ -155,12 +157,12 @@ export function BaggageStep({ flight, passenger, passengers, segments, initialRo
             onClick={() => {
               onCalculate();
               setCalculated(true);
-              showToast("Baggage prices calculated");
+              showToast(t("Baggage prices calculated"));
             }}
           >
-            Calculate
+            {t("Calculate")}
           </button>
-          <button type="button" className="tertiary" onClick={() => showToast("Baggage confirmed")}>Confirm</button>
+          <button type="button" className="tertiary" onClick={() => showToast(t("Baggage confirmed"))}>{t("Confirm")}</button>
         </div>
       </div>
 
@@ -178,7 +180,7 @@ export function BaggageStep({ flight, passenger, passengers, segments, initialRo
                     <span className="baggage-row-static mono">{row.destination}</span>
                   ) : (
                     <Select
-                      label="To"
+                      label={t("To")}
                       value={row.destination}
                       onChange={(v) => updateRow(row.id, { destination: v })}
                       options={destinationOptions}
@@ -196,14 +198,14 @@ export function BaggageStep({ flight, passenger, passengers, segments, initialRo
                     placeholder=" "
                     onChange={(e) => updateRow(row.id, { weight: e.target.value.replace(/\D/g, "").slice(0, 3) })}
                   />
-                  <label>Weight, kg</label>
+                  <label>{t("Weight, kg")}</label>
                 </div>
               )}
               {locked ? (
                 <span className="baggage-row-static baggage-row-static-type">{baggageTypeDisplay(row.typeId)}</span>
               ) : (
                 <BaggageTypeSelect
-                  label="Type"
+                  label={t("Type")}
                   value={row.typeId}
                   onChange={(id) => updateRow(row.id, { typeId: id })}
                   style={{ flex: 1 }}
@@ -217,8 +219,8 @@ export function BaggageStep({ flight, passenger, passengers, segments, initialRo
                   type="button"
                   className="baggage-row-print error"
                   onClick={() => attemptPrint(row, true)}
-                  title="Error 111, out of ink"
-                  aria-label="Retry print"
+                  title={t("Error 111, out of ink")}
+                  aria-label={t("Retry print")}
                 >
                   <RefreshIcon size={16} />
                 </button>
@@ -228,18 +230,18 @@ export function BaggageStep({ flight, passenger, passengers, segments, initialRo
                   className={`baggage-row-print ${row.printStatus === "printed" ? "printed" : ""}`}
                   disabled={!complete}
                   onClick={() => attemptPrint(row, false)}
-                  aria-label="Print bag tag"
+                  aria-label={t("Print bag tag")}
                 >
                   <PrinterIcon size={18} />
                 </button>
               )}
 
               {locked ? (
-                <button type="button" className="baggage-row-undo" onClick={() => updateRow(row.id, { printStatus: "idle" })} aria-label="Return bag">
+                <button type="button" className="baggage-row-undo" onClick={() => updateRow(row.id, { printStatus: "idle" })} aria-label={t("Return bag")}>
                   <ArrowNestedIcon size={16} />
                 </button>
               ) : (
-                <button type="button" className="baggage-row-remove" onClick={() => removeRow(row.id)} aria-label="Remove">
+                <button type="button" className="baggage-row-remove" onClick={() => removeRow(row.id)} aria-label={t("Remove")}>
                   <CloseIcon size={16} />
                 </button>
               )}
@@ -254,12 +256,12 @@ export function BaggageStep({ flight, passenger, passengers, segments, initialRo
                     EMD
                   </button>
                   {row.tagNumber ? (
-                    <span className="baggage-row-tag-display mono">Tag {row.tagNumber}</span>
+                    <span className="baggage-row-tag-display mono">{t("Tag")} {row.tagNumber}</span>
                   ) : (
-                    <button type="button" className="link-btn" onClick={() => setManualTagRowId(row.id)}>Tag manually</button>
+                    <button type="button" className="link-btn" onClick={() => setManualTagRowId(row.id)}>{t("Tag manually")}</button>
                   )}
                   <button type="button" className="link-btn" onClick={() => setTransferRowId(row.id)} disabled={otherPassengers.length === 0}>
-                    Transfer to another passenger
+                    {t("Transfer to another passenger")}
                   </button>
                   <div className="baggage-row-detail-checks">
                     <label className="baggage-row-check">
@@ -280,7 +282,7 @@ export function BaggageStep({ flight, passenger, passengers, segments, initialRo
 
       <div className="baggage-carryon-section">
         <button type="button" className="tertiary docs-add-link baggage-carryon-add" onClick={() => setCarryOn((prev) => [...prev, emptyCarryOnRow()])}>
-          Add carry-on
+          {t("Add carry-on")}
         </button>
         {carryOn.length > 0 && (
           <div className="baggage-carryon-rows">
@@ -293,16 +295,16 @@ export function BaggageStep({ flight, passenger, passengers, segments, initialRo
                     placeholder=" "
                     onChange={(e) => updateCarryOn(row.id, { weight: e.target.value.replace(/\D/g, "").slice(0, 3) })}
                   />
-                  <label>Weight, kg</label>
+                  <label>{t("Weight, kg")}</label>
                 </div>
-                <button type="button" className="baggage-row-remove" onClick={() => removeCarryOn(row.id)} aria-label="Remove">
+                <button type="button" className="baggage-row-remove" onClick={() => removeCarryOn(row.id)} aria-label={t("Remove")}>
                   <CloseIcon size={16} />
                 </button>
                 {!!row.weight && (
                   row.mcoRef ? (
                     <span className="baggage-mco-ref mono">MCO #{row.mcoRef}</span>
                   ) : (
-                    <button type="button" className="link-btn" onClick={() => setMcoRowId(row.id)}>Insert MCO</button>
+                    <button type="button" className="link-btn" onClick={() => setMcoRowId(row.id)}>{t("Insert MCO")}</button>
                   )
                 )}
               </div>
@@ -337,7 +339,7 @@ export function BaggageStep({ flight, passenger, passengers, segments, initialRo
           passengers={otherPassengers}
           onConfirm={(target) => {
             removeRow(transferRowId);
-            showToast(`Bag transferred to ${target.surname} ${target.given_name}`);
+            showToast(t("Bag transferred to {name}").replace("{name}", `${target.surname} ${target.given_name}`));
             setTransferRowId(null);
           }}
           onClose={() => setTransferRowId(null)}

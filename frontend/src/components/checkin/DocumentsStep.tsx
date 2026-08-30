@@ -15,6 +15,7 @@ import { Select } from "../Select";
 import { DateField } from "../DateField";
 import { BirthDateField } from "../BirthDateField";
 import { DocScannedIcon } from "../Icon";
+import { useLanguage } from "../../i18n";
 
 const EMPTY_DOC: PassengerDocument = { document_type: "P", document_number: "", nationality: "", doc_expiry: "" };
 const EMPTY_VISA: VisaDocument = {
@@ -70,6 +71,7 @@ interface Props {
  * in place (Save/Undo changes/Delete/Exit) rather than in a modal.
  */
 export function DocumentsStep({ flightId, passenger, segments, onUpdated }: Props) {
+  const { t } = useLanguage();
   const [tab, setTab] = useState<DocKind>("docs");
   const [segment, setSegment] = useState(0);
   const [editing, setEditing] = useState<EditTarget | null>(null);
@@ -143,10 +145,10 @@ export function DocumentsStep({ flightId, passenger, segments, onUpdated }: Prop
       <div className="docs-step-top">
         <SegmentToggle segments={segments} selected={segment} onSelect={setSegment} />
         {extra.docVerified ? (
-          <span className="docs-verify-link docs-verify-done">Docs on all segments are verified</span>
+          <span className="docs-verify-link docs-verify-done">{t("Docs on all segments are verified")}</span>
         ) : (
           <button type="button" className="tertiary docs-verify-link" onClick={() => saveExtraPatch({ docVerified: true })} disabled={saving}>
-            Verify docs on all segments
+            {t("Verify docs on all segments")}
           </button>
         )}
       </div>
@@ -164,7 +166,7 @@ export function DocumentsStep({ flightId, passenger, segments, onUpdated }: Prop
       </div>
 
       <button type="button" className="tertiary docs-add-link" onClick={() => setEditing({ kind: tab, index: "new" })}>
-        Add document
+        {t("Add document")}
       </button>
 
       {tab === "docs" && (
@@ -219,7 +221,7 @@ export function DocumentsStep({ flightId, passenger, segments, onUpdated }: Prop
 
       {tab === "doco" && (
         <div className="docs-cards">
-          {visas.length === 0 && !isEditing("doco", "new") && <div className="docs-empty">No entry documents on file.</div>}
+          {visas.length === 0 && !isEditing("doco", "new") && <div className="docs-empty">{t("No entry documents on file.")}</div>}
           {visas.map((v, i) => (
             <VisaCard
               key={i}
@@ -254,7 +256,7 @@ export function DocumentsStep({ flightId, passenger, segments, onUpdated }: Prop
 
       {tab === "doca" && (
         <div className="docs-cards">
-          {addresses.length === 0 && !isEditing("doca", "new") && <div className="docs-empty">No address on file.</div>}
+          {addresses.length === 0 && !isEditing("doca", "new") && <div className="docs-empty">{t("No address on file.")}</div>}
           {addresses.map((a, i) => (
             <AddressCard
               key={i}
@@ -290,14 +292,15 @@ export function DocumentsStep({ flightId, passenger, segments, onUpdated }: Prop
 
 /** Save/Undo changes/Delete/Exit footer shared by every editable card. */
 function EditFooter({ deletable, saving, onSave, onUndo, onDelete, onExit }: { deletable: boolean; saving: boolean; onSave: () => void; onUndo: () => void; onDelete?: () => void; onExit: () => void }) {
+  const { t } = useLanguage();
   return (
     <div className="doc-card-edit-footer">
-      <button type="button" disabled={saving} onClick={onSave}>Save</button>
-      <button type="button" className="tertiary" onClick={onUndo}>Undo changes</button>
+      <button type="button" disabled={saving} onClick={onSave}>{t("Save")}</button>
+      <button type="button" className="tertiary" onClick={onUndo}>{t("Undo changes")}</button>
       {deletable && onDelete && (
-        <button type="button" className="tertiary" style={{ color: "var(--danger)" }} onClick={onDelete}>Delete</button>
+        <button type="button" className="tertiary" style={{ color: "var(--danger)" }} onClick={onDelete}>{t("Delete")}</button>
       )}
-      <button type="button" className="tertiary" onClick={onExit}>Exit</button>
+      <button type="button" className="tertiary" onClick={onExit}>{t("Exit")}</button>
     </div>
   );
 }
@@ -316,6 +319,7 @@ interface DocsCardProps {
 }
 
 function DocsCard({ passenger, doc, scanned, editing, deletable, saving, onEdit, onCancel, onDelete, onSave }: DocsCardProps) {
+  const { t } = useLanguage();
   const [draft, setDraft] = useState(doc);
   const [identity, setIdentity] = useState(() => identityFrom(passenger));
   useEffect(() => {
@@ -331,20 +335,20 @@ function DocsCard({ passenger, doc, scanned, editing, deletable, saving, onEdit,
     return (
       <div className="doc-card">
         <div className="doc-card-grid">
-          <div className="doc-field"><span className="doc-field-label">Document Type</span><span className="doc-field-value">{typeLabel}</span></div>
-          <div className="doc-field"><span className="doc-field-label">Issue Country</span><span className="doc-field-value">{doc.nationality || "—"}</span></div>
-          <div className="doc-field"><span className="doc-field-label">Document Number</span><span className="doc-field-value">{doc.document_number || "—"}</span></div>
-          <div className="doc-field"><span className="doc-field-label">Nationality</span><span className="doc-field-value">{doc.nationality || "—"}</span></div>
-          <div className="doc-field"><span className="doc-field-label">Surname</span><span className="doc-field-value">{passenger.surname}</span></div>
-          <div className="doc-field"><span className="doc-field-label">Name</span><span className="doc-field-value">{passenger.given_name}</span></div>
-          <div className="doc-field"><span className="doc-field-label">Middle Name</span><span className="doc-field-value">{passenger.middle_name || "—"}</span></div>
-          <div className="doc-field"><span className="doc-field-label">Birth Date</span><span className="doc-field-value">{passenger.dob ?? "—"}</span></div>
-          <div className="doc-field"><span className="doc-field-label">Gender</span><span className="doc-field-value">{passenger.gender ?? "—"}</span></div>
-          <div className="doc-field"><span className="doc-field-label">Valid Till</span><span className="doc-field-value">{doc.doc_expiry || "—"}</span></div>
+          <div className="doc-field"><span className="doc-field-label">{t("Document Type")}</span><span className="doc-field-value">{typeLabel}</span></div>
+          <div className="doc-field"><span className="doc-field-label">{t("Issue Country")}</span><span className="doc-field-value">{doc.nationality || "—"}</span></div>
+          <div className="doc-field"><span className="doc-field-label">{t("Document Number")}</span><span className="doc-field-value">{doc.document_number || "—"}</span></div>
+          <div className="doc-field"><span className="doc-field-label">{t("Nationality")}</span><span className="doc-field-value">{doc.nationality || "—"}</span></div>
+          <div className="doc-field"><span className="doc-field-label">{t("Surname")}</span><span className="doc-field-value">{passenger.surname}</span></div>
+          <div className="doc-field"><span className="doc-field-label">{t("Name")}</span><span className="doc-field-value">{passenger.given_name}</span></div>
+          <div className="doc-field"><span className="doc-field-label">{t("Middle Name")}</span><span className="doc-field-value">{passenger.middle_name || "—"}</span></div>
+          <div className="doc-field"><span className="doc-field-label">{t("Birth Date")}</span><span className="doc-field-value">{passenger.dob ?? "—"}</span></div>
+          <div className="doc-field"><span className="doc-field-label">{t("Gender")}</span><span className="doc-field-value">{passenger.gender ?? "—"}</span></div>
+          <div className="doc-field"><span className="doc-field-label">{t("Valid Till")}</span><span className="doc-field-value">{doc.doc_expiry || "—"}</span></div>
         </div>
         <div className="doc-card-footer">
           {scanned !== undefined ? (
-            <div className="doc-scanned-mark" title={scanned ? "Document scanned" : "Not scanned"}>
+            <div className="doc-scanned-mark" title={scanned ? t("Document scanned") : t("Not scanned")}>
               <DocScannedIcon size={16} className={scanned ? "pnr-doc-icon-on" : "pnr-doc-icon-off"} />
             </div>
           ) : (
@@ -352,8 +356,8 @@ function DocsCard({ passenger, doc, scanned, editing, deletable, saving, onEdit,
           )}
           <div className="doc-card-actions">
             {/* Placeholder — no scanner hardware wired up yet. */}
-            <button type="button" className="tertiary" disabled>Scan</button>
-            <button type="button" className="tertiary" onClick={onEdit}>Edit</button>
+            <button type="button" className="tertiary" disabled>{t("Scan")}</button>
+            <button type="button" className="tertiary" onClick={onEdit}>{t("Edit")}</button>
           </div>
         </div>
       </div>
@@ -363,16 +367,16 @@ function DocsCard({ passenger, doc, scanned, editing, deletable, saving, onEdit,
   return (
     <div className="doc-card doc-card-editing">
       <div className="doc-card-grid">
-        <Select label="Document Type" value={draft.document_type} onChange={(v) => setDraft({ ...draft, document_type: v })} options={DOCUMENT_TYPES} />
-        <Field label="Issue Country"><input value={draft.nationality} maxLength={2} onChange={(e) => setDraft({ ...draft, nationality: e.target.value.toUpperCase() })} placeholder=" " /></Field>
-        <Field label="Document Number"><input value={draft.document_number} onChange={(e) => setDraft({ ...draft, document_number: e.target.value })} placeholder=" " /></Field>
-        <Field label="Nationality"><input value={draft.nationality} maxLength={2} onChange={(e) => setDraft({ ...draft, nationality: e.target.value.toUpperCase() })} placeholder=" " /></Field>
-        <Field label="Surname"><input value={identity.surname} onChange={(e) => setIdentity({ ...identity, surname: e.target.value })} placeholder=" " /></Field>
-        <Field label="Name"><input value={identity.given_name} onChange={(e) => setIdentity({ ...identity, given_name: e.target.value })} placeholder=" " /></Field>
-        <Field label="Middle Name"><input value={identity.middle_name} onChange={(e) => setIdentity({ ...identity, middle_name: e.target.value })} placeholder=" " /></Field>
-        <BirthDateField label="Birth Date" value={identity.dob} onChange={(v) => setIdentity({ ...identity, dob: v })} />
-        <Select label="Gender" value={identity.gender} onChange={(v) => setIdentity({ ...identity, gender: v as Identity["gender"] })} options={GENDER_OPTIONS} />
-        <DateField label="Valid Till" value={draft.doc_expiry} onChange={(v) => setDraft({ ...draft, doc_expiry: v })} />
+        <Select label={t("Document Type")} value={draft.document_type} onChange={(v) => setDraft({ ...draft, document_type: v })} options={DOCUMENT_TYPES} />
+        <Field label={t("Issue Country")}><input value={draft.nationality} maxLength={2} onChange={(e) => setDraft({ ...draft, nationality: e.target.value.toUpperCase() })} placeholder=" " /></Field>
+        <Field label={t("Document Number")}><input value={draft.document_number} onChange={(e) => setDraft({ ...draft, document_number: e.target.value })} placeholder=" " /></Field>
+        <Field label={t("Nationality")}><input value={draft.nationality} maxLength={2} onChange={(e) => setDraft({ ...draft, nationality: e.target.value.toUpperCase() })} placeholder=" " /></Field>
+        <Field label={t("Surname")}><input value={identity.surname} onChange={(e) => setIdentity({ ...identity, surname: e.target.value })} placeholder=" " /></Field>
+        <Field label={t("Name")}><input value={identity.given_name} onChange={(e) => setIdentity({ ...identity, given_name: e.target.value })} placeholder=" " /></Field>
+        <Field label={t("Middle Name")}><input value={identity.middle_name} onChange={(e) => setIdentity({ ...identity, middle_name: e.target.value })} placeholder=" " /></Field>
+        <BirthDateField label={t("Birth Date")} value={identity.dob} onChange={(v) => setIdentity({ ...identity, dob: v })} />
+        <Select label={t("Gender")} value={identity.gender} onChange={(v) => setIdentity({ ...identity, gender: v as Identity["gender"] })} options={GENDER_OPTIONS} />
+        <DateField label={t("Valid Till")} value={draft.doc_expiry} onChange={(v) => setDraft({ ...draft, doc_expiry: v })} />
       </div>
       <EditFooter
         deletable={deletable}
@@ -398,6 +402,7 @@ interface VisaCardProps {
 }
 
 function VisaCard({ passenger, doc, editing, saving, onEdit, onCancel, onDelete, onSave }: VisaCardProps) {
+  const { t } = useLanguage();
   const [draft, setDraft] = useState(doc);
   useEffect(() => {
     if (editing) setDraft(doc);
@@ -407,21 +412,21 @@ function VisaCard({ passenger, doc, editing, saving, onEdit, onCancel, onDelete,
     return (
       <div className="doc-card">
         <div className="doc-card-grid">
-          <div className="doc-field"><span className="doc-field-label">Document Type</span><span className="doc-field-value">{doc.document_type || "—"}</span></div>
-          <div className="doc-field"><span className="doc-field-label">Expiration Date</span><span className="doc-field-value">{doc.expiration_date || "—"}</span></div>
-          <div className="doc-field"><span className="doc-field-label">Visa Number</span><span className="doc-field-value">{doc.visa_number || "—"}</span></div>
-          <div className="doc-field"><span className="doc-field-label">Applicable Country</span><span className="doc-field-value">{doc.applicable_country || "—"}</span></div>
-          <div className="doc-field"><span className="doc-field-label">Issue Country</span><span className="doc-field-value">{doc.issue_country || "—"}</span></div>
-          <div className="doc-field"><span className="doc-field-label">Issue City</span><span className="doc-field-value">{doc.issue_city || "—"}</span></div>
-          <div className="doc-field"><span className="doc-field-label">Issue Date</span><span className="doc-field-value">{doc.issue_date || "—"}</span></div>
-          <div className="doc-field"><span className="doc-field-label">Passenger Birth Place</span><span className="doc-field-value">{doc.birth_place || "—"}</span></div>
-          <div className="doc-field"><span className="doc-field-label">Name</span><span className="doc-field-value">{passenger.given_name}</span></div>
-          <div className="doc-field"><span className="doc-field-label">Second Name</span><span className="doc-field-value">{passenger.middle_name || "—"}</span></div>
-          <div className="doc-field"><span className="doc-field-label">Surname</span><span className="doc-field-value">{passenger.surname}</span></div>
-          <div className="doc-field"><span className="doc-field-label">Nationality</span><span className="doc-field-value">{passenger.nationality || "—"}</span></div>
+          <div className="doc-field"><span className="doc-field-label">{t("Document Type")}</span><span className="doc-field-value">{doc.document_type || "—"}</span></div>
+          <div className="doc-field"><span className="doc-field-label">{t("Expiration Date")}</span><span className="doc-field-value">{doc.expiration_date || "—"}</span></div>
+          <div className="doc-field"><span className="doc-field-label">{t("Visa Number")}</span><span className="doc-field-value">{doc.visa_number || "—"}</span></div>
+          <div className="doc-field"><span className="doc-field-label">{t("Applicable Country")}</span><span className="doc-field-value">{doc.applicable_country || "—"}</span></div>
+          <div className="doc-field"><span className="doc-field-label">{t("Issue Country")}</span><span className="doc-field-value">{doc.issue_country || "—"}</span></div>
+          <div className="doc-field"><span className="doc-field-label">{t("Issue City")}</span><span className="doc-field-value">{doc.issue_city || "—"}</span></div>
+          <div className="doc-field"><span className="doc-field-label">{t("Issue Date")}</span><span className="doc-field-value">{doc.issue_date || "—"}</span></div>
+          <div className="doc-field"><span className="doc-field-label">{t("Passenger Birth Place")}</span><span className="doc-field-value">{doc.birth_place || "—"}</span></div>
+          <div className="doc-field"><span className="doc-field-label">{t("Name")}</span><span className="doc-field-value">{passenger.given_name}</span></div>
+          <div className="doc-field"><span className="doc-field-label">{t("Second Name")}</span><span className="doc-field-value">{passenger.middle_name || "—"}</span></div>
+          <div className="doc-field"><span className="doc-field-label">{t("Surname")}</span><span className="doc-field-value">{passenger.surname}</span></div>
+          <div className="doc-field"><span className="doc-field-label">{t("Nationality")}</span><span className="doc-field-value">{passenger.nationality || "—"}</span></div>
         </div>
         <div className="doc-card-actions">
-          <button type="button" className="tertiary" onClick={onEdit}>Edit</button>
+          <button type="button" className="tertiary" onClick={onEdit}>{t("Edit")}</button>
         </div>
       </div>
     );
@@ -430,18 +435,18 @@ function VisaCard({ passenger, doc, editing, saving, onEdit, onCancel, onDelete,
   return (
     <div className="doc-card doc-card-editing">
       <div className="doc-card-grid">
-        <Field label="Document Type"><input value={draft.document_type} onChange={(e) => setDraft({ ...draft, document_type: e.target.value })} placeholder=" " /></Field>
-        <DateField label="Expiration Date" value={draft.expiration_date} onChange={(v) => setDraft({ ...draft, expiration_date: v })} />
-        <Field label="Visa Number"><input value={draft.visa_number} onChange={(e) => setDraft({ ...draft, visa_number: e.target.value })} placeholder=" " /></Field>
-        <Field label="Applicable Country"><input value={draft.applicable_country} onChange={(e) => setDraft({ ...draft, applicable_country: e.target.value.toUpperCase() })} placeholder=" " /></Field>
-        <Field label="Issue Country"><input value={draft.issue_country} onChange={(e) => setDraft({ ...draft, issue_country: e.target.value.toUpperCase() })} placeholder=" " /></Field>
-        <Field label="Issue City"><input value={draft.issue_city} onChange={(e) => setDraft({ ...draft, issue_city: e.target.value })} placeholder=" " /></Field>
-        <DateField label="Issue Date" value={draft.issue_date} onChange={(v) => setDraft({ ...draft, issue_date: v })} />
-        <Field label="Passenger Birth Place"><input value={draft.birth_place} onChange={(e) => setDraft({ ...draft, birth_place: e.target.value })} placeholder=" " /></Field>
-        <div className="doc-field"><span className="doc-field-label">Name</span><span className="doc-field-value">{passenger.given_name}</span></div>
-        <div className="doc-field"><span className="doc-field-label">Second Name</span><span className="doc-field-value">{passenger.middle_name || "—"}</span></div>
-        <div className="doc-field"><span className="doc-field-label">Surname</span><span className="doc-field-value">{passenger.surname}</span></div>
-        <div className="doc-field"><span className="doc-field-label">Nationality</span><span className="doc-field-value">{passenger.nationality || "—"}</span></div>
+        <Field label={t("Document Type")}><input value={draft.document_type} onChange={(e) => setDraft({ ...draft, document_type: e.target.value })} placeholder=" " /></Field>
+        <DateField label={t("Expiration Date")} value={draft.expiration_date} onChange={(v) => setDraft({ ...draft, expiration_date: v })} />
+        <Field label={t("Visa Number")}><input value={draft.visa_number} onChange={(e) => setDraft({ ...draft, visa_number: e.target.value })} placeholder=" " /></Field>
+        <Field label={t("Applicable Country")}><input value={draft.applicable_country} onChange={(e) => setDraft({ ...draft, applicable_country: e.target.value.toUpperCase() })} placeholder=" " /></Field>
+        <Field label={t("Issue Country")}><input value={draft.issue_country} onChange={(e) => setDraft({ ...draft, issue_country: e.target.value.toUpperCase() })} placeholder=" " /></Field>
+        <Field label={t("Issue City")}><input value={draft.issue_city} onChange={(e) => setDraft({ ...draft, issue_city: e.target.value })} placeholder=" " /></Field>
+        <DateField label={t("Issue Date")} value={draft.issue_date} onChange={(v) => setDraft({ ...draft, issue_date: v })} />
+        <Field label={t("Passenger Birth Place")}><input value={draft.birth_place} onChange={(e) => setDraft({ ...draft, birth_place: e.target.value })} placeholder=" " /></Field>
+        <div className="doc-field"><span className="doc-field-label">{t("Name")}</span><span className="doc-field-value">{passenger.given_name}</span></div>
+        <div className="doc-field"><span className="doc-field-label">{t("Second Name")}</span><span className="doc-field-value">{passenger.middle_name || "—"}</span></div>
+        <div className="doc-field"><span className="doc-field-label">{t("Surname")}</span><span className="doc-field-value">{passenger.surname}</span></div>
+        <div className="doc-field"><span className="doc-field-label">{t("Nationality")}</span><span className="doc-field-value">{passenger.nationality || "—"}</span></div>
       </div>
       <EditFooter deletable saving={saving} onSave={() => onSave(draft)} onUndo={() => setDraft(doc)} onDelete={onDelete} onExit={onCancel} />
     </div>
@@ -459,6 +464,7 @@ interface AddressCardProps {
 }
 
 function AddressCard({ doc, editing, saving, onEdit, onCancel, onDelete, onSave }: AddressCardProps) {
+  const { t } = useLanguage();
   const [draft, setDraft] = useState(doc);
   useEffect(() => {
     if (editing) setDraft(doc);
@@ -468,15 +474,15 @@ function AddressCard({ doc, editing, saving, onEdit, onCancel, onDelete, onSave 
     return (
       <div className="doc-card">
         <div className="doc-card-grid doc-card-grid-2">
-          <div className="doc-field"><span className="doc-field-label">Address Type</span><span className="doc-field-value">{doc.address_type || "—"}</span></div>
-          <div className="doc-field"><span className="doc-field-label">Country</span><span className="doc-field-value">{doc.country || "—"}</span></div>
-          <div className="doc-field"><span className="doc-field-label">State/Province</span><span className="doc-field-value">{doc.state || "—"}</span></div>
-          <div className="doc-field"><span className="doc-field-label">City</span><span className="doc-field-value">{doc.city || "—"}</span></div>
-          <div className="doc-field"><span className="doc-field-label">Address</span><span className="doc-field-value">{doc.address || "—"}</span></div>
-          <div className="doc-field"><span className="doc-field-label">Zip Code</span><span className="doc-field-value">{doc.zip_code || "—"}</span></div>
+          <div className="doc-field"><span className="doc-field-label">{t("Address Type")}</span><span className="doc-field-value">{doc.address_type || "—"}</span></div>
+          <div className="doc-field"><span className="doc-field-label">{t("Country")}</span><span className="doc-field-value">{doc.country || "—"}</span></div>
+          <div className="doc-field"><span className="doc-field-label">{t("State/Province")}</span><span className="doc-field-value">{doc.state || "—"}</span></div>
+          <div className="doc-field"><span className="doc-field-label">{t("City")}</span><span className="doc-field-value">{doc.city || "—"}</span></div>
+          <div className="doc-field"><span className="doc-field-label">{t("Address")}</span><span className="doc-field-value">{doc.address || "—"}</span></div>
+          <div className="doc-field"><span className="doc-field-label">{t("Zip Code")}</span><span className="doc-field-value">{doc.zip_code || "—"}</span></div>
         </div>
         <div className="doc-card-actions">
-          <button type="button" className="tertiary" onClick={onEdit}>Edit</button>
+          <button type="button" className="tertiary" onClick={onEdit}>{t("Edit")}</button>
         </div>
       </div>
     );
@@ -485,12 +491,12 @@ function AddressCard({ doc, editing, saving, onEdit, onCancel, onDelete, onSave 
   return (
     <div className="doc-card doc-card-editing">
       <div className="doc-card-grid doc-card-grid-2">
-        <Select label="Address Type" value={draft.address_type} onChange={(v) => setDraft({ ...draft, address_type: v })} options={ADDRESS_TYPES} />
-        <Field label="Country"><input value={draft.country} onChange={(e) => setDraft({ ...draft, country: e.target.value })} placeholder=" " /></Field>
-        <Field label="State/Province"><input value={draft.state} onChange={(e) => setDraft({ ...draft, state: e.target.value })} placeholder=" " /></Field>
-        <Field label="City"><input value={draft.city} onChange={(e) => setDraft({ ...draft, city: e.target.value })} placeholder=" " /></Field>
-        <Field label="Address"><input value={draft.address} onChange={(e) => setDraft({ ...draft, address: e.target.value })} placeholder=" " /></Field>
-        <Field label="Zip Code"><input value={draft.zip_code} onChange={(e) => setDraft({ ...draft, zip_code: e.target.value })} placeholder=" " /></Field>
+        <Select label={t("Address Type")} value={draft.address_type} onChange={(v) => setDraft({ ...draft, address_type: v })} options={ADDRESS_TYPES.map((o) => ({ ...o, label: t(o.label) }))} />
+        <Field label={t("Country")}><input value={draft.country} onChange={(e) => setDraft({ ...draft, country: e.target.value })} placeholder=" " /></Field>
+        <Field label={t("State/Province")}><input value={draft.state} onChange={(e) => setDraft({ ...draft, state: e.target.value })} placeholder=" " /></Field>
+        <Field label={t("City")}><input value={draft.city} onChange={(e) => setDraft({ ...draft, city: e.target.value })} placeholder=" " /></Field>
+        <Field label={t("Address")}><input value={draft.address} onChange={(e) => setDraft({ ...draft, address: e.target.value })} placeholder=" " /></Field>
+        <Field label={t("Zip Code")}><input value={draft.zip_code} onChange={(e) => setDraft({ ...draft, zip_code: e.target.value })} placeholder=" " /></Field>
       </div>
       <EditFooter deletable saving={saving} onSave={() => onSave(draft)} onUndo={() => setDraft(doc)} onDelete={onDelete} onExit={onCancel} />
     </div>

@@ -2,6 +2,7 @@ import { Passenger, SeatCell } from "../../api";
 import { BagRow } from "../../baggageTypes";
 import { SeatServiceItem, baggageServiceItemsForRows, seatServiceItemsForSeat } from "../../paxExtra";
 import { CloseIcon } from "../Icon";
+import { useLanguage } from "../../i18n";
 
 interface Props {
   passengers: Passenger[];
@@ -31,6 +32,7 @@ function CartLine({ label, amount, bold }: { label: string; amount: number; bold
 
 /** Slide-out side panel (same shell as FlightInfoPanel, but from the left) opened from the check-in flow's Cart nav icon. */
 export function CartPanel({ passengers, seatByCode, baggageRows, baggageCalculated, confirmedServices, open, onClose }: Props) {
+  const { t } = useLanguage();
   const rows = passengers.map((p) => {
     const seat = sum(seatServiceItemsForSeat(p.seat ? seatByCode.get(p.seat) : undefined));
     const baggage = sum(baggageServiceItemsForRows(p.id, baggageRows[p.id] ?? [], baggageCalculated.has(p.id)));
@@ -43,8 +45,8 @@ export function CartPanel({ passengers, seatByCode, baggageRows, baggageCalculat
     <div className={`cart-panel-overlay ${open ? "open" : ""}`} onClick={onClose}>
       <div className="cart-panel" onClick={(e) => e.stopPropagation()}>
         <div className="cart-panel-header">
-          <div className="cart-panel-title">Cart</div>
-          <button type="button" className="icon-button" onClick={onClose} aria-label="Close">
+          <div className="cart-panel-title">{t("Cart")}</div>
+          <button type="button" className="icon-button" onClick={onClose} aria-label={t("Close")}>
             <CloseIcon size={16} />
           </button>
         </div>
@@ -55,24 +57,24 @@ export function CartPanel({ passengers, seatByCode, baggageRows, baggageCalculat
               <div className="cart-passenger-name">{r.passenger.surname} {r.passenger.given_name}</div>
               {r.total > 0 ? (
                 <>
-                  {r.seat > 0 && <CartLine label="Seat" amount={r.seat} />}
-                  {r.baggage > 0 && <CartLine label="Baggage" amount={r.baggage} />}
-                  {r.ancillaries > 0 && <CartLine label="Ancillaries" amount={r.ancillaries} />}
-                  <CartLine label="Total" amount={r.total} bold />
+                  {r.seat > 0 && <CartLine label={t("Seat")} amount={r.seat} />}
+                  {r.baggage > 0 && <CartLine label={t("Baggage")} amount={r.baggage} />}
+                  {r.ancillaries > 0 && <CartLine label={t("Ancillaries")} amount={r.ancillaries} />}
+                  <CartLine label={t("Total")} amount={r.total} bold />
                   <div className="cart-passenger-pay">
-                    <button type="button" className="tertiary">Pay</button>
+                    <button type="button" className="tertiary">{t("Pay")}</button>
                   </div>
                 </>
               ) : (
-                <CartLine label="Total" amount={0} bold />
+                <CartLine label={t("Total")} amount={0} bold />
               )}
             </div>
           ))}
         </div>
 
         <div className="cart-panel-footer">
-          <CartLine label="Total" amount={grandTotal} bold />
-          <button type="button" disabled={grandTotal === 0}>Pay</button>
+          <CartLine label={t("Total")} amount={grandTotal} bold />
+          <button type="button" disabled={grandTotal === 0}>{t("Pay")}</button>
         </div>
       </div>
     </div>

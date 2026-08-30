@@ -6,6 +6,7 @@ import { SegmentsMultiSelect } from "../SegmentsMultiSelect";
 import { EXTRA_SERVICE_GROUPS } from "../../extraServiceTypes";
 import { MinusIcon, PlusIcon } from "../Icon";
 import { EmdModal } from "./EmdModal";
+import { useLanguage } from "../../i18n";
 
 interface RowState {
   segments: Set<number>;
@@ -53,6 +54,7 @@ function confirmedItems(rows: Record<string, RowState>): SeatServiceItem[] {
  * EMD). Unchecking clears the row back to its default state.
  */
 export function ExtraServicesStep({ flight, passenger, segments, onConfirmedChange }: Props) {
+  const { t } = useLanguage();
   const [rows, setRows] = useState<Record<string, RowState>>({});
   const [emdItem, setEmdItem] = useState<SeatServiceItem | null>(null);
 
@@ -88,7 +90,7 @@ export function ExtraServicesStep({ flight, passenger, segments, onConfirmedChan
       <div className="extra-services-groups">
         {EXTRA_SERVICE_GROUPS.map((g) => (
           <div key={g.group}>
-            <div className="extra-service-group-label">{g.group}</div>
+            <div className="extra-service-group-label">{t(g.group)}</div>
             {g.options.map((o) => {
               const row = rows[o.id];
               const checked = !!row;
@@ -113,7 +115,7 @@ export function ExtraServicesStep({ flight, passenger, segments, onConfirmedChan
                           className="qty-stepper-btn"
                           disabled={row.qty <= 1}
                           onClick={() => updateRow(o.id, { qty: Math.max(1, row.qty - 1) })}
-                          aria-label="Decrease"
+                          aria-label={t("Decrease")}
                         >
                           <MinusIcon size={14} />
                         </button>
@@ -122,7 +124,7 @@ export function ExtraServicesStep({ flight, passenger, segments, onConfirmedChan
                           type="button"
                           className="qty-stepper-btn"
                           onClick={() => updateRow(o.id, { qty: row.qty + 1 })}
-                          aria-label="Increase"
+                          aria-label={t("Increase")}
                         >
                           <PlusIcon size={14} />
                         </button>
@@ -136,7 +138,7 @@ export function ExtraServicesStep({ flight, passenger, segments, onConfirmedChan
                           {row.confirmed.price.toLocaleString("ru-RU")} ₽
                         </button>
                       ) : (
-                        <button type="button" className="tertiary" onClick={() => confirmRow(o.id)}>Confirm</button>
+                        <button type="button" className="tertiary" onClick={() => confirmRow(o.id)}>{t("Confirm")}</button>
                       )}
                     </div>
                   )}
