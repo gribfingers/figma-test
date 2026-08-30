@@ -10,6 +10,7 @@ import { useRegisterTab } from "../tabs";
 import { useToast } from "../toast";
 import { MAX_SEGMENTS } from "../flightSegments";
 import { alphanumericUpper, digitsOnly } from "../validation";
+import { useLanguage } from "../i18n";
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^\d{2}:\d{2}$/;
@@ -40,6 +41,7 @@ const CHECKS = [
 // nothing to "view" yet) and support the same Add/Remove segment flow as
 // the flight card, up to MAX_SEGMENTS legs.
 export function NewFlight() {
+  const { t } = useLanguage();
   useRegisterTab("New flight");
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -75,8 +77,8 @@ export function NewFlight() {
     e.preventDefault();
     setError("");
     const first = segments[0];
-    if (!first.depAirport || !first.arrAirport) return setError("Origin and destination airports are required");
-    if (!DATE_RE.test(first.depDate) || !TIME_RE.test(first.depTime)) return setError("Departure date/time is required");
+    if (!first.depAirport || !first.arrAirport) return setError(t("Origin and destination airports are required"));
+    if (!DATE_RE.test(first.depDate) || !TIME_RE.test(first.depTime)) return setError(t("Departure date/time is required"));
     const now = new Date().toISOString();
     const std = combineDateAndTime(now, first.depDate, first.depTime);
     const sta = DATE_RE.test(first.arrDate) && TIME_RE.test(first.arrTime) ? combineDateAndTime(now, first.arrDate, first.arrTime) : undefined;
@@ -120,7 +122,7 @@ export function NewFlight() {
         extra,
       });
       navigate(`/flights/${flight.id}`);
-      showToast("Flight created");
+      showToast(t("Flight created"));
     } catch (e: any) {
       setError(e.message);
     }
@@ -132,7 +134,7 @@ export function NewFlight() {
         <div className="flight-card-head">
           <div className="flight-card-id">
             <div className="new-flight-number-fields">
-              <Field label="Airline (IATA)" style={{ width: 108 }}>
+              <Field label={t("Airline (IATA)")} style={{ width: 108 }}>
                 <input
                   value={carrierCode}
                   required
@@ -142,7 +144,7 @@ export function NewFlight() {
                   placeholder=" "
                 />
               </Field>
-              <Field label="Flight number" style={{ width: 124 }}>
+              <Field label={t("Flight number")} style={{ width: 124 }}>
                 <input
                   value={flightNumber}
                   required
@@ -151,11 +153,11 @@ export function NewFlight() {
                 />
               </Field>
             </div>
-            <div className="flight-card-date">Manual entry — for flights without a preloaded schedule</div>
+            <div className="flight-card-date">{t("Manual entry — for flights without a preloaded schedule")}</div>
           </div>
           <div />
           <div className="flight-card-actions">
-            <button type="submit">Create flight</button>
+            <button type="submit">{t("Create flight")}</button>
           </div>
         </div>
 
@@ -175,7 +177,7 @@ export function NewFlight() {
               ))}
               {segments.length < MAX_SEGMENTS && (
                 <button type="button" className="secondary segment-add" onClick={addSegment}>
-                  <PlusIcon size={14} /> Add segment
+                  <PlusIcon size={14} /> {t("Add segment")}
                 </button>
               )}
             </div>
@@ -189,18 +191,18 @@ export function NewFlight() {
                   rows={3}
                   maxLength={500}
                 />
-                <label>Flight comment</label>
+                <label>{t("Flight comment")}</label>
               </div>
 
               <div className="grid-2" style={{ marginTop: 16 }}>
-                <Field label="Partner flight">
+                <Field label={t("Partner flight")}>
                   <input
                     value={partnerFlight}
                     onChange={(e) => setPartnerFlight(alphanumericUpper(e.target.value, 8))}
                     placeholder=" "
                   />
                 </Field>
-                <Select label="Agreement type" value={agreement} onChange={setAgreement} options={AGREEMENT_TYPES} />
+                <Select label={t("Agreement type")} value={agreement} onChange={setAgreement} options={AGREEMENT_TYPES.map((o) => ({ ...o, label: t(o.label) }))} />
               </div>
 
               <div className="grid-2" style={{ marginTop: 16, alignItems: "center" }}>
@@ -211,7 +213,7 @@ export function NewFlight() {
                 >
                   APIS
                 </button>
-                <Field label="Max KZ, kg">
+                <Field label={t("Max KZ, kg")}>
                   <input
                     value={maxWeight}
                     onChange={(e) => setMaxWeight(digitsOnly(e.target.value, 6))}
@@ -228,7 +230,7 @@ export function NewFlight() {
                       checked={!!checks[c]}
                       onChange={() => setChecks((prev) => ({ ...prev, [c]: !prev[c] }))}
                     />
-                    {c}
+                    {t(c)}
                   </label>
                 ))}
               </div>

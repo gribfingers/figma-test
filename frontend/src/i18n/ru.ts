@@ -561,4 +561,13 @@ export const RU: Record<string, string> = {
   "Edit user: {login}": "Редактирование пользователя: {login}",
   "Password for {login}": "Пароль для {login}",
   "Share this password with the user now — it isn't shown again.": "Сообщите этот пароль пользователю сейчас — повторно он не покажется.",
+
+  // ---- NewFlight.tsx ----
+  "Origin and destination airports are required": "Аэропорты отправления и назначения обязательны",
+  "Departure date/time is required": "Дата/время вылета обязательны",
+  "Flight created": "Рейс создан",
+  "Airline (IATA)": "Авиакомпания (IATA)",
+  "Flight number": "Номер рейса",
+  "Manual entry — for flights without a preloaded schedule": "Ручной ввод — для рейсов без предзагруженного расписания",
+  "Create flight": "Создать рейс",
 };
