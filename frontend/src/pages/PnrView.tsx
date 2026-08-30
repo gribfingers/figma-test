@@ -5,7 +5,7 @@ import { api, Flight, Passenger, PassengerSearchMode, SeatCell } from "../api";
 import { formatSeatDisplay } from "../seatExtra";
 import { classFor, parsePassengerExtra, SeatServiceItem } from "../paxExtra";
 import { BagRow } from "../baggageTypes";
-import { ChevronDownIcon, CloseIcon, DocScannedIcon, DocVerifiedIcon, RefreshIcon } from "../components/Icon";
+import { ChevronDownIcon, CloseIcon, DocVerifiedIcon, RefreshIcon } from "../components/Icon";
 import { EntityNotFound } from "../components/EntityNotFound";
 import { SEARCH_MODES } from "./Search";
 import { useRegisterTab, useTabs } from "../tabs";
@@ -843,9 +843,6 @@ export function PnrView() {
                       <span className="pnr-doc-icons">
                         <span title={t("Documents verified against the booking")}>
                           <DocVerifiedIcon size={16} className={extra.docVerified ? "pnr-doc-icon-on" : "pnr-doc-icon-off"} />
-                        </span>
-                        <span title={t("Documents scanned")}>
-                          <DocScannedIcon size={16} className={extra.docScanned ? "pnr-doc-icon-on" : "pnr-doc-icon-off"} />
                         </span>
                       </span>
                     </td>

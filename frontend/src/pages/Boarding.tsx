@@ -5,7 +5,6 @@ import {
   ArrowNestedIcon,
   ChildIcon,
   CloseIcon,
-  DocScannedIcon,
   DocVerifiedIcon,
   HandIcon,
   InfantIcon,
@@ -463,9 +462,6 @@ export function Boarding() {
                       <span className="pnr-doc-icons">
                         <span title={t("Documents verified against the booking")}>
                           <DocVerifiedIcon size={16} className={extra.docVerified ? "pnr-doc-icon-on" : "pnr-doc-icon-off"} />
-                        </span>
-                        <span title={t("Documents scanned")}>
-                          <DocScannedIcon size={16} className={extra.docScanned ? "pnr-doc-icon-on" : "pnr-doc-icon-off"} />
                         </span>
                       </span>
                     </td>
