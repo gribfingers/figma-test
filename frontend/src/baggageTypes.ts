@@ -67,8 +67,9 @@ export function baggageTypeById(id: string): BaggageTypeOption | undefined {
 }
 
 /** "010 1-10 kg" for a Standard-group option, "WEAP (RUH)" for a special one — matches how each reads in the reference design. */
-export function baggageTypeDisplay(id: string): string {
+export function baggageTypeDisplay(id: string, t: (text: string) => string = (s) => s): string {
   const opt = ALL_BAGGAGE_TYPES.find((o) => o.id === id);
   if (!opt) return "";
-  return BAGGAGE_SPECIAL_TYPES.includes(opt) ? `${opt.label} (${opt.code})` : `${opt.code} ${opt.label}`;
+  const label = t(opt.label);
+  return BAGGAGE_SPECIAL_TYPES.includes(opt) ? `${label} (${opt.code})` : `${opt.code} ${label}`;
 }

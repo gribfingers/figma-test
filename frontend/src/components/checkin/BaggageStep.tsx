@@ -202,7 +202,7 @@ export function BaggageStep({ flight, passenger, passengers, segments, initialRo
                 </div>
               )}
               {locked ? (
-                <span className="baggage-row-static baggage-row-static-type">{baggageTypeDisplay(row.typeId)}</span>
+                <span className="baggage-row-static baggage-row-static-type">{baggageTypeDisplay(row.typeId, t)}</span>
               ) : (
                 <BaggageTypeSelect
                   label={t("Type")}
@@ -251,7 +251,7 @@ export function BaggageStep({ flight, passenger, passengers, segments, initialRo
                   <button
                     type="button"
                     className="link-btn"
-                    onClick={() => setEmdItem({ rfisc: "0B5", label: baggageTypeDisplay(row.typeId), price: 12500, paid: tone === "paid" })}
+                    onClick={() => setEmdItem({ rfisc: "0B5", label: baggageTypeDisplay(row.typeId, t), price: 12500, paid: tone === "paid" })}
                   >
                     EMD
                   </button>
@@ -288,7 +288,7 @@ export function BaggageStep({ flight, passenger, passengers, segments, initialRo
           <div className="baggage-carryon-rows">
             {carryOn.map((row) => (
               <div key={row.id} className="baggage-row baggage-row-carryon">
-                <span className="baggage-carryon-type">{baggageTypeDisplay(row.typeId)}</span>
+                <span className="baggage-carryon-type">{baggageTypeDisplay(row.typeId, t)}</span>
                 <div className="field2" style={{ width: 110 }}>
                   <input
                     value={row.weight}

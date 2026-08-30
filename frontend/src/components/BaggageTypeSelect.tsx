@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { usePopoverPosition } from "../usePopoverPosition";
 import { ChevronDownIcon } from "./Icon";
 import { BAGGAGE_SPECIAL_TYPES, BAGGAGE_TYPE_GROUPS, baggageTypeDisplay } from "../baggageTypes";
+import { useLanguage } from "../i18n";
 
 interface Props {
   label: string;
@@ -16,6 +17,7 @@ interface Props {
 
 /** Same custom-dropdown pattern as Select/AirportSelect (field2 box, floating label), grouped (Standard/Oversize/Sport, then special handling types with no group of their own). */
 export function BaggageTypeSelect({ label, value, onChange, style, tone = "neutral", disabled }: Props) {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLUListElement>(null);
@@ -50,7 +52,7 @@ export function BaggageTypeSelect({ label, value, onChange, style, tone = "neutr
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
       >
-        {value ? baggageTypeDisplay(value) : ""}
+        {value ? baggageTypeDisplay(value, t) : ""}
       </button>
       <label>{label}</label>
       <ChevronDownIcon size={16} className="select-chevron" />
@@ -58,7 +60,7 @@ export function BaggageTypeSelect({ label, value, onChange, style, tone = "neutr
         createPortal(
           <ul ref={menuRef} className="select-menu" role="listbox" style={{ position: "fixed", top: rect.top, left: rect.left, width: Math.max(rect.width, 280) }}>
             {BAGGAGE_TYPE_GROUPS.flatMap((g) => [
-              <li key={`h-${g.group}`} className="select-group-label">{g.group}</li>,
+              <li key={`h-${g.group}`} className="select-group-label">{t(g.group)}</li>,
               ...g.options.map((o) => (
                 <li
                   key={o.id}
@@ -67,11 +69,11 @@ export function BaggageTypeSelect({ label, value, onChange, style, tone = "neutr
                   className={o.id === value ? "selected" : ""}
                   onClick={() => { onChange(o.id); setOpen(false); }}
                 >
-                  <span className="mono">{o.code}</span> {o.label}
+                  <span className="mono">{o.code}</span> {t(o.label)}
                 </li>
               )),
             ])}
-            <li key="h-special" className="select-group-label">Special</li>
+            <li key="h-special" className="select-group-label">{t("Special")}</li>
             {BAGGAGE_SPECIAL_TYPES.map((o) => (
               <li
                 key={o.id}
@@ -80,7 +82,7 @@ export function BaggageTypeSelect({ label, value, onChange, style, tone = "neutr
                 className={o.id === value ? "selected" : ""}
                 onClick={() => { onChange(o.id); setOpen(false); }}
               >
-                {o.label} <span className="mono">({o.code})</span>
+                {t(o.label)} <span className="mono">({o.code})</span>
               </li>
             ))}
           </ul>,

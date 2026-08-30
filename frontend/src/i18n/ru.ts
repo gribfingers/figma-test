@@ -588,4 +588,30 @@ export const RU: Record<string, string> = {
   "Attach image": "Прикрепить изображение",
   "Take a screenshot": "Сделать скриншот",
   Send: "Отправить",
+
+  // ---- SeatHistoryModal.tsx ----
+  "Seat assigned": "Место назначено",
+  "Seat unassigned": "Место снято",
+  "Seat swapped": "Обмен местами",
+  "Passenger checked in": "Регистрация",
+  "Seat attributes updated": "Изменены свойства места",
+  "Seat history — {seat}": "История изменений — место {seat}",
+  "No changes recorded.": "Изменений не зафиксировано.",
+
+  // ---- BaggageTypeSelect.tsx / baggageTypes.ts ----
+  Standard: "Стандарт",
+  Oversize: "Негабарит",
+  Sport: "Спортивный инвентарь",
+  Special: "Особая категория",
+  "1-10 kg": "1-10 кг",
+  "1-20 kg": "1-20 кг",
+  "1-32 kg": "1-32 кг",
+  "Up to 203 cm <20 kg": "До 203 см <20 кг",
+  "Up to 203 cm <32kg (OFK)": "До 203 см <32кг (OFK)",
+  Bike: "Велосипед",
+  Ski: "Лыжи",
+  Fish: "Рыболовный инвентарь",
+  WEAP: "Оружие",
+  Weelchair: "Инвалидное кресло",
+  Stroller: "Коляска",
 };
