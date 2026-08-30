@@ -522,4 +522,10 @@ export const RU: Record<string, string> = {
   "Docs to verify": "Документы для проверки",
   "Services to pay": "Услуги к оплате",
   "No pax match.": "Нет совпадений.",
+
+  // ---- BoardingPax.tsx ----
+  "No passenger with Sq № {n}": "Нет пассажира с пор. № {n}",
+  "Remain time for boarding": "Осталось времени до посадки",
+  "Pax to board": "Пассажиров к посадке",
+  Unboard: "Отменить посадку",
 };

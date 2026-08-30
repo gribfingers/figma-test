@@ -12,6 +12,7 @@ import { FlowStep, presetCheckinStep } from "../checkinFlow";
 import { PassengerDocPanel } from "../components/PassengerDocPanel";
 import { usePanelTransition } from "../usePanelMounted";
 import { EntityNotFound } from "../components/EntityNotFound";
+import { useLanguage } from "../i18n";
 
 // Matches Boarding.tsx's fmtCardDate/parseVersion/StatBar/statusLabel/statusChipClass — same
 // light duplication this session's other pages already use rather than a shared module
@@ -84,6 +85,7 @@ const STEP_ICONS: { step: FlowStep; icon: (size: number) => JSX.Element; tooltip
  * their check-in flow.
  */
 export function BoardingPax() {
+  const { t } = useLanguage();
   const { flightId, passengerId } = useParams();
   const fid = Number(flightId);
   const pid = Number(passengerId);
@@ -135,7 +137,7 @@ export function BoardingPax() {
       await api.scanBoardingPass(passenger.bcbp);
       // Tab closes once the toast itself dismisses (same pattern as PnrView's
       // completeCheckin) rather than instantly alongside it — less jarring.
-      showToast("Boarded", "success", () => closeTab(`/boarding/${fid}/pax/${passenger.id}`));
+      showToast(t("Boarded"), "success", () => closeTab(`/boarding/${fid}/pax/${passenger.id}`));
     } catch (e: any) {
       setMessage({ kind: "error", text: e.message });
     }
@@ -145,7 +147,7 @@ export function BoardingPax() {
     try {
       await api.unboard(fid, passenger.id);
       refresh();
-      showToast("Boarding undone");
+      showToast(t("Boarding undone"));
     } catch (e: any) {
       setMessage({ kind: "error", text: e.message });
     }
@@ -157,11 +159,11 @@ export function BoardingPax() {
     if (!q) return;
     const found = passengers.find((p) => String(p.checkin_sequence ?? "") === q);
     if (found) navigate(`/boarding/${fid}/pax/${found.id}`);
-    else setMessage({ kind: "error", text: `No passenger with Sq № ${q}` });
+    else setMessage({ kind: "error", text: t("No passenger with Sq № {n}").replace("{n}", q) });
   }
 
-  if (notFound) return <EntityNotFound label="This flight" />;
-  if (!flight || !passenger) return <div className="content">Loading…</div>;
+  if (notFound) return <EntityNotFound label={t("This flight")} />;
+  if (!flight || !passenger) return <div className="content">{t("Loading…")}</div>;
 
   const extra = parsePassengerExtra(passenger);
   const comment = extra.comments?.boarding[0] ?? extra.comments?.checkin[0] ?? null;
@@ -176,7 +178,7 @@ export function BoardingPax() {
           <div className="pnr-head-id-meta">
             <span className="pnr-route">{flight.origin} → {flight.destination}</span>
             <div className="pnr-date">{fmtCardDate(flight.std)}</div>
-            <div className="pnr-date">Gate {flight.gate ?? "—"}</div>
+            <div className="pnr-date">{t("Gate {gate}").replace("{gate}", flight.gate ?? "—")}</div>
           </div>
         </div>
 
@@ -189,11 +191,11 @@ export function BoardingPax() {
 
         <div className="pnr-side">
           <div className="boarding-remain-block">
-            <span className="boarding-remain-label">Remain time for boarding</span>
+            <span className="boarding-remain-label">{t("Remain time for boarding")}</span>
             <span className="boarding-remain-value">{remainStr}</span>
           </div>
           <div className="boarding-remain-block">
-            <span className="boarding-remain-label">Pax to board</span>
+            <span className="boarding-remain-label">{t("Pax to board")}</span>
             <span className="boarding-remain-value boarding-remain-value-muted">{yetToBoardCount}</span>
           </div>
         </div>
@@ -202,13 +204,13 @@ export function BoardingPax() {
       <div className="toolbar">
         <form onSubmit={runSearch} className="search-mode-bar" style={{ flex: 1 }}>
           <div className="search-mode-tabs">
-            <button type="button" className="search-mode-tab selected">Sq №</button>
+            <button type="button" className="search-mode-tab selected">{t("Sq №")}</button>
           </div>
           <input
             className="search-mode-input"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search"
+            placeholder={t("Search")}
           />
         </form>
       </div>
@@ -226,7 +228,7 @@ export function BoardingPax() {
                 key={step}
                 to={`/checkin/${fid}/pnr/${passenger.id}`}
                 target="_blank"
-                data-tooltip={tooltip}
+                data-tooltip={t(tooltip)}
                 onClick={() => {
                   presetFlowSelection(passenger.id);
                   presetCheckinStep(passenger.id, step);
@@ -239,7 +241,7 @@ export function BoardingPax() {
 
           <div className="boarding-pax-seat-row">
             <span className="boarding-pax-seat-box mono">{passenger.seat ? formatSeatDisplay(passenger.seat) : "—"}</span>
-            <span className={`boarding-pax-status-badge ${statusBadgeClass(passenger)}`}>{statusLabel(passenger)}</span>
+            <span className={`boarding-pax-status-badge ${statusBadgeClass(passenger)}`}>{t(statusLabel(passenger))}</span>
             <div className="boarding-pax-remarks">
               {ssr.map((code) => <span key={code} className="chip small muted mono">{code}</span>)}
               {passenger.infant && <span className="chip small muted mono">INF</span>}
@@ -251,7 +253,7 @@ export function BoardingPax() {
           <div className="boarding-pax-actions">
             {passenger.boarding_status === "BOARDED" ? (
               <button type="button" className="secondary boarding-pax-action-btn" onClick={unboardThis}>
-                Unboard
+                {t("Unboard")}
               </button>
             ) : (
               <button
@@ -260,10 +262,10 @@ export function BoardingPax() {
                 disabled={passenger.checkin_status !== "CHECKED_IN"}
                 onClick={boardThis}
               >
-                Board
+                {t("Board")}
               </button>
             )}
-            <button type="button" className="secondary boarding-pax-action-btn">Reprint BP</button>
+            <button type="button" className="secondary boarding-pax-action-btn">{t("Reprint BP")}</button>
           </div>
         </div>
 
