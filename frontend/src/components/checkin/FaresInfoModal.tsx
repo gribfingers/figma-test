@@ -1,4 +1,5 @@
 import { Modal } from "../Modal";
+import { useLanguage } from "../../i18n";
 
 interface Props {
   carrierCode: string;
@@ -7,6 +8,7 @@ interface Props {
 
 /** Static baggage-allowance boilerplate (no fare-rules engine behind it) — opened from the roster card's info icon. */
 export function FaresInfoModal({ carrierCode, onClose }: Props) {
+  const { t } = useLanguage();
   const text = `${carrierCode} airline's checked baggage allowance applies
 Free baggage allowance 2PC
 1ST checked bag:        UPTO50LB 23KG AND80LI 203LCM (0GP)
@@ -29,12 +31,12 @@ Carry-on bag 1PC
 
   return (
     <Modal
-      title="Passenger Fares Info"
+      title={t("Passenger Fares Info")}
       onClose={onClose}
       width={560}
       footer={
         <button type="button" className="tertiary" onClick={onClose}>
-          Close
+          {t("Close")}
         </button>
       }
     >

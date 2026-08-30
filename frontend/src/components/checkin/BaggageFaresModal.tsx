@@ -1,5 +1,6 @@
 import { Passenger } from "../../api";
 import { Modal } from "../Modal";
+import { useLanguage } from "../../i18n";
 
 interface Props {
   passengers: Passenger[];
@@ -63,17 +64,18 @@ function buildFareRows(passengers: Passenger[]): FareRow[] {
 
 /** Static per-PNR baggage-fares summary (no fare-surcharge backend) — opened from the Baggage step's info icon. */
 export function BaggageFaresModal({ passengers, onClose }: Props) {
+  const { t } = useLanguage();
   const rows = buildFareRows(passengers);
   const total = rows.reduce((sum, r) => sum + (r.surcharge ?? 0), 0);
 
   return (
     <Modal
-      title="Baggage Fares"
+      title={t("Baggage Fares")}
       onClose={onClose}
       width={900}
       footer={
         <button type="button" className="tertiary" onClick={onClose}>
-          Close
+          {t("Close")}
         </button>
       }
     >
@@ -81,12 +83,12 @@ export function BaggageFaresModal({ passengers, onClose }: Props) {
         <table className="baggage-fares-table">
           <thead>
             <tr>
-              <th>Weight, kg</th>
-              <th>Passenger</th>
-              <th>Fare</th>
-              <th>Tag</th>
-              <th>EMD</th>
-              <th>Surcharge, ₽</th>
+              <th>{t("Weight, kg")}</th>
+              <th>{t("Passenger")}</th>
+              <th>{t("Fare")}</th>
+              <th>{t("Tag")}</th>
+              <th>{t("EMD")}</th>
+              <th>{t("Surcharge, ₽")}</th>
             </tr>
           </thead>
           <tbody>
@@ -94,7 +96,7 @@ export function BaggageFaresModal({ passengers, onClose }: Props) {
               <tr key={i}>
                 <td>{r.weight}</td>
                 <td className={r.status === "refusal" ? "baggage-fares-refusal" : r.status === "payment" ? "baggage-fares-payment" : undefined}>
-                  {r.passengerLabel}
+                  {r.status === "refusal" ? t("Refusal") : r.status === "payment" ? t("Payment on site") : r.passengerLabel}
                 </td>
                 <td>{r.fare}</td>
                 <td className="mono">{r.tag}</td>
@@ -106,7 +108,7 @@ export function BaggageFaresModal({ passengers, onClose }: Props) {
         </table>
       </div>
       <div className="baggage-fares-total">
-        <span>Total surcharge, ₽</span>
+        <span>{t("Total surcharge, ₽")}</span>
         <span className="baggage-fares-total-leader" />
         <span>{total}</span>
       </div>

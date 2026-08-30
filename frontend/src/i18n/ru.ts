@@ -421,4 +421,30 @@ export const RU: Record<string, string> = {
   City: "Город",
   Address: "Адрес",
   "Zip Code": "Почтовый индекс",
+
+  // ---- McoModal.tsx / TagManualModal.tsx ----
+  "Insert payment confirmation": "Ввести подтверждение оплаты",
+  "Payment is confirmed. MSO/TKNA #{reference}": "Оплата подтверждена. MSO/TKNA #{reference}",
+  "Insert tag number manually": "Ввести номер бирки вручную",
+  "Tag number": "Номер бирки",
+
+  // ---- TransferBagModal.tsx ----
+  "Transfer bag to": "Перенести багаж на",
+
+  // ---- BaggageFaresModal.tsx ----
+  "Baggage Fares": "Тарифы на багаж",
+  Passenger: "Пассажир",
+  Fare: "Тариф",
+  EMD: "EMD",
+  "Surcharge, ₽": "Доплата, ₽",
+  Refusal: "Отказ",
+  "Payment on site": "Оплата на месте",
+  "Total surcharge, ₽": "Итого доплата, ₽",
+
+  // ---- RouteSegmentsModal.tsx ----
+  Aircraft: "Тип ВС",
+  "Aircraft number": "Борт. номер",
+
+  // ---- FaresInfoModal.tsx ----
+  "Passenger Fares Info": "Информация о тарифах пассажира",
 };

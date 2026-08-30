@@ -1,6 +1,7 @@
 import { Flight, Passenger } from "../../api";
 import { SeatServiceItem } from "../../paxExtra";
 import { Modal } from "../Modal";
+import { useLanguage } from "../../i18n";
 
 interface Props {
   flight: Flight;
@@ -19,6 +20,7 @@ function emdNumber(p: Passenger): string {
 
 /** Static EMD-receipt boilerplate (no ticketing system behind it) — opened by clicking a paid seat extra's price. */
 export function EmdModal({ flight, passenger, item, onClose }: Props) {
+  const { t } = useLanguage();
   const flightNo = `${flight.carrier_code}${flight.flight_number}`;
   const text = `PNR: ${passenger.record_locator}/${flight.carrier_code}
 Sale:
@@ -53,7 +55,7 @@ Payment:
       width={640}
       footer={
         <button type="button" className="tertiary" onClick={onClose}>
-          Close
+          {t("Close")}
         </button>
       }
     >

@@ -2,6 +2,7 @@ import { Flight } from "../../api";
 import { segmentsForFlight } from "../../flightSegments";
 import { fmtTimeValue } from "../flightcard/mainDraft";
 import { Modal } from "../Modal";
+import { useLanguage } from "../../i18n";
 
 interface Props {
   flight: Flight;
@@ -10,6 +11,7 @@ interface Props {
 
 /** Leg-by-leg routing breakdown — opened by clicking the header's route text. */
 export function RouteSegmentsModal({ flight, onClose }: Props) {
+  const { t } = useLanguage();
   const segments = segmentsForFlight(flight);
   return (
     <Modal
@@ -18,19 +20,19 @@ export function RouteSegmentsModal({ flight, onClose }: Props) {
       width={720}
       footer={
         <button type="button" className="tertiary" onClick={onClose}>
-          Close
+          {t("Close")}
         </button>
       }
     >
       <table className="route-segments-table">
         <thead>
           <tr>
-            <th>From</th>
-            <th>To</th>
-            <th>Departure</th>
-            <th>Arrival</th>
-            <th>Aircraft</th>
-            <th>Aircraft number</th>
+            <th>{t("From")}</th>
+            <th>{t("To")}</th>
+            <th>{t("Departure")}</th>
+            <th>{t("Arrival")}</th>
+            <th>{t("Aircraft")}</th>
+            <th>{t("Aircraft number")}</th>
           </tr>
         </thead>
         <tbody>
