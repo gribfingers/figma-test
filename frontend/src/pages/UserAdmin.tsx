@@ -129,8 +129,25 @@ export function UserAdmin() {
 
   async function copyGeneratedPassword() {
     if (!generatedPassword) return;
+    const text = generatedPassword.password;
     try {
-      await navigator.clipboard.writeText(generatedPassword.password);
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        // Clipboard API unavailable (non-HTTPS origin, older/restricted browser, etc.) —
+        // fall back to the classic hidden-textarea + execCommand trick, which works
+        // pretty much everywhere a click can trigger a copy at all.
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        const ok = document.execCommand("copy");
+        document.body.removeChild(textarea);
+        if (!ok) throw new Error(t("Clipboard access isn't available — select the password above and copy it manually."));
+      }
       showToast(t("Copied to clipboard"));
     } catch (e: any) {
       setError(e.message);

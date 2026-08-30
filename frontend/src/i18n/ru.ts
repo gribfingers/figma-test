@@ -695,4 +695,6 @@ export const RU: Record<string, string> = {
   // ---- UserAdmin.tsx (copy generated password) ----
   "Copy to clipboard": "Скопировать в буфер обмена",
   "Copied to clipboard": "Скопировано в буфер обмена",
+  "Clipboard access isn't available — select the password above and copy it manually.":
+    "Доступ к буферу обмена недоступен — выделите пароль выше и скопируйте вручную.",
 };
