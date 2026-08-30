@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../auth";
 import { useCheckinFlow, FLOW_STEPS, FLOW_STEP_LABEL, FlowStep, pnrFlowPidFromPath } from "../checkinFlow";
 import { tabKindForPath } from "../tabKind";
+import { useLanguage } from "../i18n";
 import {
   BaggageFlowIcon,
   BoardingIcon,
@@ -34,6 +35,7 @@ function formatClock(d: Date): string {
 export function SideDrawer() {
   const { pathname } = useLocation();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { flowStepFor, setFlowStep, flightInfoOpenFor, setFlightInfoOpen, cartOpenFor, setCartOpen } = useCheckinFlow();
   const kind = tabKindForPath(pathname);
   const pnrPid = pnrFlowPidFromPath(pathname);
@@ -51,7 +53,7 @@ export function SideDrawer() {
   return (
     <nav className="side-drawer">
       {/* Opens links to other apps — not wired up yet. */}
-      <button type="button" className="side-item" data-tooltip="Other apps">
+      <button type="button" className="side-item" data-tooltip={t("Other apps")}>
         <BurgerIcon size={20} />
       </button>
 
@@ -59,18 +61,18 @@ export function SideDrawer() {
         <Link
           to="/"
           className={`side-item ${kind === "flights" ? "selected" : ""}`}
-          data-tooltip="Flight schedule"
+          data-tooltip={t("Flight schedule")}
         >
           <PlaneIcon size={20} />
         </Link>
         <Link
           to="/search"
           className={`side-item ${kind === "checkin" && !showFlowIcons ? "selected" : ""}`}
-          data-tooltip="Check-in"
+          data-tooltip={t("Check-in")}
         >
           <CheckInIcon size={20} />
         </Link>
-        <Link to="/boarding-search" className={`side-item ${kind === "boarding" ? "selected" : ""}`} data-tooltip="Boarding">
+        <Link to="/boarding-search" className={`side-item ${kind === "boarding" ? "selected" : ""}`} data-tooltip={t("Boarding")}>
           <BoardingIcon size={20} />
         </Link>
         {showFlowIcons && (
@@ -81,7 +83,7 @@ export function SideDrawer() {
                 key={step}
                 type="button"
                 className={`side-item ${flowStep === step ? "selected" : ""}`}
-                data-tooltip={FLOW_STEP_LABEL[step]}
+                data-tooltip={t(FLOW_STEP_LABEL[step])}
                 onClick={() => setFlowStep(pnrPid!, step)}
               >
                 {FLOW_STEP_ICON[step](20)}
@@ -91,7 +93,7 @@ export function SideDrawer() {
             <button
               type="button"
               className={`side-item ${cartOpen ? "selected" : ""}`}
-              data-tooltip="Cart"
+              data-tooltip={t("Cart")}
               onClick={() => setCartOpen(pnrPid!, true)}
             >
               <CartFlowIcon size={20} />
@@ -99,7 +101,7 @@ export function SideDrawer() {
             <button
               type="button"
               className={`side-item ${flightInfoOpen ? "selected" : ""}`}
-              data-tooltip="Flight information"
+              data-tooltip={t("Flight information")}
               onClick={() => setFlightInfoOpen(pnrPid!, true)}
             >
               <InfoIcon size={20} />
@@ -110,7 +112,7 @@ export function SideDrawer() {
           <Link
             to="/users-admin"
             className={`side-item ${pathname === "/users-admin" ? "selected" : ""}`}
-            data-tooltip="User administration"
+            data-tooltip={t("User administration")}
           >
             <SettingsIcon size={20} />
           </Link>
@@ -121,13 +123,13 @@ export function SideDrawer() {
         <button
           type="button"
           className="side-item side-update"
-          title="Refresh"
+          title={t("Refresh")}
           onClick={() => setLastUpdated(new Date())}
         >
           <RefreshIcon size={18} />
           <span className="side-time">{formatClock(lastUpdated)}</span>
         </button>
-        <button type="button" className="side-item side-static" data-tooltip="Connected devices: OK">
+        <button type="button" className="side-item side-static" data-tooltip={t("Connected devices: OK")}>
           <DeviceIcon size={18} className="side-device-ok" />
         </button>
       </div>

@@ -5,6 +5,7 @@ import { Field } from "../components/Field";
 import { Select } from "../components/Select";
 import { SortTh, useSort } from "../components/SortTh";
 import { useRegisterTab } from "../tabs";
+import { useLanguage } from "../i18n";
 
 // Matches Search.tsx's fmtStd — same UTC wall-clock convention as the rest of the app.
 function fmtStd(iso: string): string {
@@ -36,7 +37,8 @@ const OPEN_STATUSES = ["CHECKIN_OPEN", "BOARDING"] as const;
  * base list further; the table itself is fully sortable.
  */
 export function BoardingSearch() {
-  useRegisterTab("Boarding Search");
+  const { t } = useLanguage();
+  useRegisterTab(t("Boarding Search"));
   const navigate = useNavigate();
 
   const [flights, setFlights] = useState<Flight[]>([]);
@@ -81,29 +83,29 @@ export function BoardingSearch() {
 
       <div className="panel">
         <div className="toolbar" style={{ flexWrap: "wrap", alignItems: "flex-end" }}>
-          <Field label="Flight" style={{ minWidth: 160 }}>
+          <Field label={t("Flight")} style={{ minWidth: 160 }}>
             <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="e.g. SU5678" autoFocus />
           </Field>
           <Select
-            label="Status"
+            label={t("Status")}
             style={{ minWidth: 180 }}
             value={status}
             onChange={setStatus}
-            options={[{ value: "", label: "All" }, ...OPEN_STATUSES.map((s) => ({ value: s, label: s }))]}
+            options={[{ value: "", label: t("All") }, ...OPEN_STATUSES.map((s) => ({ value: s, label: t(s) }))]}
           />
           <Select
-            label="Departure"
+            label={t("Departure")}
             style={{ minWidth: 120 }}
             value={origin}
             onChange={setOrigin}
-            options={[{ value: "", label: "All" }, ...origins.map((o) => ({ value: o, label: o }))]}
+            options={[{ value: "", label: t("All") }, ...origins.map((o) => ({ value: o, label: o }))]}
           />
           <Select
-            label="Arrival"
+            label={t("Arrival")}
             style={{ minWidth: 120 }}
             value={destination}
             onChange={setDestination}
-            options={[{ value: "", label: "All" }, ...destinations.map((d) => ({ value: d, label: d }))]}
+            options={[{ value: "", label: t("All") }, ...destinations.map((d) => ({ value: d, label: d }))]}
           />
         </div>
       </div>
@@ -113,11 +115,11 @@ export function BoardingSearch() {
           <table>
             <thead>
               <tr>
-                <SortTh id="flight" label="Flight" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                <SortTh id="route" label="Route" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                <SortTh id="std" label="Date&Time" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                <SortTh id="gate" label="Gate" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                <SortTh id="status" label="Status" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="flight" label={t("Flight")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="route" label={t("Route")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="std" label={t("Date&Time")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="gate" label={t("Gate")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="status" label={t("Status")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
               </tr>
             </thead>
             <tbody>
@@ -128,12 +130,12 @@ export function BoardingSearch() {
                   <td className="mono">{fmtStd(f.std)}</td>
                   <td className="mono">{f.gate ?? "—"}</td>
                   <td>
-                    <span className={`chip middle ${f.status === "BOARDING" ? "warn" : "ok"}`}>{f.status}</span>
+                    <span className={`chip middle ${f.status === "BOARDING" ? "warn" : "ok"}`}>{t(f.status)}</span>
                   </td>
                 </tr>
               ))}
               {sortedResults.length === 0 && (
-                <tr><td colSpan={5} style={{ color: "var(--muted)" }}>No flights match.</td></tr>
+                <tr><td colSpan={5} style={{ color: "var(--muted)" }}>{t("No flights match.")}</td></tr>
               )}
             </tbody>
           </table>

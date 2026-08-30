@@ -9,6 +9,7 @@ import { usePanelTransition } from "../usePanelMounted";
 import { userAvatarColor, userInitials } from "../userDisplay";
 import { tabKindForPath, TabKind } from "../tabKind";
 import { useTabIcons } from "../tabIcons";
+import { useLanguage } from "../i18n";
 import { ChatIcon, ChevronLeftIcon, ChevronRightIcon, CloseIcon, TabBoardingIcon, TabCheckinIcon, TabFlightsIcon } from "./Icon";
 import { UserPanel } from "./UserPanel";
 import { Messenger } from "./Messenger";
@@ -37,8 +38,9 @@ function MoscowClock() {
     hour: "2-digit",
     minute: "2-digit",
   });
+  const { t } = useLanguage();
   return (
-    <div className="moscow-clock" title="Moscow time (MSK)">
+    <div className="moscow-clock" title={t("Moscow time (MSK)")}>
       {time} MSK
     </div>
   );
@@ -50,6 +52,7 @@ export function TopTabs() {
   const { flowStepFor, setFlowStep } = useCheckinFlow();
   const { showToast } = useToast();
   const { enabled: tabIconsEnabled } = useTabIcons();
+  const { t } = useLanguage();
   const [panelOpen, setPanelOpen] = useState(false);
   const [messengerOpen, setMessengerOpen] = useState(false);
   const panelTransition = usePanelTransition(panelOpen);
@@ -75,7 +78,7 @@ export function TopTabs() {
   }
 
   function handleCloseAll() {
-    if (!window.confirm(`Close all ${tabs.length} tabs?`)) return;
+    if (!window.confirm(t("Close all {n} tabs?").replace("{n}", String(tabs.length)))) return;
     closeAllTabs();
   }
 
@@ -91,7 +94,7 @@ export function TopTabs() {
     setCanScrollLeft(el.scrollLeft > 1);
     setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
     if (isOverflowing && !wasOverflowingRef.current) {
-      showToast("Too many tabs open — scroll the strip or close a few.", "info");
+      showToast(t("Too many tabs open — scroll the strip or close a few."), "info");
     }
     wasOverflowingRef.current = isOverflowing;
   }
@@ -138,7 +141,7 @@ export function TopTabs() {
           <button
             type="button"
             className="tabs-icon-btn tabs-scroll-btn"
-            title="Scroll tabs left"
+            title={t("Scroll tabs left")}
             disabled={!canScrollLeft}
             onClick={() => scrollTabs(-1)}
           >
@@ -163,7 +166,7 @@ export function TopTabs() {
                 <button
                   type="button"
                   className="top-tab-close"
-                  aria-label={`Close ${tab.label}`}
+                  aria-label={`${t("Close")} ${tab.label}`}
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -182,13 +185,13 @@ export function TopTabs() {
           <button
             type="button"
             className="tabs-icon-btn tabs-scroll-btn"
-            title="Scroll tabs right"
+            title={t("Scroll tabs right")}
             disabled={!canScrollRight}
             onClick={() => scrollTabs(1)}
           >
             <ChevronRightIcon size={18} />
           </button>
-          <button type="button" className="tabs-icon-btn tabs-scroll-btn" title="Close all tabs" onClick={handleCloseAll}>
+          <button type="button" className="tabs-icon-btn tabs-scroll-btn" title={t("Close all tabs")} onClick={handleCloseAll}>
             <CloseIcon size={16} />
           </button>
         </div>
@@ -200,7 +203,7 @@ export function TopTabs() {
           <button
             type="button"
             className="tabs-icon-btn"
-            title="Messages"
+            title={t("Messages")}
             onClick={() => {
               setMessengerOpen(true);
               setUnreadCount(0);
@@ -214,7 +217,7 @@ export function TopTabs() {
           <button
             type="button"
             className="tabs-avatar-btn"
-            title="Account"
+            title={t("Account")}
             style={user.avatar ? undefined : { background: userAvatarColor(user) }}
             onClick={() => setPanelOpen(true)}
           >
@@ -228,11 +231,11 @@ export function TopTabs() {
       )}
       {closeConfirmPath && (
         <Modal
-          title="Exit check-in"
+          title={t("Exit check-in")}
           onClose={() => setCloseConfirmPath(null)}
           footer={
             <>
-              <button type="button" className="tertiary" onClick={() => setCloseConfirmPath(null)}>Cancel</button>
+              <button type="button" className="tertiary" onClick={() => setCloseConfirmPath(null)}>{t("Cancel")}</button>
               <button
                 type="button"
                 className="tertiary"
@@ -243,12 +246,12 @@ export function TopTabs() {
                   setCloseConfirmPath(null);
                 }}
               >
-                OK
+                {t("OK")}
               </button>
             </>
           }
         >
-          You are about to exit the check-in process. Unsaved progress on the current step will be lost.
+          {t("You are about to exit the check-in process. Unsaved progress on the current step will be lost.")}
         </Modal>
       )}
     </div>

@@ -5,6 +5,7 @@ import { Select } from "../Select";
 import { BirthDateField } from "../BirthDateField";
 import { DateField } from "../DateField";
 import { DOCUMENT_TYPES, PassengerDocument, PassengerExtra, SSR_OPTIONS, isInfant, parsePassengerExtra } from "../../paxExtra";
+import { useLanguage } from "../../i18n";
 
 export type PaxDraft = {
   surname: string;
@@ -167,40 +168,41 @@ export interface SeatSectionInfo {
 }
 
 export function SummaryFields({ draft, onChange, seat }: FieldsProps & { seat?: SeatSectionInfo }) {
+  const { t } = useLanguage();
   const infant = isInfant(draft.dob);
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12, paddingBottom: 16 }}>
       <div style={{ display: "flex", gap: 12 }}>
-        <Field label="Surname" style={{ flex: 1 }}>
+        <Field label={t("Surname")} style={{ flex: 1 }}>
           <input value={draft.surname} onChange={(e) => onChange({ ...draft, surname: e.target.value })} placeholder=" " />
         </Field>
-        <Field label="Given name" style={{ flex: 1 }}>
+        <Field label={t("Given name")} style={{ flex: 1 }}>
           <input value={draft.given_name} onChange={(e) => onChange({ ...draft, given_name: e.target.value })} placeholder=" " />
         </Field>
-        <Field label="Middle name" style={{ flex: 1 }}>
+        <Field label={t("Middle name")} style={{ flex: 1 }}>
           <input value={draft.middle_name} onChange={(e) => onChange({ ...draft, middle_name: e.target.value })} placeholder=" " />
         </Field>
       </div>
       <div style={{ display: "flex", gap: 12 }}>
-        <Field label="Ticket number" style={{ flex: 1 }}>
+        <Field label={t("Ticket number")} style={{ flex: 1 }}>
           <input value={draft.ticket_number} onChange={(e) => onChange({ ...draft, ticket_number: e.target.value })} placeholder=" " />
         </Field>
-        <Field label="Record locator (PNR)" style={{ flex: 1 }}>
+        <Field label={t("Record locator (PNR)")} style={{ flex: 1 }}>
           <input value={draft.record_locator} onChange={(e) => onChange({ ...draft, record_locator: e.target.value.toUpperCase() })} placeholder=" " />
         </Field>
       </div>
       <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
         <Select
-          label="Gender"
+          label={t("Gender")}
           style={{ width: 120 }}
           value={draft.gender}
           onChange={(v) => onChange({ ...draft, gender: v as PaxDraft["gender"] })}
           options={[{ value: "", label: "—" }, { value: "M", label: "M" }, { value: "F", label: "F" }]}
         />
-        <BirthDateField label="Date of birth" value={draft.dob} onChange={(dob) => onChange({ ...draft, dob })} style={{ flex: 1 }} />
+        <BirthDateField label={t("Date of birth")} value={draft.dob} onChange={(dob) => onChange({ ...draft, dob })} style={{ flex: 1 }} />
         {infant && (
-          <span className="chip middle ok" style={{ marginBottom: 16 }} title="Under 2 years old, derived from date of birth">
-            Infant
+          <span className="chip middle ok" style={{ marginBottom: 16 }} title={t("Under 2 years old, derived from date of birth")}>
+            {t("Infant")}
           </span>
         )}
       </div>
@@ -214,7 +216,7 @@ export function SummaryFields({ draft, onChange, seat }: FieldsProps & { seat?: 
           <input type="checkbox" checked={draft.pl} onChange={(e) => onChange({ ...draft, pl: e.target.checked })} />
           PL
         </label>
-        <Field label="Type" style={{ width: 100 }}>
+        <Field label={t("Type")} style={{ width: 100 }}>
           <input value={draft.type} onChange={(e) => onChange({ ...draft, type: e.target.value.toUpperCase() })} placeholder=" " maxLength={3} />
         </Field>
         <label className="checkbox-row" style={{ marginBottom: 16 }}>
@@ -225,9 +227,9 @@ export function SummaryFields({ draft, onChange, seat }: FieldsProps & { seat?: 
 
       {seat && (
         <div className="field" style={{ marginTop: 0 }}>
-          <label>Seat</label>
+          <label>{t("Seat")}</label>
           <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-            <span className="mono" style={{ fontWeight: 700, fontSize: 15 }}>{seat.code ?? "Not assigned"}</span>
+            <span className="mono" style={{ fontWeight: 700, fontSize: 15 }}>{seat.code ?? t("Not assigned")}</span>
             {seat.code && (
               <>
                 <label className="checkbox-row" style={{ marginBottom: 0 }}>
@@ -236,7 +238,7 @@ export function SummaryFields({ draft, onChange, seat }: FieldsProps & { seat?: 
                     checked={seat.preseated}
                     onChange={(e) => seat.onChange({ preseated: e.target.checked, reserved: seat.reserved })}
                   />
-                  Pre-seated
+                  {t("Pre-seated")}
                 </label>
                 <label className="checkbox-row" style={{ marginBottom: 0 }}>
                   <input
@@ -244,7 +246,7 @@ export function SummaryFields({ draft, onChange, seat }: FieldsProps & { seat?: 
                     checked={seat.reserved}
                     onChange={(e) => seat.onChange({ preseated: seat.preseated, reserved: e.target.checked })}
                   />
-                  Reserved
+                  {t("Reserved")}
                 </label>
               </>
             )}
@@ -256,6 +258,7 @@ export function SummaryFields({ draft, onChange, seat }: FieldsProps & { seat?: 
 }
 
 export function DocumentsFields({ draft, onChange }: FieldsProps) {
+  const { t } = useLanguage();
   function updateDoc(i: number, patch: Partial<PassengerDocument>) {
     onChange({ ...draft, documents: draft.documents.map((d, idx) => (idx === i ? { ...d, ...patch } : d)) });
   }
@@ -275,40 +278,41 @@ export function DocumentsFields({ draft, onChange }: FieldsProps) {
           <div className="document-card-head">
             <label className="checkbox-row" style={{ marginBottom: 0 }}>
               <input type="radio" name="primary-document" checked={draft.primaryDocument === i} onChange={() => onChange({ ...draft, primaryDocument: i })} />
-              Primary
+              {t("Primary")}
             </label>
             {draft.documents.length > 1 && (
               <button type="button" className="tertiary" style={{ color: "var(--danger)" }} onClick={() => removeDoc(i)}>
-                Remove
+                {t("Remove")}
               </button>
             )}
           </div>
           <div style={{ display: "flex", gap: 12 }}>
-            <Select label="Type" style={{ width: 150 }} value={doc.document_type} onChange={(v) => updateDoc(i, { document_type: v })} options={DOCUMENT_TYPES} />
-            <Field label="Number" style={{ flex: 1 }}>
+            <Select label={t("Type")} style={{ width: 150 }} value={doc.document_type} onChange={(v) => updateDoc(i, { document_type: v })} options={DOCUMENT_TYPES} />
+            <Field label={t("Number")} style={{ flex: 1 }}>
               <input value={doc.document_number} onChange={(e) => updateDoc(i, { document_number: e.target.value })} placeholder=" " />
             </Field>
           </div>
           <div style={{ display: "flex", gap: 12, marginTop: 12 }}>
-            <Field label="Nationality (country code)" style={{ width: 180 }}>
+            <Field label={t("Nationality (country code)")} style={{ width: 180 }}>
               <input value={doc.nationality} maxLength={2} onChange={(e) => updateDoc(i, { nationality: e.target.value.toUpperCase() })} placeholder=" " />
             </Field>
-            <DateField label="Expiry" value={doc.doc_expiry} onChange={(v) => updateDoc(i, { doc_expiry: v })} style={{ flex: 1 }} />
+            <DateField label={t("Expiry")} value={doc.doc_expiry} onChange={(v) => updateDoc(i, { doc_expiry: v })} style={{ flex: 1 }} />
           </div>
         </div>
       ))}
       <button type="button" className="secondary" onClick={addDoc} style={{ alignSelf: "flex-start" }}>
-        Add document
+        {t("Add document")}
       </button>
     </div>
   );
 }
 
 export function RemarksFields({ draft, onChange }: FieldsProps) {
+  const { t } = useLanguage();
   return (
     <div style={{ paddingBottom: 16 }}>
       <div className="field" style={{ marginTop: 0 }}>
-        <label>SSR (remarks)</label>
+        <label>{t("SSR (remarks)")}</label>
         <div className="ssr-tags">
           {SSR_OPTIONS.map((code) => (
             <label key={code} className="checkbox-row" style={{ marginBottom: 0 }}>
@@ -323,26 +327,27 @@ export function RemarksFields({ draft, onChange }: FieldsProps) {
 }
 
 export function BaggageFields({ draft, onChange }: FieldsProps) {
+  const { t } = useLanguage();
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16, paddingBottom: 16 }}>
       <div>
-        <div className="modal-section-label">Checked baggage</div>
+        <div className="modal-section-label">{t("Checked baggage")}</div>
         <div style={{ display: "flex", gap: 12 }}>
-          <Field label="Bag count" style={{ width: 120 }}>
+          <Field label={t("Bag count")} style={{ width: 120 }}>
             <input type="number" min={0} value={draft.bag_count} onChange={(e) => onChange({ ...draft, bag_count: Number(e.target.value) })} />
           </Field>
-          <Field label="Bag weight (kg)" style={{ width: 140 }}>
+          <Field label={t("Bag weight (kg)")} style={{ width: 140 }}>
             <input type="number" min={0} step={0.5} value={draft.bag_weight_kg} onChange={(e) => onChange({ ...draft, bag_weight_kg: Number(e.target.value) })} />
           </Field>
         </div>
       </div>
       <div>
-        <div className="modal-section-label">Cabin (hand) baggage</div>
+        <div className="modal-section-label">{t("Cabin (hand) baggage")}</div>
         <div style={{ display: "flex", gap: 12 }}>
-          <Field label="Bag count" style={{ width: 120 }}>
+          <Field label={t("Bag count")} style={{ width: 120 }}>
             <input type="number" min={0} value={draft.cabinBagCount} onChange={(e) => onChange({ ...draft, cabinBagCount: Number(e.target.value) })} />
           </Field>
-          <Field label="Bag weight (kg)" style={{ width: 140 }}>
+          <Field label={t("Bag weight (kg)")} style={{ width: 140 }}>
             <input type="number" min={0} step={0.5} value={draft.cabinBagWeight} onChange={(e) => onChange({ ...draft, cabinBagWeight: Number(e.target.value) })} />
           </Field>
         </div>

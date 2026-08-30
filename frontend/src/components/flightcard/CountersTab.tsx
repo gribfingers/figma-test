@@ -1,3 +1,5 @@
+import { useLanguage } from "../../i18n";
+
 interface CounterTableProps {
   title: string;
   columns?: string[];
@@ -8,10 +10,11 @@ interface CounterTableProps {
 // backend yet, so this whole tab renders illustrative sample figures —
 // same shape as the Figma reference — until that data model exists.
 function CounterTable({ title, columns = ["C", "Y", "W"], rows }: CounterTableProps) {
+  const { t } = useLanguage();
   return (
     <div className="counter-table">
       <div className="counter-table-row head" style={{ gridTemplateColumns: `1fr repeat(${columns.length}, 56px)` }}>
-        <div className="counter-table-title">{title}</div>
+        <div className="counter-table-title">{t(title)}</div>
         {columns.map((c) => (
           <div key={c} className="counter-table-col">
             {c}
@@ -24,7 +27,7 @@ function CounterTable({ title, columns = ["C", "Y", "W"], rows }: CounterTablePr
           className="counter-table-row"
           style={{ gridTemplateColumns: `1fr repeat(${r.values.length}, 56px)` }}
         >
-          <div className="counter-table-label">{r.label}</div>
+          <div className="counter-table-label">{t(r.label)}</div>
           {r.values.map((v, i) => (
             <div key={i} className="counter-table-value">
               {v}

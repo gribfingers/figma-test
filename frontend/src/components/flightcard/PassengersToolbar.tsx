@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { SeatCell } from "../../api";
 import { SSR_OPTIONS } from "../../paxExtra";
 import { ChevronDownIcon, MoreIcon, SearchIcon } from "../Icon";
+import { useLanguage } from "../../i18n";
 
 export type QuickFilter = "all" | "reseat" | "priority";
 
@@ -78,6 +79,7 @@ export function PassengersToolbar({
   totalCount,
   onAddPassenger,
 }: Props) {
+  const { t } = useLanguage();
   const [servicesOpen, setServicesOpen] = useState(false);
   const [columnsOpen, setColumnsOpen] = useState(false);
   const servicesRef = useRef<HTMLDivElement>(null);
@@ -99,7 +101,7 @@ export function PassengersToolbar({
       <div className="pax-toolbar-row">
         <div className="pax-quick-filters">
           <button type="button" className={`pax-quick-filter ${quickFilter === "all" ? "selected" : ""}`} onClick={() => onQuickFilter("all")}>
-            All
+            {t("All")}
           </button>
           <button type="button" className={`pax-quick-filter ${quickFilter === "reseat" ? "selected" : ""}`} onClick={() => onQuickFilter("reseat")}>
             WL ({reseatCount})
@@ -119,7 +121,7 @@ export function PassengersToolbar({
 
         <div className="input-box" style={{ width: 190 }}>
           <SearchIcon size={16} />
-          <input placeholder="Search pax…" value={query} onChange={(e) => onQuery(e.target.value)} />
+          <input placeholder={t("Search pax…")} value={query} onChange={(e) => onQuery(e.target.value)} />
         </div>
 
         <div className="pax-multiselect" ref={servicesRef}>
@@ -138,7 +140,7 @@ export function PassengersToolbar({
                 </button>
               </span>
             ))}
-            {serviceFilter.length === 0 && <span className="pax-multiselect-placeholder">Any services</span>}
+            {serviceFilter.length === 0 && <span className="pax-multiselect-placeholder">{t("Any services")}</span>}
             <ChevronDownIcon size={14} className="pax-multiselect-chevron" />
           </div>
           {servicesOpen && (
@@ -161,18 +163,18 @@ export function PassengersToolbar({
         <div className="pax-search-field" style={{ width: 190 }}>
           <div className="input-box">
             <SearchIcon size={16} />
-            <input placeholder="Search ancillary…" value={asvcFilter} onChange={(e) => onAsvcFilter(e.target.value)} />
+            <input placeholder={t("Search ancillary…")} value={asvcFilter} onChange={(e) => onAsvcFilter(e.target.value)} />
           </div>
         </div>
 
         <div className="spacer" />
 
-        <span className="passengers-count">{totalCount} pax</span>
+        <span className="passengers-count">{totalCount} {t("pax")}</span>
 
-        <button type="button" className="tertiary" onClick={onAddPassenger}>Add pax</button>
+        <button type="button" className="tertiary" onClick={onAddPassenger}>{t("Add pax")}</button>
 
         <div className="pax-columns-menu" ref={columnsRef}>
-          <button type="button" className="icon-button pax-columns-trigger" title="Columns" onClick={() => setColumnsOpen((o) => !o)}>
+          <button type="button" className="icon-button pax-columns-trigger" title={t("Columns")} onClick={() => setColumnsOpen((o) => !o)}>
             <MoreIcon size={20} />
           </button>
           {columnsOpen && (
@@ -180,7 +182,7 @@ export function PassengersToolbar({
               {PASSENGER_COLUMNS.map((c) => (
                 <li key={c.key} className="pax-columns-item" onClick={() => onToggleColumn(c.key)}>
                   <input type="checkbox" checked={visibleColumns.has(c.key)} readOnly />
-                  {c.label}
+                  {t(c.label)}
                 </li>
               ))}
             </ul>

@@ -4,6 +4,7 @@ import { api, PassengerSearchMode, PassengerSearchResult } from "../api";
 import { useRegisterTab, useTabs } from "../tabs";
 import { clearPersistentState, usePersistentState } from "../usePersistentState";
 import { SortTh, useSort } from "../components/SortTh";
+import { useLanguage } from "../i18n";
 
 type ResultSortKey = "name" | "destination" | "flight" | "std" | "pnr" | "status";
 const RESULT_SORT_GETTERS: Record<ResultSortKey, (p: PassengerSearchResult) => string | number> = {
@@ -53,7 +54,8 @@ function fmtStd(iso: string): string {
  * appears above the results once a search comes back.
  */
 export function Search() {
-  useRegisterTab("Check-in Search");
+  const { t } = useLanguage();
+  useRegisterTab(t("Check-in Search"));
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { onTabClose } = useTabs();
@@ -123,7 +125,7 @@ export function Search() {
                     disabled={searching}
                     onClick={() => setMode(m.key)}
                   >
-                    {m.label}
+                    {t(m.label)}
                   </button>
                 ))}
               </div>
@@ -131,12 +133,12 @@ export function Search() {
                 className="search-mode-input"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder={SEARCH_MODES.find((m) => m.key === mode)?.placeholder ?? "Search"}
+                placeholder={t(SEARCH_MODES.find((m) => m.key === mode)?.placeholder ?? "Search")}
                 disabled={searching}
                 autoFocus
               />
             </div>
-            <button type="submit" disabled={searching}>Search</button>
+            <button type="submit" disabled={searching}>{t("Search")}</button>
           </div>
         </form>
       </div>
@@ -154,22 +156,22 @@ export function Search() {
                   className={`pax-quick-filter ${paxQuickFilter === f.key ? "selected" : ""}`}
                   onClick={() => setPaxQuickFilter(f.key)}
                 >
-                  {f.label} ({results.filter(f.test).length})
+                  {t(f.label)} ({results.filter(f.test).length})
                 </button>
               ))}
             </div>
-            <span className="passengers-count">{filteredResults.length} results</span>
+            <span className="passengers-count">{filteredResults.length} {t("results")}</span>
           </div>
           <div className="table-scroll">
             <table>
               <thead>
                 <tr>
-                  <SortTh id="name" label="Name" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                  <SortTh id="destination" label="Destination" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                  <SortTh id="flight" label="Flight" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                  <SortTh id="std" label="Date&Time" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                  <SortTh id="name" label={t("Name")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                  <SortTh id="destination" label={t("Destination")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                  <SortTh id="flight" label={t("Flight")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                  <SortTh id="std" label={t("Date&Time")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
                   <SortTh id="pnr" label="PNR" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                  <SortTh id="status" label="Status" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                  <SortTh id="status" label={t("Status")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
                 </tr>
               </thead>
               <tbody>
@@ -182,13 +184,13 @@ export function Search() {
                     <td className="mono">{p.record_locator}</td>
                     <td>
                       <span className={`chip middle ${p.checkin_status === "CHECKED_IN" ? "ok" : "muted"}`}>
-                        {p.checkin_status === "CHECKED_IN" ? "Checked in" : "Not checked in"}
+                        {p.checkin_status === "CHECKED_IN" ? t("Checked in") : t("Not checked in")}
                       </span>
                     </td>
                   </tr>
                 ))}
                 {sortedResults.length === 0 && (
-                  <tr><td colSpan={6} style={{ color: "var(--muted)" }}>No passengers match.</td></tr>
+                  <tr><td colSpan={6} style={{ color: "var(--muted)" }}>{t("No passengers match.")}</td></tr>
                 )}
               </tbody>
             </table>

@@ -4,6 +4,7 @@ import { Modal } from "../Modal";
 import { ArrowBackIcon } from "../Icon";
 import { formatSeatDisplay } from "../../seatExtra";
 import { useToast } from "../../toast";
+import { useLanguage } from "../../i18n";
 
 interface TransferPax {
   id: string;
@@ -103,6 +104,7 @@ const TRANSFER_SORT_GETTERS: Record<TransferSortKey, (r: TransferRow) => string 
 };
 
 function TransferTable({ title, rows, onSelectRow }: { title: string; rows: TransferRow[]; onSelectRow: (row: TransferRow) => void }) {
+  const { t } = useLanguage();
   const { sorted, sortKey, sortDir, onSort } = useSort(rows, TRANSFER_SORT_GETTERS);
   return (
     <div>
@@ -110,12 +112,12 @@ function TransferTable({ title, rows, onSelectRow }: { title: string; rows: Tran
       <table>
         <thead>
           <tr>
-            <SortTh id="flight" label="Flight" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-            <SortTh id="route" label="Route" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-            <SortTh id="time" label="Time" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-            <SortTh id="pax" label="Pax" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-            <SortTh id="bag" label="Baggage" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-            <SortTh id="delay" label="Delay" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+            <SortTh id="flight" label={t("Flight")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+            <SortTh id="route" label={t("Route")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+            <SortTh id="time" label={t("Time")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+            <SortTh id="pax" label={t("Pax")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+            <SortTh id="bag" label={t("Baggage")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+            <SortTh id="delay" label={t("Delay")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
           </tr>
         </thead>
         <tbody>
@@ -144,23 +146,24 @@ function CancelCheckinModal({
   onClose: () => void;
   onConfirm: () => void;
 }) {
+  const { t } = useLanguage();
   const [saveBaggageTag, setSaveBaggageTag] = useState(true);
   return (
     <Modal
-      title="Cancel Check-in"
+      title={t("Cancel Check-in")}
       onClose={onClose}
       width={420}
       footer={
         <>
-          <button type="button" className="tertiary" onClick={onClose}>Close</button>
-          <button type="button" className="tertiary" onClick={onConfirm}>Cancel check-in</button>
+          <button type="button" className="tertiary" onClick={onClose}>{t("Close")}</button>
+          <button type="button" className="tertiary" onClick={onConfirm}>{t("Cancel check-in")}</button>
         </>
       }
     >
-      <p style={{ marginTop: 0 }}>Are you sure you want to cancel check-in for {names.join(", ")}?</p>
+      <p style={{ marginTop: 0 }}>{t("Are you sure you want to cancel check-in for {names}?").replace("{names}", names.join(", "))}</p>
       <label className="checkbox-row">
         <input type="checkbox" checked={saveBaggageTag} onChange={(e) => setSaveBaggageTag(e.target.checked)} />
-        Save baggage tag
+        {t("Save baggage tag")}
       </label>
     </Modal>
   );
@@ -177,20 +180,21 @@ function ReaccommodateModal({
   onClose: () => void;
   onConfirm: (flight: string) => void;
 }) {
+  const { t } = useLanguage();
   const [chosen, setChosen] = useState(options[0]?.flight ?? "");
   return (
     <Modal
-      title="Reaccommodation"
+      title={t("Reaccommodation")}
       onClose={onClose}
       width={460}
       footer={
         <>
-          <button type="button" className="tertiary" onClick={onClose}>Close</button>
-          <button type="button" className="tertiary" disabled={!chosen} onClick={() => onConfirm(chosen)}>Reaccommodate</button>
+          <button type="button" className="tertiary" onClick={onClose}>{t("Close")}</button>
+          <button type="button" className="tertiary" disabled={!chosen} onClick={() => onConfirm(chosen)}>{t("Reaccommodate")}</button>
         </>
       }
     >
-      <p style={{ marginTop: 0 }}>Select the appropriate flight for {names.join(", ")}</p>
+      <p style={{ marginTop: 0 }}>{t("Select the appropriate flight for {names}").replace("{names}", names.join(", "))}</p>
       <div className="transfer-flight-options">
         {options.map((o) => (
           <label key={o.flight} className={`transfer-flight-option ${chosen === o.flight ? "selected" : ""}`}>
@@ -218,6 +222,7 @@ function TransferDetail({
   onBack: () => void;
   onRemovePax: (ids: Set<string>) => void;
 }) {
+  const { t } = useLanguage();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [modal, setModal] = useState<"cancel" | "reaccommodate" | null>(null);
   const { showToast } = useToast();
@@ -250,20 +255,29 @@ function TransferDetail({
     onRemovePax(selected);
     setSelected(new Set());
     setModal(null);
-    showToast(`Check-in cancelled for ${count} passenger${count === 1 ? "" : "s"}`);
+    showToast(
+      count === 1
+        ? t("Check-in cancelled for {n} passenger").replace("{n}", String(count))
+        : t("Check-in cancelled for {n} passengers").replace("{n}", String(count))
+    );
   }
   function confirmReaccommodate(targetFlight: string) {
     const count = selected.size;
     onRemovePax(selected);
     setSelected(new Set());
     setModal(null);
-    showToast(`${count} passenger${count === 1 ? "" : "s"} reaccommodated to ${targetFlight}`);
+    showToast(
+      (count === 1
+        ? t("{n} passenger reaccommodated to {flight}")
+        : t("{n} passengers reaccommodated to {flight}")
+      ).replace("{n}", String(count)).replace("{flight}", targetFlight)
+    );
   }
 
   return (
     <div>
       <div className="transfer-detail-head">
-        <button type="button" className="icon-button" onClick={onBack} aria-label="Back">
+        <button type="button" className="icon-button" onClick={onBack} aria-label={t("Back")}>
           <ArrowBackIcon size={18} />
         </button>
         <span className="transfer-detail-title">{title} {row.flight}</span>
@@ -274,7 +288,7 @@ function TransferDetail({
         <div className="transfer-pax-row">
           <label className="checkbox-row">
             <input type="checkbox" checked={allSelected} onChange={toggleAll} />
-            All passengers
+            {t("All passengers")}
           </label>
         </div>
 
@@ -296,21 +310,21 @@ function TransferDetail({
                     {p.name}
                   </label>
                   <span className="mono chip middle muted seat-chip">{formatSeatDisplay(p.seat)}</span>
-                  {p.verified && <span className="chip middle ok">VERIFIED</span>}
+                  {p.verified && <span className="chip middle ok">{t("VERIFIED")}</span>}
                 </div>
               ))}
             </div>
           );
         })}
-        {allPax.length === 0 && <div className="transfer-pax-row transfer-pax-empty">No passengers left on this connection.</div>}
+        {allPax.length === 0 && <div className="transfer-pax-row transfer-pax-empty">{t("No passengers left on this connection.")}</div>}
       </div>
 
       <div className="transfer-detail-actions">
         <button type="button" className="secondary" disabled={selected.size === 0} onClick={() => setModal("cancel")}>
-          Cancel check-in
+          {t("Cancel check-in")}
         </button>
         <button type="button" className="secondary" disabled={selected.size === 0} onClick={() => setModal("reaccommodate")}>
-          Reaccommodation
+          {t("Reaccommodation")}
         </button>
       </div>
 
@@ -325,6 +339,7 @@ function TransferDetail({
 }
 
 export function TransfersTab() {
+  const { t } = useLanguage();
   const [inbound, setInbound] = useState(INBOUND);
   const [outbound, setOutbound] = useState(OUTBOUND);
   const [activeInbound, setActiveInbound] = useState<string | null>(null);
@@ -347,25 +362,25 @@ export function TransfersTab() {
     <div className="grid-2">
       {inboundRow ? (
         <TransferDetail
-          title="Inbound"
+          title={t("Inbound")}
           row={inboundRow}
           otherRows={inbound.filter((r) => r.flight !== inboundRow.flight)}
           onBack={() => setActiveInbound(null)}
           onRemovePax={(ids) => removeFromRow(inbound, setInbound, inboundRow.flight, ids)}
         />
       ) : (
-        <TransferTable title="Inbound" rows={inbound} onSelectRow={(r) => setActiveInbound(r.flight)} />
+        <TransferTable title={t("Inbound")} rows={inbound} onSelectRow={(r) => setActiveInbound(r.flight)} />
       )}
       {outboundRow ? (
         <TransferDetail
-          title="Outbound"
+          title={t("Outbound")}
           row={outboundRow}
           otherRows={outbound.filter((r) => r.flight !== outboundRow.flight)}
           onBack={() => setActiveOutbound(null)}
           onRemovePax={(ids) => removeFromRow(outbound, setOutbound, outboundRow.flight, ids)}
         />
       ) : (
-        <TransferTable title="Outbound" rows={outbound} onSelectRow={(r) => setActiveOutbound(r.flight)} />
+        <TransferTable title={t("Outbound")} rows={outbound} onSelectRow={(r) => setActiveOutbound(r.flight)} />
       )}
     </div>
   );

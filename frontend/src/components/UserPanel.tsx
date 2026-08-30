@@ -4,6 +4,7 @@ import { useAuth } from "../auth";
 import { useTheme } from "../theme";
 import { useFontSize } from "../fontSize";
 import { useTabIcons } from "../tabIcons";
+import { useLanguage } from "../i18n";
 import { resizeImageToDataUrl, userAvatarColor, userInitials } from "../userDisplay";
 import { Field } from "./Field";
 import { Select } from "./Select";
@@ -36,6 +37,7 @@ export function UserPanel({ open, onClose }: Props) {
   const { theme, setTheme } = useTheme();
   const { fontSize, increase, decrease } = useFontSize();
   const { enabled: tabIconsEnabled, setEnabled: setTabIconsEnabled } = useTabIcons();
+  const { language, setLanguage, t } = useLanguage();
   const [settingsOpen, setSettingsOpen] = useState(true);
   const [securityOpen, setSecurityOpen] = useState(false);
   const [timezone, setTimezone] = useState(user?.timezone ?? "Europe/Moscow");
@@ -92,7 +94,7 @@ export function UserPanel({ open, onClose }: Props) {
             </div>
             {user.company && <div className="user-panel-company">{user.company}</div>}
           </div>
-          <button type="button" className="icon-button" onClick={onClose} aria-label="Close">
+          <button type="button" className="icon-button" onClick={onClose} aria-label={t("Close")}>
             <CloseIcon size={16} />
           </button>
         </div>
@@ -103,7 +105,7 @@ export function UserPanel({ open, onClose }: Props) {
             className="user-panel-avatar"
             style={user.avatar ? undefined : ({ "--avatar-color": userAvatarColor(user) } as CSSProperties)}
             onClick={() => fileRef.current?.click()}
-            title="Change photo"
+            title={t("Change photo")}
           >
             {user.avatar ? <img src={user.avatar} alt="" /> : <span>{userInitials(user)}</span>}
           </button>
@@ -112,32 +114,39 @@ export function UserPanel({ open, onClose }: Props) {
 
         <div className="user-panel-section">
           <button type="button" className="user-panel-section-head" onClick={() => setSettingsOpen((o) => !o)}>
-            Settings
+            {t("Settings")}
             <ChevronDownIcon size={16} className={settingsOpen ? "chevron-rotated" : ""} />
           </button>
           {settingsOpen && (
             <div className="user-panel-section-body">
               <div className="user-panel-theme-row">
-                <span>Theme</span>
+                <span>{t("Language")}</span>
                 <div className="user-panel-theme-toggle">
-                  <button type="button" className={theme === "light" ? "selected" : ""} onClick={() => setTheme("light")}>Light</button>
-                  <button type="button" className={theme === "dark" ? "selected" : ""} onClick={() => setTheme("dark")}>Dark</button>
+                  <button type="button" className={language === "ru" ? "selected" : ""} onClick={() => setLanguage("ru")}>RUS</button>
+                  <button type="button" className={language === "en" ? "selected" : ""} onClick={() => setLanguage("en")}>ENG</button>
                 </div>
               </div>
               <div className="user-panel-theme-row">
-                <span>Font size</span>
+                <span>{t("Theme")}</span>
+                <div className="user-panel-theme-toggle">
+                  <button type="button" className={theme === "light" ? "selected" : ""} onClick={() => setTheme("light")}>{t("Light")}</button>
+                  <button type="button" className={theme === "dark" ? "selected" : ""} onClick={() => setTheme("dark")}>{t("Dark")}</button>
+                </div>
+              </div>
+              <div className="user-panel-theme-row">
+                <span>{t("Font size")}</span>
                 <div className="seatmap-zoom">
-                  <button type="button" className="seatmap-zoom-btn" onClick={decrease} aria-label="Decrease font size">
+                  <button type="button" className="seatmap-zoom-btn" onClick={decrease} aria-label={t("Decrease font size")}>
                     <MinusIcon size={14} />
                   </button>
                   <span className="seatmap-zoom-value">{fontSize}%</span>
-                  <button type="button" className="seatmap-zoom-btn" onClick={increase} aria-label="Increase font size">
+                  <button type="button" className="seatmap-zoom-btn" onClick={increase} aria-label={t("Increase font size")}>
                     <PlusIcon size={14} />
                   </button>
                 </div>
               </div>
               <div className="user-panel-theme-row">
-                <span>Tab section icons</span>
+                <span>{t("Tab section icons")}</span>
                 <label className="checkbox-row">
                   <input
                     type="checkbox"
@@ -147,7 +156,7 @@ export function UserPanel({ open, onClose }: Props) {
                 </label>
               </div>
               <Select
-                label="Timezone"
+                label={t("Timezone")}
                 value={timezone}
                 onChange={changeTimezone}
                 options={timezones.map((tz) => ({ value: tz, label: tz }))}
@@ -158,14 +167,14 @@ export function UserPanel({ open, onClose }: Props) {
 
         <div className="user-panel-section">
           <button type="button" className="user-panel-section-head" onClick={() => setSecurityOpen((o) => !o)}>
-            Security
+            {t("Security")}
             <ChevronDownIcon size={16} className={securityOpen ? "chevron-rotated" : ""} />
           </button>
           {securityOpen && (
             <form className="user-panel-section-body" onSubmit={submitPasswordChange}>
               {pwError && <div className="error-box">{pwError}</div>}
-              {pwSuccess && <div className="ok-box">Password changed.</div>}
-              <Field label="Current password">
+              {pwSuccess && <div className="ok-box">{t("Password changed.")}</div>}
+              <Field label={t("Current password")}>
                 <input
                   type="password"
                   value={currentPassword}
@@ -173,11 +182,11 @@ export function UserPanel({ open, onClose }: Props) {
                   placeholder=" "
                 />
               </Field>
-              <Field label="New password">
+              <Field label={t("New password")}>
                 <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder=" " />
               </Field>
               <button type="submit" className="secondary" disabled={pwBusy || !currentPassword || !newPassword}>
-                Change password
+                {t("Change password")}
               </button>
             </form>
           )}
@@ -192,7 +201,7 @@ export function UserPanel({ open, onClose }: Props) {
               onClose();
             }}
           >
-            Logout
+            {t("Logout")}
           </button>
         </div>
       </div>

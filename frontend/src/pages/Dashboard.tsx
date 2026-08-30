@@ -9,6 +9,7 @@ import { SortTh, useSort } from "../components/SortTh";
 import { useRegisterTab } from "../tabs";
 import { fullRouteLabel, routeLabel } from "../flightSegments";
 import { currentPhaseIndex, phaseStatusLabel } from "../flightPhase";
+import { useLanguage } from "../i18n";
 
 function formatTime(iso: string | null): string {
   if (!iso) return "";
@@ -67,7 +68,8 @@ function msToWallClock(ms: number): string {
 }
 
 export function Dashboard() {
-  useRegisterTab("Flights");
+  const { t } = useLanguage();
+  useRegisterTab(t("Flights"));
   const navigate = useNavigate();
   const [flights, setFlights] = useState<Flight[]>([]);
   const [error, setError] = useState("");
@@ -131,31 +133,31 @@ export function Dashboard() {
         <form onSubmit={runSearch}>
           <div className="toolbar" style={{ flexWrap: "wrap", alignItems: "flex-end" }}>
             <Select
-              label="Airline"
+              label={t("Airline")}
               style={{ minWidth: 120 }}
               value={draftSearch.airline}
               onChange={(v) => setDraftSearch({ ...draftSearch, airline: v })}
-              options={[{ value: "", label: "All" }, ...airlines.map((a) => ({ value: a, label: a }))]}
+              options={[{ value: "", label: t("All") }, ...airlines.map((a) => ({ value: a, label: a }))]}
             />
-            <Field label="Flight range" style={{ minWidth: 130 }}>
+            <Field label={t("Flight range")} style={{ minWidth: 130 }}>
               <input value={draftSearch.flight} onChange={(e) => setDraftSearch({ ...draftSearch, flight: e.target.value })} placeholder=" " />
             </Field>
             <Select
-              label="Departure"
+              label={t("Departure")}
               style={{ minWidth: 120 }}
               value={draftSearch.origin}
               onChange={(v) => setDraftSearch({ ...draftSearch, origin: v })}
-              options={[{ value: "", label: "All" }, ...origins.map((o) => ({ value: o, label: o }))]}
+              options={[{ value: "", label: t("All") }, ...origins.map((o) => ({ value: o, label: o }))]}
             />
             <Select
-              label="Destination"
+              label={t("Destination")}
               style={{ minWidth: 120 }}
               value={draftSearch.destination}
               onChange={(v) => setDraftSearch({ ...draftSearch, destination: v })}
-              options={[{ value: "", label: "All" }, ...destinations.map((d) => ({ value: d, label: d }))]}
+              options={[{ value: "", label: t("All") }, ...destinations.map((d) => ({ value: d, label: d }))]}
             />
             <DateTimePicker
-              label="Date/time from"
+              label={t("Date/time from")}
               style={{ minWidth: 194 }}
               value={draftSearch.dateFrom}
               onChange={(v) => {
@@ -173,15 +175,15 @@ export function Dashboard() {
               }}
             />
             <DateTimePicker
-              label="Date/time to"
+              label={t("Date/time to")}
               style={{ minWidth: 194 }}
               value={draftSearch.dateTo}
               onChange={(v) => setDraftSearch({ ...draftSearch, dateTo: v })}
             />
-            <button type="submit" disabled={searchIsUnchanged}>Search</button>
+            <button type="submit" disabled={searchIsUnchanged}>{t("Search")}</button>
             <div className="spacer" />
-            <Link to="/flights/new"><button type="button" className="secondary">New flight</button></Link>
-            <button type="button" className="icon-button" onClick={load} title="Refresh">
+            <Link to="/flights/new"><button type="button" className="secondary">{t("New flight")}</button></Link>
+            <button type="button" className="icon-button" onClick={load} title={t("Refresh")}>
               <RefreshIcon size={20} />
             </button>
           </div>
@@ -189,18 +191,18 @@ export function Dashboard() {
       </div>
 
       <div className="panel panel--flush">
-        <h3 className="panel-head">Flights ({visibleFlights.length})</h3>
+        <h3 className="panel-head">{t("Flights")} ({visibleFlights.length})</h3>
         <div className="table-scroll">
           <table>
             <thead>
               <tr>
                 <th><input placeholder="STD" disabled style={{ width: "100%", opacity: 0.4 }} /></th>
-                <th><input placeholder="Airline" value={quick.airline} onChange={(e) => setQuick({ ...quick, airline: e.target.value })} style={{ width: "100%" }} /></th>
-                <th><input placeholder="Flight" value={quick.flight} onChange={(e) => setQuick({ ...quick, flight: e.target.value })} style={{ width: "100%" }} /></th>
+                <th><input placeholder={t("Airline")} value={quick.airline} onChange={(e) => setQuick({ ...quick, airline: e.target.value })} style={{ width: "100%" }} /></th>
+                <th><input placeholder={t("Flight")} value={quick.flight} onChange={(e) => setQuick({ ...quick, flight: e.target.value })} style={{ width: "100%" }} /></th>
                 <th colSpan={2}>
                   <div style={{ display: "flex", gap: 8 }}>
-                    <input placeholder="Departure" value={quick.origin} onChange={(e) => setQuick({ ...quick, origin: e.target.value })} style={{ width: "100%" }} />
-                    <input placeholder="Destination" value={quick.destination} onChange={(e) => setQuick({ ...quick, destination: e.target.value })} style={{ width: "100%" }} />
+                    <input placeholder={t("Departure")} value={quick.origin} onChange={(e) => setQuick({ ...quick, origin: e.target.value })} style={{ width: "100%" }} />
+                    <input placeholder={t("Destination")} value={quick.destination} onChange={(e) => setQuick({ ...quick, destination: e.target.value })} style={{ width: "100%" }} />
                   </div>
                 </th>
                 <th><input placeholder="ETD" value={quick.etd} onChange={(e) => setQuick({ ...quick, etd: e.target.value })} style={{ width: "100%" }} /></th>
@@ -210,18 +212,18 @@ export function Dashboard() {
               </tr>
               <tr>
                 <SortTh id="std" label="STD" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                <SortTh id="carrier_code" label="Airline" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                <SortTh id="flight_number" label="Flight" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                <SortTh id="route" label="Route" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                <SortTh id="ops_status" label="Status" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="carrier_code" label={t("Airline")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="flight_number" label={t("Flight")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="route" label={t("Route")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="ops_status" label={t("Status")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
                 <SortTh id="etd" label="ETD" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
                 <SortTh id="sta" label="STA" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
                 <SortTh id="ata" label="ATA" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                <SortTh id="terminal" label="Terminal" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                <SortTh id="gate" label="Gate" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                <SortTh id="aircraft_type" label="Type" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                <SortTh id="aircraft_reg" label="A/C reg" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
-                <SortTh id="aircraft_version" label="Version" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="terminal" label={t("Terminal")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="gate" label={t("Gate")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="aircraft_type" label={t("Type")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="aircraft_reg" label={t("A/C reg")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="aircraft_version" label={t("Version")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
               </tr>
             </thead>
             <tbody>
@@ -233,7 +235,7 @@ export function Dashboard() {
                   <td>{f.carrier_code}</td>
                   <td className="mono">{f.flight_number}</td>
                   <td className="mono" title={fullRouteLabel(f)}>{routeLabel(f)}</td>
-                  <td><span className={`chip middle ${status.badge}`}>{status.label}</span></td>
+                  <td><span className={`chip middle ${status.badge}`}>{t(status.label)}</span></td>
                   <td className="mono">{formatTime(f.etd)}</td>
                   <td className="mono">{formatTime(f.sta)}</td>
                   <td className="mono">{formatTime(f.ata)}</td>
@@ -246,7 +248,7 @@ export function Dashboard() {
                 );
               })}
               {visibleFlights.length === 0 && (
-                <tr><td colSpan={13} style={{ color: "var(--muted)" }}>No flights match the current filters.</td></tr>
+                <tr><td colSpan={13} style={{ color: "var(--muted)" }}>{t("No flights match the current filters.")}</td></tr>
               )}
             </tbody>
           </table>

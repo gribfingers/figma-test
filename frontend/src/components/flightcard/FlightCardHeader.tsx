@@ -4,6 +4,7 @@ import { OPS_STATUS_UNSET } from "../../flightStatuses";
 import { FLIGHT_PHASES, currentPhaseIndex, isFlightDeparted, phaseBasedStatusKey } from "../../flightPhase";
 import { FlightStatusSelect } from "./FlightStatusSelect";
 import { FlightAction, FlightActionsMenu } from "./FlightActionsMenu";
+import { useLanguage } from "../../i18n";
 
 interface Props {
   flight: Flight;
@@ -31,6 +32,7 @@ function fmtCardDate(std: string): string {
 }
 
 export function FlightCardHeader({ flight, activeTab, dirty, onSave, onAction, onStatusChange }: Props) {
+  const { t } = useLanguage();
   // Ticks so the highlighted phase keeps up with real time even if nothing
   // else on the page changes (not just right after editing std/sta).
   const [now, setNow] = useState(() => new Date());
@@ -67,7 +69,7 @@ export function FlightCardHeader({ flight, activeTab, dirty, onSave, onAction, o
           const state = i < currentPhase ? "past" : i === currentPhase ? "active" : "";
           return (
             <div key={p.key} className={`flight-status-chip ${state}`}>
-              <div className="flight-status-label">{p.label}</div>
+              <div className="flight-status-label">{t(p.label)}</div>
               <div className="flight-status-range">{fmtWindow(flight.std, p.fromMin, p.toMin)}</div>
             </div>
           );
@@ -77,8 +79,8 @@ export function FlightCardHeader({ flight, activeTab, dirty, onSave, onAction, o
       <div className="flight-card-actions">
         <FlightActionsMenu onAction={onAction} disabledActions={departed ? new Set<FlightAction>(["checkin", "boarding"]) : undefined} />
         {activeTab === "main" && (
-          <button type="button" disabled={!dirty || departed} title={departed ? "A departed flight's record can't be changed" : undefined} onClick={onSave}>
-            Save
+          <button type="button" disabled={!dirty || departed} title={departed ? t("A departed flight's record can't be changed") : undefined} onClick={onSave}>
+            {t("Save")}
           </button>
         )}
       </div>

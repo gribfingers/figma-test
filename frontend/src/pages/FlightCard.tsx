@@ -16,6 +16,7 @@ import { PassengersTab } from "../components/flightcard/PassengersTab";
 import { TransfersTab } from "../components/flightcard/TransfersTab";
 import { SettingsTab } from "../components/flightcard/SettingsTab";
 import { combineDateAndTime, draftFromFlight, draftsEqual, MainDraft } from "../components/flightcard/mainDraft";
+import { useLanguage } from "../i18n";
 
 const TABS = [
   { key: "main", label: "Main" },
@@ -31,8 +32,9 @@ export function FlightCard() {
   const { flightId } = useParams();
   const fid = Number(flightId);
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [flight, setFlight] = useState<Flight | null>(null);
-  useRegisterTab(flight ? `${flight.carrier_code}${flight.flight_number}` : "Flight");
+  useRegisterTab(flight ? `${flight.carrier_code}${flight.flight_number}` : t("Flight"));
   const [tab, setTab] = usePersistentState<TabKey>(`dcs_flight_tab_${fid}`, "main");
   const [draft, setDraft] = useState<MainDraft | null>(null);
   const [manifest, setManifest] = useState<{ label: string; text: string } | null>(null);
@@ -50,8 +52,8 @@ export function FlightCard() {
       .catch(() => setNotFound(true));
   }, [fid]);
 
-  if (notFound) return <EntityNotFound label="This flight" />;
-  if (!flight || !draft) return <div className="content">Loading…</div>;
+  if (notFound) return <EntityNotFound label={t("This flight")} />;
+  if (!flight || !draft) return <div className="content">{t("Loading…")}</div>;
 
   const dirty = !draftsEqual(draft, draftFromFlight(flight));
   const departed = isFlightDeparted(flight, new Date());
@@ -66,9 +68,9 @@ export function FlightCard() {
       const updated = await api.updateFlight(flight.id, { ops_status: key });
       setFlight(updated);
       setDraft(draftFromFlight(updated));
-      const from = FLIGHT_STATUSES.find((s) => s.key === currentKey)?.labelEn ?? currentKey;
-      const to = FLIGHT_STATUSES.find((s) => s.key === key)?.labelEn ?? key;
-      showToast(`Flight status changed from ${from} to ${to}`);
+      const from = t(FLIGHT_STATUSES.find((s) => s.key === currentKey)?.labelEn ?? currentKey);
+      const to = t(FLIGHT_STATUSES.find((s) => s.key === key)?.labelEn ?? key);
+      showToast(t("Flight status changed from {from} to {to}").replace("{from}", from).replace("{to}", to));
     } catch (e: any) {
       setError(e.message);
     }
@@ -119,7 +121,7 @@ export function FlightCard() {
       });
       setFlight(updated);
       setDraft(draftFromFlight(updated));
-      showToast("Changes saved");
+      showToast(t("Changes saved"));
     } catch (e: any) {
       setError(e.message);
     }
@@ -133,21 +135,21 @@ export function FlightCard() {
       if (action === "boarding") return navigate(`/boarding/${flight.id}`);
       if (action === "pnl") {
         const text = await api.pnl(flight.id);
-        setManifest({ label: "PNL (passenger name list)", text });
+        setManifest({ label: t("PNL (passenger name list)"), text });
         return;
       }
       if (action === "pfs") {
         const text = await api.pfs(flight.id);
-        setManifest({ label: "PFS (current preliminary summary)", text });
+        setManifest({ label: t("PFS (current preliminary summary)"), text });
         return;
       }
       if (action === "close") {
-        if (!confirm("Close the flight? Pax checked in but not boarded will be marked NO SHOW.")) return;
+        if (!confirm(t("Close the flight? Pax checked in but not boarded will be marked NO SHOW."))) return;
         const { flight: updated, pfs } = await api.closeFlight(flight.id);
         setFlight(updated);
         setDraft(draftFromFlight(updated));
-        setManifest({ label: "PFS (final list after flight close-out)", text: pfs });
-        showToast("Flight closed");
+        setManifest({ label: t("PFS (final list after flight close-out)"), text: pfs });
+        showToast(t("Flight closed"));
       }
     } catch (e: any) {
       setError(e.message);
@@ -167,14 +169,14 @@ export function FlightCard() {
           onStatusChange={handleStatusChange}
         />
         <div className="flight-tabs">
-          {TABS.map((t) => (
+          {TABS.map((tabDef) => (
             <button
-              key={t.key}
+              key={tabDef.key}
               type="button"
-              className={`flight-tab ${tab === t.key ? "selected" : ""}`}
-              onClick={() => setTab(t.key)}
+              className={`flight-tab ${tab === tabDef.key ? "selected" : ""}`}
+              onClick={() => setTab(tabDef.key)}
             >
-              {t.label}
+              {t(tabDef.label)}
             </button>
           ))}
         </div>
@@ -198,7 +200,7 @@ export function FlightCard() {
         <div className="panel">
           <div className="manifest-head">
             <h3>{manifest.label}</h3>
-            <button type="button" className="icon-button" aria-label="Close" onClick={() => setManifest(null)}>
+            <button type="button" className="icon-button" aria-label={t("Close")} onClick={() => setManifest(null)}>
               <CloseIcon size={16} />
             </button>
           </div>

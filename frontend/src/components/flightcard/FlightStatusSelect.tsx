@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { FLIGHT_STATUSES } from "../../flightStatuses";
 import { ChevronDownIcon } from "../Icon";
+import { useLanguage } from "../../i18n";
 
 interface Props {
   value: string;
@@ -11,6 +12,7 @@ interface Props {
 // Persisted to flights.ops_status by the parent (see FlightCardHeader's
 // onStatusChange) — this component itself is just the picker UI.
 export function FlightStatusSelect({ value, onChange, disabled }: Props) {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const current = FLIGHT_STATUSES.find((s) => s.key === value) ?? FLIGHT_STATUSES[0];
@@ -37,12 +39,12 @@ export function FlightStatusSelect({ value, onChange, disabled }: Props) {
         type="button"
         className="secondary"
         disabled={disabled}
-        title={disabled ? "A departed flight's status can't be changed" : undefined}
+        title={disabled ? t("A departed flight's status can't be changed") : undefined}
         aria-haspopup="listbox"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
       >
-        {current.labelEn} <ChevronDownIcon size={16} className="chevron-flip" />
+        {t(current.labelEn)} <ChevronDownIcon size={16} className="chevron-flip" />
       </button>
       {open && (
         <ul className="status-menu" role="listbox">

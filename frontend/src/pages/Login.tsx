@@ -3,9 +3,11 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth";
 import { Field } from "../components/Field";
 import { PlaneIcon } from "../components/Icon";
+import { useLanguage } from "../i18n";
 
 export function Login() {
   const { user, login } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [loginName, setLoginName] = useState("");
   const [password, setPassword] = useState("");
@@ -36,14 +38,14 @@ export function Login() {
           <span>Airport DCS</span>
         </div>
         {error && <div className="error-box">{error}</div>}
-        <Field label="Login">
+        <Field label={t("Login")}>
           <input value={loginName} onChange={(e) => setLoginName(e.target.value)} placeholder=" " autoFocus />
         </Field>
-        <Field label="Password">
+        <Field label={t("Password")}>
           <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder=" " />
         </Field>
         <button type="submit" disabled={busy || !loginName || !password}>
-          Sign in
+          {t("Sign in")}
         </button>
       </form>
     </div>

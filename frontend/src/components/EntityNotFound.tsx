@@ -1,5 +1,6 @@
 import { useLocation } from "react-router-dom";
 import { useTabs } from "../tabs";
+import { useLanguage } from "../i18n";
 
 /**
  * Shown instead of an endless "Loading…" when the flight/passenger a tab's
@@ -10,11 +11,12 @@ import { useTabs } from "../tabs";
 export function EntityNotFound({ label }: { label: string }) {
   const { pathname } = useLocation();
   const { closeTab } = useTabs();
+  const { t } = useLanguage();
   return (
     <div className="content">
-      <p>{label} no longer exists. It may have been deleted, or today's demo schedule was regenerated after this tab was opened.</p>
+      <p>{label} {t("no longer exists. It may have been deleted, or today's demo schedule was regenerated after this tab was opened.")}</p>
       <button type="button" className="secondary" onClick={() => closeTab(pathname)}>
-        Close tab
+        {t("Close tab")}
       </button>
     </div>
   );

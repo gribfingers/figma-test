@@ -21,6 +21,7 @@ import { Modal } from "../Modal";
 import { PASSENGER_COLUMNS, PassengersToolbar, QuickFilter } from "./PassengersToolbar";
 import { SegmentToggle } from "../SegmentToggle";
 import { segmentsForFlight } from "../../flightSegments";
+import { useLanguage } from "../../i18n";
 
 interface Props {
   flight: Flight;
@@ -72,10 +73,10 @@ function statusLabel(p: Passenger): string {
   if (p.checkin_status === "CHECKED_IN") return "Checked-in";
   return "—";
 }
-function statusChip(p: Passenger) {
+function statusChip(p: Passenger, t: (text: string) => string) {
   const label = statusLabel(p);
   if (label === "—") return "";
-  return <span className={`chip middle ${label === "Offloaded" ? "danger" : "ok"}`}>{label}</span>;
+  return <span className={`chip middle ${label === "Offloaded" ? "danger" : "ok"}`}>{t(label)}</span>;
 }
 
 function classFor(p: Passenger, seatByCode: Map<string, SeatCell>): string {
@@ -114,6 +115,7 @@ const STATUS_CLASS: Record<FlagStatus, string> = {
 };
 
 export function PassengersTab({ flight }: Props) {
+  const { t } = useLanguage();
   const [passengers, setPassengers] = useState<Passenger[]>([]);
   const [seats, setSeats] = useState<SeatCell[]>([]);
   const [query, setQuery] = useState("");
@@ -185,7 +187,11 @@ export function PassengersTab({ flight }: Props) {
       await api.changeSeat(seatAction.passenger.id, seatCode);
       refreshSeating();
       setSeatAction(null);
-      showToast(wasSeated ? `Seat changed to ${formatSeatDisplay(seatCode)}` : `Seat ${formatSeatDisplay(seatCode)} assigned`);
+      showToast(
+        wasSeated
+          ? t("Seat changed to {seat}").replace("{seat}", formatSeatDisplay(seatCode))
+          : t("Seat {seat} assigned").replace("{seat}", formatSeatDisplay(seatCode))
+      );
     } catch (e: any) {
       alert(e.message);
     }
@@ -202,7 +208,7 @@ export function PassengersTab({ flight }: Props) {
         await api.swapSeats(seatAction.passenger.id, s.passenger_id);
         refreshSeating();
         setSeatAction(null);
-        showToast("Seats swapped");
+        showToast(t("Seats swapped"));
       } catch (e: any) {
         alert(e.message);
       }
@@ -220,7 +226,7 @@ export function PassengersTab({ flight }: Props) {
     try {
       await api.changeSeat(activeId, null);
       refreshSeating();
-      showToast(`Seat ${formatSeatDisplay(passenger.seat)} unassigned`);
+      showToast(t("Seat {seat} unassigned").replace("{seat}", formatSeatDisplay(passenger.seat)));
     } catch (e: any) {
       alert(e.message);
     }
@@ -228,11 +234,11 @@ export function PassengersTab({ flight }: Props) {
 
   async function deletePassenger(p: Passenger) {
     setContextMenu(null);
-    if (!window.confirm(`Delete pax ${p.surname} ${p.given_name}?`)) return;
+    if (!window.confirm(t("Delete pax {name}?").replace("{name}", `${p.surname} ${p.given_name}`))) return;
     try {
       await api.deletePassenger(flight.id, p.id);
       loadPassengers();
-      showToast("Passenger deleted");
+      showToast(t("Passenger deleted"));
     } catch (e: any) {
       alert(e.message);
     }
@@ -245,7 +251,7 @@ export function PassengersTab({ flight }: Props) {
   }
   async function submitAdd() {
     if (!addDraft.surname.trim() || !addDraft.given_name.trim() || !addDraft.ticket_number.trim()) {
-      setError("Surname, given name and ticket number are required.");
+      setError(t("Surname, given name and ticket number are required."));
       return;
     }
     setAdding(true);
@@ -254,7 +260,7 @@ export function PassengersTab({ flight }: Props) {
       await api.addPassenger(flight.id, paxDraftToPayload(addDraft));
       setAddOpen(false);
       loadPassengers();
-      showToast("Passenger added");
+      showToast(t("Passenger added"));
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -385,23 +391,23 @@ export function PassengersTab({ flight }: Props) {
             <thead>
               <tr>
                 <th></th>
-                <SortTh id="name" label="Name" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="name" label={t("Name")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
                 {visibleColumns.has("pnr") && <SortTh id="pnr" label="PNR" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />}
-                {visibleColumns.has("flags") && <th>Flags</th>}
-                {visibleColumns.has("seat") && <SortTh id="seat" label="Seat" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />}
-                {visibleColumns.has("class") && <SortTh id="class" label="Class" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />}
-                {visibleColumns.has("status") && <SortTh id="status" label="Status" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />}
-                {visibleColumns.has("services") && <th>Services</th>}
+                {visibleColumns.has("flags") && <th>{t("Flags")}</th>}
+                {visibleColumns.has("seat") && <SortTh id="seat" label={t("Seat")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />}
+                {visibleColumns.has("class") && <SortTh id="class" label={t("Class")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />}
+                {visibleColumns.has("status") && <SortTh id="status" label={t("Status")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />}
+                {visibleColumns.has("services") && <th>{t("Services")}</th>}
                 {visibleColumns.has("asvc") && <th>ASVC</th>}
                 {visibleColumns.has("wl") && <th>WL</th>}
                 {visibleColumns.has("pl") && <th>PL</th>}
-                {visibleColumns.has("type") && <th>Type</th>}
+                {visibleColumns.has("type") && <th>{t("Type")}</th>}
                 {visibleColumns.has("iapp") && <th>iAPP</th>}
-                {visibleColumns.has("inbound") && <th>Inbound</th>}
-                {visibleColumns.has("outbound") && <th>Outbound</th>}
-                {visibleColumns.has("bag") && <SortTh id="bag" label="Bag" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />}
-                {visibleColumns.has("age") && <SortTh id="age" label="Age" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />}
-                {visibleColumns.has("gender") && <SortTh id="gender" label="Gender" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />}
+                {visibleColumns.has("inbound") && <th>{t("Inbound")}</th>}
+                {visibleColumns.has("outbound") && <th>{t("Outbound")}</th>}
+                {visibleColumns.has("bag") && <SortTh id="bag" label={t("Bag")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />}
+                {visibleColumns.has("age") && <SortTh id="age" label={t("Age")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />}
+                {visibleColumns.has("gender") && <SortTh id="gender" label={t("Gender")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />}
               </tr>
             </thead>
             <tbody>
@@ -433,11 +439,11 @@ export function PassengersTab({ flight }: Props) {
                         {nested && <ArrowNestedIcon size={14} className="pax-nest-arrow" />}
                         {nested && <InfantIcon size={14} className="pax-infant-icon" />}
                         {!nested && extra.type === "CHD" && (
-                          <span title="Child (travelling with a guardian on this PNR)">
+                          <span title={t("Child (travelling with a guardian on this PNR)")}>
                             <ChildIcon size={14} className="pax-child-icon" />
                           </span>
                         )}
-                        {hasInfant && <span className="pax-infant-dot" title="Travelling with an infant" />}
+                        {hasInfant && <span className="pax-infant-dot" title={t("Travelling with an infant")} />}
                         <span>
                           {p.surname} {p.given_name}
                         </span>
@@ -466,7 +472,7 @@ export function PassengersTab({ flight }: Props) {
                       <td>{p.seat && <span className="mono chip middle muted seat-chip">{formatSeatDisplay(p.seat)}</span>}</td>
                     )}
                     {visibleColumns.has("class") && <td>{cls}</td>}
-                    {visibleColumns.has("status") && <td>{statusChip(p)}</td>}
+                    {visibleColumns.has("status") && <td>{statusChip(p, t)}</td>}
                     {visibleColumns.has("services") && (
                       <td>
                         {ssr.length === 0 ? (
@@ -503,17 +509,17 @@ export function PassengersTab({ flight }: Props) {
               {rows.length === 0 && (
                 <tr>
                   <td colSpan={visibleColCount} style={{ color: "var(--muted)" }}>
-                    No pax found.
+                    {t("No pax found.")}
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
-        <div className="panel-hint">Right-click a row to assign/change or swap the seat, edit the passenger, or delete them.</div>
+        <div className="panel-hint">{t("Right-click a row to assign/change or swap the seat, edit the passenger, or delete them.")}</div>
       </div>
       {mapHidden ? (
-        <button type="button" className="passengers-seatmap-collapsed" onClick={() => setMapHidden(false)} title="Show seat map">
+        <button type="button" className="passengers-seatmap-collapsed" onClick={() => setMapHidden(false)} title={t("Show seat map")}>
           <ArrowBackIcon size={18} />
         </button>
       ) : (
@@ -521,13 +527,13 @@ export function PassengersTab({ flight }: Props) {
           {seatAction && (
             <div className="seat-pick-banner">
               <span>
-                {seatAction.mode === "assign" ? "Select a seat for " : "Select a pax's seat to swap with "}
+                {seatAction.mode === "assign" ? t("Select a seat for ") : t("Select a pax's seat to swap with ")}
                 <b>
                   {seatAction.passenger.surname} {seatAction.passenger.given_name}
                 </b>
               </span>
               <button type="button" className="tertiary" onClick={() => setSeatAction(null)}>
-                Cancel
+                {t("Cancel")}
               </button>
             </div>
           )}
@@ -544,7 +550,7 @@ export function PassengersTab({ flight }: Props) {
             ineligibleSeats={ineligibleSeats}
             undesirableSeats={undesirableSeats}
           />
-          <div className="panel-hint">Right-click a seat to edit its properties.</div>
+          <div className="panel-hint">{t("Right-click a seat to edit its properties.")}</div>
         </div>
       )}
 
@@ -577,11 +583,11 @@ export function PassengersTab({ flight }: Props) {
           style={{ left: contextMenu.x, top: contextMenu.y }}
         >
           <li className="pax-columns-item" onClick={() => startAssignSeat(contextMenu.passenger)}>
-            {contextMenu.passenger.seat ? "Change seat" : "Assign seat"}
+            {contextMenu.passenger.seat ? t("Change seat") : t("Assign seat")}
           </li>
           {contextMenu.passenger.seat && (
             <li className="pax-columns-item" onClick={() => startSwapSeat(contextMenu.passenger)}>
-              Swap seat…
+              {t("Swap seat…")}
             </li>
           )}
           <li
@@ -591,33 +597,33 @@ export function PassengersTab({ flight }: Props) {
               setContextMenu(null);
             }}
           >
-            Edit
+            {t("Edit")}
           </li>
           <li className="pax-columns-item danger" onClick={() => deletePassenger(contextMenu.passenger)}>
-            Delete
+            {t("Delete")}
           </li>
         </ul>
       )}
 
       {addOpen && (
         <Modal
-          title="Add pax"
+          title={t("Add pax")}
           onClose={() => setAddOpen(false)}
           width={720}
           footer={
             <>
-              <button type="button" className="tertiary" onClick={() => setAddOpen(false)}>Close</button>
-              <button type="button" className="tertiary" disabled={adding} onClick={submitAdd}>Add</button>
+              <button type="button" className="tertiary" onClick={() => setAddOpen(false)}>{t("Close")}</button>
+              <button type="button" className="tertiary" disabled={adding} onClick={submitAdd}>{t("Add")}</button>
             </>
           }
         >
           {error && <div className="error-box">{error}</div>}
           <PaxTabbedFields
             tabs={[
-              { key: "summary", label: "Summary", content: <SummaryFields draft={addDraft} onChange={setAddDraft} /> },
-              { key: "documents", label: "Documents", content: <DocumentsFields draft={addDraft} onChange={setAddDraft} /> },
-              { key: "remarks", label: "Remarks", content: <RemarksFields draft={addDraft} onChange={setAddDraft} /> },
-              { key: "baggage", label: "Baggage", content: <BaggageFields draft={addDraft} onChange={setAddDraft} /> },
+              { key: "summary", label: t("Summary"), content: <SummaryFields draft={addDraft} onChange={setAddDraft} /> },
+              { key: "documents", label: t("Documents"), content: <DocumentsFields draft={addDraft} onChange={setAddDraft} /> },
+              { key: "remarks", label: t("Remarks"), content: <RemarksFields draft={addDraft} onChange={setAddDraft} /> },
+              { key: "baggage", label: t("Baggage"), content: <BaggageFields draft={addDraft} onChange={setAddDraft} /> },
             ]}
           />
         </Modal>

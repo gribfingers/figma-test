@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronDownIcon } from "../Icon";
+import { useLanguage } from "../../i18n";
 
 export type FlightAction = "checkin" | "boarding" | "pnl" | "pfs" | "close";
 
@@ -24,6 +25,7 @@ interface Props {
 }
 
 export function FlightActionsMenu({ onAction, disabledActions }: Props) {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -52,7 +54,7 @@ export function FlightActionsMenu({ onAction, disabledActions }: Props) {
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
       >
-        Actions <ChevronDownIcon size={16} className="chevron-flip" />
+        {t("Actions")} <ChevronDownIcon size={16} className="chevron-flip" />
       </button>
       {open && (
         <ul className="actions-menu" role="listbox">
@@ -63,14 +65,14 @@ export function FlightActionsMenu({ onAction, disabledActions }: Props) {
                 key={a.key}
                 className={`${a.danger ? "danger" : ""} ${disabled ? "disabled" : ""}`}
                 aria-disabled={disabled}
-                title={disabled ? "A departed flight can't reopen check-in or boarding" : undefined}
+                title={disabled ? t("A departed flight can't reopen check-in or boarding") : undefined}
                 onClick={() => {
                   if (disabled) return;
                   setOpen(false);
                   onAction(a.key);
                 }}
               >
-                {a.label}
+                {t(a.label)}
               </li>
             );
           })}

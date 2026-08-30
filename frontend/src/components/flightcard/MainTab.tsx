@@ -7,6 +7,7 @@ import { draftFromFlight, EMPTY_SEGMENT, MainDraft, SegmentDraft } from "./mainD
 import { SegmentCard } from "./SegmentCard";
 import { MAX_SEGMENTS } from "../../flightSegments";
 import { alphanumericUpper, digitsOnly } from "../../validation";
+import { useLanguage } from "../../i18n";
 
 interface Props {
   flight: Flight;
@@ -35,6 +36,7 @@ const CHECKS = [
 ];
 
 export function MainTab({ flight, draft, onChange, readOnly }: Props) {
+  const { t } = useLanguage();
   // Route (airport/time) fields are shown as plain text until "Change
   // route" is used — that's the manual-entry path for small airports
   // without a preloaded schedule. "Back to initial route" discards edits.
@@ -90,7 +92,7 @@ export function MainTab({ flight, draft, onChange, readOnly }: Props) {
         ))}
         {editingRoute && draft.segments.length < MAX_SEGMENTS && (
           <button type="button" className="secondary segment-add" onClick={addSegment}>
-            <PlusIcon size={14} /> Add segment
+            <PlusIcon size={14} /> {t("Add segment")}
           </button>
         )}
       </div>
@@ -104,11 +106,11 @@ export function MainTab({ flight, draft, onChange, readOnly }: Props) {
             rows={3}
             maxLength={500}
           />
-          <label>Flight comment</label>
+          <label>{t("Flight comment")}</label>
         </div>
 
         <div className="grid-2" style={{ marginTop: 16 }}>
-          <Field label="Partner flight">
+          <Field label={t("Partner flight")}>
             <input
               value={draft.partnerFlight}
               onChange={(e) => onChange({ partnerFlight: alphanumericUpper(e.target.value, 8) })}
@@ -116,10 +118,10 @@ export function MainTab({ flight, draft, onChange, readOnly }: Props) {
             />
           </Field>
           <Select
-            label="Agreement type"
+            label={t("Agreement type")}
             value={draft.agreement}
             onChange={(v) => onChange({ agreement: v })}
-            options={AGREEMENT_TYPES}
+            options={AGREEMENT_TYPES.map((o) => ({ ...o, label: t(o.label) }))}
           />
         </div>
 
@@ -131,7 +133,7 @@ export function MainTab({ flight, draft, onChange, readOnly }: Props) {
           >
             APIS
           </button>
-          <Field label="Max KZ, kg">
+          <Field label={t("Max KZ, kg")}>
             <input
               value={draft.maxWeight}
               onChange={(e) => onChange({ maxWeight: digitsOnly(e.target.value, 6) })}
@@ -148,7 +150,7 @@ export function MainTab({ flight, draft, onChange, readOnly }: Props) {
                 checked={!!draft.checks[c]}
                 onChange={() => onChange({ checks: { ...draft.checks, [c]: !draft.checks[c] } })}
               />
-              {c}
+              {t(c)}
             </label>
           ))}
         </div>
@@ -156,7 +158,7 @@ export function MainTab({ flight, draft, onChange, readOnly }: Props) {
         {!readOnly && (
           <div className="route-toggle-row">
             <button type="button" className="tertiary" onClick={toggleRoute}>
-              {editingRoute ? "Back to initial route" : "Change route"}
+              {editingRoute ? t("Back to initial route") : t("Change route")}
             </button>
           </div>
         )}
