@@ -69,13 +69,19 @@ export const EMPTY_SEGMENT: SegmentDraft = {
   seatConfig: "",
 };
 
-export function draftFromFlight(flight: Flight): MainDraft {
-  let extra: Record<string, unknown> = {};
+/** Flight.extra is a shared JSON blob — Main tab, Settings tab, etc. each own a handful of its
+ *  keys, so every writer has to parse-merge-stringify rather than replacing it wholesale, or
+ *  saving from one tab would silently wipe out another's fields. */
+export function parseFlightExtra(flight: Flight): Record<string, unknown> {
   try {
-    extra = flight.extra ? JSON.parse(flight.extra) : {};
+    return flight.extra ? JSON.parse(flight.extra) : {};
   } catch {
-    extra = {};
+    return {};
   }
+}
+
+export function draftFromFlight(flight: Flight): MainDraft {
+  const extra = parseFlightExtra(flight);
   return {
     segments: segmentsForFlight(flight).map((s) => ({
       depAirport: s.origin,

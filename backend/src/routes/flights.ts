@@ -153,6 +153,15 @@ flightsRouter.patch("/:id", requireEdit, (req, res) => {
   res.json(updated);
 });
 
+/** Settings tab's danger-zone action — permanently removes the flight and everything under it
+ *  (seats/passengers/seat_events all cascade via their own ON DELETE CASCADE foreign keys). */
+flightsRouter.delete("/:id", requireEdit, (req, res) => {
+  const flight = db.prepare("SELECT * FROM flights WHERE id = ?").get(req.params.id);
+  if (!flight) return res.status(404).json({ error: "Flight not found" });
+  db.prepare("DELETE FROM flights WHERE id = ?").run(req.params.id);
+  res.status(204).end();
+});
+
 flightsRouter.get("/:id/seatmap", (req, res) => {
   const seats = db
     .prepare(

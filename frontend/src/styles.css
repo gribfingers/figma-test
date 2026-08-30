@@ -2004,6 +2004,16 @@ a { color: var(--accent); }
 /* Departed flight's Main tab — visible but not editable (see FlightCard.tsx's isFlightDeparted). */
 .flight-main-grid-readonly { pointer-events: none; opacity: 0.6; }
 .segment-cards { display: flex; flex-direction: column; gap: 12px; align-self: start; }
+
+/* Settings tab: window/overbooking fields (each its own divided section), a save button, then a
+   visually separated danger zone — kept as its own class, not .settings-section, so its border
+   is never fought over by a :last-child-style rule. */
+.settings-tab { display: flex; flex-direction: column; max-width: 640px; }
+.settings-section { padding-bottom: 24px; margin-bottom: 24px; border-bottom: 1px solid var(--panel-border); }
+.settings-hint { color: var(--muted); font-size: 13px; margin: 12px 0 0; }
+.settings-save { align-self: flex-start; margin-bottom: 24px; }
+.danger-zone { border: 1px solid var(--danger-border); border-radius: var(--radius); padding: 16px 18px; }
+.danger-zone .subtitle { margin-bottom: 14px; }
 .segment-card { position: relative; border: 1px solid var(--panel-border); border-radius: 4px; padding: 16px; }
 .segment-remove { display: block; margin-top: 12px; color: var(--danger); }
 .segment-add { align-self: flex-start; }

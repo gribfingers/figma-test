@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Flight } from "../../api";
 import { OPS_STATUS_UNSET } from "../../flightStatuses";
-import { FLIGHT_PHASES, currentPhaseIndex, isFlightDeparted, phaseBasedStatusKey } from "../../flightPhase";
+import { currentPhaseIndex, flightPhases, isFlightDeparted, phaseBasedStatusKey } from "../../flightPhase";
 import { FlightStatusSelect } from "./FlightStatusSelect";
 import { FlightAction, FlightActionsMenu } from "./FlightActionsMenu";
 import { useLanguage } from "../../i18n";
@@ -65,7 +65,7 @@ export function FlightCardHeader({ flight, activeTab, dirty, onSave, onAction, o
       </div>
 
       <div className="flight-status-group">
-        {FLIGHT_PHASES.map((p, i) => {
+        {flightPhases(flight).map((p, i) => {
           const state = i < currentPhase ? "past" : i === currentPhase ? "active" : "";
           return (
             <div key={p.key} className={`flight-status-chip ${state}`}>

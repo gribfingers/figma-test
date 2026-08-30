@@ -15,7 +15,7 @@ import { CountersTab } from "../components/flightcard/CountersTab";
 import { PassengersTab } from "../components/flightcard/PassengersTab";
 import { TransfersTab } from "../components/flightcard/TransfersTab";
 import { SettingsTab } from "../components/flightcard/SettingsTab";
-import { combineDateAndTime, draftFromFlight, draftsEqual, MainDraft } from "../components/flightcard/mainDraft";
+import { combineDateAndTime, draftFromFlight, draftsEqual, MainDraft, parseFlightExtra } from "../components/flightcard/mainDraft";
 import { useLanguage } from "../i18n";
 
 const TABS = [
@@ -83,6 +83,7 @@ export function FlightCard() {
     const std = combineDateAndTime(flight.std, first.depDate, first.depTime);
     const sta = combineDateAndTime(flight.sta ?? flight.std, first.arrDate, first.arrTime);
     const extra = JSON.stringify({
+      ...parseFlightExtra(flight),
       comment: draft.comment,
       partnerFlight: draft.partnerFlight,
       agreement: draft.agreement,
@@ -192,7 +193,15 @@ export function FlightCard() {
           {tab === "counters" && <CountersTab />}
           {tab === "passengers" && <PassengersTab flight={flight} />}
           {tab === "transfers" && <TransfersTab />}
-          {tab === "settings" && <SettingsTab />}
+          {tab === "settings" && (
+            <SettingsTab
+              flight={flight}
+              onFlightUpdated={(updated) => {
+                setFlight(updated);
+                setDraft(draftFromFlight(updated));
+              }}
+            />
+          )}
         </div>
       </div>
 

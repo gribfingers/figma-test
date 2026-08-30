@@ -668,4 +668,27 @@ export const RU: Record<string, string> = {
   "Coffee +": "Кофе +",
   Blanket: "Плед",
   Headphones: "Наушники",
+
+  // ---- SettingsTab.tsx ----
+  "Check-in/boarding window values must be numbers.": "Значения окон регистрации/посадки должны быть числами.",
+  "Each window must open before the next — Check-in opens > Boarding starts > Gate closing starts > Final call.":
+    "Каждое окно должно открываться раньше следующего — Открытие регистрации > Начало посадки > Начало закрытия выхода > Крайний срок.",
+  "Settings saved": "Настройки сохранены",
+  "Permanently delete this flight and every passenger on it? This cannot be undone.":
+    "Безвозвратно удалить этот рейс и всех его пассажиров? Это действие нельзя отменить.",
+  "Check-in / boarding windows": "Окна регистрации/посадки",
+  "Minutes before departure (STD) that each phase begins.": "Минут до вылета (STD), когда начинается каждый этап.",
+  "Check-in opens": "Открытие регистрации",
+  "Boarding starts": "Начало посадки",
+  "Gate closing starts": "Начало закрытия выхода",
+  "Final call": "Крайний срок посадки",
+  Overbooking: "Овербукинг",
+  "Extra seats sellable beyond configured capacity: C {c} · Y {y}": "Дополнительные места сверх настроенной вместимости: C {c} · Y {y}",
+  "Overbooking limit — Business (C)": "Лимит овербукинга — Бизнес (C)",
+  "Overbooking limit — Economy (Y)": "Лимит овербукинга — Эконом (Y)",
+  "Max sellable with overbooking: C {c} · Y {y}": "Максимум к продаже с овербукингом: C {c} · Y {y}",
+  "Danger zone": "Опасная зона",
+  "Permanently deletes the flight, its passengers, and its seat map. This cannot be undone.":
+    "Безвозвратно удаляет рейс, его пассажиров и карту мест. Это действие нельзя отменить.",
+  "Delete flight": "Удалить рейс",
 };

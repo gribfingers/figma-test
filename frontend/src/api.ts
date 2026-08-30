@@ -172,6 +172,7 @@ export const api = {
     request<Flight>("/flights", { method: "POST", body: JSON.stringify(data) }),
   updateFlight: (id: number, data: Partial<Flight>) =>
     request<Flight>(`/flights/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteFlight: (id: number) => request<void>(`/flights/${id}`, { method: "DELETE" }),
   seatmap: (flightId: number) => request<SeatCell[]>(`/flights/${flightId}/seatmap`),
   updateSeat: (flightId: number, seat: string, data: { exit_row?: boolean; extra?: string }) =>
     request<SeatCell>(`/flights/${flightId}/seats/${seat}`, { method: "PATCH", body: JSON.stringify(data) }),
