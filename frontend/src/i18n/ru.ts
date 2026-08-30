@@ -691,4 +691,8 @@ export const RU: Record<string, string> = {
   "Permanently deletes the flight, its passengers, and its seat map. This cannot be undone.":
     "Безвозвратно удаляет рейс, его пассажиров и карту мест. Это действие нельзя отменить.",
   "Delete flight": "Удалить рейс",
+
+  // ---- UserAdmin.tsx (copy generated password) ----
+  "Copy to clipboard": "Скопировать в буфер обмена",
+  "Copied to clipboard": "Скопировано в буфер обмена",
 };

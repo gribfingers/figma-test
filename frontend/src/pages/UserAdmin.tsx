@@ -5,8 +5,10 @@ import { useRegisterTab } from "../tabs";
 import { Field } from "../components/Field";
 import { Select } from "../components/Select";
 import { Modal } from "../components/Modal";
+import { CopyIcon } from "../components/Icon";
 import { useLanguage } from "../i18n";
 import { useConfirmDialog } from "../confirmDialog";
+import { useToast } from "../toast";
 
 type Draft = {
   login: string;
@@ -22,6 +24,7 @@ const EMPTY_DRAFT: Draft = { login: "", first_name: "", last_name: "", role: "us
 export function UserAdmin() {
   const { t } = useLanguage();
   const { confirmDialog, alertDialog } = useConfirmDialog();
+  const { showToast } = useToast();
   useRegisterTab("User administration", true);
   const { user: me } = useAuth();
 
@@ -119,6 +122,16 @@ export function UserAdmin() {
     try {
       const { password } = await api.resetUserPassword(u.id);
       setGeneratedPassword({ login: u.login, password });
+    } catch (e: any) {
+      setError(e.message);
+    }
+  }
+
+  async function copyGeneratedPassword() {
+    if (!generatedPassword) return;
+    try {
+      await navigator.clipboard.writeText(generatedPassword.password);
+      showToast(t("Copied to clipboard"));
     } catch (e: any) {
       setError(e.message);
     }
@@ -332,8 +345,25 @@ export function UserAdmin() {
           footer={<button type="button" className="tertiary" onClick={() => setGeneratedPassword(null)}>{t("Close")}</button>}
         >
           <p>{t("Share this password with the user now — it isn't shown again.")}</p>
-          <div className="mono" style={{ fontSize: 20, fontWeight: 700, padding: "12px 16px", background: "var(--field-bg)", borderRadius: 4, userSelect: "all", marginBottom: 16 }}>
-            {generatedPassword.password}
+          <div
+            className="mono"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              fontSize: 20,
+              fontWeight: 700,
+              padding: "12px 16px",
+              background: "var(--field-bg)",
+              borderRadius: 4,
+              marginBottom: 16,
+            }}
+          >
+            <span style={{ userSelect: "all" }}>{generatedPassword.password}</span>
+            <button type="button" className="icon-button" aria-label={t("Copy to clipboard")} onClick={copyGeneratedPassword}>
+              <CopyIcon size={18} />
+            </button>
           </div>
         </Modal>
       )}

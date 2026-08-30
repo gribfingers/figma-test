@@ -20,6 +20,9 @@ declare global {
   namespace Express {
     interface Request {
       user?: AuthUser;
+      /** The bearer token that authenticated this request — routes that revoke sessions (e.g.
+       *  reset-password) use this to spare the caller's own session when it's their own account. */
+      token?: string;
     }
   }
 }
@@ -48,6 +51,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
   const user = db.prepare("SELECT * FROM users WHERE id = ?").get(session.user_id) as AuthUser | undefined;
   if (!user) return res.status(401).json({ error: "Not authenticated" });
   req.user = user;
+  req.token = token;
   next();
 }
 

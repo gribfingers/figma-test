@@ -71,13 +71,22 @@ usersRouter.patch("/:id", (req, res) => {
   res.json(publicUser(updated));
 });
 
-/** Regenerates the password and revokes existing sessions, so the old password/token stop working immediately. */
+/**
+ * Regenerates the password and revokes existing sessions, so the old password/token stop working
+ * immediately — except the caller's own session when they're resetting their own account. Without
+ * that carve-out, a superadmin resetting their own password immediately logs themselves out (the
+ * global 401 handler bounces them to /login) before they can read the new password off screen.
+ */
 usersRouter.post("/:id/reset-password", (req, res) => {
   const user = db.prepare("SELECT * FROM users WHERE id = ?").get(req.params.id);
   if (!user) return res.status(404).json({ error: "User not found" });
   const password = generatePassword();
   db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(hashPassword(password), req.params.id);
-  db.prepare("DELETE FROM sessions WHERE user_id = ?").run(req.params.id);
+  if (Number(req.params.id) === req.user!.id && req.token) {
+    db.prepare("DELETE FROM sessions WHERE user_id = ? AND token != ?").run(req.params.id, req.token);
+  } else {
+    db.prepare("DELETE FROM sessions WHERE user_id = ?").run(req.params.id);
+  }
   res.json({ password });
 });
 

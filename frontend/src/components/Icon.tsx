@@ -504,6 +504,16 @@ export function TrashIcon({ size = 18, className }: IconProps) {
   );
 }
 
+/** Copy-to-clipboard — the generated-password modal's "copy" button. */
+export function CopyIcon({ size = 18, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <rect x="9" y="9" width="11" height="11" rx="1.5" />
+      <path d="M15 9V6.5A1.5 1.5 0 0 0 13.5 5H6.5A1.5 1.5 0 0 0 5 6.5v7A1.5 1.5 0 0 0 6.5 15H9" />
+    </svg>
+  );
+}
+
 /* ---- Small colored tab badges — TopTabs shows one per tab, per its section
    (flights/check-in/boarding), when the user has them enabled (see
    tabIcons.tsx). Fixed brand colors rather than currentColor, since these
