@@ -18,10 +18,10 @@ export const EXTRA_SERVICE_GROUPS: ExtraServiceGroup[] = [
   {
     group: "Other",
     options: [
-      { id: "pec", code: "PEC", label: "Дом животное в салоне рес" },
-      { id: "ofk", code: "OFK", label: "Детский набор" },
-      { id: "pzr-other", code: "PZR", label: "Поздравление со свадьбой" },
-      { id: "pn8-other", code: "PN8", label: "Кофе со сливками" },
+      { id: "pec", code: "PEC", label: "Pet in cabin" },
+      { id: "ofk", code: "OFK", label: "Kids kit" },
+      { id: "pzr-other", code: "PZR", label: "Wedding congratulations" },
+      { id: "pn8-other", code: "PN8", label: "Coffee with cream" },
     ],
   },
 ];

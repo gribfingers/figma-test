@@ -343,7 +343,7 @@ export function PassengersTab({ flight }: Props) {
     if (quickFilter === "reseat" && !extra.wl) return false;
     if (quickFilter === "priority" && !extra.pl) return false;
     if (serviceFilter.length > 0 && !(p.ssr ?? []).some((code) => serviceFilter.includes(code))) return false;
-    if (asvcQuery && !asvcForPassenger(p).some((leg) => leg.services.some((s) => s.name.toLowerCase().includes(asvcQuery)))) return false;
+    if (asvcQuery && !asvcForPassenger(p).some((leg) => leg.services.some((s) => t(s.name).toLowerCase().includes(asvcQuery)))) return false;
     return true;
   });
 

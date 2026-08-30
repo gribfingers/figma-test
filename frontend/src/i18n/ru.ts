@@ -653,4 +653,18 @@ export const RU: Record<string, string> = {
   Icons: "Иконки",
   "Hide seat map": "Скрыть карту мест",
   Child: "Ребёнок",
+
+  // ---- extraServiceTypes.ts ----
+  "Pet in cabin": "Домашнее животное в салоне",
+  "Kids kit": "Детский набор",
+  "Wedding congratulations": "Поздравление со свадьбой",
+  "Coffee with cream": "Кофе со сливками",
+
+  // ---- paxExtra.ts (ASVC_SERVICE_POOL) ----
+  "Wi-Fi access": "Доступ в интернет",
+  Bagels: "Бублики",
+  Coffee: "Кофе",
+  "Coffee +": "Кофе +",
+  Blanket: "Плед",
+  Headphones: "Наушники",
 };

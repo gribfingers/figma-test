@@ -160,7 +160,7 @@ export interface AsvcLeg {
 }
 
 const ASVC_LEGS = ["MOW-AER", "AER-PEE", "PEE-LED"];
-const ASVC_SERVICE_POOL = ["Доступ в интернет", "Бублики", "Кофе", "Кофе +", "Плед", "Наушники"];
+const ASVC_SERVICE_POOL = ["Wi-Fi access", "Bagels", "Coffee", "Coffee +", "Blanket", "Headphones"];
 
 /**
  * Ancillary purchases per leg have no backing table yet — generated

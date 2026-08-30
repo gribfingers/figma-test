@@ -37,10 +37,10 @@ function defaultRow(segments: FlightSegment[]): RowState {
 
 const ALL_OPTIONS = EXTRA_SERVICE_GROUPS.flatMap((g) => g.options);
 
-function confirmedItems(rows: Record<string, RowState>): SeatServiceItem[] {
+function confirmedItems(rows: Record<string, RowState>, t: (text: string) => string): SeatServiceItem[] {
   return ALL_OPTIONS.filter((o) => rows[o.id]?.confirmed).map((o) => ({
     rfisc: o.code,
-    label: o.label,
+    label: t(o.label),
     price: rows[o.id].confirmed!.price,
     paid: rows[o.id].confirmed!.paid,
   }));
@@ -66,7 +66,7 @@ export function ExtraServicesStep({ flight, passenger, segments, onConfirmedChan
     setRows((prev) => {
       const next = { ...prev };
       delete next[id];
-      onConfirmedChange(confirmedItems(next));
+      onConfirmedChange(confirmedItems(next, t));
       return next;
     });
   }
@@ -80,7 +80,7 @@ export function ExtraServicesStep({ flight, passenger, segments, onConfirmedChan
     const paid = hashSeed(`${passenger.id}-${id}-${row.qty}-${[...row.segments].join(",")}`) % 3 !== 0;
     setRows((prev) => {
       const next = { ...prev, [id]: { ...prev[id], confirmed: { price, paid } } };
-      onConfirmedChange(confirmedItems(next));
+      onConfirmedChange(confirmedItems(next, t));
       return next;
     });
   }
@@ -98,7 +98,7 @@ export function ExtraServicesStep({ flight, passenger, segments, onConfirmedChan
                 <div key={o.id} className="extra-service-row">
                   <label className="extra-service-checkbox">
                     <input type="checkbox" checked={checked} onChange={(e) => toggle(o.id, e.target.checked)} />
-                    <span className="mono">{o.code}</span> {o.label}
+                    <span className="mono">{o.code}</span> {t(o.label)}
                   </label>
                   {row && (
                     <div className="extra-service-row-controls">
@@ -133,7 +133,7 @@ export function ExtraServicesStep({ flight, passenger, segments, onConfirmedChan
                         <button
                           type="button"
                           className={`extra-service-item-price ${row.confirmed.paid ? "paid" : "unpaid"}`}
-                          onClick={() => setEmdItem({ rfisc: o.code, label: o.label, price: row.confirmed!.price, paid: row.confirmed!.paid })}
+                          onClick={() => setEmdItem({ rfisc: o.code, label: t(o.label), price: row.confirmed!.price, paid: row.confirmed!.paid })}
                         >
                           {row.confirmed.price.toLocaleString("ru-RU")} ₽
                         </button>
