@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useLanguage } from "../i18n";
 
 /**
  * Landing spot for closing the very last tab (see EMPTY_PATH in tabs.tsx) —
@@ -7,12 +8,13 @@ import { Link } from "react-router-dom";
  * fully blank instead of silently reopening Flights.
  */
 export function EmptyState() {
+  const { t } = useLanguage();
   return (
     <div className="empty-state">
-      <div className="empty-state-title">No tabs open</div>
-      <div className="empty-state-subtitle">Pick something from the sidebar to get back to work.</div>
+      <div className="empty-state-title">{t("No tabs open")}</div>
+      <div className="empty-state-subtitle">{t("Pick something from the sidebar to get back to work.")}</div>
       <Link to="/" className="empty-state-cta">
-        <button type="button" className="secondary">Open flight schedule</button>
+        <button type="button" className="secondary">{t("Open flight schedule")}</button>
       </Link>
     </div>
   );

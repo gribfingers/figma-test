@@ -5,6 +5,7 @@ import { useRegisterTab } from "../tabs";
 import { Field } from "../components/Field";
 import { Select } from "../components/Select";
 import { Modal } from "../components/Modal";
+import { useLanguage } from "../i18n";
 
 type Draft = {
   login: string;
@@ -18,6 +19,7 @@ type Draft = {
 const EMPTY_DRAFT: Draft = { login: "", first_name: "", last_name: "", role: "user", can_edit: false, company: "" };
 
 export function UserAdmin() {
+  const { t } = useLanguage();
   useRegisterTab("User administration", true);
   const { user: me } = useAuth();
 
@@ -43,8 +45,8 @@ export function UserAdmin() {
   if (me?.role !== "superadmin") {
     return (
       <div>
-        <h1>User administration</h1>
-        <p className="subtitle">Superadmin only.</p>
+        <h1>{t("User administration")}</h1>
+        <p className="subtitle">{t("Superadmin only.")}</p>
       </div>
     );
   }
@@ -58,7 +60,7 @@ export function UserAdmin() {
   async function submitAdd(e: FormEvent) {
     e.preventDefault();
     if (!addDraft.login.trim() || !addDraft.first_name.trim() || !addDraft.last_name.trim()) {
-      setError("Login, first name and last name are required.");
+      setError(t("Login, first name and last name are required."));
       return;
     }
     setAdding(true);
@@ -110,7 +112,7 @@ export function UserAdmin() {
   }
 
   async function resetPassword(u: User) {
-    if (!window.confirm(`Generate a new password for ${u.login}? Their current password stops working immediately.`)) return;
+    if (!window.confirm(t("Generate a new password for {login}? Their current password stops working immediately.").replace("{login}", u.login))) return;
     setError("");
     try {
       const { password } = await api.resetUserPassword(u.id);
@@ -121,7 +123,7 @@ export function UserAdmin() {
   }
 
   async function deleteUser(u: User) {
-    if (!window.confirm(`Delete user ${u.login}?`)) return;
+    if (!window.confirm(t("Delete user {login}?").replace("{login}", u.login))) return;
     setError("");
     try {
       await api.deleteUser(u.id);
@@ -134,7 +136,9 @@ export function UserAdmin() {
   async function regenerateTodaySchedule() {
     if (
       !window.confirm(
-        "Rebuild today's auto-generated demo flights from scratch? This deletes and recreates them with the current generator logic, so any open tabs pointing at today's flights/passengers will go stale."
+        t(
+          "Rebuild today's auto-generated demo flights from scratch? This deletes and recreates them with the current generator logic, so any open tabs pointing at today's flights/passengers will go stale."
+        )
       )
     )
       return;
@@ -142,7 +146,11 @@ export function UserAdmin() {
     setError("");
     try {
       const result = await api.regenerateTodaySchedule();
-      window.alert(`Regenerated ${result.flights} flights / ${result.passengers} passengers for today.`);
+      window.alert(
+        t("Regenerated {flights} flights / {passengers} passengers for today.")
+          .replace("{flights}", String(result.flights))
+          .replace("{passengers}", String(result.passengers))
+      );
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -152,8 +160,8 @@ export function UserAdmin() {
 
   return (
     <div>
-      <h1>User administration</h1>
-      <p className="subtitle">Create accounts, assign edit rights, and manage passwords.</p>
+      <h1>{t("User administration")}</h1>
+      <p className="subtitle">{t("Create accounts, assign edit rights, and manage passwords.")}</p>
 
       {error && <div className="error-box">{error}</div>}
 
@@ -161,9 +169,9 @@ export function UserAdmin() {
         <div className="toolbar">
           <div className="spacer" />
           <button type="button" className="secondary" disabled={regenerating} onClick={regenerateTodaySchedule}>
-            {regenerating ? "Regenerating…" : "Regenerate today's schedule"}
+            {regenerating ? t("Regenerating…") : t("Regenerate today's schedule")}
           </button>
-          <button type="button" className="secondary" onClick={openAdd}>Add user</button>
+          <button type="button" className="secondary" onClick={openAdd}>{t("Add user")}</button>
         </div>
       </div>
 
@@ -172,12 +180,12 @@ export function UserAdmin() {
           <table>
             <thead>
               <tr>
-                <th>Login</th>
-                <th>Name</th>
-                <th>Company</th>
-                <th>Role</th>
-                <th>Can edit</th>
-                <th>Created</th>
+                <th>{t("Login")}</th>
+                <th>{t("Name")}</th>
+                <th>{t("Company")}</th>
+                <th>{t("Role")}</th>
+                <th>{t("Can edit")}</th>
+                <th>{t("Created")}</th>
                 <th></th>
               </tr>
             </thead>
@@ -187,20 +195,20 @@ export function UserAdmin() {
                   <td className="mono">{u.login}</td>
                   <td>{u.first_name} {u.last_name}</td>
                   <td>{u.company}</td>
-                  <td>{u.role === "superadmin" ? "Superadmin" : "User"}</td>
+                  <td>{u.role === "superadmin" ? t("Superadmin") : t("User")}</td>
                   <td style={{ textAlign: "center" }}>{u.role === "superadmin" || u.can_edit ? "✓" : ""}</td>
                   <td className="mono">{u.created_at.slice(0, 10)}</td>
                   <td>
                     <div style={{ display: "flex", gap: 8 }}>
-                      <button type="button" className="secondary small" onClick={() => startEdit(u)}>Edit</button>
-                      <button type="button" className="secondary small" onClick={() => resetPassword(u)}>Reset password</button>
+                      <button type="button" className="secondary small" onClick={() => startEdit(u)}>{t("Edit")}</button>
+                      <button type="button" className="secondary small" onClick={() => resetPassword(u)}>{t("Reset password")}</button>
                       <button
                         type="button"
                         className="danger small"
                         disabled={u.id === me.id}
                         onClick={() => deleteUser(u)}
                       >
-                        Delete
+                        {t("Delete")}
                       </button>
                     </div>
                   </td>
@@ -208,7 +216,7 @@ export function UserAdmin() {
               ))}
               {users.length === 0 && (
                 <tr>
-                  <td colSpan={7} style={{ color: "var(--muted)" }}>No users found.</td>
+                  <td colSpan={7} style={{ color: "var(--muted)" }}>{t("No users found.")}</td>
                 </tr>
               )}
             </tbody>
@@ -218,38 +226,38 @@ export function UserAdmin() {
 
       {addOpen && (
         <Modal
-          title="Add user"
+          title={t("Add user")}
           onClose={() => setAddOpen(false)}
           width={480}
           footer={
             <>
-              <button type="button" className="tertiary" onClick={() => setAddOpen(false)}>Close</button>
-              <button type="submit" form="add-user-form" className="tertiary" disabled={adding}>Add</button>
+              <button type="button" className="tertiary" onClick={() => setAddOpen(false)}>{t("Close")}</button>
+              <button type="submit" form="add-user-form" className="tertiary" disabled={adding}>{t("Add")}</button>
             </>
           }
         >
           <form id="add-user-form" onSubmit={submitAdd} style={{ display: "flex", flexDirection: "column", gap: 12, paddingBottom: 16 }}>
             <div style={{ display: "flex", gap: 12 }}>
-              <Field label="First name" style={{ flex: 1 }}>
+              <Field label={t("First name")} style={{ flex: 1 }}>
                 <input value={addDraft.first_name} onChange={(e) => setAddDraft({ ...addDraft, first_name: e.target.value })} placeholder=" " />
               </Field>
-              <Field label="Last name" style={{ flex: 1 }}>
+              <Field label={t("Last name")} style={{ flex: 1 }}>
                 <input value={addDraft.last_name} onChange={(e) => setAddDraft({ ...addDraft, last_name: e.target.value })} placeholder=" " />
               </Field>
             </div>
-            <Field label="Login">
+            <Field label={t("Login")}>
               <input value={addDraft.login} onChange={(e) => setAddDraft({ ...addDraft, login: e.target.value.trim() })} placeholder=" " />
             </Field>
-            <Field label="Company">
+            <Field label={t("Company")}>
               <input value={addDraft.company} onChange={(e) => setAddDraft({ ...addDraft, company: e.target.value })} placeholder=" " />
             </Field>
             <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
               <Select
-                label="Role"
+                label={t("Role")}
                 style={{ width: 160 }}
                 value={addDraft.role}
                 onChange={(v) => setAddDraft({ ...addDraft, role: v as Draft["role"] })}
-                options={[{ value: "user", label: "User" }, { value: "superadmin", label: "Superadmin" }]}
+                options={[{ value: "user", label: t("User") }, { value: "superadmin", label: t("Superadmin") }]}
               />
               {addDraft.role === "user" && (
                 <label className="checkbox-row" style={{ marginBottom: 16 }}>
@@ -258,47 +266,47 @@ export function UserAdmin() {
                     checked={addDraft.can_edit}
                     onChange={(e) => setAddDraft({ ...addDraft, can_edit: e.target.checked })}
                   />
-                  Can edit
+                  {t("Can edit")}
                 </label>
               )}
             </div>
-            <p className="subtitle" style={{ margin: 0 }}>A password will be generated automatically and shown once after creation.</p>
+            <p className="subtitle" style={{ margin: 0 }}>{t("A password will be generated automatically and shown once after creation.")}</p>
           </form>
         </Modal>
       )}
 
       {editing && (
         <Modal
-          title={`Edit user: ${editing.login}`}
+          title={t("Edit user: {login}").replace("{login}", editing.login)}
           onClose={() => setEditing(null)}
           width={480}
           footer={
             <>
-              <button type="button" className="tertiary" onClick={() => setEditing(null)}>Close</button>
-              <button type="button" className="tertiary" disabled={savingEdit} onClick={saveEdit}>Save</button>
+              <button type="button" className="tertiary" onClick={() => setEditing(null)}>{t("Close")}</button>
+              <button type="button" className="tertiary" disabled={savingEdit} onClick={saveEdit}>{t("Save")}</button>
             </>
           }
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 12, paddingBottom: 16 }}>
             <div style={{ display: "flex", gap: 12 }}>
-              <Field label="First name" style={{ flex: 1 }}>
+              <Field label={t("First name")} style={{ flex: 1 }}>
                 <input value={editDraft.first_name} onChange={(e) => setEditDraft({ ...editDraft, first_name: e.target.value })} placeholder=" " />
               </Field>
-              <Field label="Last name" style={{ flex: 1 }}>
+              <Field label={t("Last name")} style={{ flex: 1 }}>
                 <input value={editDraft.last_name} onChange={(e) => setEditDraft({ ...editDraft, last_name: e.target.value })} placeholder=" " />
               </Field>
             </div>
-            <Field label="Company">
+            <Field label={t("Company")}>
               <input value={editDraft.company} onChange={(e) => setEditDraft({ ...editDraft, company: e.target.value })} placeholder=" " />
             </Field>
             <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
               <Select
-                label="Role"
+                label={t("Role")}
                 style={{ width: 160 }}
                 value={editDraft.role}
                 onChange={(v) => setEditDraft({ ...editDraft, role: v as Draft["role"] })}
                 disabled={editing.id === me.id}
-                options={[{ value: "user", label: "User" }, { value: "superadmin", label: "Superadmin" }]}
+                options={[{ value: "user", label: t("User") }, { value: "superadmin", label: t("Superadmin") }]}
               />
               {editDraft.role === "user" && (
                 <label className="checkbox-row" style={{ marginBottom: 16 }}>
@@ -307,7 +315,7 @@ export function UserAdmin() {
                     checked={editDraft.can_edit}
                     onChange={(e) => setEditDraft({ ...editDraft, can_edit: e.target.checked })}
                   />
-                  Can edit
+                  {t("Can edit")}
                 </label>
               )}
             </div>
@@ -317,12 +325,12 @@ export function UserAdmin() {
 
       {generatedPassword && (
         <Modal
-          title={`Password for ${generatedPassword.login}`}
+          title={t("Password for {login}").replace("{login}", generatedPassword.login)}
           onClose={() => setGeneratedPassword(null)}
           width={420}
-          footer={<button type="button" className="tertiary" onClick={() => setGeneratedPassword(null)}>Close</button>}
+          footer={<button type="button" className="tertiary" onClick={() => setGeneratedPassword(null)}>{t("Close")}</button>}
         >
-          <p>Share this password with the user now — it isn't shown again.</p>
+          <p>{t("Share this password with the user now — it isn't shown again.")}</p>
           <div className="mono" style={{ fontSize: 20, fontWeight: 700, padding: "12px 16px", background: "var(--field-bg)", borderRadius: 4, userSelect: "all", marginBottom: 16 }}>
             {generatedPassword.password}
           </div>

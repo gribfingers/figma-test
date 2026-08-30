@@ -528,4 +528,37 @@ export const RU: Record<string, string> = {
   "Remain time for boarding": "Осталось времени до посадки",
   "Pax to board": "Пассажиров к посадке",
   Unboard: "Отменить посадку",
+
+  // ---- EmptyState.tsx ----
+  "No tabs open": "Нет открытых вкладок",
+  "Pick something from the sidebar to get back to work.": "Выберите что-нибудь в боковой панели, чтобы продолжить работу.",
+  "Open flight schedule": "Открыть расписание рейсов",
+
+  // ---- UserAdmin.tsx ----
+  "Superadmin only.": "Только для суперадминистратора.",
+  "Login, first name and last name are required.": "Логин, имя и фамилия обязательны.",
+  "Generate a new password for {login}? Their current password stops working immediately.":
+    "Сгенерировать новый пароль для {login}? Текущий пароль перестанет работать немедленно.",
+  "Delete user {login}?": "Удалить пользователя {login}?",
+  "Rebuild today's auto-generated demo flights from scratch? This deletes and recreates them with the current generator logic, so any open tabs pointing at today's flights/passengers will go stale.":
+    "Пересобрать сегодняшние автосгенерированные демо-рейсы с нуля? Это удалит и заново создаст их по текущей логике генератора, поэтому открытые вкладки с сегодняшними рейсами/пассажирами устареют.",
+  "Regenerated {flights} flights / {passengers} passengers for today.": "Пересоздано {flights} рейсов / {passengers} пассажиров на сегодня.",
+  "Create accounts, assign edit rights, and manage passwords.": "Создавайте учётные записи, назначайте права редактирования и управляйте паролями.",
+  "Regenerating…": "Пересоздание…",
+  "Regenerate today's schedule": "Пересоздать сегодняшнее расписание",
+  "Add user": "Добавить пользователя",
+  Company: "Компания",
+  Role: "Роль",
+  "Can edit": "Может редактировать",
+  Created: "Создан",
+  Superadmin: "Суперадминистратор",
+  User: "Пользователь",
+  "Reset password": "Сбросить пароль",
+  "No users found.": "Пользователи не найдены.",
+  "First name": "Имя",
+  "Last name": "Фамилия",
+  "A password will be generated automatically and shown once after creation.": "Пароль будет сгенерирован автоматически и показан один раз после создания.",
+  "Edit user: {login}": "Редактирование пользователя: {login}",
+  "Password for {login}": "Пароль для {login}",
+  "Share this password with the user now — it isn't shown again.": "Сообщите этот пароль пользователю сейчас — повторно он не покажется.",
 };
