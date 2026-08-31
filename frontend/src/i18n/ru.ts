@@ -70,6 +70,7 @@ export const RU: Record<string, string> = {
   "Scroll tabs left": "Прокрутить вкладки влево",
   "Scroll tabs right": "Прокрутить вкладки вправо",
   "Close all tabs": "Закрыть все вкладки",
+  "Reopen closed tab": "Восстановить закрытую вкладку",
   Messages: "Сообщения",
   Account: "Аккаунт",
   "Exit check-in": "Выйти из регистрации",

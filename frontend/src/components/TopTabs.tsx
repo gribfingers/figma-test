@@ -11,7 +11,7 @@ import { userAvatarColor, userInitials } from "../userDisplay";
 import { tabKindForPath, TabKind } from "../tabKind";
 import { useTabIcons } from "../tabIcons";
 import { useLanguage } from "../i18n";
-import { ChatIcon, ChevronLeftIcon, ChevronRightIcon, CloseIcon, TabBoardingIcon, TabCheckinIcon, TabFlightsIcon } from "./Icon";
+import { ChatIcon, ChevronLeftIcon, ChevronRightIcon, CloseIcon, RestoreTabIcon, TabBoardingIcon, TabCheckinIcon, TabFlightsIcon } from "./Icon";
 import { UserPanel } from "./UserPanel";
 import { Messenger } from "./Messenger";
 import { Modal } from "./Modal";
@@ -24,6 +24,10 @@ const TAB_KIND_ICON: Record<Exclude<TabKind, null>, (size: number) => JSX.Elemen
 
 // How far one click of a scroll arrow moves the tab strip.
 const TAB_SCROLL_STEP = 240;
+
+// Reopen-closed-tab's shortcut label matches whichever modifier the browser actually reports for
+// this platform (⌘ on Mac, Ctrl elsewhere) — checked once, since it can't change mid-session.
+const modKeyLabel = /Mac|iPhone|iPod|iPad/.test(navigator.platform) ? "⌘" : "Ctrl";
 
 // Moscow time, shown as a fixed reference point regardless of the viewer's
 // own browser timezone — flight times throughout the app are UTC wall-clock
@@ -48,7 +52,7 @@ function MoscowClock() {
 }
 
 export function TopTabs() {
-  const { tabs, activePath, closeTab, closeAllTabs } = useTabs();
+  const { tabs, activePath, closeTab, closeAllTabs, hasClosedTabs, reopenLastClosedTab } = useTabs();
   const { user } = useAuth();
   const { flowStepFor, setFlowStep } = useCheckinFlow();
   const { showToast } = useToast();
@@ -136,6 +140,19 @@ export function TopTabs() {
     return () => clearInterval(t);
   }, [user]);
 
+  // Safari's own "reopen last closed tab" shortcut, scoped to this app's tab strip — accidentally
+  // closing a tab you still needed shouldn't mean digging for it again through search/navigation.
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "t") {
+        e.preventDefault();
+        reopenLastClosedTab();
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [reopenLastClosedTab]);
+
   return (
     <div className="tabs-bar">
       {overflowing && (
@@ -200,6 +217,16 @@ export function TopTabs() {
       )}
       <div className="tabs-fill" />
       <div className="tabs-actions">
+        {hasClosedTabs && (
+          <button
+            type="button"
+            className="tabs-icon-btn"
+            title={`${t("Reopen closed tab")} (${modKeyLabel}+Shift+T)`}
+            onClick={() => reopenLastClosedTab()}
+          >
+            <RestoreTabIcon size={18} />
+          </button>
+        )}
         <MoscowClock />
         {user && (
           <button

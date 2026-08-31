@@ -514,6 +514,17 @@ export function CopyIcon({ size = 18, className }: IconProps) {
   );
 }
 
+/** Reopen-last-closed-tab (TopTabs) — a history arrow wrapped around a clock hand. */
+export function RestoreTabIcon({ size = 18, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M3 12a9 9 0 1 0 2.64-6.36" />
+      <path d="M3 4v4.5h4.5" />
+      <path d="M12 8v4.3l3 2" />
+    </svg>
+  );
+}
+
 /* ---- Small colored tab badges — TopTabs shows one per tab, per its section
    (flights/check-in/boarding), when the user has them enabled (see
    tabIcons.tsx). Fixed brand colors rather than currentColor, since these
