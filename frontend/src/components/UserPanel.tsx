@@ -4,6 +4,7 @@ import { useAuth } from "../auth";
 import { useTheme } from "../theme";
 import { useFontSize } from "../fontSize";
 import { useTabIcons } from "../tabIcons";
+import { useDesktopNotifications } from "../desktopNotifications";
 import { useLanguage } from "../i18n";
 import { resizeImageToDataUrl, userAvatarColor, userInitials } from "../userDisplay";
 import { Field } from "./Field";
@@ -37,6 +38,7 @@ export function UserPanel({ open, onClose }: Props) {
   const { theme, setTheme, contrast, setContrast } = useTheme();
   const { fontSize, increase, decrease } = useFontSize();
   const { enabled: tabIconsEnabled, setEnabled: setTabIconsEnabled } = useTabIcons();
+  const { enabled: desktopNotificationsEnabled, supported: desktopNotificationsSupported, setEnabled: setDesktopNotificationsEnabled } = useDesktopNotifications();
   const { language, setLanguage, t } = useLanguage();
   const [settingsOpen, setSettingsOpen] = useState(true);
   const [securityOpen, setSecurityOpen] = useState(false);
@@ -165,6 +167,18 @@ export function UserPanel({ open, onClose }: Props) {
                   />
                 </label>
               </div>
+              {desktopNotificationsSupported && (
+                <div className="user-panel-theme-row">
+                  <span>{t("Desktop notifications for new messages")}</span>
+                  <label className="checkbox-row">
+                    <input
+                      type="checkbox"
+                      checked={desktopNotificationsEnabled}
+                      onChange={(e) => setDesktopNotificationsEnabled(e.target.checked)}
+                    />
+                  </label>
+                </div>
+              )}
               <Select
                 label={t("Timezone")}
                 value={timezone}

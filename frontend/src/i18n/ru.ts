@@ -41,6 +41,11 @@ export const RU: Record<string, string> = {
   "Decrease font size": "Уменьшить шрифт",
   "Increase font size": "Увеличить шрифт",
   "Tab section icons": "Иконки разделов во вкладках",
+  "Desktop notifications for new messages": "Уведомления на рабочем столе о новых сообщениях",
+  "You have a new message": "У вас новое сообщение",
+  "Notifications are blocked for this site in your browser settings.": "Уведомления для этого сайта заблокированы в настройках браузера.",
+  "Notifications weren't allowed — you can turn this on again once you allow them.":
+    "Уведомления не разрешены — включите их заново, когда разрешите в браузере.",
   Timezone: "Часовой пояс",
   Security: "Безопасность",
   "Password changed.": "Пароль изменён.",

@@ -10,6 +10,7 @@ import { usePanelTransition } from "../usePanelMounted";
 import { userAvatarColor, userInitials } from "../userDisplay";
 import { tabKindForPath, TabKind } from "../tabKind";
 import { useTabIcons } from "../tabIcons";
+import { useDesktopNotifications } from "../desktopNotifications";
 import { useLanguage } from "../i18n";
 import { ChatIcon, ChevronLeftIcon, ChevronRightIcon, CloseIcon, RestoreTabIcon, TabBoardingIcon, TabCheckinIcon, TabFlightsIcon } from "./Icon";
 import { UserPanel } from "./UserPanel";
@@ -58,9 +59,19 @@ export function TopTabs() {
   const { showToast } = useToast();
   const { confirmDialog } = useConfirmDialog();
   const { enabled: tabIconsEnabled } = useTabIcons();
+  const { enabled: desktopNotificationsEnabled } = useDesktopNotifications();
   const { t } = useLanguage();
   const [panelOpen, setPanelOpen] = useState(false);
   const [messengerOpen, setMessengerOpen] = useState(false);
+  // Read inside the polling effect below without needing messengerOpen itself in that effect's
+  // deps (which would otherwise tear down and restart the 15s interval on every panel open/close).
+  const messengerOpenRef = useRef(messengerOpen);
+  useEffect(() => {
+    messengerOpenRef.current = messengerOpen;
+  }, [messengerOpen]);
+  // Set once a poll has actually reported a count, so the very first poll of the session (which
+  // may already show pre-existing unread messages) never itself reads as "new" and fires a notification.
+  const previousUnreadRef = useRef<number | null>(null);
   const panelTransition = usePanelTransition(panelOpen);
   const messengerTransition = usePanelTransition(messengerOpen);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -130,15 +141,41 @@ export function TopTabs() {
 
   useEffect(() => {
     if (!user) return;
+    previousUnreadRef.current = null;
     function poll() {
-      api.unreadMessageCount().then((r) => setUnreadCount(r.count)).catch(() => {});
+      api
+        .unreadMessageCount()
+        .then((r) => {
+          const previous = previousUnreadRef.current;
+          setUnreadCount(r.count);
+          // "Not looking at it" covers both this tab being backgrounded/minimized (document.hidden)
+          // and the browser window itself just not being the focused one (document.hasFocus() —
+          // hidden alone misses e.g. alt-tabbing to another app while this window stays visible
+          // behind it). Skip while the messenger panel is already open — that IS looking at it.
+          if (
+            previous !== null &&
+            r.count > previous &&
+            desktopNotificationsEnabled &&
+            !messengerOpenRef.current &&
+            (document.hidden || !document.hasFocus())
+          ) {
+            const notification = new Notification(t("Airport DCS"), { body: t("You have a new message"), tag: "dcs-new-message" });
+            notification.onclick = () => {
+              window.focus();
+              setMessengerOpen(true);
+              notification.close();
+            };
+          }
+          previousUnreadRef.current = r.count;
+        })
+        .catch(() => {});
     }
     poll();
     // Messenger.tsx polls its own open thread/contacts much faster while it's open;
     // this slower interval just keeps the badge fresh while the panel is closed.
-    const t = setInterval(poll, 15000);
-    return () => clearInterval(t);
-  }, [user]);
+    const interval = setInterval(poll, 15000);
+    return () => clearInterval(interval);
+  }, [user, desktopNotificationsEnabled, t]);
 
   // Safari's own "reopen last closed tab" shortcut, scoped to this app's tab strip — accidentally
   // closing a tab you still needed shouldn't mean digging for it again through search/navigation.
