@@ -1,9 +1,12 @@
-import { Fragment } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { SeatCell } from "../api";
 import { CabinFeature, CabinFeatureType } from "../cabinLayout";
 import { GalleyIcon, SeatChildIcon } from "./Icon";
-import { EXIT_ROW_ATTR, occupantAge, parseSeatExtra, primaryAttr, seatState, seatSubtype } from "../seatExtra";
+import { EXIT_ROW_ATTR, allAttrs, occupantAge, parseSeatExtra, seatState, seatSubtype } from "../seatExtra";
 import { useLanguage } from "../i18n";
+
+/** How long each icon shows before the hover carousel advances to the next one. */
+const MULTI_FLAG_CAROUSEL_INTERVAL_MS = 900;
 
 interface Props {
   seats: SeatCell[];
@@ -99,6 +102,17 @@ export function SeatMapGrid({
   undesirableSeats,
 }: Props) {
   const { t } = useLanguage();
+  // A seat with more than one attribute flag gets a small badge (seat-multi-badge) instead of/alongside
+  // its single primary icon; hovering it cycles all its icons one at a time in a small floating carousel.
+  const [multiHoverSeat, setMultiHoverSeat] = useState<string | null>(null);
+  const [carouselIndex, setCarouselIndex] = useState(0);
+  useEffect(() => {
+    if (!multiHoverSeat) return;
+    setCarouselIndex(0);
+    const id = setInterval(() => setCarouselIndex((i) => i + 1), MULTI_FLAG_CAROUSEL_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, [multiHoverSeat]);
+
   const rows = new Map<number, SeatCell[]>();
   for (const s of seats) {
     const row = Number(s.seat.slice(0, 3));
@@ -156,7 +170,13 @@ export function SeatMapGrid({
                 const subtype = seatSubtype(extra); // none | presit | booked
                 const age = occupantAge(s);
                 const isChild = age != null && age >= 2 && age <= 12; // CHILD = 2 to 12 years old
-                const attr = isChild ? null : primaryAttr(extra) ?? (s.exit_row ? EXIT_ROW_ATTR : null);
+                const realAttrs = isChild ? [] : allAttrs(extra);
+                const attrs = realAttrs.length > 0 ? realAttrs : s.exit_row ? [EXIT_ROW_ATTR] : [];
+                const attr = attrs[0] ?? null;
+                // Up to 3 flags per the seat-map legend — a 4th+ would just never be reachable in practice,
+                // but cap it anyway so the carousel can't grow unbounded.
+                const carouselAttrs = attrs.slice(0, 3);
+                const hasMultiFlags = carouselAttrs.length > 1;
                 const ineligible = ineligibleSeats?.has(s.seat) ?? false;
                 const undesirable = !ineligible && (undesirableSeats?.has(s.seat) ?? false);
                 // Ineligible seats always read as plain free ones, whatever their real occupancy —
@@ -175,7 +195,12 @@ export function SeatMapGrid({
                 const Icon = isChild ? SeatChildIcon : attr?.icon;
                 const holdLabel = effectiveSubtype === "presit" ? t("Pre-seated") : effectiveSubtype === "booked" ? t("Reserved") : "";
                 const priceLabel = extra.price != null ? `${extra.price}` : "";
-                const titleBits = [isChild ? t("Child") : attr && t(attr.label), holdLabel, extra.rfisc, priceLabel].filter(Boolean).join(", ");
+                const attrLabel = isChild
+                  ? t("Child")
+                  : hasMultiFlags
+                  ? carouselAttrs.map((a) => t(a.label)).join(" / ")
+                  : attr && t(attr.label);
+                const titleBits = [attrLabel, holdLabel, extra.rfisc, priceLabel].filter(Boolean).join(", ");
                 const priceStr = extra.price != null ? String(extra.price) : "";
                 const priceTwoLine = priceStr.length > 3;
                 return (
@@ -205,8 +230,23 @@ export function SeatMapGrid({
                           onSeatContextMenu(s, e.clientX, e.clientY);
                         }
                       }}
+                      onMouseEnter={() => {
+                        if (hasMultiFlags) setMultiHoverSeat(s.seat);
+                      }}
+                      onMouseLeave={() => {
+                        if (hasMultiFlags) setMultiHoverSeat((cur) => (cur === s.seat ? null : cur));
+                      }}
                     >
                       {effectiveSubtype !== "none" && <span className={`seat-subtype-bar seat-subtype-${effectiveSubtype}`} />}
+                      {showIcons && hasMultiFlags && <span className="seat-multi-badge" />}
+                      {showIcons && hasMultiFlags && multiHoverSeat === s.seat && (
+                        <span className="seat-multi-carousel">
+                          {(() => {
+                            const CarouselIcon = carouselAttrs[carouselIndex % carouselAttrs.length].icon;
+                            return <CarouselIcon size={16} />;
+                          })()}
+                        </span>
+                      )}
                       <span className="seat-content">
                         {showIcons && Icon && (
                           <>

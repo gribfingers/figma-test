@@ -1791,6 +1791,29 @@ button.icon-button:hover { background: var(--hover-bg); }
 .seat-checked-in .seat-child-age, .seat-boarded .seat-child-age { color: #ffffff; }
 .seat.selected .seat-child-age { color: var(--seat-active-ink); }
 
+/* A seat with 2-3 attribute flags shows its primary icon as usual, plus this small dot in the corner —
+   hovering reveals seat-multi-carousel, which cycles all its icons one at a time (SeatMapGrid). */
+.seat-multi-badge { position: absolute; top: 2px; left: 2px; width: 6px; height: 6px; border-radius: 50%; background: #181f24; pointer-events: none; }
+.seat:hover { overflow: visible; }
+.seat:has(.seat-multi-carousel) { z-index: 5; }
+.seat-multi-carousel {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 26px;
+  height: 26px;
+  border-radius: 4px;
+  background: var(--paper);
+  border: 1px solid var(--panel-border);
+  box-shadow: 0 2px 12px -4px var(--shadow-popover);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 6;
+}
+
 .aisle { width: 28px; display: flex; align-items: center; justify-content: center; }
 .aisle-row-num { font-size: 13px; font-weight: 700; color: var(--field-value); font-family: var(--mono); }
 

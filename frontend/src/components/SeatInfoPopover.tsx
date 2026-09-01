@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { SeatCell } from "../api";
 import {
-  SEAT_ATTRS,
+  allAttrs,
   formatSeatDisplay,
   occupantAge,
   parseSeatExtra,
@@ -63,7 +63,7 @@ export function SeatInfoPopover({ seatCell, x, y, onClose, onOpenHistory }: Prop
   const state = seatState(seatCell);
   const subtype = seatSubtype(extra);
   const age = occupantAge(seatCell);
-  const activeAttrs = SEAT_ATTRS.filter((a) => extra[a.key]);
+  const activeAttrs = allAttrs(extra);
 
   return (
     <div ref={ref} className="seat-info-popover" style={{ left: pos.left, top: pos.top, visibility: pos.visible ? "visible" : "hidden" }}>

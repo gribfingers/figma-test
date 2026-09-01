@@ -89,6 +89,12 @@ export function primaryAttr(extra: SeatExtra): SeatAttrDef | null {
   return SEAT_ATTRS.find((a) => extra[a.key]) ?? null;
 }
 
+/** Every attribute set on the seat, in SEAT_ATTRS priority order — used where a seat can carry more
+ *  than one flag at once (SeatMapGrid's multi-flag badge/carousel, SeatInfoPopover's attribute list). */
+export function allAttrs(extra: SeatExtra): SeatAttrDef[] {
+  return SEAT_ATTRS.filter((a) => extra[a.key]);
+}
+
 export type SeatState = "free" | "checked_in" | "boarded";
 
 export function seatState(s: SeatCell): SeatState {
