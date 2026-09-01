@@ -1732,6 +1732,33 @@ button.icon-button:hover { background: var(--hover-bg); }
 /* Same font as .aisle-row-num (the horizontal row numbers) so both axes read consistently. */
 .seat-col-label { width: 30px; text-align: center; font-size: 13px; font-weight: 700; color: var(--field-value); font-family: var(--mono); }
 
+/* Horizontal orientation (SeatMapPanel's toggle): rows run left-to-right, letters top-to-bottom.
+   A pure flex-direction flip of .seatmap and every .seatrow inside it — every seat cell, feature
+   bar (WC/galley/exit) and label keeps its own markup/logic unchanged, only the axis swaps. */
+.seatmap.seatmap-horizontal { flex-direction: row; align-items: flex-start; }
+.seatmap.seatmap-horizontal .seatrow { flex-direction: column; }
+.seatmap.seatmap-horizontal .seat-col-headers {
+  position: sticky;
+  top: auto;
+  left: 0;
+  margin-bottom: 0;
+  padding-bottom: 0;
+  margin-right: 2px;
+  padding-right: 2px;
+}
+.seatmap.seatmap-horizontal .seat-exit-slot { width: 30px; height: 14px; }
+.seatmap.seatmap-horizontal .aisle { width: 30px; height: 28px; }
+.seatmap.seatmap-horizontal .cabin-exit-gap { width: 30px; height: auto; }
+.seatmap.seatmap-horizontal .cabin-exit-gap::after { width: auto; height: 100%; border-top: none; border-left: 1px dashed var(--panel-border); }
+.seatmap.seatmap-horizontal .cabin-feature-bar { width: 30px; height: auto; writing-mode: vertical-rl; }
+.seatmap.seatmap-horizontal .cabin-section-label {
+  writing-mode: vertical-rl;
+  padding-bottom: 0;
+  padding-right: 4px;
+  border-bottom: none;
+  border-right: 1px solid var(--panel-border);
+}
+
 .seat {
   position: relative;
   box-sizing: border-box;
@@ -2154,7 +2181,11 @@ a { color: var(--accent); }
    name in the banner can never widen this panel (and with it the seat grid)
    the way an in-flow banner would. .picking reserves the vertical space the
    banner overlays instead, so it doesn't cover the toolbar underneath it. */
-.passengers-seatmap { position: relative; flex-shrink: 0; border: 1px solid var(--panel-border); border-radius: 4px; padding: 16px; display: flex; flex-direction: column; min-height: 0; }
+/* max-width caps this at roughly its natural (content-sized) width in the default vertical orientation —
+   without it, the horizontal orientation's much wider content (every row laid out left-to-right instead
+   of just 6 letter columns) would balloon this flex-shrink:0 sidebar out to fit it, instead of scrolling
+   internally via .seatmap-scroll's overflow:auto. */
+.passengers-seatmap { position: relative; flex-shrink: 0; max-width: 460px; min-width: 0; border: 1px solid var(--panel-border); border-radius: 4px; padding: 16px; display: flex; flex-direction: column; min-height: 0; }
 .passengers-seatmap.picking { padding-top: 68px; }
 .seat-pick-banner {
   position: absolute;
@@ -2413,7 +2444,7 @@ tr.row-hover { cursor: pointer; }
 /* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
 .passengers-tab .passengers-seatmap-collapsed:hover { background: transparent; color: var(--field-value); border-color: var(--field-border-hover); }
 
-.seatmap-panel { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.seatmap-panel { display: flex; flex-direction: column; height: 100%; min-height: 0; min-width: 0; }
 .seatmap-toolbar { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
 .seatmap-toolbar-banner {
   flex: 1;
@@ -2479,7 +2510,7 @@ tr.row-hover { cursor: pointer; }
 .seatmap-layers-list.select-menu { left: auto; right: 0; width: 240px; max-height: 360px; overflow-y: auto; }
 .seatmap-layers-list .pax-columns-item { gap: 8px; }
 
-.seatmap-scroll { flex: 1; min-height: 0; overflow: auto; display: flex; justify-content: safe center; }
+.seatmap-scroll { flex: 1; min-height: 0; min-width: 0; overflow: auto; display: flex; justify-content: safe center; }
 .seatmap-zoom-wrap { transform-origin: top center; width: fit-content; }
 
 .seat-editor { display: flex; flex-direction: column; gap: 6px; padding-bottom: 4px; }
@@ -3080,8 +3111,8 @@ tr.row-hover { cursor: pointer; }
 }
 .pnr-flow-placeholder { color: var(--muted); font-size: 14px; }
 
-.seats-step { display: flex; flex-direction: column; flex: 1; min-height: 0; }
-.seats-step-map { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.seats-step { display: flex; flex-direction: column; flex: 1; min-height: 0; min-width: 0; }
+.seats-step-map { flex: 1; min-height: 0; min-width: 0; display: flex; flex-direction: column; }
 
 .fares-info-text { font-family: var(--mono); font-size: 12px; line-height: 1.6; color: var(--field-value); white-space: pre; overflow-x: auto; }
 

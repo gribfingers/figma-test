@@ -660,6 +660,8 @@ export const RU: Record<string, string> = {
   "This aircraft has no upper deck": "У этого самолёта нет верхней палубы",
   "Zoom out": "Уменьшить",
   "Zoom in": "Увеличить",
+  "Switch to horizontal layout": "Переключить на горизонтальный вид",
+  "Switch to vertical layout": "Переключить на вертикальный вид",
   Legend: "Легенда",
   "Child (2–12 y.o.)": "Ребёнок (2–12 лет)",
   Layers: "Слои",
