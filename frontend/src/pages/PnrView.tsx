@@ -558,6 +558,7 @@ export function PnrView() {
                 classLetter={classFor(row.passenger, seatByCode)}
                 seat={row.passenger.seat ? seatByCode.get(row.passenger.seat) : undefined}
                 showSeat={flowStep === "seats"}
+                compactSeat={seatsRotated}
                 showBaggage={flowStep === "baggage"}
                 bagRows={baggageRows[row.passenger.id] ?? []}
                 baggageCalculated={baggageCalculated.has(row.passenger.id)}

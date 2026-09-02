@@ -112,6 +112,10 @@ interface Props {
   seat: SeatCell | undefined;
   /** Seat badge + real seat properties — only shown on the Seats step. */
   showSeat: boolean;
+  /** Rotated seat map only: the active card's seat properties collapse to the same one-line,
+   *  code-only chips + badge the inactive cards already use, instead of the full per-segment
+   *  breakdown — the roster only has so much height to work with stacked above a wide map. */
+  compactSeat?: boolean;
   /** The passenger's actual bag rows from the Baggage step — only shown on the Baggage step. */
   showBaggage: boolean;
   bagRows: BagRow[];
@@ -148,6 +152,7 @@ export function FlowRosterRow({
   classLetter,
   seat,
   showSeat,
+  compactSeat,
   showBaggage,
   bagRows,
   baggageCalculated,
@@ -201,7 +206,7 @@ export function FlowRosterRow({
       </div>
 
       {showSeat && !nested && p.seat && (
-        active ? (
+        active && !compactSeat ? (
           <div className="pnr-flow-seat-detail" onClick={(e) => e.stopPropagation()}>
             {segments.length > 1 ? (
               segments.map((seg, i) => (

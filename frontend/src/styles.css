@@ -2607,7 +2607,9 @@ tr.row-hover { cursor: pointer; }
 .seatmap-layers-list.select-menu { left: auto; right: 0; width: 240px; max-height: 360px; overflow-y: auto; }
 .seatmap-layers-list .pax-columns-item { gap: 8px; }
 
-.seatmap-scroll { flex: 1; min-height: 0; min-width: 0; overflow: auto; display: flex; justify-content: safe center; }
+/* "safe" on both axes: centers the grid when it's smaller than the scroll area (the common case for
+   a short, wide rotated map) but falls back to start-aligned instead of clipping when it's bigger. */
+.seatmap-scroll { flex: 1; min-height: 0; min-width: 0; overflow: auto; display: flex; justify-content: safe center; align-items: safe center; }
 .seatmap-zoom-wrap { transform-origin: top center; width: fit-content; }
 
 .seat-editor { display: flex; flex-direction: column; gap: 6px; padding-bottom: 4px; }
