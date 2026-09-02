@@ -82,7 +82,7 @@ export function SideDrawer() {
               <button
                 key={step}
                 type="button"
-                className={`side-item ${flowStep === step ? "selected" : ""}`}
+                className={`side-item side-item-flow-step ${flowStep === step ? "selected" : ""}`}
                 data-tooltip={t(FLOW_STEP_LABEL[step])}
                 onClick={() => setFlowStep(pnrPid!, step)}
               >

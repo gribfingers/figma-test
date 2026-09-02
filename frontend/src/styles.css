@@ -15,6 +15,9 @@
   --accent-soft: #f2f6fa;
   --accent-selected: #d3e9ff;
   --accent-ink: #ffffff;
+  /* Sidebar background for the check-in flow's step icons (docs/seats/baggage/services), so they
+     read as a distinct group from the rest of the rail even when none of them is the active step. */
+  --flow-step-bg: #eaeffb;
   --ok: #0f7a3d;
   --ok-bg: #e4f6ea;
   --warn: #a35b00;
@@ -90,6 +93,9 @@
   --accent-soft: rgba(96, 163, 216, 0.16);
   --accent-selected: #495366;
   --accent-ink: #ffffff;
+  /* Same subtle blue-lavender tint as the light theme's --flow-step-bg, lightened just enough off
+     the dark panel (#2d3649) to read as its own group without looking like the active/selected item. */
+  --flow-step-bg: #3a4358;
   --ok: #48b903;
   --ok-bg: rgba(71, 218, 0, 0.2);
   --warn: #ffc44e;
@@ -361,6 +367,10 @@ body {
   flex-shrink: 0;
   -webkit-tap-highlight-color: transparent;
 }
+/* The check-in flow's step icons (docs/seats/baggage/services) get a tinted background so they
+   read as their own group in the rail — except the active one, which keeps the normal .selected
+   look (handled entirely by that rule; :not(.selected) here just avoids the two backgrounds fighting). */
+.side-item.side-item-flow-step:not(.selected) { background: var(--flow-step-bg); }
 /* Just the icon tinting blue on hover — no background highlight. Excludes
    the Connected Devices status button, which shouldn't change look on
    hover at all (only its tooltip appears — see .side-static below). Extra
