@@ -2957,7 +2957,10 @@ tr.row-hover { cursor: pointer; }
   gap: 10px;
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 12px 16px;
+  padding: 12px 16px 0;
+  /* Pulls the cards' bottom edge 1px past the roster's own box, into the map panel's top border —
+     merges the two into a single line instead of a visible gap or a doubled border. */
+  margin-bottom: -1px;
 }
 .pnr-flow-body.seatmap-stacked .pnr-flow-roster-row {
   flex: 0 0 280px;
