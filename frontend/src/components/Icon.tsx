@@ -283,16 +283,6 @@ export function HideIcon({ size = 18, className }: IconProps) {
   );
 }
 
-/** Seat-map orientation toggle — a tall (portrait) rect and a wide (landscape) one, side by side. */
-export function OrientationToggleIcon({ size = 18, className }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
-      <rect x="3" y="4" width="7" height="16" rx="1.5" />
-      <rect x="13" y="9" width="8" height="6" rx="1.2" />
-    </svg>
-  );
-}
-
 export function MinusIcon({ size = 16, className }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
