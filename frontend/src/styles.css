@@ -2833,8 +2833,10 @@ tr.row-hover { cursor: pointer; }
 
 /* The roster is a horizontal strip of cards above the step content — not a sidebar beside it — so
    the step panel below (especially the seat map, which can run wide in its own horizontal
-   orientation) gets the full width instead of competing with a fixed-width column for it. */
-.pnr-flow-body { display: flex; flex-direction: column; gap: 0; flex: 1; min-height: 0; }
+   orientation) gets the full width instead of competing with a fixed-width column for it. Both
+   live inside one shared .panel border (applied to .pnr-flow-body itself) rather than two separate
+   boxes with a gap between, so the roster reads as attached to the top of the seat map below it. */
+.pnr-flow-body { display: flex; flex-direction: column; gap: 0; flex: 1; min-height: 0; padding: 0; overflow: hidden; }
 .pnr-flow-roster {
   flex: 0 0 auto;
   display: flex;
@@ -2842,8 +2844,9 @@ tr.row-hover { cursor: pointer; }
   align-items: flex-start;
   gap: 10px;
   background: transparent;
-  padding: 0 0 16px;
+  padding: 16px 16px 12px;
   border: none;
+  border-bottom: 1px solid var(--panel-border);
   border-radius: 0;
   overflow-x: auto;
   overflow-y: hidden;
@@ -2918,11 +2921,8 @@ tr.row-hover { cursor: pointer; }
 /* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
 .pnr-flow-roster-bottom .pnr-flow-info-btn:hover { background: transparent; color: var(--accent); }
 
-/* ---- Seats step: paid seat-selection extras on the active/inactive roster card ---- */
+/* ---- Baggage/Extra-services steps: paid extras on the active roster card ---- */
 .pnr-flow-seat-detail { margin-top: 10px; }
-.pnr-flow-seat-segment + .pnr-flow-seat-segment { margin-top: 12px; }
-.pnr-flow-seat-segment-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; font-weight: 700; color: var(--field-value); margin-bottom: 6px; }
-.pnr-flow-seat-segment-head-plain { justify-content: flex-end; }
 .seat-service-row {
   position: relative;
   display: flex;
