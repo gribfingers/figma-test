@@ -33,6 +33,11 @@ interface Props {
   /** Whether the logged-in user lacks edit rights (see useCanEdit) — hides every action that would
    *  mutate a passenger, seat, or the flight itself, leaving the roster and seat map browsable. */
   readOnly?: boolean;
+  /** Controlled seat map orientation — pass both this and onOrientationChange when the caller (the
+   *  flight-card shell) needs to react too, e.g. hiding its own header/tab strip once rotated to give
+   *  the stacked layout more room. Uncontrolled (manages its own state) when omitted. */
+  orientation?: "vertical" | "horizontal";
+  onOrientationChange?: (orientation: "vertical" | "horizontal") => void;
 }
 
 type ModalKind = "summary" | "documents" | "remarks" | "baggage" | FlagKind;
@@ -122,7 +127,7 @@ const STATUS_CLASS: Record<FlagStatus, string> = {
   conflict: "danger",
 };
 
-export function PassengersTab({ flight, readOnly }: Props) {
+export function PassengersTab({ flight, readOnly, orientation: orientationProp, onOrientationChange }: Props) {
   const { t } = useLanguage();
   const [passengers, setPassengers] = useState<Passenger[]>([]);
   const [seats, setSeats] = useState<SeatCell[]>([]);
@@ -146,7 +151,14 @@ export function PassengersTab({ flight, readOnly }: Props) {
   const [mapHidden, setMapHidden] = useState(false);
   // Lifted out of SeatMapPanel (which would otherwise track this itself) so this tab's own layout
   // can react to it too — the passenger list stacks above the map, full width, once it's rotated.
-  const [seatMapOrientation, setSeatMapOrientation] = useState<"vertical" | "horizontal">("vertical");
+  // In turn controllable from the flight-card shell (orientationProp/onOrientationChange) so *it*
+  // can react too, by hiding its header/tab strip while rotated.
+  const [internalOrientation, setInternalOrientation] = useState<"vertical" | "horizontal">("vertical");
+  const seatMapOrientation = orientationProp ?? internalOrientation;
+  function setSeatMapOrientation(next: "vertical" | "horizontal") {
+    if (onOrientationChange) onOrientationChange(next);
+    else setInternalOrientation(next);
+  }
   const [selectedSegment, setSelectedSegment] = useState(0);
   const segments = useMemo(() => segmentsForFlight(flight), [flight]);
   const cabinFeatures = useMemo(() => cabinFeaturesFor(flight.aircraft_type), [flight.aircraft_type]);
@@ -433,25 +445,30 @@ export function PassengersTab({ flight, readOnly }: Props) {
   return (
     <div className={`passengers-tab ${mapHidden ? "map-hidden" : ""} ${seatMapOrientation === "horizontal" ? "seatmap-stacked" : ""}`}>
       <div className="passengers-list">
-        <SegmentToggle segments={segments} selected={selectedSegment} onSelect={setSelectedSegment} />
-        <PassengersToolbar
-          seats={seats}
-          reseatCount={reseatCount}
-          priorityCount={priorityCount}
-          quickFilter={quickFilter}
-          onQuickFilter={setQuickFilter}
-          query={query}
-          onQuery={setQuery}
-          serviceFilter={serviceFilter}
-          onServiceFilter={setServiceFilter}
-          asvcFilter={asvcFilter}
-          onAsvcFilter={setAsvcFilter}
-          visibleColumns={visibleColumns}
-          onToggleColumn={toggleColumn}
-          totalCount={filteredPassengers.length}
-          onAddPassenger={openAdd}
-          hideAddPassenger={readOnly}
-        />
+        {/* Bare wrapper outside seatmap-stacked (stacks its two children as before, unstyled) — in
+            stacked mode it becomes a single row (see .seatmap-stacked .pax-list-header in styles.css)
+            since vertical room is scarcer there than it is beside a side-by-side seat map. */}
+        <div className="pax-list-header">
+          <SegmentToggle segments={segments} selected={selectedSegment} onSelect={setSelectedSegment} />
+          <PassengersToolbar
+            seats={seats}
+            reseatCount={reseatCount}
+            priorityCount={priorityCount}
+            quickFilter={quickFilter}
+            onQuickFilter={setQuickFilter}
+            query={query}
+            onQuery={setQuery}
+            serviceFilter={serviceFilter}
+            onServiceFilter={setServiceFilter}
+            asvcFilter={asvcFilter}
+            onAsvcFilter={setAsvcFilter}
+            visibleColumns={visibleColumns}
+            onToggleColumn={toggleColumn}
+            totalCount={filteredPassengers.length}
+            onAddPassenger={openAdd}
+            hideAddPassenger={readOnly}
+          />
+        </div>
         {!readOnly && selectedIds.size > 0 && (
           <div className="pax-selection-bar">
             <span className="pax-selection-count">{t("{n} selected").replace("{n}", String(selectedIds.size))}</span>

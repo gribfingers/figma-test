@@ -2231,6 +2231,12 @@ a { color: var(--accent); }
 .passengers-tab.seatmap-stacked { flex-direction: column; }
 .passengers-tab.seatmap-stacked .passengers-list { flex: 0 0 auto; max-height: 320px; }
 .passengers-tab.seatmap-stacked .passengers-seatmap { flex: 1; max-width: none; width: 100%; }
+/* Segment pills + roster filters normally stack (segment-toggle's own margin-bottom, pax-toolbar's
+   column layout) — in the stacked/rotated layout that costs two lines of the already-tight 320px
+   list height, so they run as one row instead. */
+.passengers-tab.seatmap-stacked .pax-list-header { display: flex; align-items: center; gap: 16px; }
+.passengers-tab.seatmap-stacked .pax-list-header .segment-toggle { flex-shrink: 0; margin-bottom: 0; }
+.passengers-tab.seatmap-stacked .pax-list-header .pax-toolbar { flex: 1; min-width: 0; padding: 0; }
 .seat-pick-banner {
   position: absolute;
   z-index: 2;
@@ -2523,6 +2529,13 @@ tr.row-hover { cursor: pointer; }
 .seatmap-tool-btn { all: unset; box-sizing: border-box; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 4px; color: var(--muted); cursor: pointer; }
 .seatmap-panel .seatmap-tool-btn:hover { background: var(--field-bg); color: var(--field-value); }
 .seatmap-tool-btn.active { background: var(--accent-soft); color: var(--accent); }
+/* Rotated seat map: a plain "active" tint reads the same as every other toggled tool button, but
+   this is the only control that gets a user back to the normal view — a solid fill makes it obvious. */
+.seatmap-orientation-btn.active,
+.seatmap-panel .seatmap-orientation-btn.active:hover {
+  background: var(--accent);
+  color: #ffffff;
+}
 
 .seatmap-popover-anchor { position: relative; }
 .seatmap-legend { position: absolute; z-index: 30; top: calc(100% + 6px); right: 0; width: 240px; max-height: 360px; overflow-y: auto; background: var(--paper); border: 1px solid var(--panel-border); border-radius: 4px; box-shadow: 0 2px 24px -6px var(--shadow-popover); padding: 12px; }

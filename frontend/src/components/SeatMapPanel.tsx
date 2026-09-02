@@ -143,7 +143,7 @@ export function SeatMapPanel({
           {allowOrientationToggle && (
             <button
               type="button"
-              className="seatmap-tool-btn"
+              className={`seatmap-tool-btn seatmap-orientation-btn ${orientation === "horizontal" ? "active" : ""}`}
               title={orientation === "vertical" ? t("Switch to horizontal layout") : t("Switch to vertical layout")}
               onClick={toggleOrientation}
             >

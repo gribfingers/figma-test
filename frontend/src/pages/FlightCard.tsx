@@ -38,6 +38,10 @@ export function FlightCard() {
   const [flight, setFlight] = useState<Flight | null>(null);
   useRegisterTab(flight ? `${flight.carrier_code}${flight.flight_number}` : t("Flight"));
   const [tab, setTab] = usePersistentState<TabKey>(`dcs_flight_tab_${fid}`, "main");
+  // Only PassengersTab's seat map can rotate — while it's rotated, hide the header/tab strip above
+  // it so the stacked passenger list (already squeezed to 320px) gets a bit more of the page.
+  const [paxSeatMapOrientation, setPaxSeatMapOrientation] = useState<"vertical" | "horizontal">("vertical");
+  const chromeHidden = tab === "passengers" && paxSeatMapOrientation === "horizontal";
   const [draft, setDraft] = useState<MainDraft | null>(null);
   const [manifest, setManifest] = useState<{ label: string; text: string } | null>(null);
   const [error, setError] = useState("");
@@ -166,27 +170,31 @@ export function FlightCard() {
     <div className="flight-card-page">
       {error && <div className="error-box">{error}</div>}
       <div className="flight-card-panel">
-        <FlightCardHeader
-          flight={flight}
-          activeTab={tab}
-          dirty={dirty}
-          canEdit={canEdit}
-          onSave={handleSave}
-          onAction={handleAction}
-          onStatusChange={handleStatusChange}
-        />
-        <div className="flight-tabs">
-          {TABS.map((tabDef) => (
-            <button
-              key={tabDef.key}
-              type="button"
-              className={`flight-tab ${tab === tabDef.key ? "selected" : ""}`}
-              onClick={() => setTab(tabDef.key)}
-            >
-              {t(tabDef.label)}
-            </button>
-          ))}
-        </div>
+        {!chromeHidden && (
+          <>
+            <FlightCardHeader
+              flight={flight}
+              activeTab={tab}
+              dirty={dirty}
+              canEdit={canEdit}
+              onSave={handleSave}
+              onAction={handleAction}
+              onStatusChange={handleStatusChange}
+            />
+            <div className="flight-tabs">
+              {TABS.map((tabDef) => (
+                <button
+                  key={tabDef.key}
+                  type="button"
+                  className={`flight-tab ${tab === tabDef.key ? "selected" : ""}`}
+                  onClick={() => setTab(tabDef.key)}
+                >
+                  {t(tabDef.label)}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
         <div className="flight-card-body">
           {tab === "main" && (
             <MainTab
@@ -197,7 +205,14 @@ export function FlightCard() {
             />
           )}
           {tab === "counters" && <CountersTab />}
-          {tab === "passengers" && <PassengersTab flight={flight} readOnly={!canEdit} />}
+          {tab === "passengers" && (
+            <PassengersTab
+              flight={flight}
+              readOnly={!canEdit}
+              orientation={paxSeatMapOrientation}
+              onOrientationChange={setPaxSeatMapOrientation}
+            />
+          )}
           {tab === "transfers" && <TransfersTab />}
           {tab === "settings" && (
             <SettingsTab
