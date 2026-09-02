@@ -144,6 +144,9 @@ export function PassengersTab({ flight, readOnly }: Props) {
   const [asvcFilter, setAsvcFilter] = useState("");
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(() => new Set(PASSENGER_COLUMNS.map((c) => c.key)));
   const [mapHidden, setMapHidden] = useState(false);
+  // Lifted out of SeatMapPanel (which would otherwise track this itself) so this tab's own layout
+  // can react to it too — the passenger list stacks above the map, full width, once it's rotated.
+  const [seatMapOrientation, setSeatMapOrientation] = useState<"vertical" | "horizontal">("vertical");
   const [selectedSegment, setSelectedSegment] = useState(0);
   const segments = useMemo(() => segmentsForFlight(flight), [flight]);
   const cabinFeatures = useMemo(() => cabinFeaturesFor(flight.aircraft_type), [flight.aircraft_type]);
@@ -428,7 +431,7 @@ export function PassengersTab({ flight, readOnly }: Props) {
   const selectedPassengers = passengers.filter((p) => selectedIds.has(p.id));
 
   return (
-    <div className={`passengers-tab ${mapHidden ? "map-hidden" : ""}`}>
+    <div className={`passengers-tab ${mapHidden ? "map-hidden" : ""} ${seatMapOrientation === "horizontal" ? "seatmap-stacked" : ""}`}>
       <div className="passengers-list">
         <SegmentToggle segments={segments} selected={selectedSegment} onSelect={setSelectedSegment} />
         <PassengersToolbar
@@ -679,6 +682,8 @@ export function PassengersTab({ flight, readOnly }: Props) {
             ineligibleSeats={ineligibleSeats}
             undesirableSeats={undesirableSeats}
             allowOrientationToggle
+            orientation={seatMapOrientation}
+            onOrientationChange={setSeatMapOrientation}
           />
           <div className="panel-hint">{t("Right-click a seat to edit its properties.")}</div>
         </div>

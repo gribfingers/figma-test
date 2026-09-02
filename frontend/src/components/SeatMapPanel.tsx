@@ -30,6 +30,11 @@ interface Props {
    *  turned on where it's been rolled out so far (the Pax tab's seat map), not on every embedding
    *  of this panel. */
   allowOrientationToggle?: boolean;
+  /** Controlled orientation — pass both this and onOrientationChange when the caller's own layout
+   *  needs to react to orientation too (e.g. the Pax tab stacking its passenger list above the map
+   *  instead of beside it once rotated). Uncontrolled (manages its own state) when omitted. */
+  orientation?: "vertical" | "horizontal";
+  onOrientationChange?: (orientation: "vertical" | "horizontal") => void;
 }
 
 const LEGEND_STATES: { cls: string; label: string }[] = [
@@ -68,10 +73,18 @@ export function SeatMapPanel({
   allowSeatEdit = true,
   banner,
   allowOrientationToggle = false,
+  orientation: orientationProp,
+  onOrientationChange,
 }: Props) {
   const { t } = useLanguage();
   const [zoom, setZoom] = useState(100);
-  const [orientation, setOrientation] = useState<"vertical" | "horizontal">("vertical");
+  const [internalOrientation, setInternalOrientation] = useState<"vertical" | "horizontal">("vertical");
+  const orientation = orientationProp ?? internalOrientation;
+  function toggleOrientation() {
+    const next = orientation === "vertical" ? "horizontal" : "vertical";
+    if (onOrientationChange) onOrientationChange(next);
+    else setInternalOrientation(next);
+  }
   const [legendOpen, setLegendOpen] = useState(false);
   const [layersOpen, setLayersOpen] = useState(false);
   const [editingSeat, setEditingSeat] = useState<SeatCell | null>(null);
@@ -132,7 +145,7 @@ export function SeatMapPanel({
               type="button"
               className="seatmap-tool-btn"
               title={orientation === "vertical" ? t("Switch to horizontal layout") : t("Switch to vertical layout")}
-              onClick={() => setOrientation((o) => (o === "vertical" ? "horizontal" : "vertical"))}
+              onClick={toggleOrientation}
             >
               <OrientationToggleIcon size={16} />
             </button>

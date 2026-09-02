@@ -1740,6 +1740,9 @@ button.icon-button:hover { background: var(--hover-bg); }
    WC/galley/exit bar, and label keeps working unchanged. */
 .seatmap.seatmap-horizontal { flex-direction: row; align-items: flex-start; }
 .seatmap.seatmap-horizontal .seatrow { flex-direction: column-reverse; }
+/* The seat's rounded corners sit on its top edge before rotation (chair-back silhouette) — after a
+   90° CCW turn that same edge is on the left, so the rounding moves there too. */
+.seatmap.seatmap-horizontal .seat { border-radius: 4px 0 0 4px; }
 .seatmap.seatmap-horizontal .seat-col-headers {
   position: sticky;
   top: auto;
@@ -2195,6 +2198,13 @@ a { color: var(--accent); }
    internally via .seatmap-scroll's overflow:auto. */
 .passengers-seatmap { position: relative; flex-shrink: 0; max-width: 460px; min-width: 0; border: 1px solid var(--panel-border); border-radius: 4px; padding: 16px; display: flex; flex-direction: column; min-height: 0; }
 .passengers-seatmap.picking { padding-top: 68px; }
+
+/* The rotated (horizontal) seat map reads better with the passenger list stacked above it, full
+   width, rather than squeezed into the side-by-side sidebar — the map itself can run much wider
+   than tall once rotated, so it wants the width the list would otherwise take. */
+.passengers-tab.seatmap-stacked { flex-direction: column; }
+.passengers-tab.seatmap-stacked .passengers-list { flex: 0 0 auto; max-height: 320px; }
+.passengers-tab.seatmap-stacked .passengers-seatmap { flex: 1; max-width: none; width: 100%; }
 .seat-pick-banner {
   position: absolute;
   z-index: 2;
