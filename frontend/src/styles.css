@@ -2239,6 +2239,27 @@ a { color: var(--accent); }
 .passengers-tab.seatmap-stacked .pax-list-header { display: flex; align-items: center; gap: 16px; }
 .passengers-tab.seatmap-stacked .pax-list-header .segment-toggle { flex-shrink: 0; margin-bottom: 0; }
 .passengers-tab.seatmap-stacked .pax-list-header .pax-toolbar { flex: 1; min-width: 0; padding: 0; }
+/* Hiding the map in the stacked layout collapses it to the thin full-width bar below (see
+   .passengers-seatmap-collapsed-row) — with that little height taken, the list's own 320px cap no
+   longer serves a purpose, so it's free to grow and take the rest of the tab instead. */
+.passengers-tab.seatmap-stacked.map-hidden .passengers-list { flex: 1; max-height: none; }
+/* Same collapsed strip as .passengers-seatmap-collapsed, just rotated: full width and thin instead
+   of full height and narrow, since the stacked layout's map sits below the list, not beside it. */
+.passengers-seatmap-collapsed-row {
+  all: unset;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  height: 32px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--muted);
+}
+.passengers-tab .passengers-seatmap-collapsed-row:hover { background: transparent; color: var(--field-value); border-color: var(--field-border-hover); }
 .seat-pick-banner {
   position: absolute;
   z-index: 2;
@@ -2539,9 +2560,10 @@ tr.row-hover { cursor: pointer; }
   color: #ffffff;
 }
 
-/* The "hide" arrow points right by default (collapse-to-the-side, used in the vertical layout) — in
-   the rotated layout the same button minimizes the grid's height in place instead, so the arrow
-   rotates to match: down to invite collapsing, up (once collapsed) to invite expanding again. */
+/* The "hide" arrow points right by default (the vertical layout collapses the whole panel to a thin
+   strip on its right edge) — in the rotated layout the panel collapses to a thin strip below the
+   list instead, so the arrow rotates to point down to match (see .passengers-seatmap-collapsed-row,
+   which reuses this same rotated icon for its own "restore" arrow, pointing back up). */
 .seatmap-hide-icon-down { transform: rotate(90deg); }
 .seatmap-hide-icon-up { transform: rotate(-90deg); }
 
@@ -2576,9 +2598,6 @@ tr.row-hover { cursor: pointer; }
 .seatmap-layers-list .pax-columns-item { gap: 8px; }
 
 .seatmap-scroll { flex: 1; min-height: 0; min-width: 0; overflow: auto; display: flex; justify-content: safe center; }
-/* Rotated layout's "minimize" toolbar button (see seatmap-hide-icon-down/up above) collapses the
-   grid down to nothing while leaving the toolbar above it in place. */
-.seatmap-scroll.seatmap-scroll-minimized { flex: 0 0 auto; height: 0; overflow: hidden; }
 .seatmap-zoom-wrap { transform-origin: top center; width: fit-content; }
 
 .seat-editor { display: flex; flex-direction: column; gap: 6px; padding-bottom: 4px; }

@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { api, Flight, Passenger, SeatCell } from "../../api";
 import { cabinFeaturesFor } from "../../cabinLayout";
 import { SeatMapPanel } from "../SeatMapPanel";
-import { ArrowBackIcon, ArrowNestedIcon, ChevronDownIcon, ChildIcon, InfantIcon } from "../Icon";
+import { ArrowBackIcon, ArrowNestedIcon, ChevronDownIcon, ChildIcon, HideIcon, InfantIcon } from "../Icon";
 import { SortTh, useSort } from "../SortTh";
 import { FlagStatus, ageFromDob, ageYears, asvcForPassenger, asvcStatus, commentsStatus, etStatus, ffpStatus, isInfant, parsePassengerExtra, trStatus } from "../../paxExtra";
 import { FlagKind, FlagModal, PassengerDetailModal } from "./PassengerModals";
@@ -668,9 +668,15 @@ export function PassengersTab({ flight, readOnly, orientation: orientationProp, 
         <div className="panel-hint">{t("Right-click a row to assign/change or swap the seat, edit the passenger, or delete them.")}</div>
       </div>
       {mapHidden ? (
-        <button type="button" className="passengers-seatmap-collapsed" onClick={() => setMapHidden(false)} title={t("Show seat map")}>
-          <ArrowBackIcon size={18} />
-        </button>
+        seatMapOrientation === "horizontal" ? (
+          <button type="button" className="passengers-seatmap-collapsed-row" onClick={() => setMapHidden(false)} title={t("Show seat map")}>
+            <HideIcon size={18} className="seatmap-hide-icon-up" />
+          </button>
+        ) : (
+          <button type="button" className="passengers-seatmap-collapsed" onClick={() => setMapHidden(false)} title={t("Show seat map")}>
+            <ArrowBackIcon size={18} />
+          </button>
+        )
       ) : (
         <div className={`passengers-seatmap ${seatAction ? "picking" : ""}`} ref={seatmapRef}>
           {seatAction && (
