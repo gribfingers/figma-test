@@ -1752,13 +1752,23 @@ button.icon-button:hover { background: var(--hover-bg); }
   margin-right: 2px;
   padding-right: 2px;
 }
-.seatmap.seatmap-horizontal .seat-exit-slot { width: 30px; height: 14px; }
+.seatmap.seatmap-horizontal .seat-exit-slot { width: 30px; height: 18px; }
+.seatmap.seatmap-horizontal .seat-exit-label { writing-mode: horizontal-tb; font-size: 8px; }
 .seatmap.seatmap-horizontal .aisle { width: 30px; height: 28px; }
-.seatmap.seatmap-horizontal .cabin-exit-gap { width: 30px; height: auto; }
+/* WC/galley/exit bars are their own .seatrow (cabin-feature-row), so they get column-reverse like
+   every other row above — but unlike a real seat row, their own content (1-2 short bars) is much
+   shorter than a full seat column, so they need align-self: stretch to actually reach the same
+   height, and flex: 1 on the bars/gap themselves to fill that height once stretched. A WC's two
+   bars split it evenly around the aisle gap (~3 seats tall each, matching the vertical view's
+   half-row WC boxes); a galley's single bar has nothing to split with, so it fills the whole
+   column (full height, matching the vertical view's full-row galley bar). */
+.seatmap.seatmap-horizontal .cabin-feature-row { align-self: stretch; }
+.seatmap.seatmap-horizontal .cabin-exit-gap { flex: 1; width: 30px; height: auto; }
 .seatmap.seatmap-horizontal .cabin-exit-gap::after { width: auto; height: 100%; border-top: none; border-left: 1px dashed var(--panel-border); }
-.seatmap.seatmap-horizontal .cabin-feature-bar { width: 30px; height: auto; writing-mode: vertical-rl; }
+.seatmap.seatmap-horizontal .cabin-feature-bar { flex: 1; width: 30px; height: auto; writing-mode: vertical-rl; }
 .seatmap.seatmap-horizontal .cabin-section-label {
   writing-mode: vertical-rl;
+  transform: rotate(180deg);
   padding-bottom: 0;
   padding-right: 4px;
   border-bottom: none;
