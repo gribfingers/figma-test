@@ -2953,7 +2953,10 @@ tr.row-hover { cursor: pointer; }
 .pnr-flow-body.seatmap-stacked .pnr-flow-roster {
   display: flex;
   flex-direction: row;
-  align-items: flex-start;
+  /* Stretch (not flex-start) so every card — not just the active one, which has the extra
+     Actions row inactive cards don't — reaches the row's full height and its own bottom edge,
+     matching the active card's and staying flush against the map panel below. */
+  align-items: stretch;
   gap: 10px;
   overflow-x: auto;
   overflow-y: hidden;
