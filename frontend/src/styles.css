@@ -1761,9 +1761,12 @@ button.icon-button:hover { background: var(--hover-bg); }
 .seatmap.seatmap-horizontal .seat-exit-label { writing-mode: horizontal-tb; font-size: 8px; }
 /* The accent tick marks the fuselage wall the exit door is on — before rotation that's the left/right
    ends of the row, so it's a border-left/border-right. After a 90° CCW turn that same wall is the top
-   or bottom end of the (now vertical) exit column, so the tick rotates to border-top/border-bottom too. */
-.seatmap.seatmap-horizontal .seat-exit-slot.active.left { border-left: none; border-bottom: 2px solid var(--accent); }
-.seatmap.seatmap-horizontal .seat-exit-slot.active.right { border-right: none; border-top: 2px solid var(--accent); }
+   or bottom end of the (now vertical) exit column, so the tick rotates to border-top/border-bottom too.
+   It sits on the slot's *inner* edge (facing the seats) rather than the outer one, so it lands the
+   normal row gap (16px) away from the nearest seat — the same spacing as between any two seats —
+   instead of floating out past the slot's own empty padding at the true edge of the seat map. */
+.seatmap.seatmap-horizontal .seat-exit-slot.active.left { border-left: none; border-top: 2px solid var(--accent); }
+.seatmap.seatmap-horizontal .seat-exit-slot.active.right { border-right: none; border-bottom: 2px solid var(--accent); }
 .seatmap.seatmap-horizontal .aisle { width: 30px; height: 28px; }
 /* WC/galley/exit bars are their own .seatrow (cabin-feature-row), so they get column-reverse like
    every other row above — but unlike a real seat row, their own content (1-2 short bars) is much
