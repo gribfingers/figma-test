@@ -18,6 +18,10 @@ interface Props {
    *  this step just reacts to it (dims the assign/unassign interactions, wires the map click). */
   swapping: boolean;
   onSwappingChange: (swapping: boolean) => void;
+  /** Lifted up to PnrView the same way PassengersTab lifts it from SeatMapPanel, so the flow body's
+   *  own layout can stack the roster above the map, full width, once it's rotated. */
+  orientation: "vertical" | "horizontal";
+  onOrientationChange: (orientation: "vertical" | "horizontal") => void;
 }
 
 /**
@@ -37,6 +41,8 @@ export function SeatsStep({
   onPassengerUpdated,
   swapping,
   onSwappingChange,
+  orientation,
+  onOrientationChange,
 }: Props) {
   const { t } = useLanguage();
   const [error, setError] = useState("");
@@ -129,6 +135,9 @@ export function SeatsStep({
           ineligibleSeats={ineligibleSeats}
           undesirableSeats={undesirableSeats}
           allowSeatEdit={false}
+          allowOrientationToggle
+          orientation={orientation}
+          onOrientationChange={onOrientationChange}
           banner={
             swapping ? (
               <>

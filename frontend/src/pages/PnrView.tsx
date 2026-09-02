@@ -322,6 +322,9 @@ export function PnrView() {
   // so a stale "swapping" state can't survive a switch.
   const [swapSeatMode, setSwapSeatMode] = useState(false);
   useEffect(() => setSwapSeatMode(false), [flowActiveId, flowStep]);
+  // Same rotated-layout treatment as the flight card's Pax tab: the roster stacks above the map,
+  // full width, once it's rotated horizontal — see SeatsStep/SeatMapPanel's orientation prop.
+  const [seatMapOrientation, setSeatMapOrientation] = useState<"vertical" | "horizontal">("vertical");
   const [flagsModal, setFlagsModal] = useState<{ flag: FlagKind; passenger: Passenger } | null>(null);
   const [docPanelPassenger, setDocPanelPassenger] = useState<Passenger | null>(null);
   const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
@@ -539,7 +542,7 @@ export function PnrView() {
           </div>
         </div>
 
-        <div className="pnr-flow-body">
+        <div className={`pnr-flow-body ${flowStep === "seats" && seatMapOrientation === "horizontal" ? "seatmap-stacked" : ""}`}>
           <div className="panel panel--flush pnr-flow-roster">
             {buildFlowRows(flowPassengers).map((row) => (
               <FlowRosterRow
@@ -585,6 +588,8 @@ export function PnrView() {
                 onPassengerUpdated={handlePassengerUpdated}
                 swapping={swapSeatMode}
                 onSwappingChange={setSwapSeatMode}
+                orientation={seatMapOrientation}
+                onOrientationChange={setSeatMapOrientation}
               />
             )}
             {flowStep === "baggage" && flowActive && (
