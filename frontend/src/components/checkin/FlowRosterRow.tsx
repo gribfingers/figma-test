@@ -3,6 +3,7 @@ import { Flight, Passenger, SeatCell } from "../../api";
 import { BagRow } from "../../baggageTypes";
 import { ageFromDob, baggageServiceItemsForRows, SeatServiceItem, seatServiceItemsForSeat } from "../../paxExtra";
 import { formatSeatDisplay } from "../../seatExtra";
+import { FlightSegment } from "../../flightSegments";
 import { ChevronDownIcon, InfantIcon, InfoIcon } from "../Icon";
 import { EmdModal } from "./EmdModal";
 import { useLanguage } from "../../i18n";
@@ -120,6 +121,7 @@ interface Props {
   showServices: boolean;
   /** The services this passenger has actually confirmed on the Extra services step — mirrored onto the card verbatim. */
   confirmedServices: SeatServiceItem[];
+  segments: FlightSegment[];
   onSelect: () => void;
   onOpenFlag: (flag: "com" | "ffp") => void;
   onOpenInfo: () => void;
@@ -151,6 +153,7 @@ export function FlowRosterRow({
   baggageCalculated,
   showServices,
   confirmedServices,
+  segments,
   onSelect,
   onOpenFlag,
   onOpenInfo,
@@ -197,14 +200,34 @@ export function FlowRosterRow({
         {hasRemarks && flagButtons}
       </div>
 
-      {/* One-line summary (chips + seat badge) for every card, active or not — cards sit side by
-       *  side in a narrow horizontal strip now, so there's no room for the old active-card
-       *  per-segment breakdown. */}
       {showSeat && !nested && p.seat && (
-        <div className="pnr-flow-seat-compact" onClick={(e) => e.stopPropagation()}>
-          {seatItems.map((item, i) => <SeatServiceChip key={i} item={item} onOpenEmd={setEmdItem} />)}
-          <SeatBadge seat={p.seat} />
-        </div>
+        active ? (
+          <div className="pnr-flow-seat-detail" onClick={(e) => e.stopPropagation()}>
+            {segments.length > 1 ? (
+              segments.map((seg, i) => (
+                <div key={i} className="pnr-flow-seat-segment">
+                  <div className="pnr-flow-seat-segment-head">
+                    <span>{seg.origin} - {seg.destination}</span>
+                    {i === 0 && <SeatBadge seat={p.seat!} />}
+                  </div>
+                  {i === 0 && seatItems.map((item, j) => <SeatServiceRow key={j} item={item} onOpenEmd={setEmdItem} />)}
+                </div>
+              ))
+            ) : (
+              <div className="pnr-flow-seat-segment">
+                <div className="pnr-flow-seat-segment-head pnr-flow-seat-segment-head-plain">
+                  <SeatBadge seat={p.seat} />
+                </div>
+                {seatItems.map((item, j) => <SeatServiceRow key={j} item={item} onOpenEmd={setEmdItem} />)}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="pnr-flow-seat-compact" onClick={(e) => e.stopPropagation()}>
+            {seatItems.map((item, i) => <SeatServiceChip key={i} item={item} onOpenEmd={setEmdItem} />)}
+            <SeatBadge seat={p.seat} />
+          </div>
+        )
       )}
 
       {showBaggage && !nested && baggageItems.length > 0 && (

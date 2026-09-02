@@ -539,8 +539,8 @@ export function PnrView() {
           </div>
         </div>
 
-        <div className="panel panel--flush pnr-flow-body">
-          <div className="pnr-flow-roster">
+        <div className="pnr-flow-body">
+          <div className="panel panel--flush pnr-flow-roster">
             {buildFlowRows(flowPassengers).map((row) => (
               <FlowRosterRow
                 key={row.passenger.id}
@@ -557,6 +557,7 @@ export function PnrView() {
                 baggageCalculated={baggageCalculated.has(row.passenger.id)}
                 showServices={flowStep === "services"}
                 confirmedServices={confirmedServices[row.passenger.id] ?? []}
+                segments={segmentsForFlight(flight)}
                 onSelect={() => setFlowActiveId(row.passenger.id)}
                 onOpenFlag={(flag) => setFlagsModal({ flag, passenger: row.passenger })}
                 onOpenInfo={() => setInfoModalOpen(true)}
@@ -565,7 +566,7 @@ export function PnrView() {
             ))}
           </div>
 
-          <div className="pnr-flow-panel">
+          <div className="panel panel--flush pnr-flow-panel">
             {flowStep === "docs" && flowActive && (
               <DocumentsStep
                 flightId={fid}
