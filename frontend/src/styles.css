@@ -2831,23 +2831,37 @@ tr.row-hover { cursor: pointer; }
 }
 .pnr-flow-checkin-wrap:hover .pnr-flow-checkin-tooltip { display: block; }
 
-.pnr-flow-body { display: flex; gap: 0; flex: 1; min-height: 0; }
+/* The roster is a horizontal strip of cards above the step content — not a sidebar beside it — so
+   the step panel below (especially the seat map, which can run wide in its own horizontal
+   orientation) gets the full width instead of competing with a fixed-width column for it. */
+.pnr-flow-body { display: flex; flex-direction: column; gap: 0; flex: 1; min-height: 0; }
 .pnr-flow-roster {
-  flex: 0 0 320px;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
   background: transparent;
-  padding: 0;
+  padding: 0 0 16px;
   border: none;
   border-radius: 0;
-  overflow-y: auto;
+  overflow-x: auto;
+  overflow-y: hidden;
   min-height: 0;
 }
-.pnr-flow-roster-row { padding: 10px 16px; cursor: pointer; background: transparent; user-select: none; }
+.pnr-flow-roster-row {
+  flex: 0 0 280px;
+  padding: 10px 12px;
+  cursor: pointer;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  user-select: none;
+}
 .pnr-flow-roster-row:hover { background: var(--field-bg); }
 .pnr-flow-roster-row.selected {
   background: var(--panel);
-  border-top: 1px solid var(--panel-border);
-  border-bottom: 1px solid var(--panel-border);
-  border-left: 1px solid var(--panel-border);
+  border-color: var(--accent);
   box-shadow: inset 3px 0 0 0 var(--accent);
 }
 
@@ -2855,7 +2869,9 @@ tr.row-hover { cursor: pointer; }
 .pnr-flow-roster-name { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; color: var(--field-value); }
 .pnr-flow-roster-index { color: var(--muted); font-weight: 700; }
 .pnr-flow-roster-nested-icon { color: var(--muted); flex-shrink: 0; }
-.pnr-flow-roster-row.nested { padding-left: 40px; }
+/* An infant nested under its guardian's card just sits next to it in the strip now, rather than
+   indented beneath it in a stack — a smaller left inset is enough to still read as "attached to". */
+.pnr-flow-roster-row.nested { flex-basis: 240px; padding-left: 12px; }
 .pnr-flow-roster-remarks { display: flex; gap: 6px; flex-shrink: 0; }
 .pnr-flow-remark-chip {
   display: inline-flex;
@@ -3103,9 +3119,6 @@ tr.row-hover { cursor: pointer; }
   min-width: 0;
   min-height: 0;
   padding: 20px;
-  border-left: 1px solid var(--panel-border);
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
   display: flex;
   flex-direction: column;
 }
