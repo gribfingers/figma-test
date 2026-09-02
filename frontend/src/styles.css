@@ -2965,7 +2965,13 @@ tr.row-hover { cursor: pointer; }
   border-radius: 4px;
   overflow-y: auto;
 }
-.pnr-flow-body.seatmap-stacked .pnr-flow-roster-row.selected { border-color: var(--panel-border); }
+/* The active-card accent bar sits on the left edge in the normal column roster (a natural "current
+   tab" marker when cards stack top to bottom) — in the row layout that reads as the card being
+   pinned to its neighbor instead, so it moves to the top edge to match the row's own orientation. */
+.pnr-flow-body.seatmap-stacked .pnr-flow-roster-row.selected {
+  border-color: var(--panel-border);
+  box-shadow: inset 0 3px 0 0 var(--accent);
+}
 .pnr-flow-body.seatmap-stacked .pnr-flow-roster-row.nested { padding-left: 16px; }
 .pnr-flow-roster-row { padding: 10px 16px; cursor: pointer; background: transparent; user-select: none; }
 .pnr-flow-roster-row:hover { background: var(--field-bg); }
