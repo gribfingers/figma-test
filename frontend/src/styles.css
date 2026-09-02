@@ -2934,6 +2934,27 @@ tr.row-hover { cursor: pointer; }
 .pnr-flow-body.seatmap-stacked { flex-direction: column; }
 .pnr-flow-body.seatmap-stacked .pnr-flow-roster { flex: 0 0 auto; max-height: 320px; width: 100%; }
 .pnr-flow-body.seatmap-stacked .pnr-flow-panel { border-left: none; border-top: 1px solid var(--panel-border); }
+/* The roster's cards normally stack in a single column down the fixed 320px sidebar — once that
+   sidebar itself becomes a full-width strip above the map, laying them out in a row instead uses
+   that width the same way the column used to use height. Each card gets its own border so they
+   read as distinct cards in the row, since they can no longer rely on the sidebar's edge for that. */
+.pnr-flow-body.seatmap-stacked .pnr-flow-roster {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 12px 16px;
+}
+.pnr-flow-body.seatmap-stacked .pnr-flow-roster-row {
+  flex: 0 0 280px;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  overflow-y: auto;
+}
+.pnr-flow-body.seatmap-stacked .pnr-flow-roster-row.selected { border-color: var(--panel-border); }
+.pnr-flow-body.seatmap-stacked .pnr-flow-roster-row.nested { padding-left: 16px; }
 .pnr-flow-roster-row { padding: 10px 16px; cursor: pointer; background: transparent; user-select: none; }
 .pnr-flow-roster-row:hover { background: var(--field-bg); }
 .pnr-flow-roster-row.selected {

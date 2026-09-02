@@ -508,41 +508,44 @@ export function PnrView() {
   }
 
   if (flowStep) {
+    const seatsRotated = flowStep === "seats" && seatMapOrientation === "horizontal";
     return (
       <div className="pnr-view pnr-view-flow">
-        <div className="pnr-head pnr-head-flow">
-          <div className="pnr-head-id">
-            <div className="pnr-flight-number">{flight.carrier_code}{flight.flight_number}</div>
-            <div className="pnr-head-id-meta">
-              <button type="button" className="pnr-route" onClick={() => setRouteModalOpen(true)}>{flight.origin} → {flight.destination}</button>
-              <div className="pnr-date">{fmtCardDate(flight.std)}</div>
+        {!seatsRotated && (
+          <div className="pnr-head pnr-head-flow">
+            <div className="pnr-head-id">
+              <div className="pnr-flight-number">{flight.carrier_code}{flight.flight_number}</div>
+              <div className="pnr-head-id-meta">
+                <button type="button" className="pnr-route" onClick={() => setRouteModalOpen(true)}>{flight.origin} → {flight.destination}</button>
+                <div className="pnr-date">{fmtCardDate(flight.std)}</div>
+              </div>
+            </div>
+            <div className="spacer" />
+            <div className="pnr-flow-actions">
+              {/* No action wired up yet — present for layout. */}
+              <button type="button" className="icon-button" aria-label={t("Refresh")}>
+                <RefreshIcon size={18} />
+              </button>
+              <button type="button" className="tertiary" onClick={() => setFinishConfirmOpen(true)}>{t("Finish")}</button>
+              <span className="pnr-flow-checkin-wrap">
+                <button
+                  type="button"
+                  className="secondary"
+                  disabled={checkInDisabled}
+                  onClick={completeCheckin}
+                >
+                  {t("Check-in")}
+                </button>
+                {checkInDisabled && (
+                  <span className="pnr-flow-checkin-tooltip">{t("Seat and verify documents for all passengers first")}</span>
+                )}
+              </span>
+              <button type="button" className="tertiary" disabled={flowStep === "services"} onClick={nextFlowStep}>{t("Next")}</button>
             </div>
           </div>
-          <div className="spacer" />
-          <div className="pnr-flow-actions">
-            {/* No action wired up yet — present for layout. */}
-            <button type="button" className="icon-button" aria-label={t("Refresh")}>
-              <RefreshIcon size={18} />
-            </button>
-            <button type="button" className="tertiary" onClick={() => setFinishConfirmOpen(true)}>{t("Finish")}</button>
-            <span className="pnr-flow-checkin-wrap">
-              <button
-                type="button"
-                className="secondary"
-                disabled={checkInDisabled}
-                onClick={completeCheckin}
-              >
-                {t("Check-in")}
-              </button>
-              {checkInDisabled && (
-                <span className="pnr-flow-checkin-tooltip">{t("Seat and verify documents for all passengers first")}</span>
-              )}
-            </span>
-            <button type="button" className="tertiary" disabled={flowStep === "services"} onClick={nextFlowStep}>{t("Next")}</button>
-          </div>
-        </div>
+        )}
 
-        <div className={`pnr-flow-body ${flowStep === "seats" && seatMapOrientation === "horizontal" ? "seatmap-stacked" : ""}`}>
+        <div className={`pnr-flow-body ${seatsRotated ? "seatmap-stacked" : ""}`}>
           <div className="panel panel--flush pnr-flow-roster">
             {buildFlowRows(flowPassengers).map((row) => (
               <FlowRosterRow
