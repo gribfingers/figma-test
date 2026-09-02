@@ -667,6 +667,8 @@ export const RU: Record<string, string> = {
   Layers: "Слои",
   Icons: "Иконки",
   "Hide seat map": "Скрыть карту мест",
+  "Minimize seat map": "Свернуть карту мест",
+  "Expand seat map": "Развернуть карту мест",
   Child: "Ребёнок",
 
   // ---- extraServiceTypes.ts ----

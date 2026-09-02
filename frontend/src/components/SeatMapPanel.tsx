@@ -85,6 +85,11 @@ export function SeatMapPanel({
     if (onOrientationChange) onOrientationChange(next);
     else setInternalOrientation(next);
   }
+  // Rotated (horizontal) layout stacks the seat map full-width below its caller's other content —
+  // collapsing it sideways (onHide, below) doesn't fit that shape, so the same toolbar button instead
+  // shrinks the grid's own height in place, leaving the toolbar itself (and everything above it)
+  // right where it is.
+  const [gridMinimized, setGridMinimized] = useState(false);
   const [legendOpen, setLegendOpen] = useState(false);
   const [layersOpen, setLayersOpen] = useState(false);
   const [editingSeat, setEditingSeat] = useState<SeatCell | null>(null);
@@ -205,7 +210,17 @@ export function SeatMapPanel({
               </ul>
             )}
           </div>
-          {onHide && (
+          {onHide && orientation === "horizontal" && (
+            <button
+              type="button"
+              className="seatmap-tool-btn"
+              title={gridMinimized ? t("Expand seat map") : t("Minimize seat map")}
+              onClick={() => setGridMinimized((v) => !v)}
+            >
+              <HideIcon size={16} className={gridMinimized ? "seatmap-hide-icon-up" : "seatmap-hide-icon-down"} />
+            </button>
+          )}
+          {onHide && orientation === "vertical" && (
             <button type="button" className="seatmap-tool-btn" title={t("Hide seat map")} onClick={onHide}>
               <HideIcon size={16} />
             </button>
@@ -213,7 +228,7 @@ export function SeatMapPanel({
         </div>
       </div>
 
-      <div className="seatmap-scroll" ref={scrollRef}>
+      <div className={`seatmap-scroll ${orientation === "horizontal" && gridMinimized ? "seatmap-scroll-minimized" : ""}`} ref={scrollRef}>
         <div className="seatmap-zoom-wrap" style={{ transform: `scale(${zoom / 100})` }}>
           <SeatMapGrid
             seats={seats}

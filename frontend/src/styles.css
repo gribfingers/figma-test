@@ -2539,6 +2539,12 @@ tr.row-hover { cursor: pointer; }
   color: #ffffff;
 }
 
+/* The "hide" arrow points right by default (collapse-to-the-side, used in the vertical layout) — in
+   the rotated layout the same button minimizes the grid's height in place instead, so the arrow
+   rotates to match: down to invite collapsing, up (once collapsed) to invite expanding again. */
+.seatmap-hide-icon-down { transform: rotate(90deg); }
+.seatmap-hide-icon-up { transform: rotate(-90deg); }
+
 .seatmap-popover-anchor { position: relative; }
 .seatmap-legend { position: absolute; z-index: 30; top: calc(100% + 6px); right: 0; width: 240px; max-height: 360px; overflow-y: auto; background: var(--paper); border: 1px solid var(--panel-border); border-radius: 4px; box-shadow: 0 2px 24px -6px var(--shadow-popover); padding: 12px; }
 .seatmap-legend-states { display: flex; flex-direction: column; gap: 6px; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid var(--border); }
@@ -2570,6 +2576,9 @@ tr.row-hover { cursor: pointer; }
 .seatmap-layers-list .pax-columns-item { gap: 8px; }
 
 .seatmap-scroll { flex: 1; min-height: 0; min-width: 0; overflow: auto; display: flex; justify-content: safe center; }
+/* Rotated layout's "minimize" toolbar button (see seatmap-hide-icon-down/up above) collapses the
+   grid down to nothing while leaving the toolbar above it in place. */
+.seatmap-scroll.seatmap-scroll-minimized { flex: 0 0 auto; height: 0; overflow: hidden; }
 .seatmap-zoom-wrap { transform-origin: top center; width: fit-content; }
 
 .seat-editor { display: flex; flex-direction: column; gap: 6px; padding-bottom: 4px; }
