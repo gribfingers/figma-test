@@ -678,6 +678,7 @@ export function PassengersTab({ flight, readOnly }: Props) {
             onUnassign={readOnly || seatAction ? undefined : handleUnassignSeatClick}
             ineligibleSeats={ineligibleSeats}
             undesirableSeats={undesirableSeats}
+            allowOrientationToggle
           />
           <div className="panel-hint">{t("Right-click a seat to edit its properties.")}</div>
         </div>

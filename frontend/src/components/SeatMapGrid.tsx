@@ -34,6 +34,13 @@ interface Props {
   /** Seat codes that are legal but discouraged for the passenger being assigned (soft-blocked) — dimmed to
    *  70% opacity with a dashed border, but stay clickable. */
   undesirableSeats?: Set<string>;
+  /** "horizontal" rotates the whole grid 90° counter-clockwise — rows run left-to-right (row 1 leftmost,
+   *  seats facing left) instead of top-to-bottom, and each row's own seat order runs bottom-to-top
+   *  reversed (F..A instead of A..F) so it's a true rotation rather than a mirror. Achieved with
+   *  flex-direction: row on .seatmap and column-reverse on every .seatrow (see seatmap-horizontal in
+   *  styles.css) — the DOM/JSX order below never changes, so every seat cell, WC/galley/exit bar and
+   *  label keeps working unchanged; only their flex placement does. */
+  orientation?: "vertical" | "horizontal";
 }
 
 const LETTER_ORDER = ["A", "B", "C", "D", "E", "F"];
@@ -100,6 +107,7 @@ export function SeatMapGrid({
   onUnassign,
   ineligibleSeats,
   undesirableSeats,
+  orientation = "vertical",
 }: Props) {
   const { t } = useLanguage();
   // A seat with more than one attribute flag gets a small badge (seat-multi-badge) instead of/alongside
@@ -133,7 +141,7 @@ export function SeatMapGrid({
   let prevClass: string | null = null;
 
   return (
-    <div className="seatmap">
+    <div className={`seatmap${orientation === "horizontal" ? " seatmap-horizontal" : ""}`}>
       <div className="seatrow seat-col-headers">
         <span className="seat-exit-slot" />
         {columns.map((letter) => (

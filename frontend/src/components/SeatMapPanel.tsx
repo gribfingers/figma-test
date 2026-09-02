@@ -5,7 +5,7 @@ import { SEAT_ATTRS, SeatExtra, parseSeatExtra } from "../seatExtra";
 import { SeatMapGrid } from "./SeatMapGrid";
 import { Modal } from "./Modal";
 import { Field } from "./Field";
-import { HideIcon, LayersIcon, MinusIcon, PlusIcon, RowsIcon, SeatChildIcon } from "./Icon";
+import { HideIcon, LayersIcon, MinusIcon, OrientationToggleIcon, PlusIcon, RowsIcon, SeatChildIcon } from "./Icon";
 import { SeatInfoPopover } from "./SeatInfoPopover";
 import { SeatHistoryModal } from "./SeatHistoryModal";
 import { useLanguage } from "../i18n";
@@ -26,6 +26,10 @@ interface Props {
   allowSeatEdit?: boolean;
   /** An in-progress-pick message (e.g. "Select a pax's seat to swap with X") shown inline in the toolbar, between the deck switcher and zoom/legend/layers — not floated over the grid. */
   banner?: ReactNode;
+  /** Shows the vertical/horizontal orientation toggle in the toolbar — off by default, and only
+   *  turned on where it's been rolled out so far (the Pax tab's seat map), not on every embedding
+   *  of this panel. */
+  allowOrientationToggle?: boolean;
 }
 
 const LEGEND_STATES: { cls: string; label: string }[] = [
@@ -63,9 +67,11 @@ export function SeatMapPanel({
   undesirableSeats,
   allowSeatEdit = true,
   banner,
+  allowOrientationToggle = false,
 }: Props) {
   const { t } = useLanguage();
   const [zoom, setZoom] = useState(100);
+  const [orientation, setOrientation] = useState<"vertical" | "horizontal">("vertical");
   const [legendOpen, setLegendOpen] = useState(false);
   const [layersOpen, setLayersOpen] = useState(false);
   const [editingSeat, setEditingSeat] = useState<SeatCell | null>(null);
@@ -121,6 +127,16 @@ export function SeatMapPanel({
               <PlusIcon size={14} />
             </button>
           </div>
+          {allowOrientationToggle && (
+            <button
+              type="button"
+              className="seatmap-tool-btn"
+              title={orientation === "vertical" ? t("Switch to horizontal layout") : t("Switch to vertical layout")}
+              onClick={() => setOrientation((o) => (o === "vertical" ? "horizontal" : "vertical"))}
+            >
+              <OrientationToggleIcon size={16} />
+            </button>
+          )}
           <div className="seatmap-popover-anchor" ref={legendRef}>
             <button type="button" className="seatmap-tool-btn" title={t("Legend")} onClick={() => setLegendOpen((o) => !o)}>
               <RowsIcon size={16} />
@@ -200,6 +216,7 @@ export function SeatMapPanel({
             onUnassign={onUnassign}
             ineligibleSeats={ineligibleSeats}
             undesirableSeats={undesirableSeats}
+            orientation={orientation}
           />
         </div>
       </div>
