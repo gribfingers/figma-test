@@ -241,7 +241,9 @@ function AuxModal({ passenger, onClose }: { passenger: Passenger; onClose: () =>
             {services.map((s, i) => (
               <div key={i} className="asvc-row">
                 <span className="asvc-name">{t(s.name)}</span>
-                <span className={`asvc-status ${s.paid ? "paid" : "unpaid"}`}>{s.paid ? t("Paid") : t("Not paid")}</span>
+                <span className={`asvc-status ${s.paid ? "paid" : "unpaid"}`}>
+                  {s.paid ? t("Paid") : `${t("Not paid")} · ${s.price.toLocaleString("ru-RU")} ₽`}
+                </span>
               </div>
             ))}
             {services.length === 0 && <div className="asvc-row muted">{t("No ancillary services purchased.")}</div>}

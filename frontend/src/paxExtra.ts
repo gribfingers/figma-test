@@ -153,6 +153,8 @@ function seededRandom(seed: number): () => number {
 export interface AsvcService {
   name: string;
   paid: boolean;
+  /** Fabricated amount, same mock-data spirit as the rest of this generator — see unpaidAsvcAmount. */
+  price: number;
 }
 export interface AsvcLeg {
   leg: string;
@@ -177,10 +179,21 @@ export function asvcForPassenger(p: Passenger): AsvcLeg[] {
     for (let i = 0; i < count; i++) {
       const idx = Math.floor(rand() * pool.length);
       const name = pool.splice(idx, 1)[0];
-      services.push({ name, paid: rand() < 0.7 });
+      const paid = rand() < 0.7;
+      const price = 200 + Math.floor(rand() * 24) * 50; // 200-1350 in steps of 50
+      services.push({ name, paid, price });
     }
     return { leg, services };
   });
+}
+
+/** Total owed across a passenger's unpaid ancillary purchases (see AsvcService.price) — the amount
+ *  shown on Boarding's "Pay" button/QR, since these mock purchases have no separate priced record. */
+export function unpaidAsvcAmount(p: Passenger): number {
+  return asvcForPassenger(p)
+    .flatMap((l) => l.services)
+    .filter((s) => !s.paid)
+    .reduce((total, s) => total + s.price, 0);
 }
 
 export interface SeatServiceItem {

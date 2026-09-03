@@ -63,12 +63,16 @@ function StatBar({ label, count, total }: { label: "C" | "Y"; count: number; tot
 function statusLabel(p: Passenger): string {
   if (p.boarding_status === "BOARDED") return "Boarded";
   if (p.boarding_status === "OFFLOADED") return "Offloaded";
-  if (p.checkin_status === "CHECKED_IN") return "Checked-in";
+  if (p.checkin_status === "CHECKED_IN") {
+    if (asvcStatus(p) === "conflict") return "Not paid";
+    return "Checked-in";
+  }
   return "Not checked-in";
 }
 function statusChipClass(p: Passenger): string {
   if (p.boarding_status === "OFFLOADED") return "danger";
-  if (p.boarding_status === "BOARDED" || p.checkin_status === "CHECKED_IN") return "ok";
+  if (p.boarding_status === "BOARDED") return "ok";
+  if (p.checkin_status === "CHECKED_IN") return asvcStatus(p) === "conflict" ? "danger" : "ok";
   return "muted";
 }
 

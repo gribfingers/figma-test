@@ -5,11 +5,12 @@ import { cabinFeaturesFor } from "../cabinLayout";
 import { SeatMapPanel } from "../components/SeatMapPanel";
 import { BaggageFlowIcon, DocumentsFlowIcon, SeatsFlowIcon, ServicesFlowIcon } from "../components/Icon";
 import { formatSeatDisplay } from "../seatExtra";
-import { classFor, parsePassengerExtra } from "../paxExtra";
+import { asvcStatus, classFor, parsePassengerExtra, unpaidAsvcAmount } from "../paxExtra";
 import { useRegisterTab, useTabs } from "../tabs";
 import { useToast } from "../toast";
 import { FlowStep, presetCheckinStep } from "../checkinFlow";
 import { PassengerDocPanel } from "../components/PassengerDocPanel";
+import { PayQrModal } from "../components/checkin/PayQrModal";
 import { usePanelTransition } from "../usePanelMounted";
 import { EntityNotFound } from "../components/EntityNotFound";
 import { useLanguage } from "../i18n";
@@ -47,12 +48,16 @@ function StatBar({ label, count, total }: { label: "C" | "Y"; count: number; tot
 function statusLabel(p: Passenger): string {
   if (p.boarding_status === "BOARDED") return "Boarded";
   if (p.boarding_status === "OFFLOADED") return "Offloaded";
-  if (p.checkin_status === "CHECKED_IN") return "Checked-in";
+  if (p.checkin_status === "CHECKED_IN") {
+    if (asvcStatus(p) === "conflict") return "Not paid";
+    return "Checked-in";
+  }
   return "Not checked-in";
 }
 function statusBadgeClass(p: Passenger): string {
   if (p.boarding_status === "OFFLOADED") return "danger";
-  if (p.boarding_status === "BOARDED" || p.checkin_status === "CHECKED_IN") return "ok";
+  if (p.boarding_status === "BOARDED") return "ok";
+  if (p.checkin_status === "CHECKED_IN") return asvcStatus(p) === "conflict" ? "danger" : "ok";
   return "";
 }
 
@@ -98,6 +103,7 @@ export function BoardingPax() {
   const [message, setMessage] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [docPanelOpen, setDocPanelOpen] = useState(false);
+  const [payOpen, setPayOpen] = useState(false);
   const docPanelTransition = usePanelTransition(docPanelOpen);
   const { showToast } = useToast();
   const { closeTab } = useTabs();
@@ -168,6 +174,7 @@ export function BoardingPax() {
   if (!flight || !passenger) return <div className="content">{t("Loading…")}</div>;
 
   const extra = parsePassengerExtra(passenger);
+  const unpaid = passenger.boarding_status !== "BOARDED" && passenger.checkin_status === "CHECKED_IN" && asvcStatus(passenger) === "conflict";
   const comment = extra.comments?.boarding[0] ?? extra.comments?.checkin[0] ?? null;
   const ssr = passenger.ssr ?? [];
   const cabinFeatures = cabinFeaturesFor(flight.aircraft_type);
@@ -260,6 +267,10 @@ export function BoardingPax() {
                 <button type="button" className="secondary boarding-pax-action-btn" onClick={unboardThis}>
                   {t("Unboard")}
                 </button>
+              ) : unpaid ? (
+                <button type="button" className="boarding-pax-action-btn" onClick={() => setPayOpen(true)}>
+                  {t("Pay")}
+                </button>
               ) : (
                 <button
                   type="button"
@@ -295,6 +306,15 @@ export function BoardingPax() {
           onClose={() => setDocPanelOpen(false)}
           onUpdated={() => refresh()}
           readOnly={!canEdit}
+        />
+      )}
+
+      {payOpen && (
+        <PayQrModal
+          payerLabel={`${passenger.surname} ${passenger.given_name}`}
+          reference={passenger.record_locator}
+          amount={unpaidAsvcAmount(passenger)}
+          onClose={() => setPayOpen(false)}
         />
       )}
     </div>
