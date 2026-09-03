@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useLocation, useParams } from "react-router-dom";
 import { api, Flight, Passenger, PassengerSearchMode, SeatCell } from "../api";
@@ -358,16 +358,20 @@ export function PnrView() {
   const [infoModalOpen, setInfoModalOpen] = useState(false);
   const [finishConfirmOpen, setFinishConfirmOpen] = useState(false);
   const [routeModalOpen, setRouteModalOpen] = useState(false);
-  // Baggage prices only show on the roster card once the agent has actually
-  // run Calculate for that passenger — not just from opening the Baggage step.
-  const [baggageCalculated, setBaggageCalculated] = useState<Set<number>>(() => new Set());
+  // Baggage prices only show on the roster card once the agent has actually run Calculate for that
+  // passenger — not just from opening the Baggage step. Persisted (like checkedArr/flowActiveId
+  // above) so a page reload mid-flow doesn't silently drop confirmed baggage/services charges out
+  // of the cart — a Set doesn't survive JSON round-tripping, so the persisted form is a plain array
+  // and the Set the rest of this file uses is derived from it.
+  const [baggageCalculatedArr, setBaggageCalculatedArr] = usePersistentState<number[]>(`dcs_pnr_baggage_calc_${pid}`, []);
+  const baggageCalculated = useMemo(() => new Set(baggageCalculatedArr), [baggageCalculatedArr]);
   // The Baggage step's actual bag rows, lifted here per passenger (same reason swapSeatMode and
   // confirmedServices live here) so the roster card can mirror real rows and so switching between
   // passengers mid-flow doesn't mix up or drop anyone's in-progress bags.
-  const [baggageRows, setBaggageRows] = useState<Record<number, BagRow[]>>({});
+  const [baggageRows, setBaggageRows] = usePersistentState<Record<number, BagRow[]>>(`dcs_pnr_baggage_rows_${pid}`, {});
   // Unlike baggageCalculated, this mirrors the actual confirmed items live — the roster
   // card's service chips update (and disappear) as the agent checks/unchecks/confirms rows.
-  const [confirmedServices, setConfirmedServices] = useState<Record<number, SeatServiceItem[]>>({});
+  const [confirmedServices, setConfirmedServices] = usePersistentState<Record<number, SeatServiceItem[]>>(`dcs_pnr_confirmed_services_${pid}`, {});
 
   const [notFound, setNotFound] = useState(false);
   useEffect(() => {
@@ -605,7 +609,7 @@ export function PnrView() {
                 segments={segmentsForFlight(flight)}
                 initialRows={baggageRows[flowActive.id] ?? []}
                 onRowsChange={(rows) => setBaggageRows((prev) => ({ ...prev, [flowActive.id]: rows }))}
-                onCalculate={() => setBaggageCalculated((prev) => new Set(prev).add(flowActive.id))}
+                onCalculate={() => setBaggageCalculatedArr((prev) => (prev.includes(flowActive.id) ? prev : [...prev, flowActive.id]))}
               />
             )}
             {flowStep === "services" && flowActive && (

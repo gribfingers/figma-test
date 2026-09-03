@@ -1552,11 +1552,11 @@ button.icon-button:hover { background: var(--hover-bg); }
 .cart-panel-footer { flex-shrink: 0; padding: 20px 24px 24px; border-top: 1px solid var(--panel-border); display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .cart-panel-footer .cart-line { flex: 1; }
 
-/* Label ... dotted leader ... value, like a menu/invoice line. */
+/* Label ... dashed leader ... value, like a menu/invoice line. */
 .cart-line { display: flex; align-items: baseline; gap: 6px; font-size: 14px; color: var(--field-value); margin-bottom: 8px; }
 .cart-line:last-child { margin-bottom: 0; }
 .cart-line-label { flex-shrink: 0; color: var(--muted); }
-.cart-line-leader { flex: 1; border-bottom: 1px dotted var(--border-strong); margin-bottom: 4px; }
+.cart-line-leader { flex: 1; border-bottom: 1px dashed var(--border-strong); margin-bottom: 4px; }
 .cart-line-value { flex-shrink: 0; font-family: var(--mono); }
 .cart-line-total .cart-line-label, .cart-line-total .cart-line-value { font-weight: 700; color: var(--field-value); }
 
