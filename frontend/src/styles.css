@@ -2960,7 +2960,7 @@ tr.row-hover { cursor: pointer; }
   gap: 10px;
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 12px 16px 0;
+  padding: 0;
   /* Pulls the cards' bottom edge 1px past the roster's own box, into the map panel's top border —
      merges the two into a single line instead of a visible gap or a doubled border. */
   margin-bottom: -1px;
@@ -2968,7 +2968,9 @@ tr.row-hover { cursor: pointer; }
 .pnr-flow-body.seatmap-stacked .pnr-flow-roster-row {
   flex: 0 0 280px;
   border: 1px solid var(--panel-border);
-  border-radius: 4px;
+  /* Only the top corners round — the bottom edge sits flush against the map panel's border below
+     (see the roster's -1px margin above), where a rounded corner would leave a visible notch. */
+  border-radius: 4px 4px 0 0;
   overflow-y: auto;
 }
 /* The active-card accent bar sits on the left edge in the normal column roster (a natural "current
