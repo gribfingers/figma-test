@@ -2554,11 +2554,15 @@ tr.row-hover { cursor: pointer; }
 
 .seatmap-zoom { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--field-border); border-radius: 4px; padding: 4px 8px; font-size: 12px; font-weight: 600; color: var(--field-value); font-family: var(--mono); }
 /* Fixed width so 50%/150% (3 digits) vs 100% (3 digits) vs 90% (2 digits) never resize this box as the user zooms. A button (click resets to 100%), so it needs the same unset + reapplied font as .seatmap-zoom-btn below. */
-.seatmap-zoom-value { all: unset; display: inline-block; width: 30px; text-align: center; font: inherit; color: inherit; cursor: pointer; }
+/* user-select: none — all: unset drops the button default of not selecting its own text, so a quick
+   click was landing as a text selection (native blue highlight) instead of a plain click. */
+.seatmap-zoom-value { all: unset; display: inline-block; width: 30px; text-align: center; font: inherit; color: inherit; cursor: pointer; user-select: none; }
 .seatmap-zoom-btn { all: unset; box-sizing: border-box; display: flex; align-items: center; justify-content: center; width: 18px; height: 18px; color: var(--muted); cursor: pointer; }
 /* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
 .seatmap-zoom .seatmap-zoom-btn:hover { background: transparent; color: var(--field-value); }
-.seatmap-zoom .seatmap-zoom-value:hover { color: var(--accent); }
+/* background: transparent — extra specificity so this beats the global button:hover rule, which
+   would otherwise fill this button solid blue (var(--accent-hover)) on hover. */
+.seatmap-zoom .seatmap-zoom-value:hover { background: transparent; color: var(--accent); }
 
 .seatmap-tool-btn { all: unset; box-sizing: border-box; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 4px; color: var(--muted); cursor: pointer; }
 .seatmap-panel .seatmap-tool-btn:hover { background: var(--field-bg); color: var(--field-value); }
