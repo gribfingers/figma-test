@@ -334,6 +334,8 @@ export const RU: Record<string, string> = {
   "Check-in cancelled for {n} passengers": "Регистрация отменена для {n} пассажиров",
   "{n} passenger reaccommodated to {flight}": "{n} пассажир пересажен на рейс {flight}",
   "{n} passengers reaccommodated to {flight}": "{n} пассажиров пересажено на рейс {flight}",
+  "{n} passengers": "{n} пассажиров",
+  "Scan with a banking app to pay": "Отсканируйте в банковском приложении для оплаты",
 
   // ---- PnrView.tsx ----
   "No matches": "Совпадений нет",

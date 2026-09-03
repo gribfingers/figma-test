@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Passenger, SeatCell } from "../../api";
 import { BagRow } from "../../baggageTypes";
 import { SeatServiceItem, baggageServiceItemsForRows, seatServiceItemsForSeat } from "../../paxExtra";
 import { CloseIcon } from "../Icon";
 import { useLanguage } from "../../i18n";
+import { PayQrModal } from "./PayQrModal";
 
 interface Props {
   passengers: Passenger[];
@@ -33,6 +35,7 @@ function CartLine({ label, amount, bold }: { label: string; amount: number; bold
 /** Slide-out side panel (same shell as FlightInfoPanel, but from the left) opened from the check-in flow's Cart nav icon. */
 export function CartPanel({ passengers, seatByCode, baggageRows, baggageCalculated, confirmedServices, open, onClose }: Props) {
   const { t } = useLanguage();
+  const [payTarget, setPayTarget] = useState<{ payerLabel: string; reference: string; amount: number } | null>(null);
   const rows = passengers.map((p) => {
     const seat = sum(seatServiceItemsForSeat(p.seat ? seatByCode.get(p.seat) : undefined));
     const baggage = sum(baggageServiceItemsForRows(p.id, baggageRows[p.id] ?? [], baggageCalculated.has(p.id)));
@@ -40,6 +43,8 @@ export function CartPanel({ passengers, seatByCode, baggageRows, baggageCalculat
     return { passenger: p, seat, baggage, ancillaries, total: seat + baggage + ancillaries };
   });
   const grandTotal = rows.reduce((total, r) => total + r.total, 0);
+  const payableLocators = [...new Set(rows.filter((r) => r.total > 0).map((r) => r.passenger.record_locator))];
+  const grandReference = payableLocators.length <= 2 ? payableLocators.join(", ") : `${payableLocators.slice(0, 2).join(", ")}…`;
 
   return (
     <div className={`cart-panel-overlay ${open ? "open" : ""}`} onClick={onClose}>
@@ -62,7 +67,19 @@ export function CartPanel({ passengers, seatByCode, baggageRows, baggageCalculat
                   {r.ancillaries > 0 && <CartLine label={t("Ancillaries")} amount={r.ancillaries} />}
                   <CartLine label={t("Total")} amount={r.total} bold />
                   <div className="cart-passenger-pay">
-                    <button type="button" className="tertiary">{t("Pay")}</button>
+                    <button
+                      type="button"
+                      className="tertiary"
+                      onClick={() =>
+                        setPayTarget({
+                          payerLabel: `${r.passenger.surname} ${r.passenger.given_name}`,
+                          reference: r.passenger.record_locator,
+                          amount: r.total,
+                        })
+                      }
+                    >
+                      {t("Pay")}
+                    </button>
                   </div>
                 </>
               ) : (
@@ -74,9 +91,32 @@ export function CartPanel({ passengers, seatByCode, baggageRows, baggageCalculat
 
         <div className="cart-panel-footer">
           <CartLine label={t("Total")} amount={grandTotal} bold />
-          <button type="button" disabled={grandTotal === 0}>{t("Pay")}</button>
+          <button
+            type="button"
+            disabled={grandTotal === 0}
+            onClick={() =>
+              setPayTarget({
+                payerLabel:
+                  payableLocators.length <= 1 && rows.filter((r) => r.total > 0).length === 1
+                    ? `${rows.find((r) => r.total > 0)!.passenger.surname} ${rows.find((r) => r.total > 0)!.passenger.given_name}`
+                    : t("{n} passengers").replace("{n}", String(rows.filter((r) => r.total > 0).length)),
+                reference: grandReference,
+                amount: grandTotal,
+              })
+            }
+          >
+            {t("Pay")}
+          </button>
         </div>
       </div>
+      {payTarget && (
+        <PayQrModal
+          payerLabel={payTarget.payerLabel}
+          reference={payTarget.reference}
+          amount={payTarget.amount}
+          onClose={() => setPayTarget(null)}
+        />
+      )}
     </div>
   );
 }
