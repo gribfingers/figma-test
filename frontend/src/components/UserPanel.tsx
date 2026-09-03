@@ -9,6 +9,7 @@ import { useLanguage } from "../i18n";
 import { resizeImageToDataUrl, userAvatarColor, userInitials } from "../userDisplay";
 import { Field } from "./Field";
 import { Select } from "./Select";
+import { ShortcutSettingsSection } from "./ShortcutSettingsSection";
 import { ChevronDownIcon, CloseIcon, MinusIcon, PlusIcon } from "./Icon";
 
 const COMMON_TIMEZONES = [
@@ -41,6 +42,7 @@ export function UserPanel({ open, onClose }: Props) {
   const { enabled: desktopNotificationsEnabled, supported: desktopNotificationsSupported, setEnabled: setDesktopNotificationsEnabled } = useDesktopNotifications();
   const { language, setLanguage, t } = useLanguage();
   const [settingsOpen, setSettingsOpen] = useState(true);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [securityOpen, setSecurityOpen] = useState(false);
   const [timezone, setTimezone] = useState(user?.timezone ?? "Europe/Moscow");
   const fileRef = useRef<HTMLInputElement>(null);
@@ -185,6 +187,18 @@ export function UserPanel({ open, onClose }: Props) {
                 onChange={changeTimezone}
                 options={timezones.map((tz) => ({ value: tz, label: tz }))}
               />
+            </div>
+          )}
+        </div>
+
+        <div className="user-panel-section">
+          <button type="button" className="user-panel-section-head" onClick={() => setShortcutsOpen((o) => !o)}>
+            {t("Keyboard shortcuts")}
+            <ChevronDownIcon size={16} className={shortcutsOpen ? "chevron-rotated" : ""} />
+          </button>
+          {shortcutsOpen && (
+            <div className="user-panel-section-body">
+              <ShortcutSettingsSection />
             </div>
           )}
         </div>

@@ -30,6 +30,7 @@ import { FLOW_STEPS, FLOW_STEP_LABEL, FlowStep, useCheckinFlow } from "../checki
 import { usePersistentState } from "../usePersistentState";
 import { useLanguage } from "../i18n";
 import { useCanEdit } from "../auth";
+import { useHotkey } from "../useShortcuts";
 
 // Last-fetched flight/passengers per flight, kept outside component state so
 // it survives this component unmounting when the agent switches to another
@@ -415,6 +416,13 @@ export function PnrView() {
   useEffect(() => {
     if (!canEdit && flowStep) setFlowStep(null);
   }, [canEdit, flowStep]);
+
+  // Mirror the flow header's own Check-in/Next/Finish buttons and their disabled conditions — must
+  // stay a fixed hook call above both early returns below (rules of hooks), so the enabled checks
+  // here use flowStep directly rather than the checkInDisabled const computed further down.
+  useHotkey("flow.checkin", () => completeCheckin(), !!flowStep && flowStep !== "docs" && flowStep !== "seats");
+  useHotkey("flow.next", () => nextFlowStep(), !!flowStep && flowStep !== "services");
+  useHotkey("flow.finish", () => setFinishConfirmOpen(true), !!flowStep);
 
   if (notFound) return <EntityNotFound label={t("This flight")} />;
   if (!flight || !clicked) return <div className="content">{t("Loading…")}</div>;

@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { api, PassengerSearchMode, PassengerSearchResult } from "../api";
 import { useRegisterTab, useTabs } from "../tabs";
 import { clearPersistentState, usePersistentState } from "../usePersistentState";
 import { SortTh, useSort } from "../components/SortTh";
 import { useLanguage } from "../i18n";
+import { useHotkey } from "../useShortcuts";
 
 type ResultSortKey = "name" | "destination" | "flight" | "std" | "pnr" | "status";
 const RESULT_SORT_GETTERS: Record<ResultSortKey, (p: PassengerSearchResult) => string | number> = {
@@ -67,6 +68,8 @@ export function Search() {
   const [error, setError] = useState("");
   const [searching, setSearching] = useState(false);
   const [paxQuickFilter, setPaxQuickFilter] = usePersistentState<PaxQuickFilterKey>("dcs_search_quick_filter", "all");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  useHotkey("nav.search-focus", () => searchInputRef.current?.focus());
 
   // A search's query/results are only useful for as long as this tab stays open — closing it should
   // discard them (results can go stale, e.g. after the demo schedule is regenerated) rather than
@@ -130,6 +133,7 @@ export function Search() {
                 ))}
               </div>
               <input
+                ref={searchInputRef}
                 className="search-mode-input"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}

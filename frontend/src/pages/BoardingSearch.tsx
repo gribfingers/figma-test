@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, Flight } from "../api";
 import { Field } from "../components/Field";
@@ -6,6 +6,7 @@ import { Select } from "../components/Select";
 import { SortTh, useSort } from "../components/SortTh";
 import { useRegisterTab } from "../tabs";
 import { useLanguage } from "../i18n";
+import { useHotkey } from "../useShortcuts";
 
 // Matches Search.tsx's fmtStd — same UTC wall-clock convention as the rest of the app.
 function fmtStd(iso: string): string {
@@ -47,6 +48,8 @@ export function BoardingSearch() {
   const [status, setStatus] = useState("");
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
+  const queryInputRef = useRef<HTMLInputElement>(null);
+  useHotkey("nav.search-focus", () => queryInputRef.current?.focus());
 
   useEffect(() => {
     api.listFlights().then(setFlights).catch((e) => setError(e.message));
@@ -84,7 +87,7 @@ export function BoardingSearch() {
       <div className="panel">
         <div className="toolbar" style={{ flexWrap: "wrap", alignItems: "flex-end" }}>
           <Field label={t("Flight")} style={{ minWidth: 160 }}>
-            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="e.g. SU5678" autoFocus />
+            <input ref={queryInputRef} value={query} onChange={(e) => setQuery(e.target.value)} placeholder="e.g. SU5678" autoFocus />
           </Field>
           <Select
             label={t("Status")}

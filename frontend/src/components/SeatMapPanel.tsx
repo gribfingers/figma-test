@@ -9,6 +9,7 @@ import { HideIcon, LayersIcon, MinusIcon, OrientationToggleIcon, PlusIcon, RowsI
 import { SeatInfoPopover } from "./SeatInfoPopover";
 import { SeatHistoryModal } from "./SeatHistoryModal";
 import { useLanguage } from "../i18n";
+import { useHotkey } from "../useShortcuts";
 
 interface Props {
   flightId: number;
@@ -78,6 +79,9 @@ export function SeatMapPanel({
 }: Props) {
   const { t } = useLanguage();
   const [zoom, setZoom] = useState(100);
+  useHotkey("seatmap.zoom-in", () => setZoom((z) => Math.min(150, z + 10)));
+  useHotkey("seatmap.zoom-out", () => setZoom((z) => Math.max(50, z - 10)));
+  useHotkey("seatmap.zoom-reset", () => setZoom(100));
   const [internalOrientation, setInternalOrientation] = useState<"vertical" | "horizontal">("vertical");
   const orientation = orientationProp ?? internalOrientation;
   function toggleOrientation() {

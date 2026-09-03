@@ -28,6 +28,7 @@ import {
   trStatus,
 } from "../paxExtra";
 import { useCanEdit } from "../auth";
+import { useHotkey } from "../useShortcuts";
 
 // Matches PnrView's fmtCardDate — same UTC wall-clock convention as the rest of the app.
 function fmtCardDate(std: string): string {
@@ -156,6 +157,7 @@ export function Boarding() {
   const [message, setMessage] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
   const [manifest, setManifest] = useState<{ label: string; text: string } | null>(null);
   const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [focusedIndex, setFocusedIndex] = useState(-1);
   const [quickFilter, setQuickFilter] = useState<QuickFilterKey>("all");
   const [facet, setFacet] = useState<FacetKey>("all");
   const [searchMode, setSearchMode] = useState<SearchMode>("seq");
@@ -208,6 +210,10 @@ export function Boarding() {
   }, [facetFiltered, quickFilter, searchQuery, searchMode]);
 
   const rows = useMemo(() => buildRows(filteredPassengers), [filteredPassengers]);
+
+  // A keyboard-focused row (see boarding.row-* shortcuts) only means something for the currently
+  // visible rows — drop it whenever the filter/search narrows or reorders the list.
+  useEffect(() => setFocusedIndex(-1), [facet, quickFilter, searchQuery, searchMode]);
 
   async function boardDirectly(p: Passenger) {
     if (!canEdit || !p.bcbp) return;
@@ -292,9 +298,34 @@ export function Boarding() {
     setSelected(allSelected ? new Set() : new Set(rows.map((r) => r.passenger.id)));
   }
 
+  const closed = flight?.status === "CLOSED" || flight?.status === "DEPARTED";
+
+  // Row navigation — see UserPanel's Keyboard shortcuts section for rebinding these.
+  useHotkey("boarding.row-up", () => setFocusedIndex((i) => (i <= 0 ? 0 : i - 1)), rows.length > 0);
+  useHotkey("boarding.row-down", () => setFocusedIndex((i) => (i < 0 ? 0 : Math.min(rows.length - 1, i + 1))), rows.length > 0);
+  useHotkey(
+    "boarding.row-open",
+    () => {
+      const row = rows[focusedIndex];
+      if (row) navigate(`/boarding/${fid}/pax/${row.passenger.id}`);
+    },
+    focusedIndex >= 0 && focusedIndex < rows.length
+  );
+  useHotkey(
+    "boarding.row-toggle",
+    () => {
+      const row = rows[focusedIndex];
+      if (row) toggleSelected(row.passenger.id);
+    },
+    canEdit && focusedIndex >= 0 && focusedIndex < rows.length
+  );
+  useHotkey("boarding.select-all", toggleAllSelected, canEdit && rows.length > 0);
+  useHotkey("boarding.scan", () => setScanOpen((v) => !v), canEdit);
+  useHotkey("boarding.board", boardSelected, canEdit && selected.size > 0 && !closed);
+  useHotkey("boarding.offload", offloadSelected, canEdit && selected.size > 0 && !closed);
+
   if (notFound) return <EntityNotFound label={t("This flight")} />;
   if (!flight) return <div className="content">{t("Loading…")}</div>;
-  const closed = flight.status === "CLOSED" || flight.status === "DEPARTED";
 
   return (
     <div className="boarding-page">
@@ -423,12 +454,16 @@ export function Boarding() {
               </tr>
             </thead>
             <tbody>
-              {rows.map(({ passenger: p, nested }) => {
+              {rows.map(({ passenger: p, nested }, idx) => {
                 const ssr = p.ssr ?? [];
                 const extra = parsePassengerExtra(p);
                 const cls = classFor(p, seatByCode);
                 return (
-                  <tr key={p.id} className={`clickable ${selected.has(p.id) ? "pax-row-active" : ""}`} onClick={() => navigate(`/boarding/${fid}/pax/${p.id}`)}>
+                  <tr
+                    key={p.id}
+                    className={`clickable ${selected.has(p.id) ? "pax-row-active" : ""} ${idx === focusedIndex ? "pax-row-focused" : ""}`}
+                    onClick={() => navigate(`/boarding/${fid}/pax/${p.id}`)}
+                  >
                     <td>
                       {canEdit && (
                         <input

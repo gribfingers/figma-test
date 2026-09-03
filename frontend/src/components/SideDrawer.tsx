@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth";
 import { useCheckinFlow, FLOW_STEPS, FLOW_STEP_LABEL, FlowStep, pnrFlowPidFromPath } from "../checkinFlow";
 import { tabKindForPath } from "../tabKind";
 import { useLanguage } from "../i18n";
+import { useHotkey } from "../useShortcuts";
 import {
   BaggageFlowIcon,
   BoardingIcon,
@@ -34,6 +35,7 @@ function formatClock(d: Date): string {
 
 export function SideDrawer() {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useLanguage();
   const { flowStepFor, setFlowStep, flightInfoOpenFor, setFlightInfoOpen, cartOpenFor, setCartOpen } = useCheckinFlow();
@@ -49,6 +51,25 @@ export function SideDrawer() {
     const t = setInterval(() => setLastUpdated(new Date()), 30000);
     return () => clearInterval(t);
   }, []);
+
+  // Global nav shortcuts — always live, regardless of what's currently open.
+  useHotkey("nav.flights", () => navigate("/"));
+  useHotkey("nav.checkin-search", () => navigate("/search"));
+  useHotkey("nav.boarding-search", () => navigate("/boarding-search"));
+
+  // Check-in flow step switching + Cart/Flight info — only while a PNR's flow is actually open.
+  const FLOW_STEP_SHORTCUT: Record<FlowStep, string> = {
+    docs: "flow.step-docs",
+    seats: "flow.step-seats",
+    baggage: "flow.step-baggage",
+    services: "flow.step-services",
+  };
+  for (const step of FLOW_STEPS) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks -- FLOW_STEPS is a fixed constant tuple, so this loop always runs the same 4 hooks in the same order every render.
+    useHotkey(FLOW_STEP_SHORTCUT[step], () => setFlowStep(pnrPid!, step), showFlowIcons);
+  }
+  useHotkey("flow.cart", () => setCartOpen(pnrPid!, true), showFlowIcons);
+  useHotkey("flow.flight-info", () => setFlightInfoOpen(pnrPid!, true), showFlowIcons);
 
   return (
     <nav className="side-drawer">

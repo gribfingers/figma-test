@@ -47,6 +47,28 @@ export const RU: Record<string, string> = {
   "Notifications weren't allowed — you can turn this on again once you allow them.":
     "Уведомления не разрешены — включите их заново, когда разрешите в браузере.",
   Timezone: "Часовой пояс",
+
+  // ---- UserPanel.tsx / ShortcutSettingsSection.tsx (Keyboard shortcuts accordion) ----
+  "Keyboard shortcuts": "Горячие клавиши",
+  "Press a key…": "Нажмите клавишу…",
+  "Reset to default": "Сбросить на умолчание",
+  "Reset all shortcuts to default": "Сбросить все горячие клавиши на умолчания",
+  'Already used by "{name}"': "Уже используется для «{name}»",
+  // shortcuts.ts group names
+  Global: "Общие",
+  "Check-in flow": "Флоу регистрации",
+  "Seat map": "Карта мест",
+  // shortcuts.ts labels not already translated elsewhere in this file
+  "Focus search field": "Фокус на поле поиска",
+  "Close current tab": "Закрыть текущую вкладку",
+  "Previous tab": "Предыдущая вкладка",
+  "Next tab": "Следующая вкладка",
+  "Row up": "Строка выше",
+  "Row down": "Строка ниже",
+  "Open selected row": "Открыть выбранную строку",
+  "Toggle row checkbox": "Отметить/снять строку",
+  "Select/deselect all rows": "Выбрать/снять все строки",
+
   Security: "Безопасность",
   "Password changed.": "Пароль изменён.",
   "Current password": "Текущий пароль",

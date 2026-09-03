@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api";
-import { useTabs } from "../tabs";
+import { EMPTY_PATH, useTabs } from "../tabs";
 import { useAuth } from "../auth";
 import { useCheckinFlow, pnrFlowPidFromPath } from "../checkinFlow";
 import { useToast } from "../toast";
@@ -12,6 +12,7 @@ import { tabKindForPath, TabKind } from "../tabKind";
 import { useTabIcons } from "../tabIcons";
 import { useDesktopNotifications } from "../desktopNotifications";
 import { useLanguage } from "../i18n";
+import { useHotkey } from "../useShortcuts";
 import { ChatIcon, ChevronLeftIcon, ChevronRightIcon, CloseIcon, RestoreTabIcon, TabBoardingIcon, TabCheckinIcon, TabFlightsIcon } from "./Icon";
 import { UserPanel } from "./UserPanel";
 import { Messenger } from "./Messenger";
@@ -54,6 +55,7 @@ function MoscowClock() {
 
 export function TopTabs() {
   const { tabs, activePath, closeTab, closeAllTabs, hasClosedTabs, reopenLastClosedTab } = useTabs();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { flowStepFor, setFlowStep } = useCheckinFlow();
   const { showToast } = useToast();
@@ -189,6 +191,20 @@ export function TopTabs() {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [reopenLastClosedTab]);
+
+  // Close/switch tabs — see shortcuts.ts (nav.tab-close/prev/next) and UserPanel's Keyboard
+  // shortcuts section for how these can be rebound.
+  useHotkey("nav.tab-close", () => {
+    if (activePath !== EMPTY_PATH) requestCloseTab(activePath);
+  });
+  useHotkey("nav.tab-prev", () => {
+    const idx = tabs.findIndex((t) => t.path === activePath);
+    if (idx > 0) navigate(tabs[idx - 1].path);
+  });
+  useHotkey("nav.tab-next", () => {
+    const idx = tabs.findIndex((t) => t.path === activePath);
+    if (idx !== -1 && idx < tabs.length - 1) navigate(tabs[idx + 1].path);
+  });
 
   return (
     <div className="tabs-bar">
