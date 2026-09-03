@@ -14,15 +14,6 @@ interface RowState {
   confirmed: { price: number; paid: boolean } | null;
 }
 
-// No pricing backend for ancillary services either — deterministic per
-// confirmation, same "stable but not user-togglable" approach used
-// everywhere else this session (seat/baggage extras, MCO references).
-function hashSeed(seed: string): number {
-  let h = 0;
-  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
-  return h;
-}
-
 interface Props {
   flight: Flight;
   passenger: Passenger;
@@ -77,7 +68,9 @@ export function ExtraServicesStep({ flight, passenger, segments, onConfirmedChan
     const row = rows[id];
     if (!row) return;
     const price = 12500 * row.qty;
-    const paid = hashSeed(`${passenger.id}-${id}-${row.qty}-${[...row.segments].join(",")}`) % 3 !== 0;
+    // Confirmed right now, in this check-in session — never something carried over already paid
+    // at booking, so it's always unpaid until settled through the Cart's Pay flow.
+    const paid = false;
     setRows((prev) => {
       const next = { ...prev, [id]: { ...prev[id], confirmed: { price, paid } } };
       onConfirmedChange(confirmedItems(next, t));
