@@ -2945,7 +2945,7 @@ tr.row-hover { cursor: pointer; }
    runs much wider than tall once rotated, so it wants the width the roster would otherwise take. */
 .pnr-flow-body.seatmap-stacked { flex-direction: column; }
 .pnr-flow-body.seatmap-stacked .pnr-flow-roster { flex: 0 0 auto; max-height: 320px; width: 100%; }
-.pnr-flow-body.seatmap-stacked .pnr-flow-panel { border-left: none; border-top: 1px solid var(--panel-border); }
+.pnr-flow-body.seatmap-stacked .pnr-flow-panel { border-left: 1px solid var(--panel-border); border-top: 1px solid var(--panel-border); }
 /* The roster's cards normally stack in a single column down the fixed 320px sidebar — once that
    sidebar itself becomes a full-width strip above the map, laying them out in a row instead uses
    that width the same way the column used to use height. Each card gets its own border so they

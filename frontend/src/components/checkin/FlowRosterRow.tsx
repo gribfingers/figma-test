@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Flight, Passenger, SeatCell } from "../../api";
 import { BagRow } from "../../baggageTypes";
 import { ageFromDob, baggageServiceItemsForRows, SeatServiceItem, seatServiceItemsForSeat } from "../../paxExtra";
@@ -7,18 +8,28 @@ import { FlightSegment } from "../../flightSegments";
 import { ChevronDownIcon, InfantIcon, InfoIcon } from "../Icon";
 import { EmdModal } from "./EmdModal";
 import { useLanguage } from "../../i18n";
+import { usePopoverPosition } from "../../usePopoverPosition";
 
 /** "Swap seat…" (Seats step, once seated) and "Reprint BP" tucked under one menu, same
- *  trigger/list pattern as the flight card header's Actions menu (FlightActionsMenu). */
+ *  trigger/list pattern as the flight card header's Actions menu (FlightActionsMenu). Portaled to
+ *  document.body (see usePopoverPosition) rather than positioned absolute in place — the rotated
+ *  seat map's roster row gives each card overflow:auto/hidden so cards can share one height, which
+ *  would otherwise clip a plain absolute dropdown the moment it grew past the card's own box. */
 function RowActionsMenu({ onSwapSeat }: { onSwapSeat?: () => void }) {
   const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLUListElement>(null);
+  const rect = usePopoverPosition(btnRef, open);
 
   useEffect(() => {
     if (!open) return;
     function onDocMouseDown(e: MouseEvent) {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      if (rootRef.current?.contains(target)) return;
+      if (menuRef.current?.contains(target)) return;
+      setOpen(false);
     }
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") setOpen(false);
@@ -37,18 +48,27 @@ function RowActionsMenu({ onSwapSeat }: { onSwapSeat?: () => void }) {
       className={`actions-select ${open ? "open" : ""}`}
       onClick={(e) => e.stopPropagation()}
     >
-      <button type="button" className="tertiary" aria-haspopup="listbox" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+      <button ref={btnRef} type="button" className="tertiary" aria-haspopup="listbox" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
         {t("Actions")} <ChevronDownIcon size={16} className="chevron-flip" />
       </button>
-      {open && (
-        <ul className="actions-menu" role="listbox">
-          {onSwapSeat && (
-            <li onClick={() => { setOpen(false); onSwapSeat(); }}>{t("Swap seat…")}</li>
-          )}
-          {/* No boarding-pass printer wired up — present for layout, no action yet. */}
-          <li onClick={() => setOpen(false)}>{t("Reprint BP")}</li>
-        </ul>
-      )}
+      {open &&
+        rect &&
+        createPortal(
+          <ul
+            ref={menuRef}
+            className="actions-menu"
+            role="listbox"
+            style={{ position: "fixed", top: rect.top, right: window.innerWidth - (rect.left + rect.width) }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {onSwapSeat && (
+              <li onClick={() => { setOpen(false); onSwapSeat(); }}>{t("Swap seat…")}</li>
+            )}
+            {/* No boarding-pass printer wired up — present for layout, no action yet. */}
+            <li onClick={() => setOpen(false)}>{t("Reprint BP")}</li>
+          </ul>,
+          document.body
+        )}
     </div>
   );
 }
