@@ -1991,6 +1991,11 @@ pre.manifest {
   padding: 14px;
   border-radius: var(--radius);
   overflow-x: auto;
+  overflow-y: auto;
+  /* A full PNL/PFS dump can run to 100+ lines — without a cap this panel's natural height
+     squeezes its flex sibling (the table below it, on both Boarding.tsx and FlightCard.tsx) down
+     to a sliver, since that sibling has flex:1;min-height:0 inside a page fixed to height:100%. */
+  max-height: 280px;
   font-size: 12px;
   line-height: 1.5;
   font-family: var(--mono);
