@@ -22,6 +22,27 @@ function previewText(m: Message | null, t: (text: string) => string): string {
   return "";
 }
 
+// requestAnimationFrame only tracks this *page's* render loop — it says nothing about when the
+// captured MediaStream's own internal buffering has actually caught up and delivered a new video
+// frame, which is typically much slower (screen/tab capture has its own capture cadence and
+// encode latency independent of page paints). requestVideoFrameCallback fires exactly when a new
+// decoded frame is presented to the <video> element, so waiting for a few of those after hiding
+// the panel is what actually guarantees the grabbed frame reflects the hidden state — a couple of
+// rAF ticks was nowhere near enough and still captured a stale frame with the panel visible.
+function waitForFreshVideoFrames(video: HTMLVideoElement, count: number): Promise<void> {
+  const rvfc = (video as any).requestVideoFrameCallback?.bind(video);
+  if (!rvfc) return new Promise((r) => setTimeout(r, 400)); // fallback for browsers without rVFC
+  return new Promise((resolve) => {
+    let remaining = count;
+    function onFrame() {
+      remaining -= 1;
+      if (remaining <= 0) resolve();
+      else rvfc(onFrame);
+    }
+    rvfc(onFrame);
+  });
+}
+
 /**
  * Screen-capture screenshot tool: uses the real browser Screen Capture API
  * (getDisplayMedia) rather than faking it — the user picks a tab/window/
@@ -42,8 +63,9 @@ async function captureScreenshot(hide: () => void, show: () => void): Promise<st
     video.muted = true;
     await video.play();
     hide();
-    // Let the hide actually paint, then let at least one real frame render before grabbing it.
-    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    // Wait for real new video frames (not just page paints) so the grabbed frame actually reflects
+    // the panel being hidden, not a stale buffered frame from before the capture stream caught up.
+    await waitForFreshVideoFrames(video, 5);
     const canvas = document.createElement("canvas");
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
