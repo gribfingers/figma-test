@@ -133,6 +133,38 @@ export interface Contact {
   unreadCount: number;
 }
 
+export type AnalyticsRange = "24h" | "7d" | "30d" | "all";
+
+export interface AnalyticsSummary {
+  range: AnalyticsRange;
+  totals: { totalEvents: number; uniqueUsers: number; uniqueSessions: number };
+  errorCount: number;
+  eventsByDay: { day: string; count: number }[];
+  topPages: { path: string; count: number }[];
+  topActions: { name: string; count: number }[];
+  recentErrors: { name: string; path: string | null; detail: string | null; created_at: string; first_name: string | null; last_name: string | null }[];
+  activeUsers: { id: number; first_name: string; last_name: string; count: number }[];
+}
+
+export interface AnalyticsEventRow {
+  id: number;
+  type: string;
+  name: string;
+  path: string | null;
+  detail: string | null;
+  created_at: string;
+  first_name: string | null;
+  last_name: string | null;
+}
+
+// Set once by analytics.ts — kept as an injectable hook rather than a direct import so this module
+// never depends on analytics.ts (which itself depends on this module for getToken/trackEvents;
+// importing it back here would make that a circular import).
+let trackApiError: ((path: string, status: number, message: string) => void) | null = null;
+export function setApiErrorTracker(fn: typeof trackApiError) {
+  trackApiError = fn;
+}
+
 const TOKEN_KEY = "dcs_token";
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
@@ -160,6 +192,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const body = res.status === 204 ? undefined : isText ? await res.text() : await res.json();
   if (!res.ok) {
     const message = typeof body === "object" && body?.error ? body.error : String(body);
+    // 401s already get their own dedicated handling above; skip the analytics endpoint itself so a
+    // struggling analytics backend can't spawn more analytics events about itself.
+    if (res.status !== 401 && !path.startsWith("/analytics/") && trackApiError) {
+      trackApiError(path, res.status, message);
+    }
     throw new Error(message);
   }
   return body as T;
@@ -264,4 +301,15 @@ export const api = {
   getThread: (userId: number) => request<Message[]>(`/messages/${userId}`),
   sendMessage: (userId: number, data: { body?: string; image?: string }) =>
     request<Message>(`/messages/${userId}`, { method: "POST", body: JSON.stringify(data) }),
+
+  /** Fire-and-forget batch upload — see analytics.ts, which is the only caller. */
+  trackEvents: (events: unknown[]) => request<void>("/analytics/track", { method: "POST", body: JSON.stringify({ events }) }),
+  analyticsSummary: (range: AnalyticsRange) => request<AnalyticsSummary>(`/analytics/summary?range=${range}`),
+  analyticsEvents: (range: AnalyticsRange, type: string, q: string, page: number) => {
+    const params = new URLSearchParams({ range, type, page: String(page) });
+    if (q) params.set("q", q);
+    return request<{ total: number; page: number; pageSize: number; events: AnalyticsEventRow[] }>(
+      `/analytics/events?${params.toString()}`
+    );
+  },
 };

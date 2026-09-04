@@ -31,6 +31,7 @@ import { usePersistentState } from "../usePersistentState";
 import { useLanguage } from "../i18n";
 import { useCanEdit } from "../auth";
 import { useHotkey } from "../useShortcuts";
+import { trackEvent } from "../analytics";
 
 // Last-fetched flight/passengers per flight, kept outside component state so
 // it survives this component unmounting when the agent switches to another
@@ -516,6 +517,7 @@ export function PnrView() {
   // same way Finish does once its confirm is accepted.
   function completeCheckin() {
     const names = flowPassengers.map((p) => `${p.surname} ${p.given_name}`).join(", ");
+    trackEvent("action", "checkin.complete", { count: flowPassengers.length });
     showToast(t("{names} checked in").replace("{names}", names), "success", () => closeTab(pathname));
   }
 

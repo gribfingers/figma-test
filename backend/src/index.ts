@@ -11,6 +11,7 @@ import { manifestRouter } from "./routes/manifest";
 import { authRouter } from "./routes/auth";
 import { usersRouter } from "./routes/users";
 import { messagesRouter } from "./routes/messages";
+import { analyticsRouter } from "./routes/analytics";
 import { requireAuth } from "./middleware/auth";
 
 ensureSuperadmin();
@@ -33,6 +34,9 @@ app.use("/api/flights", requireAuth, flightsRouter);
 app.use("/api/checkin", requireAuth, checkinRouter);
 app.use("/api/boarding", requireAuth, boardingRouter);
 app.use("/api/manifest", requireAuth, manifestRouter);
+// analyticsRouter applies requireAuth (and requireSuperadmin for the read endpoints) itself — see
+// routes/analytics.ts — since /track needs to accept any logged-in user, not just superadmins.
+app.use("/api/analytics", analyticsRouter);
 
 const port = Number(process.env.PORT ?? 4000);
 app.listen(port, () => {

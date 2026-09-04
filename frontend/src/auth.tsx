@@ -1,6 +1,7 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { api, getToken, setToken, User } from "./api";
+import { trackEvent } from "./analytics";
 
 interface AuthContextValue {
   user: User | null;
@@ -49,9 +50,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { token, user: loggedInUser } = await api.login(loginName, password);
     setToken(token);
     setUser(loggedInUser);
+    trackEvent("action", "auth.login");
   }
 
   function logout() {
+    trackEvent("action", "auth.logout"); // must fire before setToken(null) clears what trackEvent gates on
     api.logout().catch(() => {});
     setToken(null);
     setUser(null);

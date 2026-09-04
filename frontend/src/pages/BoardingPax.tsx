@@ -15,6 +15,7 @@ import { usePanelTransition } from "../usePanelMounted";
 import { EntityNotFound } from "../components/EntityNotFound";
 import { useLanguage } from "../i18n";
 import { useCanEdit } from "../auth";
+import { trackEvent } from "../analytics";
 
 // Matches Boarding.tsx's fmtCardDate/parseVersion/StatBar/statusLabel/statusChipClass — same
 // light duplication this session's other pages already use rather than a shared module
@@ -143,6 +144,7 @@ export function BoardingPax() {
     if (!canEdit || !passenger?.bcbp) return;
     try {
       await api.scanBoardingPass(passenger.bcbp);
+      trackEvent("action", "boarding.board");
       // Tab closes once the toast itself dismisses (same pattern as PnrView's
       // completeCheckin) rather than instantly alongside it — less jarring.
       showToast(t("Boarded"), "success", () => closeTab(`/boarding/${fid}/pax/${passenger.id}`));
@@ -154,6 +156,7 @@ export function BoardingPax() {
     if (!canEdit || !passenger) return;
     try {
       await api.unboard(fid, passenger.id);
+      trackEvent("action", "boarding.unboard");
       refresh();
       showToast(t("Boarding undone"));
     } catch (e: any) {

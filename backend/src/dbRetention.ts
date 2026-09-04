@@ -50,3 +50,16 @@ export function pruneIfOverSize(): { deletedFlights: number; sizeMbBefore: numbe
 
   return { deletedFlights: info.changes, sizeMbBefore, sizeMbAfter: dbSizeMb() };
 }
+
+// UX analytics events are useful for trend/volume analysis, not as a permanent audit log — unlike
+// flights (pruned by total DB size above), these are pruned by age so the dashboard's own "last
+// 30 days" view is never looking at a table that's silently missing recent-ish data.
+const ANALYTICS_RETENTION_DAYS = Number(process.env.ANALYTICS_RETENTION_DAYS ?? 90);
+const deleteOldAnalyticsEvents = db.prepare(
+  `DELETE FROM analytics_events WHERE created_at < datetime('now', ?)`
+);
+
+export function pruneOldAnalyticsEvents(): { deleted: number } {
+  const info = deleteOldAnalyticsEvents.run(`-${ANALYTICS_RETENTION_DAYS} day`);
+  return { deleted: info.changes };
+}

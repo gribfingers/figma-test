@@ -1,5 +1,5 @@
 import { generateDailySchedule } from "./scheduleGenerator";
-import { pruneIfOverSize } from "./dbRetention";
+import { pruneIfOverSize, pruneOldAnalyticsEvents } from "./dbRetention";
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -19,6 +19,10 @@ function runDailyGeneration() {
       console.log(
         `[dailyScheduler] DB was ${pruned.sizeMbBefore.toFixed(1)}MB — pruned ${pruned.deletedFlights} oldest flight(s), now ${pruned.sizeMbAfter.toFixed(1)}MB.`
       );
+    }
+    const analyticsPruned = pruneOldAnalyticsEvents();
+    if (analyticsPruned.deleted > 0) {
+      console.log(`[dailyScheduler] Pruned ${analyticsPruned.deleted} analytics event(s) past the retention window.`);
     }
     const { flights, passengers } = generateDailySchedule(new Date());
     if (flights > 0) {

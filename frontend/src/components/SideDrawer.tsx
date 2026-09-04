@@ -10,6 +10,7 @@ import {
   BoardingIcon,
   BurgerIcon,
   CartFlowIcon,
+  ChartIcon,
   CheckInIcon,
   DeviceIcon,
   DocumentsFlowIcon,
@@ -128,6 +129,15 @@ export function SideDrawer() {
               <InfoIcon size={20} />
             </button>
           </>
+        )}
+        {user?.role === "superadmin" && (
+          <Link
+            to="/analytics"
+            className={`side-item ${pathname === "/analytics" ? "selected" : ""}`}
+            data-tooltip={t("UX Analytics")}
+          >
+            <ChartIcon size={20} />
+          </Link>
         )}
         {user?.role === "superadmin" && (
           <Link

@@ -3352,10 +3352,79 @@ tr.row-hover { cursor: pointer; }
 .doc-card-editing .doc-card-grid { align-items: end; row-gap: 20px; }
 .doc-card-edit-footer { display: flex; align-items: center; justify-content: flex-end; gap: 16px; margin-top: 16px; }
 
+/* ---- Analytics.tsx (UX Analytics dashboard) ---- */
+.analytics-page { display: flex; flex-direction: column; gap: 16px; }
+.analytics-range-pills { display: flex; gap: 6px; }
+.analytics-panel-title { font-size: 14px; font-weight: 700; color: var(--field-value); margin-bottom: 14px; }
+
+.analytics-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.analytics-stat-card {
+  background: var(--panel);
+  border: 1px solid var(--panel-outer-border);
+  border-radius: 4px;
+  padding: 16px 18px;
+}
+.analytics-stat-value { font-size: 26px; font-weight: 800; color: var(--field-value); line-height: 1.2; }
+.analytics-stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.analytics-stat-card-danger .analytics-stat-value { color: var(--danger); }
+
+.analytics-empty { font-size: 13px; color: var(--muted); padding: 8px 0; }
+
+/* Single-series day-bucketed bar chart — see EventsBarChart.tsx. Non-uniform viewBox scaling (via
+   preserveAspectRatio="none") keeps bars evenly spaced regardless of how many days are in range. */
+.analytics-bar-chart { position: relative; }
+.analytics-bar-chart-inner { position: relative; }
+.analytics-bar-chart-svg { width: 100%; height: 160px; display: block; overflow: visible; }
+.analytics-bar { fill: var(--accent); opacity: 0.75; transition: opacity 0.1s ease; }
+.analytics-bar.hover { opacity: 1; }
+.analytics-bar-chart-axis { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 6px; }
+.analytics-bar-tooltip {
+  position: absolute;
+  top: -8px;
+  transform: translate(-50%, -100%);
+  background: var(--tooltip-bg, #1c2733);
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+  pointer-events: none;
+  text-align: center;
+}
+.analytics-bar-tooltip-day { opacity: 0.75; }
+.analytics-bar-tooltip-count { font-weight: 700; }
+
+.analytics-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+.analytics-bar-list { display: flex; flex-direction: column; gap: 10px; }
+.analytics-bar-list-row { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 2fr) auto; align-items: center; gap: 10px; }
+.analytics-bar-list-label { font-size: 13px; color: var(--field-value); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--mono); }
+.analytics-bar-list-track { height: 8px; border-radius: 4px; background: var(--field-bg); overflow: hidden; }
+.analytics-bar-list-fill { height: 100%; border-radius: 4px; background: var(--accent); }
+.analytics-bar-list-count { font-size: 12px; color: var(--muted); text-align: right; min-width: 32px; }
+
+.analytics-error-list { display: flex; flex-direction: column; gap: 12px; max-height: 280px; overflow-y: auto; }
+.analytics-error-row { border-bottom: 1px solid var(--panel-border); padding-bottom: 10px; }
+.analytics-error-row:last-child { border-bottom: none; padding-bottom: 0; }
+.analytics-error-row-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+.analytics-error-time { font-size: 11px; color: var(--muted); }
+.analytics-error-detail { font-size: 12px; color: var(--field-value); font-family: var(--mono); word-break: break-word; }
+.analytics-error-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+.analytics-event-detail-cell { font-size: 12px; color: var(--muted); max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.analytics-pagination { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 12px 18px; }
+.analytics-pagination-label { font-size: 12px; color: var(--muted); }
+
+@media (max-width: 900px) {
+  .analytics-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .analytics-columns { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 640px) {
   .top-tab { padding: 18px 10px; height: 48px; font-size: 12px; }
   .tabs-actions { padding: 0 10px; }
   h1 { font-size: 20px; }
   .panel { padding: 14px; }
   button { padding: 9px 14px; font-size: 13px; }
+  .analytics-stats { grid-template-columns: 1fr; }
 }

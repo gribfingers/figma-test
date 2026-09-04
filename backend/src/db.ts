@@ -123,6 +123,25 @@ CREATE TABLE IF NOT EXISTS seat_events (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_seat_events_flight_seat ON seat_events(flight_id, seat, id);
+
+-- UX analytics: one row per client-reported event (page view, action, keyboard shortcut, error).
+-- session_id is a per-tab id the frontend generates itself (sessionStorage) — not the auth session
+-- token — so events from the same login in two tabs, or before/after a re-login, group separately,
+-- matching how a real analytics session is usually defined (one browser tab's visit).
+CREATE TABLE IF NOT EXISTS analytics_events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  session_id TEXT NOT NULL,
+  event_type TEXT NOT NULL,
+  event_name TEXT NOT NULL,
+  path TEXT,
+  detail TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_analytics_events_created ON analytics_events(created_at);
+CREATE INDEX IF NOT EXISTS idx_analytics_events_type ON analytics_events(event_type, event_name);
+CREATE INDEX IF NOT EXISTS idx_analytics_events_user ON analytics_events(user_id);
+CREATE INDEX IF NOT EXISTS idx_analytics_events_session ON analytics_events(session_id);
 `);
 
 // Lightweight migration for databases created before the FIDS columns existed.

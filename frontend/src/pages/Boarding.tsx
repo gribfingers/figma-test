@@ -29,6 +29,7 @@ import {
 } from "../paxExtra";
 import { useCanEdit } from "../auth";
 import { useHotkey } from "../useShortcuts";
+import { trackEvent } from "../analytics";
 
 // Matches PnrView's fmtCardDate — same UTC wall-clock convention as the rest of the app.
 function fmtCardDate(std: string): string {
@@ -219,6 +220,7 @@ export function Boarding() {
     if (!canEdit || !p.bcbp) return;
     try {
       await api.scanBoardingPass(p.bcbp);
+      trackEvent("action", "boarding.board");
       refresh();
     } catch (e: any) {
       setMessage({ kind: "error", text: e.message });
@@ -228,6 +230,7 @@ export function Boarding() {
     if (!canEdit) return;
     try {
       await api.offload(fid, p.id);
+      trackEvent("action", "boarding.offload");
       refresh();
     } catch (e: any) {
       setMessage({ kind: "error", text: e.message });

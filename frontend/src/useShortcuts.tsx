@@ -1,5 +1,6 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { SHORTCUTS, comboFromEvent } from "./shortcuts";
+import { trackEvent } from "./analytics";
 
 const STORAGE_KEY = "dcs_shortcut_overrides";
 
@@ -108,6 +109,7 @@ export function useHotkey(id: string, handler: (e: KeyboardEvent) => void, enabl
       if (!bypassTypingGuard && isTypingTarget(e.target)) return;
       if (comboFromEvent(e) !== combo) return;
       e.preventDefault();
+      trackEvent("shortcut", id);
       handlerRef.current(e);
     }
     window.addEventListener("keydown", onKeyDown);

@@ -5,6 +5,7 @@ import { SeatServiceItem, baggageServiceItemsForRows, seatServiceItemsForSeat } 
 import { CloseIcon } from "../Icon";
 import { useLanguage } from "../../i18n";
 import { PayQrModal } from "./PayQrModal";
+import { trackEvent } from "../../analytics";
 
 interface Props {
   passengers: Passenger[];
@@ -36,6 +37,10 @@ function CartLine({ label, amount, bold }: { label: string; amount: number; bold
 export function CartPanel({ passengers, seatByCode, baggageRows, baggageCalculated, confirmedServices, open, onClose }: Props) {
   const { t } = useLanguage();
   const [payTarget, setPayTarget] = useState<{ payerLabel: string; reference: string; amount: number } | null>(null);
+  function openPay(target: { payerLabel: string; reference: string; amount: number }) {
+    trackEvent("action", "cart.pay_opened", { amount: target.amount });
+    setPayTarget(target);
+  }
   const rows = passengers.map((p) => {
     const seat = sum(seatServiceItemsForSeat(p.seat ? seatByCode.get(p.seat) : undefined));
     const baggage = sum(baggageServiceItemsForRows(p.id, baggageRows[p.id] ?? [], baggageCalculated.has(p.id)));
@@ -71,7 +76,7 @@ export function CartPanel({ passengers, seatByCode, baggageRows, baggageCalculat
                       type="button"
                       className="tertiary"
                       onClick={() =>
-                        setPayTarget({
+                        openPay({
                           payerLabel: `${r.passenger.surname} ${r.passenger.given_name}`,
                           reference: r.passenger.record_locator,
                           amount: r.total,
@@ -95,7 +100,7 @@ export function CartPanel({ passengers, seatByCode, baggageRows, baggageCalculat
             type="button"
             disabled={grandTotal === 0}
             onClick={() =>
-              setPayTarget({
+              openPay({
                 payerLabel:
                   payableLocators.length <= 1 && rows.filter((r) => r.total > 0).length === 1
                     ? `${rows.find((r) => r.total > 0)!.passenger.surname} ${rows.find((r) => r.total > 0)!.passenger.given_name}`
