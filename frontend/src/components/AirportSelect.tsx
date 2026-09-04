@@ -21,14 +21,29 @@ function groupByCity() {
 }
 
 const GROUPS = groupByCity();
+// Render order (group headers interleaved) doesn't match a flat index — this is the flat order
+// arrow-key navigation walks, skipping the non-selectable group-label rows.
+const FLAT_AIRPORTS = [...GROUPS.values()].flat();
 
 /** Same custom-dropdown pattern as Select (including the portal — see its comment), with airports grouped by city. */
 export function AirportSelect({ label, value, onChange, style }: Props) {
   const [open, setOpen] = useState(false);
+  const [highlighted, setHighlighted] = useState(-1);
   const rootRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLUListElement>(null);
   const selected = AIRPORTS.find((a) => a.code === value);
   const rect = usePopoverPosition(rootRef, open);
+
+  function openMenu() {
+    const idx = FLAT_AIRPORTS.findIndex((a) => a.code === value);
+    setHighlighted(idx >= 0 ? idx : 0);
+    setOpen(true);
+  }
+
+  useEffect(() => {
+    if (!open || highlighted < 0) return;
+    menuRef.current?.querySelector(`#airport-opt-${highlighted}`)?.scrollIntoView({ block: "nearest" });
+  }, [open, highlighted]);
 
   useEffect(() => {
     if (!open) return;
@@ -39,7 +54,29 @@ export function AirportSelect({ label, value, onChange, style }: Props) {
       setOpen(false);
     }
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setOpen(false);
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setHighlighted((i) => Math.min(FLAT_AIRPORTS.length - 1, i + 1));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setHighlighted((i) => Math.max(0, (i < 0 ? FLAT_AIRPORTS.length : i) - 1));
+      } else if (e.key === "Home") {
+        e.preventDefault();
+        setHighlighted(0);
+      } else if (e.key === "End") {
+        e.preventDefault();
+        setHighlighted(FLAT_AIRPORTS.length - 1);
+      } else if (e.key === "Enter" || e.key === " ") {
+        const a = FLAT_AIRPORTS[highlighted];
+        if (a) {
+          e.preventDefault();
+          onChange(a.code);
+          setOpen(false);
+        }
+      }
     }
     document.addEventListener("mousedown", onDocMouseDown);
     document.addEventListener("keydown", onKeyDown);
@@ -47,7 +84,7 @@ export function AirportSelect({ label, value, onChange, style }: Props) {
       document.removeEventListener("mousedown", onDocMouseDown);
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [open]);
+  }, [open, highlighted, onChange]);
 
   return (
     <div ref={rootRef} className={`field2 select-field ${open ? "open" : ""} ${selected ? "has-value" : ""}`} style={style}>
@@ -56,7 +93,14 @@ export function AirportSelect({ label, value, onChange, style }: Props) {
         className="select-trigger"
         aria-haspopup="listbox"
         aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
+        aria-activedescendant={open && highlighted >= 0 ? `airport-opt-${highlighted}` : undefined}
+        onClick={() => (open ? setOpen(false) : openMenu())}
+        onKeyDown={(e) => {
+          if (!open && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
+            e.preventDefault();
+            openMenu();
+          }
+        }}
       >
         {selected?.code ?? value}
       </button>
@@ -74,20 +118,25 @@ export function AirportSelect({ label, value, onChange, style }: Props) {
               <li key={`h-${city}`} className="select-group-label">
                 {city}
               </li>,
-              ...airports.map((a) => (
-                <li
-                  key={a.code}
-                  role="option"
-                  aria-selected={a.code === value}
-                  className={a.code === value ? "selected" : ""}
-                  onClick={() => {
-                    onChange(a.code);
-                    setOpen(false);
-                  }}
-                >
-                  <span className="mono">{a.code}</span> — {a.name}
-                </li>
-              )),
+              ...airports.map((a) => {
+                const flatIdx = FLAT_AIRPORTS.indexOf(a);
+                return (
+                  <li
+                    key={a.code}
+                    id={`airport-opt-${flatIdx}`}
+                    role="option"
+                    aria-selected={a.code === value}
+                    className={`${a.code === value ? "selected" : ""} ${flatIdx === highlighted ? "highlighted" : ""}`}
+                    onMouseEnter={() => setHighlighted(flatIdx)}
+                    onClick={() => {
+                      onChange(a.code);
+                      setOpen(false);
+                    }}
+                  >
+                    <span className="mono">{a.code}</span> — {a.name}
+                  </li>
+                );
+              }),
             ])}
           </ul>,
           document.body

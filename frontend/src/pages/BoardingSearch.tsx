@@ -7,6 +7,7 @@ import { SortTh, useSort } from "../components/SortTh";
 import { useRegisterTab } from "../tabs";
 import { useLanguage } from "../i18n";
 import { useHotkey } from "../useShortcuts";
+import { clickable } from "../interactive";
 
 // Matches Search.tsx's fmtStd — same UTC wall-clock convention as the rest of the app.
 function fmtStd(iso: string): string {
@@ -127,7 +128,7 @@ export function BoardingSearch() {
             </thead>
             <tbody>
               {sortedResults.map((f) => (
-                <tr key={f.id} className="row-hover" onClick={() => openFlight(f)}>
+                <tr key={f.id} className="row-hover" onClick={() => openFlight(f)} {...clickable(() => openFlight(f))}>
                   <td className="mono">{f.carrier_code}{f.flight_number}</td>
                   <td className="mono">{f.origin} → {f.destination}</td>
                   <td className="mono">{fmtStd(f.std)}</td>

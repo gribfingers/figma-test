@@ -11,6 +11,7 @@ import { DOCUMENT_TYPES, SSR_OPTIONS } from "../paxExtra";
 import { useRegisterTab } from "../tabs";
 import { useToast } from "../toast";
 import { EntityNotFound } from "../components/EntityNotFound";
+import { clickable } from "../interactive";
 
 type ResultSortKey = "pnr" | "passenger" | "status" | "seat";
 const RESULT_SORT_GETTERS: Record<ResultSortKey, (p: Passenger) => string | number> = {
@@ -143,7 +144,7 @@ export function CheckIn() {
               </thead>
               <tbody>
                 {sortedResults.map((p) => (
-                  <tr key={p.id} className="clickable" onClick={() => selectPassenger(p)}>
+                  <tr key={p.id} className="clickable" onClick={() => selectPassenger(p)} {...clickable(() => selectPassenger(p))}>
                     <td className="mono">{p.record_locator}</td>
                     <td>{p.surname}/{p.given_name}</td>
                     <td>

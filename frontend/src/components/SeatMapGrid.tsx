@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { SeatCell } from "../api";
 import { CabinFeature, CabinFeatureType } from "../cabinLayout";
 import { GalleyIcon, SeatChildIcon } from "./Icon";
@@ -114,6 +114,11 @@ export function SeatMapGrid({
   // its single primary icon; hovering it cycles all its icons one at a time in a small floating carousel.
   const [multiHoverSeat, setMultiHoverSeat] = useState<string | null>(null);
   const [carouselIndex, setCarouselIndex] = useState(0);
+  // Roving tabindex: only one seat cell is ever Tab-reachable (tabIndex 0) at a time — arrow keys
+  // move real DOM focus between adjacent cells (see moveFocus below), Tab then leaves the grid
+  // from wherever that landed, same as any standard keyboard grid (a listbox, a spreadsheet, …).
+  const [focusedSeat, setFocusedSeat] = useState<string | null>(null);
+  const seatRefs = useRef(new Map<string, HTMLSpanElement>());
   useEffect(() => {
     if (!multiHoverSeat) return;
     setCarouselIndex(0);
@@ -131,6 +136,42 @@ export function SeatMapGrid({
   const columns = [...new Set(seats.map((s) => s.seat.slice(3)))].sort(
     (a, b) => LETTER_ORDER.indexOf(a) - LETTER_ORDER.indexOf(b)
   );
+  // Fallback Tab-stop when nothing's been focused or selected yet — row order isn't guaranteed to
+  // start at the cabin's physical front, so this is "first in DOM order", not "row 1".
+  const defaultSeat = seats[0]?.seat;
+
+  function clampIndex(i: number, len: number): number {
+    return Math.max(0, Math.min(len - 1, i));
+  }
+
+  /**
+   * Arrow-key grid navigation, aware of the same 90°-rotation "horizontal" orientation applies
+   * visually (see the Props.orientation doc above) — in that mode rows run left-to-right and each
+   * row's own letter order is visually reversed (F at the top), so Right/Left there means "next/
+   * prev row number" and Up/Down means "toward F/toward A", the opposite pairing from vertical mode.
+   */
+  function moveFocus(fromSeat: string, key: "ArrowUp" | "ArrowDown" | "ArrowLeft" | "ArrowRight") {
+    const row = Number(fromSeat.slice(0, 3));
+    const letter = fromSeat.slice(3);
+    const rowIdx = rowNumbers.indexOf(row);
+    const colIdx = columns.indexOf(letter);
+    if (rowIdx === -1 || colIdx === -1) return;
+
+    let targetRowIdx = rowIdx;
+    let targetColIdx = colIdx;
+    const rowDeltaMap: Partial<Record<typeof key, number>> =
+      orientation === "horizontal" ? { ArrowRight: 1, ArrowLeft: -1 } : { ArrowDown: 1, ArrowUp: -1 };
+    const colDeltaMap: Partial<Record<typeof key, number>> =
+      orientation === "horizontal" ? { ArrowUp: 1, ArrowDown: -1 } : { ArrowRight: 1, ArrowLeft: -1 };
+    const rowDelta = rowDeltaMap[key];
+    const colDelta = colDeltaMap[key];
+    if (rowDelta) targetRowIdx = clampIndex(rowIdx + rowDelta, rowNumbers.length);
+    if (colDelta) targetColIdx = clampIndex(colIdx + colDelta, columns.length);
+    if (targetRowIdx === rowIdx && targetColIdx === colIdx) return;
+
+    const targetSeat = `${String(rowNumbers[targetRowIdx]).padStart(3, "0")}${columns[targetColIdx]}`;
+    seatRefs.current.get(targetSeat)?.focus();
+  }
 
   const featuresByRow = new Map<number, CabinFeatureType[]>();
   for (const f of cabinFeatures ?? []) {
@@ -211,11 +252,26 @@ export function SeatMapGrid({
                 const titleBits = [attrLabel, holdLabel, extra.rfisc, priceLabel].filter(Boolean).join(", ");
                 const priceStr = extra.price != null ? String(extra.price) : "";
                 const priceTwoLine = priceStr.length > 3;
+                const activateSeat = () => {
+                  if (s.passenger_id) {
+                    if (s.seat === selected && onUnassign) onUnassign(s.seat);
+                    else onSelectOccupied?.(s);
+                  } else if (!ineligible) onSelect?.(s.seat);
+                };
+                // Only the focused (or, before any focus, the default) seat is Tab-reachable — see
+                // the roving-tabindex note on focusedSeat above.
+                const isTabStop = s.seat === (focusedSeat ?? selected ?? defaultSeat);
                 return (
                   <Fragment key={s.seat}>
                     <span
                       className={classes}
                       data-seat={s.seat}
+                      tabIndex={isTabStop ? 0 : -1}
+                      ref={(el) => {
+                        if (el) seatRefs.current.set(s.seat, el);
+                        else seatRefs.current.delete(s.seat);
+                      }}
+                      onFocus={() => setFocusedSeat(s.seat)}
                       title={
                         s.passenger_id
                           ? `${s.surname}/${s.given_name} (${s.record_locator})${titleBits ? ` — ${titleBits}` : ""}`
@@ -223,11 +279,17 @@ export function SeatMapGrid({
                           ? `${s.seat} — ${titleBits}`
                           : s.seat
                       }
-                      onClick={() => {
-                        if (s.passenger_id) {
-                          if (s.seat === selected && onUnassign) onUnassign(s.seat);
-                          else onSelectOccupied?.(s);
-                        } else if (!ineligible) onSelect?.(s.seat);
+                      onClick={activateSeat}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          activateSeat();
+                          return;
+                        }
+                        if (e.key === "ArrowUp" || e.key === "ArrowDown" || e.key === "ArrowLeft" || e.key === "ArrowRight") {
+                          e.preventDefault();
+                          moveFocus(s.seat, e.key);
+                        }
                       }}
                       onContextMenu={(e) => {
                         if (onEditSeat) {

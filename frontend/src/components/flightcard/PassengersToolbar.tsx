@@ -3,6 +3,7 @@ import { SeatCell } from "../../api";
 import { SSR_OPTIONS } from "../../paxExtra";
 import { ChevronDownIcon, MoreIcon, SearchIcon } from "../Icon";
 import { useLanguage } from "../../i18n";
+import { clickable } from "../../interactive";
 
 export type QuickFilter = "all" | "reseat" | "priority";
 
@@ -148,17 +149,15 @@ export function PassengersToolbar({
           </div>
           {servicesOpen && (
             <ul className="select-menu">
-              {SSR_OPTIONS.map((code) => (
-                <li
-                  key={code}
-                  className={serviceFilter.includes(code) ? "selected" : ""}
-                  onClick={() =>
-                    onServiceFilter(serviceFilter.includes(code) ? serviceFilter.filter((c) => c !== code) : [...serviceFilter, code])
-                  }
-                >
-                  {code}
-                </li>
-              ))}
+              {SSR_OPTIONS.map((code) => {
+                const toggle = () =>
+                  onServiceFilter(serviceFilter.includes(code) ? serviceFilter.filter((c) => c !== code) : [...serviceFilter, code]);
+                return (
+                  <li key={code} className={serviceFilter.includes(code) ? "selected" : ""} onClick={toggle} {...clickable(toggle, "option")}>
+                    {code}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
@@ -185,7 +184,12 @@ export function PassengersToolbar({
           {columnsOpen && (
             <ul className="select-menu pax-columns-list">
               {PASSENGER_COLUMNS.map((c) => (
-                <li key={c.key} className="pax-columns-item" onClick={() => onToggleColumn(c.key)}>
+                <li
+                  key={c.key}
+                  className="pax-columns-item"
+                  onClick={() => onToggleColumn(c.key)}
+                  {...clickable(() => onToggleColumn(c.key), "option")}
+                >
                   <input type="checkbox" checked={visibleColumns.has(c.key)} readOnly />
                   {t(c.label)}
                 </li>

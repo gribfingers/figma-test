@@ -9,6 +9,7 @@ import { ChevronDownIcon, InfantIcon, InfoIcon } from "../Icon";
 import { EmdModal } from "./EmdModal";
 import { useLanguage } from "../../i18n";
 import { usePopoverPosition } from "../../usePopoverPosition";
+import { clickable } from "../../interactive";
 
 /** "Swap seat…" (Seats step, once seated) and "Reprint BP" tucked under one menu, same
  *  trigger/list pattern as the flight card header's Actions menu (FlightActionsMenu). Portaled to
@@ -62,10 +63,12 @@ function RowActionsMenu({ onSwapSeat }: { onSwapSeat?: () => void }) {
             onClick={(e) => e.stopPropagation()}
           >
             {onSwapSeat && (
-              <li onClick={() => { setOpen(false); onSwapSeat(); }}>{t("Swap seat…")}</li>
+              <li onClick={() => { setOpen(false); onSwapSeat(); }} {...clickable(() => { setOpen(false); onSwapSeat(); }, "menuitem")}>
+                {t("Swap seat…")}
+              </li>
             )}
             {/* No boarding-pass printer wired up — present for layout, no action yet. */}
-            <li onClick={() => setOpen(false)}>{t("Reprint BP")}</li>
+            <li onClick={() => setOpen(false)} {...clickable(() => setOpen(false), "menuitem")}>{t("Reprint BP")}</li>
           </ul>,
           document.body
         )}
@@ -202,7 +205,7 @@ export function FlowRosterRow({
   const serviceItems = showServices && !nested ? confirmedServices : [];
 
   return (
-    <div className={`pnr-flow-roster-row ${active ? "selected" : ""} ${nested ? "nested" : ""}`} onClick={onSelect}>
+    <div className={`pnr-flow-roster-row ${active ? "selected" : ""} ${nested ? "nested" : ""}`} onClick={onSelect} {...clickable(onSelect)}>
       <div className="pnr-flow-roster-top">
         <div className="pnr-flow-roster-name">
           {nested ? <InfantIcon size={14} className="pnr-flow-roster-nested-icon" /> : <span className="pnr-flow-roster-index">{index}</span>}

@@ -27,6 +27,7 @@ import { useLanguage } from "../../i18n";
 import { usePopoverPosition } from "../../usePopoverPosition";
 import { useRetainedPanelTransition } from "../../usePanelMounted";
 import { ACTIONS_MENU_ITEMS, ActionsPanel, ActionsPanelKind } from "../checkin/ActionsPanel";
+import { clickable } from "../../interactive";
 
 interface Props {
   flight: Flight;
@@ -496,18 +497,17 @@ export function PassengersTab({ flight, readOnly, orientation: orientationProp, 
                   role="menu"
                   style={{ position: "fixed", top: selectionMenuRect.top, right: window.innerWidth - (selectionMenuRect.left + selectionMenuRect.width) }}
                 >
-                  {ACTIONS_MENU_ITEMS.map(({ label, kind }) => (
-                    <li
-                      key={label}
-                      role="menuitem"
-                      onClick={() => {
-                        setSelectionMenuOpen(false);
-                        setSelectionActionKind(kind);
-                      }}
-                    >
-                      {t(label)}
-                    </li>
-                  ))}
+                  {ACTIONS_MENU_ITEMS.map(({ label, kind }) => {
+                    const pick = () => {
+                      setSelectionMenuOpen(false);
+                      setSelectionActionKind(kind);
+                    };
+                    return (
+                      <li key={label} onClick={pick} {...clickable(pick, "menuitem")}>
+                        {t(label)}
+                      </li>
+                    );
+                  })}
                 </ul>,
                 document.body
               )}
@@ -563,6 +563,7 @@ export function PassengersTab({ flight, readOnly, orientation: orientationProp, 
                     }}
                     className={`clickable ${nested ? "pax-row-nested" : ""} ${p.id === activeId ? "pax-row-active" : ""}`}
                     onClick={() => setActiveId(p.id)}
+                    {...clickable(() => setActiveId(p.id))}
                     onContextMenu={
                       readOnly
                         ? undefined
@@ -602,18 +603,22 @@ export function PassengersTab({ flight, readOnly, orientation: orientationProp, 
                     {visibleColumns.has("flags") && (
                       <td className="pax-flags-cell">
                         <span className="pax-flags">
-                          {FLAG_CODES.map((code) => (
-                            <span
-                              key={code}
-                              className={`chip middle ${STATUS_CLASS[FLAG_STATUS[code](p)]} pax-flag`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setModal({ kind: FLAG_MODAL[code], passenger: p });
-                              }}
-                            >
-                              {code}
-                            </span>
-                          ))}
+                          {FLAG_CODES.map((code) => {
+                            const openFlag = () => setModal({ kind: FLAG_MODAL[code], passenger: p });
+                            return (
+                              <span
+                                key={code}
+                                className={`chip middle ${STATUS_CLASS[FLAG_STATUS[code](p)]} pax-flag`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openFlag();
+                                }}
+                                {...clickable(openFlag)}
+                              >
+                                {code}
+                              </span>
+                            );
+                          })}
                         </span>
                       </td>
                     )}
@@ -644,10 +649,22 @@ export function PassengersTab({ flight, readOnly, orientation: orientationProp, 
                     {visibleColumns.has("type") && <td className="mono">{extra.type}</td>}
                     {visibleColumns.has("iapp") && <td>{extra.iapp ? "✓" : ""}</td>}
                     {visibleColumns.has("inbound") && (
-                      <td className="pax-route-cell" onClick={(e) => { e.stopPropagation(); setModal({ kind: "tr", passenger: p }); }}>{extra.inbound}</td>
+                      <td
+                        className="pax-route-cell"
+                        onClick={(e) => { e.stopPropagation(); setModal({ kind: "tr", passenger: p }); }}
+                        {...clickable(() => setModal({ kind: "tr", passenger: p }))}
+                      >
+                        {extra.inbound}
+                      </td>
                     )}
                     {visibleColumns.has("outbound") && (
-                      <td className="pax-route-cell" onClick={(e) => { e.stopPropagation(); setModal({ kind: "tr", passenger: p }); }}>{extra.outbound}</td>
+                      <td
+                        className="pax-route-cell"
+                        onClick={(e) => { e.stopPropagation(); setModal({ kind: "tr", passenger: p }); }}
+                        {...clickable(() => setModal({ kind: "tr", passenger: p }))}
+                      >
+                        {extra.outbound}
+                      </td>
                     )}
                     {visibleColumns.has("bag") && <td className="mono">{p.bag_count > 0 ? `${p.bag_count}/${p.bag_weight_kg}` : ""}</td>}
                     {visibleColumns.has("age") && <td>{ageFromDob(p.dob)}</td>}
@@ -755,11 +772,19 @@ export function PassengersTab({ flight, readOnly, orientation: orientationProp, 
           className="select-menu pax-context-menu"
           style={{ left: contextMenu.x, top: contextMenu.y }}
         >
-          <li className="pax-columns-item" onClick={() => startAssignSeat(contextMenu.passenger)}>
+          <li
+            className="pax-columns-item"
+            onClick={() => startAssignSeat(contextMenu.passenger)}
+            {...clickable(() => startAssignSeat(contextMenu.passenger), "menuitem")}
+          >
             {contextMenu.passenger.seat ? t("Change seat") : t("Assign seat")}
           </li>
           {contextMenu.passenger.seat && (
-            <li className="pax-columns-item" onClick={() => startSwapSeat(contextMenu.passenger)}>
+            <li
+              className="pax-columns-item"
+              onClick={() => startSwapSeat(contextMenu.passenger)}
+              {...clickable(() => startSwapSeat(contextMenu.passenger), "menuitem")}
+            >
               {t("Swap seat…")}
             </li>
           )}
@@ -769,10 +794,18 @@ export function PassengersTab({ flight, readOnly, orientation: orientationProp, 
               setModal({ kind: "summary", passenger: contextMenu.passenger });
               setContextMenu(null);
             }}
+            {...clickable(() => {
+              setModal({ kind: "summary", passenger: contextMenu.passenger });
+              setContextMenu(null);
+            }, "menuitem")}
           >
             {t("Edit")}
           </li>
-          <li className="pax-columns-item danger" onClick={() => deletePassenger(contextMenu.passenger)}>
+          <li
+            className="pax-columns-item danger"
+            onClick={() => deletePassenger(contextMenu.passenger)}
+            {...clickable(() => deletePassenger(contextMenu.passenger), "menuitem")}
+          >
             {t("Delete")}
           </li>
         </ul>

@@ -5,6 +5,7 @@ import { ArrowBackIcon } from "../Icon";
 import { formatSeatDisplay } from "../../seatExtra";
 import { useToast } from "../../toast";
 import { useLanguage } from "../../i18n";
+import { clickable } from "../../interactive";
 
 interface TransferPax {
   id: string;
@@ -122,7 +123,7 @@ function TransferTable({ title, rows, onSelectRow }: { title: string; rows: Tran
         </thead>
         <tbody>
           {sorted.map((r) => (
-            <tr key={r.flight} className="clickable" onClick={() => onSelectRow(r)}>
+            <tr key={r.flight} className="clickable" onClick={() => onSelectRow(r)} {...clickable(() => onSelectRow(r))}>
               <td className="mono link-text">{r.flight}</td>
               <td className="mono">{r.route}</td>
               <td className="mono">{r.time}</td>

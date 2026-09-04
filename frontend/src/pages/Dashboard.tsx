@@ -11,6 +11,7 @@ import { fullRouteLabel, routeLabel } from "../flightSegments";
 import { currentPhaseIndex, phaseStatusLabel } from "../flightPhase";
 import { useLanguage } from "../i18n";
 import { useCanEdit } from "../auth";
+import { clickable } from "../interactive";
 
 function formatTime(iso: string | null): string {
   if (!iso) return "";
@@ -234,7 +235,7 @@ export function Dashboard() {
               {sortedFlights.map((f) => {
                 const status = phaseStatusLabel(f, now);
                 return (
-                <tr key={f.id} className="row-hover" onClick={() => navigate(`/flights/${f.id}`)}>
+                <tr key={f.id} className="row-hover" onClick={() => navigate(`/flights/${f.id}`)} {...clickable(() => navigate(`/flights/${f.id}`))}>
                   <td className="mono">{formatTime(f.std)}</td>
                   <td>{f.carrier_code}</td>
                   <td className="mono">{f.flight_number}</td>

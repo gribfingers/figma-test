@@ -10,6 +10,7 @@ import { Select, SelectOption } from "../Select";
 import { DateField } from "../DateField";
 import { ChevronDownIcon, CloseIcon, MinusIcon, PlusIcon, RefreshIcon, SearchIcon, TrashIcon } from "../Icon";
 import { useLanguage } from "../../i18n";
+import { clickable } from "../../interactive";
 
 export type ActionsPanelKind = "cancel" | "move" | "print" | "priority" | "remarks" | "quick" | "transfer";
 
@@ -427,12 +428,15 @@ function RemarkCodeField({ value, onSelect }: { value: RemarkEntry | null; onSel
         rect &&
         createPortal(
           <ul ref={menuRef} className="select-menu actions-remark-code-menu" style={{ position: "fixed", top: rect.top, left: rect.left, width: rect.width }}>
-            {REMARK_CATALOG.map((c, i) => (
-              <li key={i} onClick={() => { onSelect(c); setOpen(false); }}>
-                <div className="actions-remark-code-option-code">{c.code}</div>
-                <div className="actions-remark-code-option-text">{c.text}</div>
-              </li>
-            ))}
+            {REMARK_CATALOG.map((c, i) => {
+              const pick = () => { onSelect(c); setOpen(false); };
+              return (
+                <li key={i} onClick={pick} {...clickable(pick, "option")}>
+                  <div className="actions-remark-code-option-code">{c.code}</div>
+                  <div className="actions-remark-code-option-text">{c.text}</div>
+                </li>
+              );
+            })}
           </ul>,
           document.body
         )}

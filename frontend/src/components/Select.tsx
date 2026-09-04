@@ -29,10 +29,24 @@ interface Props {
  */
 export function Select({ label, value, onChange, options, disabled, error, style }: Props) {
   const [open, setOpen] = useState(false);
+  // Arrow-key cursor within the open listbox — independent of `value` until Enter commits it,
+  // same as a native <select>'s open-menu behavior.
+  const [highlighted, setHighlighted] = useState(-1);
   const rootRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLUListElement>(null);
   const selected = options.find((o) => o.value === value);
   const rect = usePopoverPosition(rootRef, open);
+
+  function openMenu() {
+    const idx = options.findIndex((o) => o.value === value);
+    setHighlighted(idx >= 0 ? idx : 0);
+    setOpen(true);
+  }
+
+  useEffect(() => {
+    if (!open || highlighted < 0) return;
+    menuRef.current?.querySelector(`#select-opt-${highlighted}`)?.scrollIntoView({ block: "nearest" });
+  }, [open, highlighted]);
 
   useEffect(() => {
     if (!open) return;
@@ -43,7 +57,29 @@ export function Select({ label, value, onChange, options, disabled, error, style
       setOpen(false);
     }
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setOpen(false);
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setHighlighted((i) => Math.min(options.length - 1, i + 1));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setHighlighted((i) => Math.max(0, (i < 0 ? options.length : i) - 1));
+      } else if (e.key === "Home") {
+        e.preventDefault();
+        setHighlighted(0);
+      } else if (e.key === "End") {
+        e.preventDefault();
+        setHighlighted(options.length - 1);
+      } else if (e.key === "Enter" || e.key === " ") {
+        const opt = options[highlighted];
+        if (opt) {
+          e.preventDefault();
+          onChange(opt.value);
+          setOpen(false);
+        }
+      }
     }
     document.addEventListener("mousedown", onDocMouseDown);
     document.addEventListener("keydown", onKeyDown);
@@ -51,7 +87,7 @@ export function Select({ label, value, onChange, options, disabled, error, style
       document.removeEventListener("mousedown", onDocMouseDown);
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [open]);
+  }, [open, options, highlighted, onChange]);
 
   return (
     <div
@@ -65,7 +101,14 @@ export function Select({ label, value, onChange, options, disabled, error, style
         disabled={disabled}
         aria-haspopup="listbox"
         aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
+        aria-activedescendant={open && highlighted >= 0 ? `select-opt-${highlighted}` : undefined}
+        onClick={() => (open ? setOpen(false) : openMenu())}
+        onKeyDown={(e) => {
+          if (!open && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
+            e.preventDefault();
+            openMenu();
+          }
+        }}
       >
         {selected?.label ?? ""}
       </button>
@@ -79,12 +122,14 @@ export function Select({ label, value, onChange, options, disabled, error, style
             role="listbox"
             style={{ position: "fixed", top: rect.top, left: rect.left, width: rect.width }}
           >
-            {options.map((o) => (
+            {options.map((o, i) => (
               <li
                 key={o.value}
+                id={`select-opt-${i}`}
                 role="option"
                 aria-selected={o.value === value}
-                className={o.value === value ? "selected" : ""}
+                className={`${o.value === value ? "selected" : ""} ${i === highlighted ? "highlighted" : ""}`}
+                onMouseEnter={() => setHighlighted(i)}
                 onClick={() => {
                   onChange(o.value);
                   setOpen(false);

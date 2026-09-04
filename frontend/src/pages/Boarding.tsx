@@ -30,6 +30,7 @@ import {
 import { useCanEdit } from "../auth";
 import { useHotkey } from "../useShortcuts";
 import { trackEvent } from "../analytics";
+import { clickable } from "../interactive";
 
 // Matches PnrView's fmtCardDate — same UTC wall-clock convention as the rest of the app.
 function fmtCardDate(std: string): string {
@@ -465,6 +466,12 @@ export function Boarding() {
                 const extra = parsePassengerExtra(p);
                 const cls = classFor(p, seatByCode);
                 return (
+                  // Not made a real Tab-stop (no clickable() here) — this row already has its own
+                  // complete keyboard scheme (boarding.row-up/row-down/row-open/row-toggle, a
+                  // focusedIndex cursor independent of DOM focus, see the useHotkey calls above).
+                  // Layering real per-row Tab/Enter on top would double-fire Enter (both handlers
+                  // would navigate) without adding any reach Tab doesn't already have via the
+                  // now-keyboard-operable name/flag cells below.
                   <tr
                     key={p.id}
                     className={`clickable ${selected.has(p.id) ? "pax-row-active" : ""} ${idx === focusedIndex ? "pax-row-focused" : ""}`}
@@ -485,18 +492,28 @@ export function Boarding() {
                         {nested && <ArrowNestedIcon size={14} className="pax-nest-arrow" />}
                         {nested && <InfantIcon size={14} className="pax-infant-icon" />}
                         {!nested && extra.type === "CHD" && <ChildIcon size={14} className="pax-child-icon" />}
-                        <span className="link-text" onClick={(e) => { e.stopPropagation(); setDocPanelPassenger(p); }}>{p.surname} {p.given_name}</span>
+                        <span
+                          className="link-text"
+                          onClick={(e) => { e.stopPropagation(); setDocPanelPassenger(p); }}
+                          {...clickable(() => setDocPanelPassenger(p))}
+                        >
+                          {p.surname} {p.given_name}
+                        </span>
                       </div>
                       <div className="board-flags" onClick={(e) => e.stopPropagation()}>
-                        {FLAG_CODES.map((code) => (
-                          <span
-                            key={code}
-                            className={`board-flag-chip ${STATUS_CLASS[FLAG_STATUS[code](p)]}`}
-                            onClick={() => setFlagsModal({ flag: FLAG_MODAL[code], passenger: p })}
-                          >
-                            {code}
-                          </span>
-                        ))}
+                        {FLAG_CODES.map((code) => {
+                          const openFlag = () => setFlagsModal({ flag: FLAG_MODAL[code], passenger: p });
+                          return (
+                            <span
+                              key={code}
+                              className={`board-flag-chip ${STATUS_CLASS[FLAG_STATUS[code](p)]}`}
+                              onClick={openFlag}
+                              {...clickable(openFlag)}
+                            >
+                              {code}
+                            </span>
+                          );
+                        })}
                       </div>
                     </td>
                     <td>

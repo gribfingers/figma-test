@@ -16,6 +16,7 @@ import { EntityNotFound } from "../components/EntityNotFound";
 import { useLanguage } from "../i18n";
 import { useCanEdit } from "../auth";
 import { trackEvent } from "../analytics";
+import { clickable } from "../interactive";
 
 // Matches Boarding.tsx's fmtCardDate/parseVersion/StatBar/statusLabel/statusChipClass — same
 // light duplication this session's other pages already use rather than a shared module
@@ -231,7 +232,12 @@ export function BoardingPax() {
 
       <div className="boarding-pax-body">
         <div className="panel boarding-pax-card">
-          <div className="boarding-pax-name" onClick={() => setDocPanelOpen(true)} style={{ cursor: "pointer" }}>
+          <div
+            className="boarding-pax-name"
+            onClick={() => setDocPanelOpen(true)}
+            style={{ cursor: "pointer" }}
+            {...clickable(() => setDocPanelOpen(true))}
+          >
             {passenger.surname} {passenger.given_name}
           </div>
           {canEdit && (

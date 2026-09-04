@@ -10,6 +10,7 @@ import { SeatInfoPopover } from "./SeatInfoPopover";
 import { SeatHistoryModal } from "./SeatHistoryModal";
 import { useLanguage } from "../i18n";
 import { useHotkey } from "../useShortcuts";
+import { clickable } from "../interactive";
 
 interface Props {
   flightId: number;
@@ -203,7 +204,12 @@ export function SeatMapPanel({
             {layersOpen && (
               <ul className="select-menu seatmap-layers-list">
                 {LAYER_OPTIONS.map((l) => (
-                  <li key={l.key} className="pax-columns-item" onClick={() => setActiveLayer(l.key)}>
+                  <li
+                    key={l.key}
+                    className="pax-columns-item"
+                    onClick={() => setActiveLayer(l.key)}
+                    {...clickable(() => setActiveLayer(l.key), "option")}
+                  >
                     <input type="radio" name="seatmap-layer" checked={activeLayer === l.key} readOnly />
                     {t(l.label)}
                   </li>

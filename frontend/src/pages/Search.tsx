@@ -6,6 +6,7 @@ import { clearPersistentState, usePersistentState } from "../usePersistentState"
 import { SortTh, useSort } from "../components/SortTh";
 import { useLanguage } from "../i18n";
 import { useHotkey } from "../useShortcuts";
+import { clickable } from "../interactive";
 
 type ResultSortKey = "name" | "destination" | "flight" | "std" | "pnr" | "status";
 const RESULT_SORT_GETTERS: Record<ResultSortKey, (p: PassengerSearchResult) => string | number> = {
@@ -180,7 +181,7 @@ export function Search() {
               </thead>
               <tbody>
                 {sortedResults.map((p) => (
-                  <tr key={p.id} className="row-hover" onClick={() => openPassenger(p)}>
+                  <tr key={p.id} className="row-hover" onClick={() => openPassenger(p)} {...clickable(() => openPassenger(p))}>
                     <td>{p.surname}/{p.given_name}</td>
                     <td className="mono">{p.destination}</td>
                     <td className="mono">{p.carrier_code}{p.flight_number}</td>

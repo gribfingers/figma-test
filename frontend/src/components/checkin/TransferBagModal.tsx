@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Passenger } from "../../api";
 import { Modal } from "../Modal";
 import { useLanguage } from "../../i18n";
+import { clickable } from "../../interactive";
 
 interface Props {
   passengers: Passenger[];
@@ -31,6 +32,7 @@ export function TransferBagModal({ passengers, onConfirm, onClose }: Props) {
             key={p.id}
             className={`transfer-passenger-item ${p.id === selectedId ? "selected" : ""}`}
             onClick={() => setSelectedId(p.id)}
+            {...clickable(() => setSelectedId(p.id), "option")}
           >
             {p.surname} {p.given_name}
           </div>

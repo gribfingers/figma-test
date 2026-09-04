@@ -32,6 +32,7 @@ import { useLanguage } from "../i18n";
 import { useCanEdit } from "../auth";
 import { useHotkey } from "../useShortcuts";
 import { trackEvent } from "../analytics";
+import { clickable } from "../interactive";
 
 // Last-fetched flight/passengers per flight, kept outside component state so
 // it survives this component unmounting when the agent switches to another
@@ -244,19 +245,19 @@ function AddPaxButton({ flightId, excludeIds, onAdd }: AddPaxButtonProps) {
         </button>
         {query.trim() && (
           <ul className="pnr-add-pax-results">
-            {shown.map((p) => (
-              <li
-                key={p.id}
-                onClick={() => {
-                  onAdd(p);
-                  setQuery("");
-                  setResults([]);
-                }}
-              >
-                <span>{p.surname} {p.given_name}</span>
-                <span className="mono">{p.record_locator}</span>
-              </li>
-            ))}
+            {shown.map((p) => {
+              const pick = () => {
+                onAdd(p);
+                setQuery("");
+                setResults([]);
+              };
+              return (
+                <li key={p.id} onClick={pick} {...clickable(pick, "option")}>
+                  <span>{p.surname} {p.given_name}</span>
+                  <span className="mono">{p.record_locator}</span>
+                </li>
+              );
+            })}
             {shown.length === 0 && <li className="pnr-add-pax-empty">{t("No matches")}</li>}
           </ul>
         )}
@@ -807,18 +808,17 @@ export function PnrView() {
               role="menu"
               style={{ position: "fixed", top: actionsMenuRect.top, right: window.innerWidth - (actionsMenuRect.left + actionsMenuRect.width) }}
             >
-              {ACTIONS_MENU_ITEMS.map(({ label, kind }) => (
-                <li
-                  key={label}
-                  role="menuitem"
-                  onClick={() => {
-                    setActionsMenuOpen(false);
-                    setActionsPanelKind(kind);
-                  }}
-                >
-                  {t(label)}
-                </li>
-              ))}
+              {ACTIONS_MENU_ITEMS.map(({ label, kind }) => {
+                const pick = () => {
+                  setActionsMenuOpen(false);
+                  setActionsPanelKind(kind);
+                };
+                return (
+                  <li key={label} onClick={pick} {...clickable(pick, "menuitem")}>
+                    {t(label)}
+                  </li>
+                );
+              })}
             </ul>,
             document.body
           )}
@@ -858,7 +858,12 @@ export function PnrView() {
                 const extra = parsePassengerExtra(p);
                 const cls = classFor(p, seatByCode);
                 return (
-                  <tr key={p.id} className={`clickable ${checked.has(p.id) ? "pax-row-active" : ""}`} onClick={() => toggleChecked(p.id)}>
+                  <tr
+                    key={p.id}
+                    className={`clickable ${checked.has(p.id) ? "pax-row-active" : ""}`}
+                    onClick={() => toggleChecked(p.id)}
+                    {...clickable(() => toggleChecked(p.id))}
+                  >
                     <td>
                       <input
                         type="checkbox"
@@ -867,7 +872,13 @@ export function PnrView() {
                         onClick={(e) => e.stopPropagation()}
                       />
                     </td>
-                    <td className="link-text" onClick={(e) => { e.stopPropagation(); setDocPanelPassenger(p); }}>{p.surname} {p.given_name}</td>
+                    <td
+                      className="link-text"
+                      onClick={(e) => { e.stopPropagation(); setDocPanelPassenger(p); }}
+                      {...clickable(() => setDocPanelPassenger(p))}
+                    >
+                      {p.surname} {p.given_name}
+                    </td>
                     <td>
                       {ssr.length > 0 && (
                         <span className="pax-service-chips">
