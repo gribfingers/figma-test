@@ -7,7 +7,12 @@ export interface ShortcutDef {
   defaultCombo: string;
 }
 
-export const MOD_KEY_LABEL = /Mac|iPhone|iPod|iPad/.test(navigator.platform) ? "⌘" : "Ctrl";
+const IS_MAC = /Mac|iPhone|iPod|iPad/.test(navigator.platform);
+export const MOD_KEY_LABEL = IS_MAC ? "⌘" : "Ctrl";
+// Physically the same key as Alt on a PC keyboard (both sides of the spacebar, next to Cmd) — Mac
+// just prints "Option"/⌥ on the keycap. The browser still reports it as altKey either way, so every
+// "alt|…" combo already works unchanged on macOS; this only affects how it's displayed.
+export const ALT_KEY_LABEL = IS_MAC ? "⌥" : "Alt";
 
 /**
  * Every shortcut the app knows about — the single source of truth for both the settings panel
@@ -81,7 +86,7 @@ export function comboFromEvent(e: KeyboardEvent): string | null {
 
 const TOKEN_LABEL: Record<string, string> = {
   mod: MOD_KEY_LABEL,
-  alt: "Alt",
+  alt: ALT_KEY_LABEL,
   shift: "Shift",
   arrowup: "↑",
   arrowdown: "↓",
