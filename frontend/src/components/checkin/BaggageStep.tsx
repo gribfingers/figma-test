@@ -13,6 +13,7 @@ import { TagManualModal } from "./TagManualModal";
 import { TransferBagModal } from "./TransferBagModal";
 import { useToast } from "../../toast";
 import { useLanguage } from "../../i18n";
+import { useHotkey } from "../../useShortcuts";
 
 interface CarryOnRow {
   id: number;
@@ -136,6 +137,18 @@ export function BaggageStep({ flight, passenger, passengers, segments, initialRo
   function removeCarryOn(id: number) {
     setCarryOn((prev) => prev.filter((r) => r.id !== id));
   }
+
+  useHotkey("baggage.add-row", () => mutateRows((prev) => [...prev, emptyBagRow(flight.destination)]));
+  // Prints (or retries) the first row that's filled in and not already printed — an agent tagging
+  // several bags in a row can just keep hitting this instead of aiming for each row's own printer icon.
+  useHotkey(
+    "baggage.print-tag",
+    () => {
+      const row = rows.find((r) => r.weight && r.typeId && r.printStatus !== "printed");
+      if (row) attemptPrint(row, row.printStatus === "error");
+    },
+    rows.some((r) => r.weight && r.typeId && r.printStatus !== "printed")
+  );
 
   return (
     <div className="baggage-step">

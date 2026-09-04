@@ -326,6 +326,9 @@ export function Boarding() {
   useHotkey("boarding.scan", () => setScanOpen((v) => !v), canEdit);
   useHotkey("boarding.board", boardSelected, canEdit && selected.size > 0 && !closed);
   useHotkey("boarding.offload", offloadSelected, canEdit && selected.size > 0 && !closed);
+  useHotkey("boarding.filter-all", () => setQuickFilter("all"));
+  useHotkey("boarding.filter-yet", () => setQuickFilter("yet"));
+  useHotkey("boarding.filter-boarded", () => setQuickFilter("boarded"));
 
   if (notFound) return <EntityNotFound label={t("This flight")} />;
   if (!flight) return <div className="content">{t("Loading…")}</div>;

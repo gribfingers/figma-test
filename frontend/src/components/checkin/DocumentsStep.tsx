@@ -16,6 +16,7 @@ import { DateField } from "../DateField";
 import { BirthDateField } from "../BirthDateField";
 import { DocScannedIcon } from "../Icon";
 import { useLanguage } from "../../i18n";
+import { useHotkey } from "../../useShortcuts";
 
 const EMPTY_DOC: PassengerDocument = { document_type: "P", document_number: "", nationality: "", doc_expiry: "" };
 const EMPTY_VISA: VisaDocument = {
@@ -139,6 +140,8 @@ export function DocumentsStep({ flightId, passenger, segments, onUpdated }: Prop
     if (kind === "doca") await saveExtraPatch({ addressDocs: addresses.filter((_, i) => i !== index) });
     setEditing(null);
   }
+
+  useHotkey("flow.verify-docs", () => saveExtraPatch({ docVerified: true }), !extra.docVerified && !saving);
 
   return (
     <div className="docs-step">

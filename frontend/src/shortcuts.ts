@@ -40,6 +40,14 @@ export const SHORTCUTS: ShortcutDef[] = [
   { id: "flow.finish", group: "Check-in flow", label: "Finish", defaultCombo: "alt|f" },
   { id: "flow.cart", group: "Check-in flow", label: "Cart", defaultCombo: "alt|c" },
   { id: "flow.flight-info", group: "Check-in flow", label: "Flight information", defaultCombo: "alt|i" },
+  // Moves flowActiveId to the next/previous passenger in flowPassengers without leaving the
+  // current step — the only other way is clicking a different roster row, the biggest friction
+  // point for a multi-pax PNR (a family, say) going through seats/baggage/docs one at a time.
+  { id: "flow.next-passenger", group: "Check-in flow", label: "Next passenger", defaultCombo: "alt|arrowdown" },
+  { id: "flow.prev-passenger", group: "Check-in flow", label: "Previous passenger", defaultCombo: "alt|arrowup" },
+  { id: "flow.verify-docs", group: "Check-in flow", label: "Verify docs on all segments", defaultCombo: "alt|v" },
+  { id: "baggage.add-row", group: "Check-in flow", label: "Add baggage", defaultCombo: "alt|g" },
+  { id: "baggage.print-tag", group: "Check-in flow", label: "Print bag tag", defaultCombo: "alt|p" },
 
   // ---- Seat map (any panel showing SeatMapPanel) ----
   { id: "seatmap.zoom-in", group: "Seat map", label: "Zoom in", defaultCombo: "+" },
@@ -55,6 +63,9 @@ export const SHORTCUTS: ShortcutDef[] = [
   { id: "boarding.row-open", group: "Boarding", label: "Open selected row", defaultCombo: "enter" },
   { id: "boarding.row-toggle", group: "Boarding", label: "Toggle row checkbox", defaultCombo: "space" },
   { id: "boarding.select-all", group: "Boarding", label: "Select/deselect all rows", defaultCombo: "mod|a" },
+  { id: "boarding.filter-all", group: "Boarding", label: "All", defaultCombo: "1" },
+  { id: "boarding.filter-yet", group: "Boarding", label: "Yet to board", defaultCombo: "2" },
+  { id: "boarding.filter-boarded", group: "Boarding", label: "Boarded", defaultCombo: "3" },
 ];
 
 const MODIFIER_KEYS = new Set(["Control", "Alt", "Shift", "Meta"]);

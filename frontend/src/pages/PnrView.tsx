@@ -418,20 +418,44 @@ export function PnrView() {
     if (!canEdit && flowStep) setFlowStep(null);
   }, [canEdit, flowStep]);
 
+  // Hoisted above the early returns below (rules of hooks — see the useHotkey block right after)
+  // so flow.next-passenger/prev-passenger can cycle through the same list the roster/flow body
+  // renders further down, which normally computes this after the loading guard.
+  const pnrPassengers = clicked ? passengers.filter((p) => p.record_locator === clicked.record_locator) : [];
+  const pnrIds = new Set(pnrPassengers.map((p) => p.id));
+  const rosterPassengers = [...pnrPassengers, ...extraPassengers.filter((p) => !pnrIds.has(p.id))];
+  const flowPassengers = rosterPassengers.filter((p) => checked.has(p.id));
+  const flowActive = flowPassengers.find((p) => p.id === flowActiveId) ?? flowPassengers[0];
+
   // Mirror the flow header's own Check-in/Next/Finish buttons and their disabled conditions — must
   // stay a fixed hook call above both early returns below (rules of hooks), so the enabled checks
   // here use flowStep directly rather than the checkInDisabled const computed further down.
   useHotkey("flow.checkin", () => completeCheckin(), !!flowStep && flowStep !== "docs" && flowStep !== "seats");
   useHotkey("flow.next", () => nextFlowStep(), !!flowStep && flowStep !== "services");
   useHotkey("flow.finish", () => setFinishConfirmOpen(true), !!flowStep);
+  useHotkey(
+    "flow.next-passenger",
+    () => {
+      const idx = flowPassengers.findIndex((p) => p.id === flowActive?.id);
+      const next = flowPassengers[(idx + 1) % flowPassengers.length];
+      if (next) setFlowActiveId(next.id);
+    },
+    !!flowStep && flowPassengers.length > 1
+  );
+  useHotkey(
+    "flow.prev-passenger",
+    () => {
+      const idx = flowPassengers.findIndex((p) => p.id === flowActive?.id);
+      const prev = flowPassengers[(idx - 1 + flowPassengers.length) % flowPassengers.length];
+      if (prev) setFlowActiveId(prev.id);
+    },
+    !!flowStep && flowPassengers.length > 1
+  );
 
   if (notFound) return <EntityNotFound label={t("This flight")} />;
   if (!flight || !clicked) return <div className="content">{t("Loading…")}</div>;
 
   const seatByCode = new Map(seats.map((s) => [s.seat, s]));
-  const pnrPassengers = passengers.filter((p) => p.record_locator === clicked.record_locator);
-  const pnrIds = new Set(pnrPassengers.map((p) => p.id));
-  const rosterPassengers = [...pnrPassengers, ...extraPassengers.filter((p) => !pnrIds.has(p.id))];
   const rosterIds = new Set(rosterPassengers.map((p) => p.id));
 
   const capacity = parseVersion(flight.aircraft_version);
@@ -494,8 +518,6 @@ export function PnrView() {
     setSeats((prev) => prev.map((s) => (s.seat === updated.seat ? updated : s)));
   }
 
-  const flowPassengers = rosterPassengers.filter((p) => checked.has(p.id));
-  const flowActive = flowPassengers.find((p) => p.id === flowActiveId) ?? flowPassengers[0];
   // Not until seats and documents are behind us — Baggage/Extra services is where it opens up.
   const checkInDisabled = flowStep === "docs" || flowStep === "seats";
 

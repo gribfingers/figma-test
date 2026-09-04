@@ -60,6 +60,8 @@ export const RU: Record<string, string> = {
   "Seat map": "Карта мест",
   // shortcuts.ts labels not already translated elsewhere in this file
   "Focus search field": "Фокус на поле поиска",
+  "Next passenger": "Следующий пассажир",
+  "Previous passenger": "Предыдущий пассажир",
   "Close current tab": "Закрыть текущую вкладку",
   "Previous tab": "Предыдущая вкладка",
   "Next tab": "Следующая вкладка",
