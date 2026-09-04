@@ -84,23 +84,18 @@ export function comboFromEvent(e: KeyboardEvent): string | null {
   return parts.join("|");
 }
 
-const TOKEN_LABEL: Record<string, string> = {
-  mod: MOD_KEY_LABEL,
-  alt: ALT_KEY_LABEL,
-  shift: "Shift",
-  arrowup: "↑",
-  arrowdown: "↓",
-  arrowleft: "←",
-  arrowright: "→",
-  enter: "Enter",
-  space: "Space",
-  escape: "Esc",
-};
+// Windows/Linux spells shortcuts out ("Ctrl+Shift+Enter"); macOS's own convention (menu bar, System
+// Settings' shortcut editor) is a run of symbols with no separator ("⇧⌘↩") — so both the individual
+// token labels and how they're joined differ by platform, not just the mod/alt glyphs.
+const TOKEN_LABEL: Record<string, string> = IS_MAC
+  ? { mod: MOD_KEY_LABEL, alt: ALT_KEY_LABEL, shift: "⇧", arrowup: "↑", arrowdown: "↓", arrowleft: "←", arrowright: "→", enter: "⏎", space: "Space", escape: "⎋" }
+  : { mod: MOD_KEY_LABEL, alt: ALT_KEY_LABEL, shift: "Shift", arrowup: "↑", arrowdown: "↓", arrowleft: "←", arrowright: "→", enter: "Enter", space: "Space", escape: "Esc" };
 
-/** Renders a combo string ("alt|n", "mod|enter", "arrowup") as the label shown in the UI ("Alt+N", "Ctrl+Enter", "↑"). */
+/** Renders a combo string ("alt|n", "mod|enter", "arrowup") as the label shown in the UI —
+ *  "Alt+N"/"Ctrl+Enter" on Windows/Linux, "⌥N"/"⌘⏎" on macOS. */
 export function formatCombo(combo: string): string {
-  return combo
+  const parts = combo
     .split("|")
-    .map((part) => TOKEN_LABEL[part] ?? (part.length === 1 ? part.toUpperCase() : part.charAt(0).toUpperCase() + part.slice(1)))
-    .join("+");
+    .map((part) => TOKEN_LABEL[part] ?? (part.length === 1 ? part.toUpperCase() : part.charAt(0).toUpperCase() + part.slice(1)));
+  return parts.join(IS_MAC ? "" : "+");
 }
