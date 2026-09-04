@@ -1602,6 +1602,11 @@ tr.pax-row-focused { outline: 2px solid var(--accent); outline-offset: -2px; }
 
 /* ---- Messenger (Chat button in the top bar) ---- */
 .messenger-overlay { position: fixed; inset: 0; background: rgba(24, 31, 36, 0.32); z-index: 100; display: flex; justify-content: flex-end; }
+/* Screenshot tool (see Messenger.tsx's captureScreenshot): hides this panel — including its dark
+   backdrop — for the single instant a frame is actually grabbed, so the screenshot shows whatever
+   was underneath instead of the messenger itself. visibility (not opacity) so it snaps instantly,
+   bypassing .messenger-overlay's own 0.3s opacity transition. */
+.messenger-overlay.capture-hidden { visibility: hidden; }
 .messenger-panel {
   width: 400px;
   max-width: 100%;

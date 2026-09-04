@@ -28,15 +28,21 @@ function previewText(m: Message | null, t: (text: string) => string): string {
  * screen via the browser's own picker, we grab a single frame from that
  * stream onto a canvas, then immediately stop the stream so the "sharing"
  * indicator disappears right away.
+ *
+ * `hide`/`show` bracket just the frame-grab, not the whole permission wait — this Messenger panel
+ * is an overlay drawn on top of whatever the agent actually wants to capture (seat map, passenger
+ * info, …), so it'd otherwise cover exactly the thing being screenshotted. Hiding it only for that
+ * instant keeps the panel visible normally while the browser's own share picker is up.
  */
-async function captureScreenshot(): Promise<string> {
+async function captureScreenshot(hide: () => void, show: () => void): Promise<string> {
   const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
   try {
     const video = document.createElement("video");
     video.srcObject = stream;
     video.muted = true;
     await video.play();
-    // Let at least one real frame render before grabbing it.
+    hide();
+    // Let the hide actually paint, then let at least one real frame render before grabbing it.
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
     const canvas = document.createElement("canvas");
     canvas.width = video.videoWidth;
@@ -46,6 +52,7 @@ async function captureScreenshot(): Promise<string> {
     ctx.drawImage(video, 0, 0);
     return canvas.toDataURL("image/png");
   } finally {
+    show();
     stream.getTracks().forEach((t) => t.stop());
   }
 }
@@ -61,6 +68,7 @@ export function Messenger({ open, onClose }: Props) {
   const [pendingImage, setPendingImage] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [capturing, setCapturing] = useState(false);
+  const [hiddenForCapture, setHiddenForCapture] = useState(false);
   const [lightbox, setLightbox] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -153,7 +161,10 @@ export function Messenger({ open, onClose }: Props) {
   async function onScreenshot() {
     setCapturing(true);
     try {
-      const raw = await captureScreenshot();
+      const raw = await captureScreenshot(
+        () => setHiddenForCapture(true),
+        () => setHiddenForCapture(false)
+      );
       setPendingImage(await resizeDataUrl(raw, 1600));
     } catch {
       // Picker cancelled or capture blocked — nothing to attach, nothing to report.
@@ -169,7 +180,7 @@ export function Messenger({ open, onClose }: Props) {
   });
 
   return (
-    <div className={`messenger-overlay ${open ? "open" : ""}`} onClick={onClose}>
+    <div className={`messenger-overlay ${open ? "open" : ""} ${hiddenForCapture ? "capture-hidden" : ""}`} onClick={onClose}>
       <div className="messenger-panel" onClick={(e) => e.stopPropagation()}>
         {!activeContact ? (
           <>
