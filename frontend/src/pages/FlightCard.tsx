@@ -195,7 +195,7 @@ export function FlightCard() {
             </div>
           </>
         )}
-        <div className="flight-card-body">
+        <div className={`flight-card-body ${chromeHidden ? "flight-card-body-standalone" : ""}`}>
           {tab === "main" && (
             <MainTab
               flight={flight}

@@ -2167,6 +2167,13 @@ a { color: var(--accent); }
   border-top: none;
   border-radius: 0 0 4px 4px;
 }
+/* The head/tabs strip above normally supplies the panel's top edge (see the comment on
+   .flight-card-head) — while it's hidden (rotated seat map, see FlightCard's chromeHidden), the
+   body is the whole panel on its own and needs that top edge back. */
+.flight-card-body-standalone {
+  border-top: 1px solid var(--panel-border);
+  border-radius: 4px;
+}
 
 /* Main tab: single flight segment + editable fields */
 /* The route card (Airport/Date/Time/Terminal ×2, fixed-width fields) needs
