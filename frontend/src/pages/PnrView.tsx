@@ -281,6 +281,14 @@ function AddPaxButton({ flightId, excludeIds, onAdd }: AddPaxButtonProps) {
             placeholder={t(ADD_PAX_MODES.find((m) => m.key === mode)?.placeholder ?? "Search")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              // Jump straight into the results list on Down (or Up, landing on the same first row) —
+              // no need to Tab out of the field first once matches are showing.
+              if ((e.key === "ArrowDown" || e.key === "ArrowUp") && shown.length > 0) {
+                e.preventDefault();
+                resultRefs.current.get(activeResultId!)?.focus();
+              }
+            }}
           />
         </div>
         {/* tabIndex=-1: Escape already closes this panel, so this button doesn't need to sit in the
@@ -932,7 +940,11 @@ export function PnrView() {
                     onFocus={() => setFocusedRosterId(p.id)}
                     onClick={() => toggleChecked(p.id)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
+                      // Alt+Enter is also the global checkin.start shortcut (see useHotkey below) —
+                      // without this guard, focusing a row and pressing it would both toggle this
+                      // row's own checkbox AND start the flow, checking a passenger the agent never
+                      // meant to check. Ctrl/Cmd are excluded for the same reason.
+                      if ((e.key === "Enter" || e.key === " ") && !e.altKey && !e.ctrlKey && !e.metaKey) {
                         e.preventDefault();
                         toggleChecked(p.id);
                       } else if (e.key === "ArrowDown") {

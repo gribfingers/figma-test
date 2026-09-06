@@ -18,6 +18,10 @@ export function clickable(onActivate: () => void, role: string = "button") {
     role,
     onKeyDown: (e: KeyboardEvent) => {
       if (e.key !== "Enter" && e.key !== " ") return;
+      // Don't also fire on Alt/Ctrl/Cmd+Enter — those combos are reserved for global keyboard
+      // shortcuts (see shortcuts.ts) that may be active on the same page while this element happens
+      // to be focused; a bare Enter/Space is the only thing this element itself should react to.
+      if (e.altKey || e.ctrlKey || e.metaKey) return;
       // A native button suppresses Space's default (page scroll) too — do the same here, and only
       // for the exact target (not a bubbled key from some focusable thing nested inside).
       if (e.target !== e.currentTarget) return;
