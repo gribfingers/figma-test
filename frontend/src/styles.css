@@ -2969,6 +2969,9 @@ tr.row-hover { cursor: pointer; }
   color: var(--field-value);
   cursor: pointer;
 }
+.pnr-add-pax-result-info { display: flex; align-items: center; gap: 8px; min-width: 0; overflow: hidden; }
+.pnr-add-pax-result-info > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pnr-add-pax-results li .chip { flex-shrink: 0; }
 .pnr-add-pax-results li:hover { background: var(--field-bg); }
 .pnr-add-pax-empty { color: var(--muted); cursor: default; }
 .pnr-add-pax-empty:hover { background: transparent; }

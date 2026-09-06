@@ -324,8 +324,11 @@ function AddPaxButton({ flightId, excludeIds, onAdd }: AddPaxButtonProps) {
                     else if (e.key === "ArrowUp") { e.preventDefault(); moveResult(-1); }
                   }}
                 >
-                  <span>{p.surname} {p.given_name}</span>
-                  <span className="mono">{p.record_locator}</span>
+                  <span className="pnr-add-pax-result-info">
+                    <span>{p.surname} {p.given_name}</span>
+                    <span className="mono">{p.record_locator}</span>
+                  </span>
+                  <span className={`chip middle ${statusChipClass(p)}`}>{t(statusLabel(p))}</span>
                 </li>
               );
             })}
