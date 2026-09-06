@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { api, Passenger, SeatCell } from "../../api";
 import { cabinFeaturesFor } from "../../cabinLayout";
 import { isInfant, parsePassengerExtra } from "../../paxExtra";
@@ -99,6 +99,18 @@ export function SeatsStep({
       setError(e.message);
     }
   }
+
+  // Escape is a third way out of "select a pax's seat to swap with…" mode, alongside the Cancel
+  // button and re-picking your own seat — consistent with every other "Escape closes/cancels" spot
+  // in the app, and the only one of the three that doesn't depend on Tab reaching a specific button.
+  useEffect(() => {
+    if (!swapping) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") onSwappingChange(false);
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [swapping, onSwappingChange]);
 
   async function handleOccupiedSeatClick(s: SeatCell) {
     if (!swapping || s.passenger_id == null) return;

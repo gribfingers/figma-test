@@ -60,6 +60,7 @@ export const SHORTCUTS: ShortcutDef[] = [
   { id: "seatmap.zoom-in", group: "Seat map", label: "Zoom in", defaultCombo: "+" },
   { id: "seatmap.zoom-out", group: "Seat map", label: "Zoom out", defaultCombo: "-" },
   { id: "seatmap.zoom-reset", group: "Seat map", label: "Reset zoom to 100%", defaultCombo: "0" },
+  { id: "seatmap.rotate", group: "Seat map", label: "Switch layout orientation", defaultCombo: "alt|r" },
 
   // ---- Boarding (gate workstation passenger list) ----
   { id: "boarding.scan", group: "Boarding", label: "Scan a boarding pass", defaultCombo: "alt|s" },

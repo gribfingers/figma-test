@@ -701,6 +701,7 @@ export const RU: Record<string, string> = {
   "Reset zoom to 100%": "Сбросить масштаб на 100%",
   "Switch to horizontal layout": "Переключить на горизонтальный вид",
   "Switch to vertical layout": "Переключить на вертикальный вид",
+  "Switch layout orientation": "Переключить ориентацию карты",
   Legend: "Легенда",
   "Child (2–12 y.o.)": "Ребёнок (2–12 лет)",
   Layers: "Слои",

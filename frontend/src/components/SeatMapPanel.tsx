@@ -10,7 +10,6 @@ import { SeatInfoPopover } from "./SeatInfoPopover";
 import { SeatHistoryModal } from "./SeatHistoryModal";
 import { useLanguage } from "../i18n";
 import { useHotkey } from "../useShortcuts";
-import { clickable } from "../interactive";
 
 interface Props {
   flightId: number;
@@ -90,6 +89,9 @@ export function SeatMapPanel({
     if (onOrientationChange) onOrientationChange(next);
     else setInternalOrientation(next);
   }
+  // A standalone one-off action outside any roving-tabindex group, same reasoning as checkin.start/
+  // Add pax elsewhere — the toolbar button itself is mouse-only (tabIndex=-1 below) in favor of this.
+  useHotkey("seatmap.rotate", toggleOrientation, allowOrientationToggle);
   const [legendOpen, setLegendOpen] = useState(false);
   const [layersOpen, setLayersOpen] = useState(false);
   const [editingSeat, setEditingSeat] = useState<SeatCell | null>(null);
@@ -98,8 +100,15 @@ export function SeatMapPanel({
   // Three layers on the seat map, per the reference spec: attribute icons, price, RFISC —
   // mutually exclusive, only one shown at a time (Icons by default).
   const [activeLayer, setActiveLayer] = useState<"icons" | "price" | "rfisc">("icons");
+  const LAYER_OPTIONS: { key: "icons" | "price" | "rfisc"; label: string }[] = [
+    { key: "icons", label: "Icons" },
+    { key: "price", label: "Price" },
+    { key: "rfisc", label: "RFISC" },
+  ];
 
+  const legendBtnRef = useRef<HTMLButtonElement>(null);
   const legendRef = useRef<HTMLDivElement>(null);
+  const layersBtnRef = useRef<HTMLButtonElement>(null);
   const layersRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -117,15 +126,43 @@ export function SeatMapPanel({
       if (legendRef.current && !legendRef.current.contains(e.target as Node)) setLegendOpen(false);
       if (layersRef.current && !layersRef.current.contains(e.target as Node)) setLayersOpen(false);
     }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key !== "Escape") return;
+      if (legendOpen) {
+        setLegendOpen(false);
+        legendBtnRef.current?.focus();
+      }
+      if (layersOpen) {
+        setLayersOpen(false);
+        layersBtnRef.current?.focus();
+      }
+    }
     document.addEventListener("mousedown", onDocMouseDown);
-    return () => document.removeEventListener("mousedown", onDocMouseDown);
-  }, []);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onDocMouseDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [legendOpen, layersOpen]);
 
-  const LAYER_OPTIONS: { key: "icons" | "price" | "rfisc"; label: string }[] = [
-    { key: "icons", label: "Icons" },
-    { key: "price", label: "Price" },
-    { key: "rfisc", label: "RFISC" },
-  ];
+  // Roving tabindex over the layers list, same pattern as any other menu in the app: one item is
+  // ever a Tab stop, Up/Down moves it — opening the list moves real focus onto the active layer's
+  // item so arrow keys work immediately.
+  const [activeLayerIdx, setActiveLayerIdx] = useState(0);
+  const layerItemRefs = useRef<(HTMLLIElement | null)[]>([]);
+  function moveLayerItem(delta: 1 | -1) {
+    const next = (activeLayerIdx + delta + LAYER_OPTIONS.length) % LAYER_OPTIONS.length;
+    setActiveLayerIdx(next);
+    layerItemRefs.current[next]?.focus();
+  }
+  useEffect(() => {
+    if (!layersOpen) return;
+    const idx = LAYER_OPTIONS.findIndex((l) => l.key === activeLayer);
+    setActiveLayerIdx(idx >= 0 ? idx : 0);
+    const id = requestAnimationFrame(() => layerItemRefs.current[idx >= 0 ? idx : 0]?.focus());
+    return () => cancelAnimationFrame(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [layersOpen]);
 
   return (
     <div className="seatmap-panel">
@@ -136,21 +173,26 @@ export function SeatMapPanel({
         </div>
         {banner && <div className="seatmap-toolbar-banner">{banner}</div>}
         <div className="seatmap-toolbar-actions">
+          {/* tabIndex=-1: fully covered by the seatmap.zoom-in/out/reset shortcuts (+/-/0) — no need
+              for these to also be a (poorly-focus-styled, all:unset) Tab stop. */}
           <div className="seatmap-zoom">
-            <button type="button" className="seatmap-zoom-btn" onClick={() => setZoom((z) => Math.max(50, z - 10))} aria-label={t("Zoom out")}>
+            <button type="button" className="seatmap-zoom-btn" tabIndex={-1} onClick={() => setZoom((z) => Math.max(50, z - 10))} aria-label={t("Zoom out")}>
               <MinusIcon size={14} />
             </button>
-            <button type="button" className="seatmap-zoom-value" onClick={() => setZoom(100)} title={t("Reset zoom to 100%")}>
+            <button type="button" className="seatmap-zoom-value" tabIndex={-1} onClick={() => setZoom(100)} title={t("Reset zoom to 100%")}>
               {zoom}%
             </button>
-            <button type="button" className="seatmap-zoom-btn" onClick={() => setZoom((z) => Math.min(150, z + 10))} aria-label={t("Zoom in")}>
+            <button type="button" className="seatmap-zoom-btn" tabIndex={-1} onClick={() => setZoom((z) => Math.min(150, z + 10))} aria-label={t("Zoom in")}>
               <PlusIcon size={14} />
             </button>
           </div>
           {allowOrientationToggle && (
+            // tabIndex=-1: reached via its own seatmap.rotate (Alt+R) shortcut instead — same
+            // reasoning as the zoom buttons above.
             <button
               type="button"
               className={`seatmap-tool-btn seatmap-orientation-btn ${orientation === "horizontal" ? "active" : ""}`}
+              tabIndex={-1}
               title={orientation === "vertical" ? t("Switch to horizontal layout") : t("Switch to vertical layout")}
               onClick={toggleOrientation}
             >
@@ -158,7 +200,7 @@ export function SeatMapPanel({
             </button>
           )}
           <div className="seatmap-popover-anchor" ref={legendRef}>
-            <button type="button" className="seatmap-tool-btn" title={t("Legend")} onClick={() => setLegendOpen((o) => !o)}>
+            <button ref={legendBtnRef} type="button" className="seatmap-tool-btn" title={t("Legend")} onClick={() => setLegendOpen((o) => !o)}>
               <RowsIcon size={16} />
             </button>
             {legendOpen && (
@@ -198,19 +240,28 @@ export function SeatMapPanel({
             )}
           </div>
           <div className="seatmap-popover-anchor" ref={layersRef}>
-            <button type="button" className="seatmap-tool-btn" title={t("Layers")} onClick={() => setLayersOpen((o) => !o)}>
+            <button ref={layersBtnRef} type="button" className="seatmap-tool-btn" title={t("Layers")} onClick={() => setLayersOpen((o) => !o)}>
               <LayersIcon size={16} />
             </button>
             {layersOpen && (
-              <ul className="select-menu seatmap-layers-list">
-                {LAYER_OPTIONS.map((l) => (
+              <ul className="select-menu seatmap-layers-list" role="listbox">
+                {LAYER_OPTIONS.map((l, i) => (
                   <li
                     key={l.key}
+                    ref={(el) => { layerItemRefs.current[i] = el; }}
                     className="pax-columns-item"
+                    role="option"
+                    aria-selected={activeLayer === l.key}
+                    tabIndex={i === activeLayerIdx ? 0 : -1}
+                    onFocus={() => setActiveLayerIdx(i)}
                     onClick={() => setActiveLayer(l.key)}
-                    {...clickable(() => setActiveLayer(l.key), "option")}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setActiveLayer(l.key); }
+                      else if (e.key === "ArrowDown") { e.preventDefault(); moveLayerItem(1); }
+                      else if (e.key === "ArrowUp") { e.preventDefault(); moveLayerItem(-1); }
+                    }}
                   >
-                    <input type="radio" name="seatmap-layer" checked={activeLayer === l.key} readOnly />
+                    <input type="radio" name="seatmap-layer" checked={activeLayer === l.key} readOnly tabIndex={-1} />
                     {t(l.label)}
                   </li>
                 ))}

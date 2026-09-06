@@ -281,7 +281,10 @@ export function SeatMapGrid({
                       }
                       onClick={activateSeat}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
+                        // Same guard as clickable()/the roster row's own Enter handler — a bare
+                        // Enter/Space activates the seat, but Alt/Ctrl/Cmd+<key> combos are reserved
+                        // for global shortcuts that might be active on the same page.
+                        if ((e.key === "Enter" || e.key === " ") && !e.altKey && !e.ctrlKey && !e.metaKey) {
                           e.preventDefault();
                           activateSeat();
                           return;
