@@ -115,7 +115,9 @@ export function BoardingSearch() {
       </div>
 
       <div className="panel panel--flush">
-        <div className="table-scroll">
+        {/* tabIndex=-1: opt out of Chrome/Safari's automatic Tab-stop for scrollable regions — see
+            the same note in PnrView.tsx's roster table. */}
+        <div className="table-scroll" tabIndex={-1}>
           <table>
             <thead>
               <tr>

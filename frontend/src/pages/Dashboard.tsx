@@ -197,7 +197,9 @@ export function Dashboard() {
 
       <div className="panel panel--flush">
         <h3 className="panel-head">{t("Flights")} ({visibleFlights.length})</h3>
-        <div className="table-scroll">
+        {/* tabIndex=-1: opt out of Chrome/Safari's automatic Tab-stop for scrollable regions — see
+            the same note in PnrView.tsx's roster table. */}
+        <div className="table-scroll" tabIndex={-1}>
           <table>
             <thead>
               <tr>

@@ -225,7 +225,10 @@ export function SeatMapPanel({
         </div>
       </div>
 
-      <div className="seatmap-scroll" ref={scrollRef}>
+      {/* tabIndex=-1: opt out of Chrome/Safari's automatic Tab-stop for scrollable regions — see
+          the same note in PnrView.tsx's roster table; the seat cells' own roving tabindex already
+          covers keyboard scrolling into view. */}
+      <div className="seatmap-scroll" ref={scrollRef} tabIndex={-1}>
         <div className="seatmap-zoom-wrap" style={{ transform: `scale(${zoom / 100})` }}>
           <SeatMapGrid
             seats={seats}

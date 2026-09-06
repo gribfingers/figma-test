@@ -21,7 +21,10 @@ export function App() {
           <header>
             <TopTabs />
           </header>
-          <main className="content">
+          {/* tabIndex=-1: opt out of Chrome/Safari's automatic Tab-stop for scrollable regions —
+              every page lives inside this one overflow-y:auto container, so without this every
+              page would gain a silent, unstyled extra Tab stop wherever it sits in the sequence. */}
+          <main className="content" tabIndex={-1}>
             <Outlet />
           </main>
         </div>

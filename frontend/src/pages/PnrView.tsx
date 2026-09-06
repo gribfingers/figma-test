@@ -814,7 +814,11 @@ export function PnrView() {
           Check-in -> Actions, instead of the two buttons above the table it visually sits below. */}
       <div className="pnr-body">
       <div className="panel panel--flush pnr-roster-panel">
-        <div className="table-scroll">
+        {/* tabIndex=-1: Chrome/Safari auto-insert any scrollable region into the Tab sequence (so
+            it's reachable to arrow-key-scroll), which would otherwise eat a silent, unstyled Tab
+            stop between the roster row and Check-in — the roving tabindex on the rows already
+            covers keyboard scrolling into view (focus() scrolls automatically). */}
+        <div className="table-scroll" tabIndex={-1}>
           <table>
             <thead>
               <tr>
