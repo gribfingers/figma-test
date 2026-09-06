@@ -67,6 +67,12 @@ export const RU: Record<string, string> = {
   "This flight has departed — check-in is closed.": "Этот рейс уже вылетел — регистрация закрыта.",
   "Selected passengers are already checked in.": "Выбранные пассажиры уже зарегистрированы.",
   "Selected passengers are not checked in.": "Выбранные пассажиры не зарегистрированы.",
+  "Selected passengers have different check-in status — select passengers with the same status.":
+    "У выбранных пассажиров разный статус регистрации — выберите пассажиров с одинаковым статусом.",
+  "Selected passengers have different check-in status — Check-in, Quick check-in and Cancel check-in are disabled until the selection matches.":
+    "У выбранных пассажиров разный статус регистрации — Check-in, Quick check-in и Cancel check-in недоступны, пока статусы не совпадут.",
+  "Selected passengers have different check-in status — Quick check-in and Cancel check-in are disabled until the selection matches.":
+    "У выбранных пассажиров разный статус регистрации — Quick check-in и Cancel check-in недоступны, пока статусы не совпадут.",
   "Close current tab": "Закрыть текущую вкладку",
   "Previous tab": "Предыдущая вкладка",
   "Next tab": "Следующая вкладка",
