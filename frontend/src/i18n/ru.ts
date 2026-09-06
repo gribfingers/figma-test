@@ -702,6 +702,8 @@ export const RU: Record<string, string> = {
   "Switch to horizontal layout": "Переключить на горизонтальный вид",
   "Switch to vertical layout": "Переключить на вертикальный вид",
   "Switch layout orientation": "Переключить ориентацию карты",
+  "Open legend": "Открыть легенду",
+  "Open layers": "Открыть слои",
   Legend: "Легенда",
   "Child (2–12 y.o.)": "Ребёнок (2–12 лет)",
   Layers: "Слои",

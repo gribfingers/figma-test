@@ -94,6 +94,11 @@ export function SeatMapPanel({
   useHotkey("seatmap.rotate", toggleOrientation, allowOrientationToggle);
   const [legendOpen, setLegendOpen] = useState(false);
   const [layersOpen, setLayersOpen] = useState(false);
+  // Same reasoning as seatmap.rotate above — pulled the trigger buttons out of Tab order (below) in
+  // favor of these, since relying on Tab to reach them depends on a browser/OS setting (Safari
+  // skips plain buttons by default unless Full Keyboard Access is on) outside this app's control.
+  useHotkey("seatmap.legend", () => setLegendOpen((o) => !o));
+  useHotkey("seatmap.layers", () => setLayersOpen((o) => !o));
   const [editingSeat, setEditingSeat] = useState<SeatCell | null>(null);
   const [infoSeat, setInfoSeat] = useState<{ seat: SeatCell; x: number; y: number } | null>(null);
   const [historySeat, setHistorySeat] = useState<string | null>(null);
@@ -200,7 +205,7 @@ export function SeatMapPanel({
             </button>
           )}
           <div className="seatmap-popover-anchor" ref={legendRef}>
-            <button ref={legendBtnRef} type="button" className="seatmap-tool-btn" title={t("Legend")} onClick={() => setLegendOpen((o) => !o)}>
+            <button ref={legendBtnRef} type="button" className="seatmap-tool-btn" tabIndex={-1} title={t("Legend")} onClick={() => setLegendOpen((o) => !o)}>
               <RowsIcon size={16} />
             </button>
             {legendOpen && (
@@ -240,7 +245,7 @@ export function SeatMapPanel({
             )}
           </div>
           <div className="seatmap-popover-anchor" ref={layersRef}>
-            <button ref={layersBtnRef} type="button" className="seatmap-tool-btn" title={t("Layers")} onClick={() => setLayersOpen((o) => !o)}>
+            <button ref={layersBtnRef} type="button" className="seatmap-tool-btn" tabIndex={-1} title={t("Layers")} onClick={() => setLayersOpen((o) => !o)}>
               <LayersIcon size={16} />
             </button>
             {layersOpen && (
