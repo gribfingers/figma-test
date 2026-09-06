@@ -2732,6 +2732,9 @@ tr.row-hover { cursor: pointer; }
 
 .pnr-side { flex-shrink: 0; display: flex; align-items: center; gap: 20px; }
 .pnr-chips { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin-right: 28px; }
+/* Read-only counters, same look button.tertiary had — not a <button> since neither does anything
+   on click (see PnrView.tsx). */
+.pnr-chip-label { font-weight: 600; font-size: 13px; letter-spacing: 0.1px; text-transform: uppercase; color: var(--accent); }
 .pnr-gate { display: flex; flex-direction: column; align-items: center; }
 .pnr-gate-num { font-size: 28px; font-weight: 800; color: var(--field-value); line-height: 1; }
 .pnr-gate-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }

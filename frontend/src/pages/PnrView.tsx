@@ -793,9 +793,11 @@ export function PnrView() {
         </div>
 
         <div className="pnr-side">
+          {/* Plain read-only counters, not <button> — neither does anything on click, so a real
+              button here was just two dead Tab stops (real once Full Keyboard Access is on). */}
           <div className="pnr-chips">
-            <button type="button" className="tertiary">{t("RESEAT")}: {reseatCount}</button>
-            <button type="button" className="tertiary">{t("PRIORITY")}: {priorityCount}</button>
+            <span className="pnr-chip-label">{t("RESEAT")}: {reseatCount}</span>
+            <span className="pnr-chip-label">{t("PRIORITY")}: {priorityCount}</span>
           </div>
           <div className="pnr-gate">
             <span className="pnr-gate-num">{flight.gate ?? "—"}</span>
