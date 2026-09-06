@@ -32,7 +32,6 @@ import { useLanguage } from "../i18n";
 import { useCanEdit } from "../auth";
 import { useHotkey } from "../useShortcuts";
 import { trackEvent } from "../analytics";
-import { clickable } from "../interactive";
 import { isFlightDeparted } from "../flightPhase";
 
 // Last-fetched flight/passengers per flight, kept outside component state so
@@ -200,7 +199,36 @@ function AddPaxButton({ flightId, excludeIds, onAdd }: AddPaxButtonProps) {
     };
   }, [open]);
 
+  // Roving tabindex over the mode tabs, same pattern as Search.tsx: one Tab stop, Left/Right
+  // switches modes. Opening the panel moves real focus there first (instead of the query field, so
+  // Tab naturally reaches the field next) — see the effect below.
+  const modeTabRefs = useRef(new Map<PassengerSearchMode, HTMLButtonElement>());
+  function moveMode(delta: 1 | -1) {
+    const idx = ADD_PAX_MODES.findIndex((m) => m.key === mode);
+    const next = ADD_PAX_MODES[(idx + delta + ADD_PAX_MODES.length) % ADD_PAX_MODES.length];
+    setMode(next.key);
+    modeTabRefs.current.get(next.key)?.focus();
+  }
+  useEffect(() => {
+    if (open) modeTabRefs.current.get(mode)?.focus();
+    // Only on open/close transitions — a mode change while already open shouldn't steal focus back.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
   const shown = results.filter((p) => !excludeIds.has(p.id));
+
+  // And again over the results list: one row is a Tab stop, Up/Down moves it, Enter/Space picks it.
+  const resultRefs = useRef(new Map<number, HTMLLIElement>());
+  const [focusedResultId, setFocusedResultId] = useState<number | null>(null);
+  const activeResultId = focusedResultId != null && shown.some((p) => p.id === focusedResultId) ? focusedResultId : shown[0]?.id ?? null;
+  function moveResult(delta: 1 | -1) {
+    const idx = shown.findIndex((p) => p.id === activeResultId);
+    if (idx === -1) return;
+    const next = shown[Math.max(0, Math.min(shown.length - 1, idx + delta))];
+    if (!next) return;
+    setFocusedResultId(next.id);
+    resultRefs.current.get(next.id)?.focus();
+  }
 
   function close() {
     setOpen(false);
@@ -225,13 +253,24 @@ function AddPaxButton({ flightId, excludeIds, onAdd }: AddPaxButtonProps) {
     <div className="pnr-add-pax pnr-add-pax-open" ref={rootRef}>
       <div className="pnr-add-pax-inline">
         <div className="search-mode-bar">
-          <div className="search-mode-tabs">
+          <div className="search-mode-tabs" role="tablist" aria-label={t("Search by")}>
             {ADD_PAX_MODES.map((m) => (
               <button
                 key={m.key}
+                ref={(el) => {
+                  if (el) modeTabRefs.current.set(m.key, el);
+                  else modeTabRefs.current.delete(m.key);
+                }}
                 type="button"
+                role="tab"
+                aria-selected={mode === m.key}
+                tabIndex={mode === m.key ? 0 : -1}
                 className={`search-mode-tab ${mode === m.key ? "selected" : ""}`}
                 onClick={() => setMode(m.key)}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowRight") { e.preventDefault(); moveMode(1); }
+                  else if (e.key === "ArrowLeft") { e.preventDefault(); moveMode(-1); }
+                }}
               >
                 {t(m.label)}
               </button>
@@ -239,25 +278,44 @@ function AddPaxButton({ flightId, excludeIds, onAdd }: AddPaxButtonProps) {
           </div>
           <input
             className="search-mode-input"
-            autoFocus
             placeholder={t(ADD_PAX_MODES.find((m) => m.key === mode)?.placeholder ?? "Search")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
         </div>
-        <button type="button" className="icon-button" aria-label={t("Close")} onClick={close}>
+        {/* tabIndex=-1: Escape already closes this panel, so this button doesn't need to sit in the
+            Tab sequence between the query field and its results — same reasoning as skipping the
+            "Add pax" button itself in favor of its own Alt+A shortcut. */}
+        <button type="button" className="icon-button" tabIndex={-1} aria-label={t("Close")} onClick={close}>
           <CloseIcon size={16} />
         </button>
         {query.trim() && (
           <ul className="pnr-add-pax-results">
             {shown.map((p) => {
+              // Adds the passenger and closes the whole panel back to the plain "Add pax" button —
+              // matches picking one being a complete, one-shot action rather than leaving the search
+              // bar open waiting for another pick.
               const pick = () => {
                 onAdd(p);
-                setQuery("");
-                setResults([]);
+                close();
               };
               return (
-                <li key={p.id} onClick={pick} {...clickable(pick, "option")}>
+                <li
+                  key={p.id}
+                  ref={(el) => {
+                    if (el) resultRefs.current.set(p.id, el);
+                    else resultRefs.current.delete(p.id);
+                  }}
+                  role="option"
+                  tabIndex={p.id === activeResultId ? 0 : -1}
+                  onFocus={() => setFocusedResultId(p.id)}
+                  onClick={pick}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); }
+                    else if (e.key === "ArrowDown") { e.preventDefault(); moveResult(1); }
+                    else if (e.key === "ArrowUp") { e.preventDefault(); moveResult(-1); }
+                  }}
+                >
                   <span>{p.surname} {p.given_name}</span>
                   <span className="mono">{p.record_locator}</span>
                 </li>
