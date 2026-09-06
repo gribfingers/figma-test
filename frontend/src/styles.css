@@ -2547,6 +2547,9 @@ tr.row-hover { cursor: pointer; }
 .pax-quick-filters .pax-quick-filter:hover { background: transparent; color: var(--field-value); }
 .pax-quick-filter.selected { background: var(--paper); color: var(--field-value); box-shadow: 0 1px 2px rgba(24, 31, 36, 0.12); }
 .pax-quick-filters .pax-quick-filter.selected:hover { background: var(--paper); }
+/* `all: unset` above strips the browser's own focus ring — only the selected filter is ever a Tab
+   stop (roving tabindex, see Search.tsx), so this only needs to show up on that one. */
+.pax-quick-filter:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 
 .pax-selection-bar { display: flex; align-items: center; gap: 12px; margin: 0 16px 10px 0; padding: 8px 12px; background: var(--accent-soft); border-radius: 6px; }
 .pax-selection-count { font-size: 13px; font-weight: 600; color: var(--field-value); }

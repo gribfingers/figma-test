@@ -6,7 +6,6 @@ import { clearPersistentState, usePersistentState } from "../usePersistentState"
 import { SortTh, useSort } from "../components/SortTh";
 import { useLanguage } from "../i18n";
 import { useHotkey } from "../useShortcuts";
-import { clickable } from "../interactive";
 
 type ResultSortKey = "name" | "destination" | "flight" | "std" | "pnr" | "status";
 const RESULT_SORT_GETTERS: Record<ResultSortKey, (p: PassengerSearchResult) => string | number> = {
@@ -84,6 +83,22 @@ export function Search() {
     modeTabRefs.current.get(next.key)?.focus();
   }
 
+  // Same roving-tabindex pattern for the results' quick-filter bar (All/Checked in/…).
+  const quickFilterRefs = useRef(new Map<PaxQuickFilterKey, HTMLButtonElement>());
+  function moveFilter(delta: 1 | -1) {
+    const idx = PAX_QUICK_FILTERS.findIndex((f) => f.key === paxQuickFilter);
+    const next = PAX_QUICK_FILTERS[(idx + delta + PAX_QUICK_FILTERS.length) % PAX_QUICK_FILTERS.length];
+    setPaxQuickFilter(next.key);
+    quickFilterRefs.current.get(next.key)?.focus();
+  }
+
+  // And again for the results table: one row is ever a Tab stop (defaulting to the first once
+  // results/filters change), Up/Down moves it, Tab from inside the table is the last stop in this
+  // screen's own loop so it wraps back to the mode picker rather than leaving to whatever the
+  // browser/app chrome puts next in the DOM.
+  const rowRefs = useRef(new Map<number, HTMLTableRowElement>());
+  const [focusedRowId, setFocusedRowId] = useState<number | null>(null);
+
   // A search's query/results are only useful for as long as this tab stays open — closing it should
   // discard them (results can go stale, e.g. after the demo schedule is regenerated) rather than
   // reappearing next time this tab is opened, unlike a plain tab-switch remount which should keep them.
@@ -121,6 +136,15 @@ export function Search() {
     return results.filter(test);
   }, [results, paxQuickFilter]);
   const { sorted: sortedResults, sortKey, sortDir, onSort } = useSort(filteredResults, RESULT_SORT_GETTERS);
+  const activeRowId = focusedRowId != null && sortedResults.some((p) => p.id === focusedRowId) ? focusedRowId : sortedResults[0]?.id ?? null;
+  function moveRow(delta: 1 | -1) {
+    const idx = sortedResults.findIndex((p) => p.id === activeRowId);
+    if (idx === -1) return;
+    const next = sortedResults[Math.max(0, Math.min(sortedResults.length - 1, idx + delta))];
+    if (!next) return;
+    setFocusedRowId(next.id);
+    rowRefs.current.get(next.id)?.focus();
+  }
 
   function openPassenger(p: PassengerSearchResult) {
     navigate(`/checkin/${p.flight_id}/pnr/${p.id}`);
@@ -175,13 +199,24 @@ export function Search() {
       {results && (
         <div className="panel panel--flush">
           <div className="pax-search-results-head panel-head">
-            <div className="pax-quick-filters">
+            <div className="pax-quick-filters" role="tablist" aria-label={t("Status filter")}>
               {PAX_QUICK_FILTERS.map((f) => (
                 <button
                   key={f.key}
+                  ref={(el) => {
+                    if (el) quickFilterRefs.current.set(f.key, el);
+                    else quickFilterRefs.current.delete(f.key);
+                  }}
                   type="button"
+                  role="tab"
+                  aria-selected={paxQuickFilter === f.key}
+                  tabIndex={paxQuickFilter === f.key ? 0 : -1}
                   className={`pax-quick-filter ${paxQuickFilter === f.key ? "selected" : ""}`}
                   onClick={() => setPaxQuickFilter(f.key)}
+                  onKeyDown={(e) => {
+                    if (e.key === "ArrowRight") { e.preventDefault(); moveFilter(1); }
+                    else if (e.key === "ArrowLeft") { e.preventDefault(); moveFilter(-1); }
+                  }}
                 >
                   {t(f.label)} ({results.filter(f.test).length})
                 </button>
@@ -203,7 +238,34 @@ export function Search() {
               </thead>
               <tbody>
                 {sortedResults.map((p) => (
-                  <tr key={p.id} className="row-hover" onClick={() => openPassenger(p)} {...clickable(() => openPassenger(p))}>
+                  <tr
+                    key={p.id}
+                    ref={(el) => {
+                      if (el) rowRefs.current.set(p.id, el);
+                      else rowRefs.current.delete(p.id);
+                    }}
+                    className="row-hover"
+                    tabIndex={p.id === activeRowId ? 0 : -1}
+                    onFocus={() => setFocusedRowId(p.id)}
+                    onClick={() => openPassenger(p)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        openPassenger(p);
+                      } else if (e.key === "ArrowDown") {
+                        e.preventDefault();
+                        moveRow(1);
+                      } else if (e.key === "ArrowUp") {
+                        e.preventDefault();
+                        moveRow(-1);
+                      } else if (e.key === "Tab" && !e.shiftKey) {
+                        // Last stop in this screen's own Tab loop — wrap back to the mode picker
+                        // instead of leaving to whatever the page puts next in the DOM.
+                        e.preventDefault();
+                        modeTabRefs.current.get(mode)?.focus();
+                      }
+                    }}
+                  >
                     <td>{p.surname}/{p.given_name}</td>
                     <td className="mono">{p.destination}</td>
                     <td className="mono">{p.carrier_code}{p.flight_number}</td>
