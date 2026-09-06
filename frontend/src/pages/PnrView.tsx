@@ -472,6 +472,11 @@ export function PnrView() {
     },
     !!flowStep && flowPassengers.length > 1
   );
+  // Roster view's own Check-in/Actions buttons — a reliable combo instead of leaning on Tab to
+  // reach them (whether Tab even stops on a <button> at all is a browser/OS setting, not something
+  // this app controls). Mirrors each button's own visibility/disabled condition.
+  useHotkey("checkin.start", () => startCheckinFlow(), canEdit && !flowStep && flowPassengers.length > 0);
+  useHotkey("checkin.actions-menu", () => setActionsMenuOpen((o) => !o), canEdit && !flowStep && flowPassengers.length > 0);
 
   // Roving tabindex over the roster rows: one row is ever a Tab stop, Up/Down moves it — the header
   // checkbox is the Tab stop before it, and (after the DOM reorder in the render below, so keyboard

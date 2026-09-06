@@ -41,6 +41,11 @@ export const SHORTCUTS: ShortcutDef[] = [
   { id: "flow.cart", group: "Check-in flow", label: "Cart", defaultCombo: "alt|c" },
   { id: "flow.flight-info", group: "Check-in flow", label: "Flight information", defaultCombo: "alt|i" },
   { id: "checkin.add-pax", group: "Check-in flow", label: "Add pax", defaultCombo: "alt|a" },
+  // Roster page's own Check-in/Actions buttons — a keyboard combo instead of relying on Tab to
+  // reach them, since whether Tab actually stops on a <button> at all is a browser/OS setting
+  // (Safari skips buttons by default unless Full Keyboard Access is on) outside this app's control.
+  { id: "checkin.start", group: "Check-in flow", label: "Check-in selected passengers", defaultCombo: "alt|enter" },
+  { id: "checkin.actions-menu", group: "Check-in flow", label: "Open Actions menu", defaultCombo: "alt|m" },
   // Moves flowActiveId to the next/previous passenger in flowPassengers without leaving the
   // current step — the only other way is clicking a different roster row, the biggest friction
   // point for a multi-pax PNR (a family, say) going through seats/baggage/docs one at a time.

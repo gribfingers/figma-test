@@ -62,6 +62,8 @@ export const RU: Record<string, string> = {
   "Focus search field": "Фокус на поле поиска",
   "Next passenger": "Следующий пассажир",
   "Previous passenger": "Предыдущий пассажир",
+  "Check-in selected passengers": "Зарегистрировать выбранных пассажиров",
+  "Open Actions menu": "Открыть меню Actions",
   "Close current tab": "Закрыть текущую вкладку",
   "Previous tab": "Предыдущая вкладка",
   "Next tab": "Следующая вкладка",
