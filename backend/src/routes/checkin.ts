@@ -6,6 +6,7 @@ import { encodeBcbp, PAX_STATUS } from "../bcbp";
 import { toJulianDayOfYear } from "../utils/julian";
 import { requireEdit } from "../middleware/auth";
 import { logSeatEvent } from "../seatHistory";
+import { isFlightDeparted } from "../flightPhase";
 
 export const checkinRouter = Router();
 
@@ -104,7 +105,7 @@ checkinRouter.post("/:passengerId", requireEdit, (req, res) => {
   if (!passenger) return res.status(404).json({ error: "Passenger not found" });
 
   const flight = db.prepare("SELECT * FROM flights WHERE id = ?").get(passenger.flight_id) as Flight;
-  if (flight.status === "CLOSED" || flight.status === "DEPARTED") {
+  if (flight.status === "CLOSED" || flight.status === "DEPARTED" || isFlightDeparted(flight)) {
     return res.status(409).json({ error: `Check-in is closed for flight ${flight.carrier_code}${flight.flight_number}` });
   }
   if (passenger.checkin_status === "CHECKED_IN") {

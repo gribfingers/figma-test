@@ -12,6 +12,7 @@ import { useRegisterTab } from "../tabs";
 import { useToast } from "../toast";
 import { EntityNotFound } from "../components/EntityNotFound";
 import { clickable } from "../interactive";
+import { isFlightDeparted } from "../flightPhase";
 
 type ResultSortKey = "pnr" | "passenger" | "status" | "seat";
 const RESULT_SORT_GETTERS: Record<ResultSortKey, (p: Passenger) => string | number> = {
@@ -78,6 +79,7 @@ export function CheckIn() {
 
   async function submitCheckin(e: React.FormEvent) {
     e.preventDefault();
+    if (!flight || isFlightDeparted(flight, new Date())) return setError("Flight has departed — check-in is closed.");
     if (!selected || !seat) return setError("Select a seat");
     setError("");
     try {
@@ -101,6 +103,8 @@ export function CheckIn() {
   if (!flight) return <div className="content">Loading…</div>;
 
   const alreadyCheckedIn = selected?.checkin_status === "CHECKED_IN";
+  const departed = isFlightDeparted(flight, new Date());
+  const formDisabled = alreadyCheckedIn || departed;
 
   return (
     <div>
@@ -171,31 +175,31 @@ export function CheckIn() {
                   <Select
                     label="Document type"
                     value={doc.document_type}
-                    disabled={alreadyCheckedIn}
+                    disabled={formDisabled}
                     onChange={(v) => setDoc({ ...doc, document_type: v })}
                     options={DOCUMENT_TYPES}
                   />
                   <Field label="Document number">
-                    <input value={doc.document_number} disabled={alreadyCheckedIn} required placeholder=" "
+                    <input value={doc.document_number} disabled={formDisabled} required placeholder=" "
                       onChange={(e) => setDoc({ ...doc, document_number: e.target.value })} />
                   </Field>
                   <Field label="Nationality (country code)">
-                    <input value={doc.nationality} disabled={alreadyCheckedIn} maxLength={2} placeholder=" "
+                    <input value={doc.nationality} disabled={formDisabled} maxLength={2} placeholder=" "
                       onChange={(e) => setDoc({ ...doc, nationality: e.target.value.toUpperCase() })} />
                   </Field>
                   <Field label="Date of birth">
-                    <input type="date" value={doc.dob ?? ""} disabled={alreadyCheckedIn} placeholder=" "
+                    <input type="date" value={doc.dob ?? ""} disabled={formDisabled} placeholder=" "
                       onChange={(e) => setDoc({ ...doc, dob: e.target.value })} />
                   </Field>
                   <Field label="Document expiry">
-                    <input type="date" value={doc.doc_expiry} disabled={alreadyCheckedIn} required placeholder=" "
+                    <input type="date" value={doc.doc_expiry} disabled={formDisabled} required placeholder=" "
                       onChange={(e) => setDoc({ ...doc, doc_expiry: e.target.value })} />
                   </Field>
                   <Field label="Bags: count / weight (kg)">
                     <div style={{ display: "flex", gap: 6 }}>
-                      <input type="number" min={0} value={bags.bag_count} disabled={alreadyCheckedIn} placeholder=" "
+                      <input type="number" min={0} value={bags.bag_count} disabled={formDisabled} placeholder=" "
                         onChange={(e) => setBags({ ...bags, bag_count: Number(e.target.value) })} />
-                      <input type="number" min={0} step={0.5} value={bags.bag_weight_kg} disabled={alreadyCheckedIn} placeholder=" "
+                      <input type="number" min={0} step={0.5} value={bags.bag_weight_kg} disabled={formDisabled} placeholder=" "
                         onChange={(e) => setBags({ ...bags, bag_weight_kg: Number(e.target.value) })} />
                     </div>
                   </Field>
@@ -208,7 +212,7 @@ export function CheckIn() {
                       <label key={code} className="checkbox-row" style={{ marginBottom: 0 }}>
                         <input
                           type="checkbox"
-                          disabled={alreadyCheckedIn}
+                          disabled={formDisabled}
                           checked={ssr.includes(code)}
                           onChange={() => toggleSsr(code)}
                         />
@@ -223,7 +227,8 @@ export function CheckIn() {
                   <SeatMapGrid seats={seats} selected={seat} onSelect={setSeat} />
                 </div>
 
-                {!alreadyCheckedIn && <button type="submit">Check in and issue boarding pass</button>}
+                {!alreadyCheckedIn && departed && <p className="error-box">Flight has departed — check-in is closed.</p>}
+                {!alreadyCheckedIn && !departed && <button type="submit">Check in and issue boarding pass</button>}
                 {alreadyCheckedIn && seat !== selected.seat && (
                   <button type="button" onClick={async () => {
                     const updated = await api.changeSeat(selected.id, seat!);

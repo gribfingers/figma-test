@@ -64,6 +64,7 @@ export const RU: Record<string, string> = {
   "Previous passenger": "Предыдущий пассажир",
   "Check-in selected passengers": "Зарегистрировать выбранных пассажиров",
   "Open Actions menu": "Открыть меню Actions",
+  "This flight has departed — check-in is closed.": "Этот рейс уже вылетел — регистрация закрыта.",
   "Close current tab": "Закрыть текущую вкладку",
   "Previous tab": "Предыдущая вкладка",
   "Next tab": "Следующая вкладка",

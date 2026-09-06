@@ -6,6 +6,7 @@ import { decodeBcbp, PAX_STATUS } from "../bcbp";
 import { buildPfs } from "../edifact";
 import { requireEdit } from "../middleware/auth";
 import { logSeatEvent } from "../seatHistory";
+import { isFlightDeparted } from "../flightPhase";
 
 export const boardingRouter = Router();
 
@@ -40,14 +41,18 @@ boardingRouter.post("/scan", requireEdit, (req, res) => {
 
   const passenger = db
     .prepare(
-      `SELECT p.*, f.status as flight_status, f.carrier_code, f.flight_number
+      `SELECT p.*, f.status as flight_status, f.ops_status as flight_ops_status, f.std as flight_std, f.carrier_code, f.flight_number
        FROM passengers p JOIN flights f ON f.id = p.flight_id
        WHERE UPPER(p.record_locator) = ? AND UPPER(f.carrier_code) = ? AND f.flight_number = ?`
     )
     .get(decoded.pnrCode.toUpperCase(), decoded.carrierCode.toUpperCase(), decoded.flightNumber.replace(/^0+/, "")) as any;
 
   if (!passenger) return res.status(404).json({ error: "No matching checked-in passenger found for this boarding pass" });
-  if (passenger.flight_status === "CLOSED" || passenger.flight_status === "DEPARTED") {
+  if (
+    passenger.flight_status === "CLOSED" ||
+    passenger.flight_status === "DEPARTED" ||
+    isFlightDeparted({ ops_status: passenger.flight_ops_status, std: passenger.flight_std })
+  ) {
     return res.status(409).json({ error: "Flight is already closed for boarding", passenger: serializePassenger(passenger) });
   }
   if (passenger.checkin_status !== "CHECKED_IN") {
