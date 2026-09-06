@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { KeyboardEvent as ReactKeyboardEvent, RefObject, useEffect, useRef, useState } from "react";
 import { api, Passenger } from "../../api";
 import {
   AddressDocument,
@@ -58,6 +58,12 @@ interface EditTarget {
   index: number | "new";
 }
 
+const DOC_KIND_TABS: { key: DocKind; label: string }[] = [
+  { key: "docs", label: "DOCS" },
+  { key: "doco", label: "DOCO" },
+  { key: "doca", label: "DOCA" },
+];
+
 interface Props {
   flightId: number;
   passenger: Passenger;
@@ -92,6 +98,57 @@ export function DocumentsStep({ flightId, passenger, segments, onUpdated }: Prop
   function isEditing(kind: DocKind, index: number | "new") {
     return editing?.kind === kind && editing.index === index;
   }
+
+  // Roving tabindex over the DOCS/DOCO/DOCA tabs — same pattern as SegmentToggle/any other tablist
+  // in the app: one Tab stop, Left/Right switches (and activates) the next tab.
+  const docTabRefs = useRef(new Map<DocKind, HTMLButtonElement>());
+  function moveDocTab(delta: 1 | -1) {
+    const idx = DOC_KIND_TABS.findIndex((k) => k.key === tab);
+    const next = DOC_KIND_TABS[(idx + delta + DOC_KIND_TABS.length) % DOC_KIND_TABS.length];
+    setTab(next.key);
+    docTabRefs.current.get(next.key)?.focus();
+  }
+
+  // And again over the (non-editing) document cards of the active tab — one card is a Tab stop,
+  // Up/Down moves it, Enter/Space opens it for editing. Switching tabs naturally resets which card
+  // is active (a stale key from another tab's list just falls through to index 0 below).
+  const cardCount = tab === "docs" ? 1 + docs.length : tab === "doco" ? visas.length : addresses.length;
+  const cardRefs = useRef(new Map<string, HTMLDivElement>());
+  const [focusedCardKey, setFocusedCardKey] = useState<string | null>(null);
+  function cardKey(index: number) {
+    return `${tab}:${index}`;
+  }
+  const focusedMatch = /^([a-z]+):(\d+)$/.exec(focusedCardKey ?? "");
+  const activeCardIndex =
+    focusedMatch && focusedMatch[1] === tab && Number(focusedMatch[2]) < cardCount ? Number(focusedMatch[2]) : 0;
+  function moveCard(delta: 1 | -1) {
+    if (cardCount === 0) return;
+    const next = Math.max(0, Math.min(cardCount - 1, activeCardIndex + delta));
+    setFocusedCardKey(cardKey(next));
+    cardRefs.current.get(cardKey(next))?.focus();
+  }
+
+  // A card being edited replaces its own view-mode div with the edit form (same key, different
+  // markup) — the only element in that subtree, so a single shared ref/focus works for whichever of
+  // the three card kinds happens to be the one currently in edit mode (EditTarget is ever non-null
+  // for at most one card at a time).
+  const editFormRef = useRef<HTMLDivElement>(null);
+  const wasEditingRef = useRef(false);
+  useEffect(() => {
+    if (editing) {
+      const id = requestAnimationFrame(() => editFormRef.current?.focus());
+      wasEditingRef.current = true;
+      return () => cancelAnimationFrame(id);
+    }
+    if (wasEditingRef.current) {
+      // Just exited edit mode (Save/Undo/Delete/Exit) — hand focus back to the roving card list
+      // instead of leaving it to fall through to <body>.
+      const id = requestAnimationFrame(() => cardRefs.current.get(cardKey(activeCardIndex))?.focus());
+      wasEditingRef.current = false;
+      return () => cancelAnimationFrame(id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editing]);
 
   async function saveExtraPatch(patch: Partial<PassengerExtra>, identity?: Identity) {
     setSaving(true);
@@ -142,6 +199,9 @@ export function DocumentsStep({ flightId, passenger, segments, onUpdated }: Prop
   }
 
   useHotkey("flow.verify-docs", () => saveExtraPatch({ docVerified: true }), !extra.docVerified && !saving);
+  // A standalone one-off action, same reasoning as checkin.start/Add pax elsewhere — not part of any
+  // roving-tabindex group, so it needs its own combo rather than depending on Tab reaching it.
+  useHotkey("flow.add-document", () => setEditing({ kind: tab, index: "new" }), !editing);
 
   return (
     <div className="docs-step">
@@ -156,16 +216,28 @@ export function DocumentsStep({ flightId, passenger, segments, onUpdated }: Prop
         )}
       </div>
 
-      <div className="docs-tabs">
-        <button type="button" className={`docs-tab ${tab === "docs" ? "selected" : ""}`} onClick={() => setTab("docs")}>
-          DOCS
-        </button>
-        <button type="button" className={`docs-tab ${tab === "doco" ? "selected" : ""}`} onClick={() => setTab("doco")}>
-          DOCO
-        </button>
-        <button type="button" className={`docs-tab ${tab === "doca" ? "selected" : ""}`} onClick={() => setTab("doca")}>
-          DOCA
-        </button>
+      <div className="docs-tabs" role="tablist">
+        {DOC_KIND_TABS.map((k) => (
+          <button
+            key={k.key}
+            ref={(el) => {
+              if (el) docTabRefs.current.set(k.key, el);
+              else docTabRefs.current.delete(k.key);
+            }}
+            type="button"
+            role="tab"
+            aria-selected={tab === k.key}
+            tabIndex={tab === k.key ? 0 : -1}
+            className={`docs-tab ${tab === k.key ? "selected" : ""}`}
+            onClick={() => setTab(k.key)}
+            onKeyDown={(e) => {
+              if (e.key === "ArrowRight") { e.preventDefault(); moveDocTab(1); }
+              else if (e.key === "ArrowLeft") { e.preventDefault(); moveDocTab(-1); }
+            }}
+          >
+            {k.label}
+          </button>
+        ))}
       </div>
 
       <button type="button" className="tertiary docs-add-link" onClick={() => setEditing({ kind: tab, index: "new" })}>
@@ -181,6 +253,11 @@ export function DocumentsStep({ flightId, passenger, segments, onUpdated }: Prop
             editing={isEditing("docs", 0)}
             deletable={false}
             saving={saving}
+            focused={activeCardIndex === 0}
+            cardRef={(el) => { if (el) cardRefs.current.set(cardKey(0), el); else cardRefs.current.delete(cardKey(0)); }}
+            onFocusCard={() => setFocusedCardKey(cardKey(0))}
+            onMove={moveCard}
+            editFormRef={editFormRef}
             onEdit={() => setEditing({ kind: "docs", index: 0 })}
             onCancel={() => setEditing(null)}
             onSave={async (doc, identity) => {
@@ -196,6 +273,11 @@ export function DocumentsStep({ flightId, passenger, segments, onUpdated }: Prop
               editing={isEditing("docs", i + 1)}
               deletable
               saving={saving}
+              focused={activeCardIndex === i + 1}
+              cardRef={(el) => { if (el) cardRefs.current.set(cardKey(i + 1), el); else cardRefs.current.delete(cardKey(i + 1)); }}
+              onFocusCard={() => setFocusedCardKey(cardKey(i + 1))}
+              onMove={moveCard}
+              editFormRef={editFormRef}
               onEdit={() => setEditing({ kind: "docs", index: i + 1 })}
               onCancel={() => setEditing(null)}
               onDelete={() => deleteDoc("docs", i)}
@@ -212,6 +294,7 @@ export function DocumentsStep({ flightId, passenger, segments, onUpdated }: Prop
               editing
               deletable={false}
               saving={saving}
+              editFormRef={editFormRef}
               onCancel={() => setEditing(null)}
               onSave={async (doc, identity) => {
                 await saveExtraPatch({ documents: [...docs, doc] }, identity);
@@ -232,6 +315,11 @@ export function DocumentsStep({ flightId, passenger, segments, onUpdated }: Prop
               doc={v}
               editing={isEditing("doco", i)}
               saving={saving}
+              focused={activeCardIndex === i}
+              cardRef={(el) => { if (el) cardRefs.current.set(cardKey(i), el); else cardRefs.current.delete(cardKey(i)); }}
+              onFocusCard={() => setFocusedCardKey(cardKey(i))}
+              onMove={moveCard}
+              editFormRef={editFormRef}
               onEdit={() => setEditing({ kind: "doco", index: i })}
               onCancel={() => setEditing(null)}
               onDelete={() => deleteDoc("doco", i)}
@@ -247,6 +335,7 @@ export function DocumentsStep({ flightId, passenger, segments, onUpdated }: Prop
               doc={{ ...EMPTY_VISA }}
               editing
               saving={saving}
+              editFormRef={editFormRef}
               onCancel={() => setEditing(null)}
               onSave={async (doc) => {
                 await saveExtraPatch({ visaDocs: [...visas, doc] });
@@ -266,6 +355,11 @@ export function DocumentsStep({ flightId, passenger, segments, onUpdated }: Prop
               doc={a}
               editing={isEditing("doca", i)}
               saving={saving}
+              focused={activeCardIndex === i}
+              cardRef={(el) => { if (el) cardRefs.current.set(cardKey(i), el); else cardRefs.current.delete(cardKey(i)); }}
+              onFocusCard={() => setFocusedCardKey(cardKey(i))}
+              onMove={moveCard}
+              editFormRef={editFormRef}
               onEdit={() => setEditing({ kind: "doca", index: i })}
               onCancel={() => setEditing(null)}
               onDelete={() => deleteDoc("doca", i)}
@@ -280,6 +374,7 @@ export function DocumentsStep({ flightId, passenger, segments, onUpdated }: Prop
               doc={{ ...EMPTY_ADDRESS }}
               editing
               saving={saving}
+              editFormRef={editFormRef}
               onCancel={() => setEditing(null)}
               onSave={async (doc) => {
                 await saveExtraPatch({ addressDocs: [...addresses, doc] });
@@ -308,7 +403,36 @@ function EditFooter({ deletable, saving, onSave, onUndo, onDelete, onExit }: { d
   );
 }
 
-interface DocsCardProps {
+/** Roving-tabindex wiring for the (non-editing) card list, shared by DocsCard/VisaCard/AddressCard
+ *  — omitted for a brand-new "add document" card, which isn't part of any list yet. `editFormRef` is
+ *  the one exception that DOES apply while editing: the parent focuses it the moment this card
+ *  switches into edit mode, so focus doesn't fall through to <body> when the view-mode div (which
+ *  had it) unmounts. */
+interface CardFocusProps {
+  focused?: boolean;
+  cardRef?: (el: HTMLDivElement | null) => void;
+  onFocusCard?: () => void;
+  onMove?: (delta: 1 | -1) => void;
+  editFormRef?: RefObject<HTMLDivElement>;
+}
+
+/** Enter/Space on the (focused) view-mode card opens it for editing, same as clicking Edit; Up/Down
+ *  moves the roving-tabindex focus to the neighboring card. */
+function cardListKeyDown(e: ReactKeyboardEvent, onEdit: (() => void) | undefined, onMove: ((delta: 1 | -1) => void) | undefined) {
+  if (e.key === "Enter" || e.key === " ") { if (onEdit) { e.preventDefault(); onEdit(); } }
+  else if (e.key === "ArrowDown") { e.preventDefault(); onMove?.(1); }
+  else if (e.key === "ArrowUp") { e.preventDefault(); onMove?.(-1); }
+}
+
+/** Ctrl/Cmd+Enter saves, Escape exits — attached to the whole edit-form wrapper so it fires no
+ *  matter which nested field currently has focus (mirrors flow.checkin's mod|enter for the wider
+ *  flow, free here since that shortcut is disabled while on the Docs step). */
+function editFormKeyDown(e: ReactKeyboardEvent, onSave: () => void, onExit: () => void) {
+  if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); onSave(); }
+  else if (e.key === "Escape") { e.preventDefault(); onExit(); }
+}
+
+interface DocsCardProps extends CardFocusProps {
   passenger: Passenger;
   doc: PassengerDocument;
   scanned?: boolean;
@@ -321,7 +445,23 @@ interface DocsCardProps {
   onSave: (doc: PassengerDocument, identity: Identity) => void;
 }
 
-function DocsCard({ passenger, doc, scanned, editing, deletable, saving, onEdit, onCancel, onDelete, onSave }: DocsCardProps) {
+function DocsCard({
+  passenger,
+  doc,
+  scanned,
+  editing,
+  deletable,
+  saving,
+  focused,
+  cardRef,
+  onFocusCard,
+  onMove,
+  editFormRef,
+  onEdit,
+  onCancel,
+  onDelete,
+  onSave,
+}: DocsCardProps) {
   const { t } = useLanguage();
   const [draft, setDraft] = useState(doc);
   const [identity, setIdentity] = useState(() => identityFrom(passenger));
@@ -336,7 +476,13 @@ function DocsCard({ passenger, doc, scanned, editing, deletable, saving, onEdit,
   if (!editing) {
     const typeLabel = DOCUMENT_TYPES.find((t) => t.value === doc.document_type)?.label.replace(/ \(.+\)$/, "") ?? doc.document_type;
     return (
-      <div className="doc-card">
+      <div
+        className="doc-card"
+        ref={cardRef}
+        tabIndex={focused ? 0 : -1}
+        onFocus={onFocusCard}
+        onKeyDown={(e) => cardListKeyDown(e, onEdit, onMove)}
+      >
         <div className="doc-card-grid">
           <div className="doc-field"><span className="doc-field-label">{t("Document Type")}</span><span className="doc-field-value">{typeLabel}</span></div>
           <div className="doc-field"><span className="doc-field-label">{t("Issue Country")}</span><span className="doc-field-value">{doc.nationality || "—"}</span></div>
@@ -359,8 +505,9 @@ function DocsCard({ passenger, doc, scanned, editing, deletable, saving, onEdit,
           )}
           <div className="doc-card-actions">
             {/* Placeholder — no scanner hardware wired up yet. */}
-            <button type="button" className="tertiary" disabled>{t("Scan")}</button>
-            <button type="button" className="tertiary" onClick={onEdit}>{t("Edit")}</button>
+            <button type="button" className="tertiary" tabIndex={-1} disabled>{t("Scan")}</button>
+            {/* tabIndex=-1: mouse-only — the card itself is the one Tab stop for this list (see cardRef above). */}
+            <button type="button" className="tertiary" tabIndex={-1} onClick={onEdit}>{t("Edit")}</button>
           </div>
         </div>
       </div>
@@ -368,7 +515,12 @@ function DocsCard({ passenger, doc, scanned, editing, deletable, saving, onEdit,
   }
 
   return (
-    <div className="doc-card doc-card-editing">
+    <div
+      className="doc-card doc-card-editing"
+      ref={editFormRef}
+      tabIndex={-1}
+      onKeyDown={(e) => editFormKeyDown(e, () => onSave(draft, identity), onCancel)}
+    >
       <div className="doc-card-grid">
         <Select label={t("Document Type")} value={draft.document_type} onChange={(v) => setDraft({ ...draft, document_type: v })} options={DOCUMENT_TYPES} />
         <Field label={t("Issue Country")}><input value={draft.nationality} maxLength={2} onChange={(e) => setDraft({ ...draft, nationality: e.target.value.toUpperCase() })} placeholder=" " /></Field>
@@ -393,7 +545,7 @@ function DocsCard({ passenger, doc, scanned, editing, deletable, saving, onEdit,
   );
 }
 
-interface VisaCardProps {
+interface VisaCardProps extends CardFocusProps {
   passenger: Passenger;
   doc: VisaDocument;
   editing: boolean;
@@ -404,7 +556,7 @@ interface VisaCardProps {
   onSave: (doc: VisaDocument) => void;
 }
 
-function VisaCard({ passenger, doc, editing, saving, onEdit, onCancel, onDelete, onSave }: VisaCardProps) {
+function VisaCard({ passenger, doc, editing, saving, focused, cardRef, onFocusCard, onMove, editFormRef, onEdit, onCancel, onDelete, onSave }: VisaCardProps) {
   const { t } = useLanguage();
   const [draft, setDraft] = useState(doc);
   useEffect(() => {
@@ -413,7 +565,13 @@ function VisaCard({ passenger, doc, editing, saving, onEdit, onCancel, onDelete,
 
   if (!editing) {
     return (
-      <div className="doc-card">
+      <div
+        className="doc-card"
+        ref={cardRef}
+        tabIndex={focused ? 0 : -1}
+        onFocus={onFocusCard}
+        onKeyDown={(e) => cardListKeyDown(e, onEdit, onMove)}
+      >
         <div className="doc-card-grid">
           <div className="doc-field"><span className="doc-field-label">{t("Document Type")}</span><span className="doc-field-value">{doc.document_type || "—"}</span></div>
           <div className="doc-field"><span className="doc-field-label">{t("Expiration Date")}</span><span className="doc-field-value">{doc.expiration_date || "—"}</span></div>
@@ -429,14 +587,20 @@ function VisaCard({ passenger, doc, editing, saving, onEdit, onCancel, onDelete,
           <div className="doc-field"><span className="doc-field-label">{t("Nationality")}</span><span className="doc-field-value">{passenger.nationality || "—"}</span></div>
         </div>
         <div className="doc-card-actions">
-          <button type="button" className="tertiary" onClick={onEdit}>{t("Edit")}</button>
+          {/* tabIndex=-1: mouse-only — the card itself is the one Tab stop for this list (see cardRef above). */}
+          <button type="button" className="tertiary" tabIndex={-1} onClick={onEdit}>{t("Edit")}</button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="doc-card doc-card-editing">
+    <div
+      className="doc-card doc-card-editing"
+      ref={editFormRef}
+      tabIndex={-1}
+      onKeyDown={(e) => editFormKeyDown(e, () => onSave(draft), onCancel)}
+    >
       <div className="doc-card-grid">
         <Field label={t("Document Type")}><input value={draft.document_type} onChange={(e) => setDraft({ ...draft, document_type: e.target.value })} placeholder=" " /></Field>
         <DateField label={t("Expiration Date")} value={draft.expiration_date} onChange={(v) => setDraft({ ...draft, expiration_date: v })} />
@@ -456,7 +620,7 @@ function VisaCard({ passenger, doc, editing, saving, onEdit, onCancel, onDelete,
   );
 }
 
-interface AddressCardProps {
+interface AddressCardProps extends CardFocusProps {
   doc: AddressDocument;
   editing: boolean;
   saving: boolean;
@@ -466,7 +630,7 @@ interface AddressCardProps {
   onSave: (doc: AddressDocument) => void;
 }
 
-function AddressCard({ doc, editing, saving, onEdit, onCancel, onDelete, onSave }: AddressCardProps) {
+function AddressCard({ doc, editing, saving, focused, cardRef, onFocusCard, onMove, editFormRef, onEdit, onCancel, onDelete, onSave }: AddressCardProps) {
   const { t } = useLanguage();
   const [draft, setDraft] = useState(doc);
   useEffect(() => {
@@ -475,7 +639,13 @@ function AddressCard({ doc, editing, saving, onEdit, onCancel, onDelete, onSave 
 
   if (!editing) {
     return (
-      <div className="doc-card">
+      <div
+        className="doc-card"
+        ref={cardRef}
+        tabIndex={focused ? 0 : -1}
+        onFocus={onFocusCard}
+        onKeyDown={(e) => cardListKeyDown(e, onEdit, onMove)}
+      >
         <div className="doc-card-grid doc-card-grid-2">
           <div className="doc-field"><span className="doc-field-label">{t("Address Type")}</span><span className="doc-field-value">{doc.address_type || "—"}</span></div>
           <div className="doc-field"><span className="doc-field-label">{t("Country")}</span><span className="doc-field-value">{doc.country || "—"}</span></div>
@@ -485,14 +655,20 @@ function AddressCard({ doc, editing, saving, onEdit, onCancel, onDelete, onSave 
           <div className="doc-field"><span className="doc-field-label">{t("Zip Code")}</span><span className="doc-field-value">{doc.zip_code || "—"}</span></div>
         </div>
         <div className="doc-card-actions">
-          <button type="button" className="tertiary" onClick={onEdit}>{t("Edit")}</button>
+          {/* tabIndex=-1: mouse-only — the card itself is the one Tab stop for this list (see cardRef above). */}
+          <button type="button" className="tertiary" tabIndex={-1} onClick={onEdit}>{t("Edit")}</button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="doc-card doc-card-editing">
+    <div
+      className="doc-card doc-card-editing"
+      ref={editFormRef}
+      tabIndex={-1}
+      onKeyDown={(e) => editFormKeyDown(e, () => onSave(draft), onCancel)}
+    >
       <div className="doc-card-grid doc-card-grid-2">
         <Select label={t("Address Type")} value={draft.address_type} onChange={(v) => setDraft({ ...draft, address_type: v })} options={ADDRESS_TYPES.map((o) => ({ ...o, label: t(o.label) }))} />
         <Field label={t("Country")}><input value={draft.country} onChange={(e) => setDraft({ ...draft, country: e.target.value })} placeholder=" " /></Field>

@@ -52,6 +52,7 @@ export const SHORTCUTS: ShortcutDef[] = [
   { id: "flow.next-passenger", group: "Check-in flow", label: "Next passenger", defaultCombo: "alt|arrowdown" },
   { id: "flow.prev-passenger", group: "Check-in flow", label: "Previous passenger", defaultCombo: "alt|arrowup" },
   { id: "flow.verify-docs", group: "Check-in flow", label: "Verify docs on all segments", defaultCombo: "alt|v" },
+  { id: "flow.add-document", group: "Check-in flow", label: "Add document", defaultCombo: "alt|d" },
   { id: "baggage.add-row", group: "Check-in flow", label: "Add baggage", defaultCombo: "alt|g" },
   { id: "baggage.print-tag", group: "Check-in flow", label: "Print bag tag", defaultCombo: "alt|p" },
 

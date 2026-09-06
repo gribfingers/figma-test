@@ -9,6 +9,7 @@ import { ChevronDownIcon, InfantIcon, InfoIcon } from "../Icon";
 import { EmdModal } from "./EmdModal";
 import { useLanguage } from "../../i18n";
 import { usePopoverPosition } from "../../usePopoverPosition";
+import { useHotkey } from "../../useShortcuts";
 import { clickable } from "../../interactive";
 
 /** "Swap seat…" (Seats step, once seated) and "Reprint BP" tucked under one menu, same
@@ -24,8 +25,30 @@ function RowActionsMenu({ onSwapSeat }: { onSwapSeat?: () => void }) {
   const menuRef = useRef<HTMLUListElement>(null);
   const rect = usePopoverPosition(btnRef, open);
 
+  const items = [
+    ...(onSwapSeat ? [{ key: "swap", label: t("Swap seat…"), pick: onSwapSeat }] : []),
+    // No boarding-pass printer wired up — present for layout, no action yet.
+    { key: "reprint", label: t("Reprint BP"), pick: () => {} },
+  ];
+  // Roving tabindex over the menu items, same pattern as PnrView's own Actions menu: one item is
+  // ever a Tab stop, Up/Down moves it — opening the menu moves real focus onto the first item so
+  // arrow keys work immediately.
+  const [activeIdx, setActiveIdx] = useState(0);
+  const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
+  function moveItem(delta: 1 | -1) {
+    const next = (activeIdx + delta + items.length) % items.length;
+    setActiveIdx(next);
+    itemRefs.current[next]?.focus();
+  }
+  function pick(item: (typeof items)[number]) {
+    setOpen(false);
+    item.pick();
+  }
+
   useEffect(() => {
     if (!open) return;
+    setActiveIdx(0);
+    const id = requestAnimationFrame(() => itemRefs.current[0]?.focus());
     function onDocMouseDown(e: MouseEvent) {
       const target = e.target as Node;
       if (rootRef.current?.contains(target)) return;
@@ -33,15 +56,24 @@ function RowActionsMenu({ onSwapSeat }: { onSwapSeat?: () => void }) {
       setOpen(false);
     }
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") {
+        setOpen(false);
+        btnRef.current?.focus();
+      }
     }
     document.addEventListener("mousedown", onDocMouseDown);
     document.addEventListener("keydown", onKeyDown);
     return () => {
+      cancelAnimationFrame(id);
       document.removeEventListener("mousedown", onDocMouseDown);
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [open]);
+
+  // Alt+M — free during the check-in flow (PnrView's own checkin.actions-menu hotkey for the plain
+  // roster page's Actions button is explicitly disabled while flowStep is set), so this active
+  // card's own Actions menu can reuse the same combo without colliding.
+  useHotkey("checkin.actions-menu", () => setOpen((o) => !o), true);
 
   return (
     <div
@@ -49,7 +81,7 @@ function RowActionsMenu({ onSwapSeat }: { onSwapSeat?: () => void }) {
       className={`actions-select ${open ? "open" : ""}`}
       onClick={(e) => e.stopPropagation()}
     >
-      <button ref={btnRef} type="button" className="tertiary" aria-haspopup="listbox" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+      <button ref={btnRef} type="button" className="tertiary" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
         {t("Actions")} <ChevronDownIcon size={16} className="chevron-flip" />
       </button>
       {open &&
@@ -58,17 +90,27 @@ function RowActionsMenu({ onSwapSeat }: { onSwapSeat?: () => void }) {
           <ul
             ref={menuRef}
             className="actions-menu"
-            role="listbox"
+            role="menu"
             style={{ position: "fixed", top: rect.top, right: window.innerWidth - (rect.left + rect.width) }}
             onClick={(e) => e.stopPropagation()}
           >
-            {onSwapSeat && (
-              <li onClick={() => { setOpen(false); onSwapSeat(); }} {...clickable(() => { setOpen(false); onSwapSeat(); }, "menuitem")}>
-                {t("Swap seat…")}
+            {items.map((item, i) => (
+              <li
+                key={item.key}
+                ref={(el) => { itemRefs.current[i] = el; }}
+                role="menuitem"
+                tabIndex={i === activeIdx ? 0 : -1}
+                onFocus={() => setActiveIdx(i)}
+                onClick={() => pick(item)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(item); }
+                  else if (e.key === "ArrowDown") { e.preventDefault(); moveItem(1); }
+                  else if (e.key === "ArrowUp") { e.preventDefault(); moveItem(-1); }
+                }}
+              >
+                {item.label}
               </li>
-            )}
-            {/* No boarding-pass printer wired up — present for layout, no action yet. */}
-            <li onClick={() => setOpen(false)} {...clickable(() => setOpen(false), "menuitem")}>{t("Reprint BP")}</li>
+            ))}
           </ul>,
           document.body
         )}
