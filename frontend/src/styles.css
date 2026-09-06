@@ -1108,6 +1108,9 @@ tr.row-hover:hover { background: var(--accent-soft); }
 .search-mode-tabs .search-mode-tab:hover { background: var(--hover-bg); color: var(--field-value); }
 .search-mode-tab.selected { background: var(--accent-selected); color: var(--field-value); }
 .search-mode-tabs .search-mode-tab.selected:hover { background: var(--accent-selected); }
+/* `all: unset` above strips the browser's own focus ring too — only the selected tab is ever a Tab
+   stop (roving tabindex, see Search.tsx), so this only needs to show up on that one. */
+.search-mode-tab:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .search-mode-input {
   flex: 1;
   min-width: 0;

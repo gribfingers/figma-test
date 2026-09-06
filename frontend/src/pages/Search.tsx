@@ -72,6 +72,18 @@ export function Search() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   useHotkey("nav.search-focus", () => searchInputRef.current?.focus());
 
+  // Roving tabindex over the mode tabs (Last Name/PNR/…): only the selected one is a Tab stop, so
+  // Tab from wherever the agent last was lands on the mode picker as a single stop, then Left/Right
+  // switches modes (same as the search field's own placeholder text), then a second Tab reaches the
+  // query field — matching a standard ARIA tablist instead of five separate Tab stops to click through.
+  const modeTabRefs = useRef(new Map<PassengerSearchMode, HTMLButtonElement>());
+  function moveMode(delta: 1 | -1) {
+    const idx = SEARCH_MODES.findIndex((m) => m.key === mode);
+    const next = SEARCH_MODES[(idx + delta + SEARCH_MODES.length) % SEARCH_MODES.length];
+    setMode(next.key);
+    modeTabRefs.current.get(next.key)?.focus();
+  }
+
   // A search's query/results are only useful for as long as this tab stays open — closing it should
   // discard them (results can go stale, e.g. after the demo schedule is regenerated) rather than
   // reappearing next time this tab is opened, unlike a plain tab-switch remount which should keep them.
@@ -120,14 +132,25 @@ export function Search() {
         <form onSubmit={runSearch}>
           <div className="toolbar" style={{ margin: 0 }}>
             <div className="search-mode-bar" style={{ flex: 1 }}>
-              <div className="search-mode-tabs">
+              <div className="search-mode-tabs" role="tablist" aria-label={t("Search by")}>
                 {SEARCH_MODES.map((m) => (
                   <button
                     key={m.key}
+                    ref={(el) => {
+                      if (el) modeTabRefs.current.set(m.key, el);
+                      else modeTabRefs.current.delete(m.key);
+                    }}
                     type="button"
+                    role="tab"
+                    aria-selected={mode === m.key}
+                    tabIndex={mode === m.key ? 0 : -1}
                     className={`search-mode-tab ${mode === m.key ? "selected" : ""}`}
                     disabled={searching}
                     onClick={() => setMode(m.key)}
+                    onKeyDown={(e) => {
+                      if (e.key === "ArrowRight") { e.preventDefault(); moveMode(1); }
+                      else if (e.key === "ArrowLeft") { e.preventDefault(); moveMode(-1); }
+                    }}
                   >
                     {t(m.label)}
                   </button>
@@ -140,10 +163,9 @@ export function Search() {
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t(SEARCH_MODES.find((m) => m.key === mode)?.placeholder ?? "Search")}
                 disabled={searching}
-                autoFocus
               />
             </div>
-            <button type="submit" disabled={searching}>{t("Search")}</button>
+            <button type="submit" disabled={searching || !query.trim()}>{t("Search")}</button>
           </div>
         </form>
       </div>
