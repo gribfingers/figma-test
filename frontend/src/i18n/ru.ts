@@ -65,6 +65,8 @@ export const RU: Record<string, string> = {
   "Check-in selected passengers": "Зарегистрировать выбранных пассажиров",
   "Open Actions menu": "Открыть меню Actions",
   "This flight has departed — check-in is closed.": "Этот рейс уже вылетел — регистрация закрыта.",
+  "Selected passengers are already checked in.": "Выбранные пассажиры уже зарегистрированы.",
+  "Selected passengers are not checked in.": "Выбранные пассажиры не зарегистрированы.",
   "Close current tab": "Закрыть текущую вкладку",
   "Previous tab": "Предыдущая вкладка",
   "Next tab": "Следующая вкладка",

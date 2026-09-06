@@ -444,6 +444,11 @@ export function PassengersTab({ flight, readOnly, orientation: orientationProp, 
     setSelectedIds(allRowsSelected ? new Set() : new Set(rowPassengers.map((p) => p.id)));
   }
   const selectedPassengers = passengers.filter((p) => selectedIds.has(p.id));
+  // Same reasoning as PnrView.tsx's own Actions menu: an all-already-checked-in selection has
+  // nothing left for Quick check-in to do, and an all-not-checked-in one has nothing for Cancel
+  // check-in to undo.
+  const anyNotCheckedIn = selectedPassengers.some((p) => p.checkin_status !== "CHECKED_IN");
+  const anyCheckedIn = selectedPassengers.some((p) => p.checkin_status === "CHECKED_IN");
 
   return (
     <div className={`passengers-tab ${mapHidden ? "map-hidden" : ""} ${seatMapOrientation === "horizontal" ? "seatmap-stacked" : ""}`}>
@@ -502,20 +507,31 @@ export function PassengersTab({ flight, readOnly, orientation: orientationProp, 
                   {ACTIONS_MENU_ITEMS.map(({ label, kind }) => {
                     // Same reasoning as PnrView.tsx's own Actions menu: Quick check-in prints
                     // boarding passes for whichever rows are checkbox-selected regardless of their
-                    // real checkin_status, so on a departed flight it's the one item here that can
-                    // still look like check-in is somehow possible.
-                    const itemDisabled = kind === "quick" && departed;
+                    // real checkin_status, so on a departed flight (or once everyone selected is
+                    // already checked in) it's the one item here that can still look like check-in is
+                    // somehow possible. Cancel check-in is the mirror case — nothing to undo if nobody
+                    // selected is actually checked in.
+                    const itemDisabled =
+                      (kind === "quick" && (departed || !anyNotCheckedIn)) || (kind === "cancel" && !anyCheckedIn);
                     const pick = () => {
                       if (itemDisabled) return;
                       setSelectionMenuOpen(false);
                       setSelectionActionKind(kind);
                     };
+                    const title =
+                      kind === "quick" && departed
+                        ? t("This flight has departed — check-in is closed.")
+                        : kind === "quick" && itemDisabled
+                        ? t("Selected passengers are already checked in.")
+                        : kind === "cancel" && itemDisabled
+                        ? t("Selected passengers are not checked in.")
+                        : undefined;
                     return (
                       <li
                         key={label}
                         aria-disabled={itemDisabled || undefined}
                         className={itemDisabled ? "disabled" : undefined}
-                        title={itemDisabled ? t("This flight has departed — check-in is closed.") : undefined}
+                        title={title}
                         onClick={pick}
                         {...clickable(pick, "menuitem")}
                       >

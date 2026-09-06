@@ -543,11 +543,16 @@ export function PnrView() {
   // ported from this same file's own logic) — the roster's Check-in button and these two shortcuts
   // all need to agree with the server's own guard instead of just discovering it via a 409.
   const departed = flight ? isFlightDeparted(flight, new Date()) : false;
+  // Whether the checkbox-selected roster rows have anyone left to check in, or anyone to undo —
+  // an all-already-checked-in selection has nothing for Check-in/Quick check-in to do, and an
+  // all-not-checked-in selection has nothing for Cancel check-in to undo.
+  const anyNotCheckedIn = flowPassengers.some((p) => p.checkin_status !== "CHECKED_IN");
+  const anyCheckedIn = flowPassengers.some((p) => p.checkin_status === "CHECKED_IN");
 
   // Roster view's own Check-in/Actions buttons — a reliable combo instead of leaning on Tab to
   // reach them (whether Tab even stops on a <button> at all is a browser/OS setting, not something
   // this app controls). Mirrors each button's own visibility/disabled condition.
-  useHotkey("checkin.start", () => startCheckinFlow(), canEdit && !flowStep && !departed && flowPassengers.length > 0);
+  useHotkey("checkin.start", () => startCheckinFlow(), canEdit && !flowStep && !departed && flowPassengers.length > 0 && anyNotCheckedIn);
   useHotkey("checkin.actions-menu", () => setActionsMenuOpen((o) => !o), canEdit && !flowStep && flowPassengers.length > 0);
 
   // Roving tabindex over the roster rows: one row is ever a Tab stop, Up/Down moves it — the header
@@ -637,7 +642,7 @@ export function PnrView() {
   const checkInDisabled = flowStep === "docs" || flowStep === "seats";
 
   function startCheckinFlow() {
-    if (!canEdit || flowPassengers.length === 0 || departed) return;
+    if (!canEdit || flowPassengers.length === 0 || departed || !anyNotCheckedIn) return;
     setFlowStep("docs");
     setFlowActiveId(flowPassengers[0]?.id ?? null);
   }
@@ -1031,8 +1036,14 @@ export function PnrView() {
         <button
           type="button"
           className="secondary"
-          disabled={flowPassengers.length === 0 || departed}
-          title={departed ? t("This flight has departed — check-in is closed.") : undefined}
+          disabled={flowPassengers.length === 0 || departed || !anyNotCheckedIn}
+          title={
+            departed
+              ? t("This flight has departed — check-in is closed.")
+              : flowPassengers.length > 0 && !anyNotCheckedIn
+              ? t("Selected passengers are already checked in.")
+              : undefined
+          }
           onClick={startCheckinFlow}
         >
           {t("Check-in")}
@@ -1060,11 +1071,13 @@ export function PnrView() {
             >
               {ACTIONS_MENU_ITEMS.map(({ label, kind }, i) => {
                 // Quick check-in prints boarding passes for the checked (checkbox-selected) roster
-                // rows regardless of their real checkin_status — on a departed flight that's the one
-                // item here that can still make it look like check-in is somehow possible, so it's
-                // the one item this screen actually needs to close off (unlike Cancel/Move/Print/etc,
-                // which stay legitimate corrections or reprints after departure).
-                const itemDisabled = kind === "quick" && departed;
+                // rows regardless of their real checkin_status — on a departed flight, or once
+                // everyone selected is already checked in, that's the one item here that can still
+                // make it look like check-in is somehow possible (unlike Cancel/Move/Print/etc, which
+                // stay legitimate corrections or reprints either way). Cancel check-in is the mirror
+                // case — nothing to undo if nobody selected is actually checked in.
+                const itemDisabled =
+                  (kind === "quick" && (departed || !anyNotCheckedIn)) || (kind === "cancel" && !anyCheckedIn);
                 const pick = () => {
                   if (itemDisabled) return;
                   setActionsMenuOpen(false);
@@ -1077,7 +1090,15 @@ export function PnrView() {
                     role="menuitem"
                     aria-disabled={itemDisabled || undefined}
                     className={itemDisabled ? "disabled" : undefined}
-                    title={itemDisabled ? t("This flight has departed — check-in is closed.") : undefined}
+                    title={
+                      kind === "quick" && departed
+                        ? t("This flight has departed — check-in is closed.")
+                        : kind === "quick" && itemDisabled
+                        ? t("Selected passengers are already checked in.")
+                        : kind === "cancel" && itemDisabled
+                        ? t("Selected passengers are not checked in.")
+                        : undefined
+                    }
                     tabIndex={i === activeActionIdx ? 0 : -1}
                     onClick={pick}
                     onFocus={() => setActiveActionIdx(i)}
