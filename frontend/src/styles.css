@@ -3364,7 +3364,16 @@ tr.row-hover { cursor: pointer; }
 }
 .docs-tab:hover:not(.selected) { background: transparent; color: var(--field-value); }
 .docs-tab.selected { color: var(--accent); border-bottom-color: var(--accent); }
+/* Without this, hovering the already-selected tab falls through to the base button's own
+   background:var(--accent-hover) (nothing here overrides it for the .selected case) and briefly
+   paints the whole tab solid blue — same fix search-mode-tab already has for the same reason. */
+.docs-tab.selected:hover { background: transparent; }
 .docs-tab-warn { color: var(--danger); margin-left: 2px; }
+/* Overrides the generic [tabindex="0"]:focus-visible rule (a hard inset outline meant for
+   pill/background buttons) — on a bare underline tab like this one it lands right on the letters
+   and doubles up with the selected state's own bottom border. A soft outer glow, same token the
+   plain <button>s already use, reads as "focused" without fighting the tab's own styling. */
+.docs-tab:focus-visible { outline: none; border-radius: 4px; box-shadow: var(--shadow-focus); }
 
 .docs-add-link { margin: 16px 0; }
 
@@ -3373,6 +3382,10 @@ tr.row-hover { cursor: pointer; }
 
 .doc-card { padding: 16px 0; border-bottom: 1px solid var(--panel-border); }
 .doc-card:last-child { border-bottom: none; }
+/* Same reasoning as .docs-tab:focus-visible above — this card is bare (no background/border of its
+   own beyond the divider), so the generic hard inset outline would land right across the field
+   labels/values at its edges instead of framing the card. */
+.doc-card:focus-visible { outline: none; border-radius: 6px; box-shadow: var(--shadow-focus); }
 .doc-card-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px 24px; }
 .doc-card-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .doc-field { min-width: 0; }
