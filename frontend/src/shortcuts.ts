@@ -55,6 +55,10 @@ export const SHORTCUTS: ShortcutDef[] = [
   { id: "flow.add-document", group: "Check-in flow", label: "Add document", defaultCombo: "alt|d" },
   { id: "baggage.add-row", group: "Check-in flow", label: "Add baggage", defaultCombo: "alt|g" },
   { id: "baggage.print-tag", group: "Check-in flow", label: "Print bag tag", defaultCombo: "alt|p" },
+  { id: "baggage.add-carryon", group: "Check-in flow", label: "Add carry-on", defaultCombo: "alt|e" },
+  { id: "baggage.allowance", group: "Check-in flow", label: "Baggage allowance", defaultCombo: "alt|h" },
+  { id: "baggage.calculate", group: "Check-in flow", label: "Calculate", defaultCombo: "alt|k" },
+  { id: "baggage.confirm", group: "Check-in flow", label: "Confirm", defaultCombo: "alt|u" },
 
   // ---- Seat map (any panel showing SeatMapPanel) ----
   { id: "seatmap.zoom-in", group: "Seat map", label: "Zoom in", defaultCombo: "+" },

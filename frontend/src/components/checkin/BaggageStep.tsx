@@ -138,6 +138,18 @@ export function BaggageStep({ flight, passenger, passengers, segments, initialRo
     setCarryOn((prev) => prev.filter((r) => r.id !== id));
   }
 
+  function calculate() {
+    onCalculate();
+    setCalculated(true);
+    showToast(t("Baggage prices calculated"));
+  }
+  function confirm() {
+    showToast(t("Baggage confirmed"));
+  }
+  function addCarryOn() {
+    setCarryOn((prev) => [...prev, emptyCarryOnRow()]);
+  }
+
   useHotkey("baggage.add-row", () => mutateRows((prev) => [...prev, emptyBagRow(flight.destination)]));
   // Prints (or retries) the first row that's filled in and not already printed — an agent tagging
   // several bags in a row can just keep hitting this instead of aiming for each row's own printer icon.
@@ -149,6 +161,10 @@ export function BaggageStep({ flight, passenger, passengers, segments, initialRo
     },
     rows.some((r) => r.weight && r.typeId && r.printStatus !== "printed")
   );
+  useHotkey("baggage.add-carryon", addCarryOn);
+  useHotkey("baggage.allowance", () => setInfoOpen(true));
+  useHotkey("baggage.calculate", calculate);
+  useHotkey("baggage.confirm", confirm);
 
   return (
     <div className="baggage-step">
@@ -164,18 +180,10 @@ export function BaggageStep({ flight, passenger, passengers, segments, initialRo
           <button type="button" className="icon-button" aria-label={t("Bag tag")}>
             <TagIcon size={18} />
           </button>
-          <button
-            type="button"
-            className="tertiary"
-            onClick={() => {
-              onCalculate();
-              setCalculated(true);
-              showToast(t("Baggage prices calculated"));
-            }}
-          >
+          <button type="button" className="tertiary" onClick={calculate}>
             {t("Calculate")}
           </button>
-          <button type="button" className="tertiary" onClick={() => showToast(t("Baggage confirmed"))}>{t("Confirm")}</button>
+          <button type="button" className="tertiary" onClick={confirm}>{t("Confirm")}</button>
         </div>
       </div>
 
@@ -294,7 +302,7 @@ export function BaggageStep({ flight, passenger, passengers, segments, initialRo
       </div>
 
       <div className="baggage-carryon-section">
-        <button type="button" className="tertiary docs-add-link baggage-carryon-add" onClick={() => setCarryOn((prev) => [...prev, emptyCarryOnRow()])}>
+        <button type="button" className="tertiary docs-add-link baggage-carryon-add" onClick={addCarryOn}>
           {t("Add carry-on")}
         </button>
         {carryOn.length > 0 && (
