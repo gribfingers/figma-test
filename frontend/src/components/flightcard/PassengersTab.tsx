@@ -28,6 +28,7 @@ import { usePopoverPosition } from "../../usePopoverPosition";
 import { useRetainedPanelTransition } from "../../usePanelMounted";
 import { ACTIONS_MENU_ITEMS, ActionsPanel, ActionsPanelKind } from "../checkin/ActionsPanel";
 import { clickable } from "../../interactive";
+import { isFlightDeparted } from "../../flightPhase";
 
 interface Props {
   flight: Flight;
@@ -130,6 +131,7 @@ const STATUS_CLASS: Record<FlagStatus, string> = {
 
 export function PassengersTab({ flight, readOnly, orientation: orientationProp, onOrientationChange }: Props) {
   const { t } = useLanguage();
+  const departed = isFlightDeparted(flight, new Date());
   const [passengers, setPassengers] = useState<Passenger[]>([]);
   const [seats, setSeats] = useState<SeatCell[]>([]);
   const [query, setQuery] = useState("");
@@ -498,12 +500,25 @@ export function PassengersTab({ flight, readOnly, orientation: orientationProp, 
                   style={{ position: "fixed", top: selectionMenuRect.top, right: window.innerWidth - (selectionMenuRect.left + selectionMenuRect.width) }}
                 >
                   {ACTIONS_MENU_ITEMS.map(({ label, kind }) => {
+                    // Same reasoning as PnrView.tsx's own Actions menu: Quick check-in prints
+                    // boarding passes for whichever rows are checkbox-selected regardless of their
+                    // real checkin_status, so on a departed flight it's the one item here that can
+                    // still look like check-in is somehow possible.
+                    const itemDisabled = kind === "quick" && departed;
                     const pick = () => {
+                      if (itemDisabled) return;
                       setSelectionMenuOpen(false);
                       setSelectionActionKind(kind);
                     };
                     return (
-                      <li key={label} onClick={pick} {...clickable(pick, "menuitem")}>
+                      <li
+                        key={label}
+                        aria-disabled={itemDisabled || undefined}
+                        className={itemDisabled ? "disabled" : undefined}
+                        title={itemDisabled ? t("This flight has departed — check-in is closed.") : undefined}
+                        onClick={pick}
+                        {...clickable(pick, "menuitem")}
+                      >
                         {t(label)}
                       </li>
                     );

@@ -989,7 +989,14 @@ export function PnrView() {
               style={{ position: "fixed", top: actionsMenuRect.top, right: window.innerWidth - (actionsMenuRect.left + actionsMenuRect.width) }}
             >
               {ACTIONS_MENU_ITEMS.map(({ label, kind }, i) => {
+                // Quick check-in prints boarding passes for the checked (checkbox-selected) roster
+                // rows regardless of their real checkin_status — on a departed flight that's the one
+                // item here that can still make it look like check-in is somehow possible, so it's
+                // the one item this screen actually needs to close off (unlike Cancel/Move/Print/etc,
+                // which stay legitimate corrections or reprints after departure).
+                const itemDisabled = kind === "quick" && departed;
                 const pick = () => {
+                  if (itemDisabled) return;
                   setActionsMenuOpen(false);
                   setActionsPanelKind(kind);
                 };
@@ -998,6 +1005,9 @@ export function PnrView() {
                     key={label}
                     ref={(el) => { actionItemRefs.current[i] = el; }}
                     role="menuitem"
+                    aria-disabled={itemDisabled || undefined}
+                    className={itemDisabled ? "disabled" : undefined}
+                    title={itemDisabled ? t("This flight has departed — check-in is closed.") : undefined}
                     tabIndex={i === activeActionIdx ? 0 : -1}
                     onClick={pick}
                     onFocus={() => setActiveActionIdx(i)}
