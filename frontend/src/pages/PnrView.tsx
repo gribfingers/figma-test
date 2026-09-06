@@ -164,6 +164,7 @@ function AddPaxButton({ flightId, excludeIds, onAdd }: AddPaxButtonProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Passenger[]>([]);
   const rootRef = useRef<HTMLDivElement>(null);
+  useHotkey("checkin.add-pax", () => setOpen(true), !open);
 
   useEffect(() => {
     if (!open || !query.trim()) {
@@ -209,7 +210,10 @@ function AddPaxButton({ flightId, excludeIds, onAdd }: AddPaxButtonProps) {
   if (!open) {
     return (
       <div className="pnr-add-pax" ref={rootRef}>
-        <button type="button" className="secondary" onClick={() => setOpen(true)}>
+        {/* Not in the Tab sequence (tabIndex=-1) — reached via its own Alt+A shortcut instead, so it
+            doesn't sit between the roster table and Check-in/Actions in the keyboard flow. Still a
+            normal click target. */}
+        <button type="button" className="secondary" tabIndex={-1} onClick={() => setOpen(true)}>
           {t("Add pax")}
         </button>
       </div>
@@ -339,9 +343,21 @@ export function PnrView() {
   const actionsBtnRef = useRef<HTMLButtonElement>(null);
   const actionsMenuRef = useRef<HTMLUListElement>(null);
   const actionsMenuRect = usePopoverPosition(actionsBtnRef, actionsMenuOpen);
+  // Roving tabindex inside the Actions menu once it's open: one item is ever a Tab stop, Up/Down
+  // moves it (wrapping, same as a native OS menu) — opening the menu (click or Enter/Space on the
+  // button) moves real focus onto the first item so arrow keys work immediately.
+  const [activeActionIdx, setActiveActionIdx] = useState(0);
+  const actionItemRefs = useRef<(HTMLLIElement | null)[]>([]);
+  function moveAction(delta: 1 | -1) {
+    const next = (activeActionIdx + delta + ACTIONS_MENU_ITEMS.length) % ACTIONS_MENU_ITEMS.length;
+    setActiveActionIdx(next);
+    actionItemRefs.current[next]?.focus();
+  }
 
   useEffect(() => {
     if (!actionsMenuOpen) return;
+    setActiveActionIdx(0);
+    const id = requestAnimationFrame(() => actionItemRefs.current[0]?.focus());
     function onDocMouseDown(e: MouseEvent) {
       const target = e.target as Node;
       if (actionsBtnRef.current?.contains(target)) return;
@@ -349,11 +365,15 @@ export function PnrView() {
       setActionsMenuOpen(false);
     }
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") setActionsMenuOpen(false);
+      if (e.key === "Escape") {
+        setActionsMenuOpen(false);
+        actionsBtnRef.current?.focus();
+      }
     }
     document.addEventListener("mousedown", onDocMouseDown);
     document.addEventListener("keydown", onKeyDown);
     return () => {
+      cancelAnimationFrame(id);
       document.removeEventListener("mousedown", onDocMouseDown);
       document.removeEventListener("keydown", onKeyDown);
     };
@@ -452,6 +472,23 @@ export function PnrView() {
     },
     !!flowStep && flowPassengers.length > 1
   );
+
+  // Roving tabindex over the roster rows: one row is ever a Tab stop, Up/Down moves it — the header
+  // checkbox is the Tab stop before it, and (after the DOM reorder in the render below, so keyboard
+  // order matches this table's visual position above Check-in/Actions) the Check-in button follows.
+  // Must stay above the early returns below (rules of hooks), same reasoning as the flow.* hotkeys.
+  const rosterRowRefs = useRef(new Map<number, HTMLTableRowElement>());
+  const [focusedRosterId, setFocusedRosterId] = useState<number | null>(null);
+  const activeRosterId =
+    focusedRosterId != null && rosterPassengers.some((p) => p.id === focusedRosterId) ? focusedRosterId : rosterPassengers[0]?.id ?? null;
+  function moveRosterRow(delta: 1 | -1) {
+    const idx = rosterPassengers.findIndex((p) => p.id === activeRosterId);
+    if (idx === -1) return;
+    const next = rosterPassengers[Math.max(0, Math.min(rosterPassengers.length - 1, idx + delta))];
+    if (!next) return;
+    setFocusedRosterId(next.id);
+    rosterRowRefs.current.get(next.id)?.focus();
+  }
 
   if (notFound) return <EntityNotFound label={t("This flight")} />;
   if (!flight || !clicked) return <div className="content">{t("Loading…")}</div>;
@@ -771,61 +808,12 @@ export function PnrView() {
         </div>
       </div>
 
-      {canEdit && (
-      <div className="pnr-actions">
-        <AddPaxButton
-          flightId={fid}
-          excludeIds={rosterIds}
-          onAdd={(p) => {
-            setExtraPassengers((prev) => {
-              if (prev.some((x) => x.id === p.id)) return prev;
-              const next = [...prev, p];
-              extraPassengersCache.set(pid, next);
-              return next;
-            });
-          }}
-        />
-        <div className="spacer" />
-        <button type="button" className="secondary" disabled={flowPassengers.length === 0} onClick={startCheckinFlow}>{t("Check-in")}</button>
-        <button
-          ref={actionsBtnRef}
-          type="button"
-          className="secondary actions-menu-btn"
-          disabled={flowPassengers.length === 0}
-          aria-haspopup="menu"
-          aria-expanded={actionsMenuOpen}
-          onClick={() => setActionsMenuOpen((o) => !o)}
-        >
-          {t("Actions")}
-          <ChevronDownIcon size={16} className={actionsMenuOpen ? "chevron-rotated" : ""} />
-        </button>
-        {actionsMenuOpen &&
-          actionsMenuRect &&
-          createPortal(
-            <ul
-              ref={actionsMenuRef}
-              className="select-menu actions-menu"
-              role="menu"
-              style={{ position: "fixed", top: actionsMenuRect.top, right: window.innerWidth - (actionsMenuRect.left + actionsMenuRect.width) }}
-            >
-              {ACTIONS_MENU_ITEMS.map(({ label, kind }) => {
-                const pick = () => {
-                  setActionsMenuOpen(false);
-                  setActionsPanelKind(kind);
-                };
-                return (
-                  <li key={label} onClick={pick} {...clickable(pick, "menuitem")}>
-                    {t(label)}
-                  </li>
-                );
-              })}
-            </ul>,
-            document.body
-          )}
-      </div>
-      )}
-
-      <div className="panel panel--flush">
+      {/* DOM order here is table-then-actions (reversed from how they're painted — see the
+          pnr-body/pnr-roster-panel/pnr-actions `order` rules in styles.css) so the keyboard Tab
+          sequence matches the requested flow: header checkbox -> roster row(s), arrow-navigable ->
+          Check-in -> Actions, instead of the two buttons above the table it visually sits below. */}
+      <div className="pnr-body">
+      <div className="panel panel--flush pnr-roster-panel">
         <div className="table-scroll">
           <table>
             <thead>
@@ -860,22 +848,44 @@ export function PnrView() {
                 return (
                   <tr
                     key={p.id}
+                    ref={(el) => {
+                      if (el) rosterRowRefs.current.set(p.id, el);
+                      else rosterRowRefs.current.delete(p.id);
+                    }}
                     className={`clickable ${checked.has(p.id) ? "pax-row-active" : ""}`}
+                    tabIndex={p.id === activeRosterId ? 0 : -1}
+                    onFocus={() => setFocusedRosterId(p.id)}
                     onClick={() => toggleChecked(p.id)}
-                    {...clickable(() => toggleChecked(p.id))}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        toggleChecked(p.id);
+                      } else if (e.key === "ArrowDown") {
+                        e.preventDefault();
+                        moveRosterRow(1);
+                      } else if (e.key === "ArrowUp") {
+                        e.preventDefault();
+                        moveRosterRow(-1);
+                      }
+                    }}
                   >
                     <td>
+                      {/* tabIndex=-1: mouse-only, same reasoning as the name cell above — the row
+                          itself is the one Tab stop, this would otherwise add a second per row. */}
                       <input
                         type="checkbox"
+                        tabIndex={-1}
                         checked={checked.has(p.id)}
                         onChange={() => toggleChecked(p.id)}
                         onClick={(e) => e.stopPropagation()}
                       />
                     </td>
+                    {/* Mouse-only (no clickable() here) — this row is a single roving-tabindex Tab
+                        stop for the whole table (see rosterRowRefs above); a separately-focusable
+                        cell inside it would turn back into one Tab stop per row. */}
                     <td
                       className="link-text"
                       onClick={(e) => { e.stopPropagation(); setDocPanelPassenger(p); }}
-                      {...clickable(() => setDocPanelPassenger(p))}
                     >
                       {p.surname} {p.given_name}
                     </td>
@@ -914,6 +924,73 @@ export function PnrView() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {canEdit && (
+      <div className="pnr-actions">
+        <AddPaxButton
+          flightId={fid}
+          excludeIds={rosterIds}
+          onAdd={(p) => {
+            setExtraPassengers((prev) => {
+              if (prev.some((x) => x.id === p.id)) return prev;
+              const next = [...prev, p];
+              extraPassengersCache.set(pid, next);
+              return next;
+            });
+          }}
+        />
+        <div className="spacer" />
+        <button type="button" className="secondary" disabled={flowPassengers.length === 0} onClick={startCheckinFlow}>{t("Check-in")}</button>
+        <button
+          ref={actionsBtnRef}
+          type="button"
+          className="secondary actions-menu-btn"
+          disabled={flowPassengers.length === 0}
+          aria-haspopup="menu"
+          aria-expanded={actionsMenuOpen}
+          onClick={() => setActionsMenuOpen((o) => !o)}
+        >
+          {t("Actions")}
+          <ChevronDownIcon size={16} className={actionsMenuOpen ? "chevron-rotated" : ""} />
+        </button>
+        {actionsMenuOpen &&
+          actionsMenuRect &&
+          createPortal(
+            <ul
+              ref={actionsMenuRef}
+              className="select-menu actions-menu"
+              role="menu"
+              style={{ position: "fixed", top: actionsMenuRect.top, right: window.innerWidth - (actionsMenuRect.left + actionsMenuRect.width) }}
+            >
+              {ACTIONS_MENU_ITEMS.map(({ label, kind }, i) => {
+                const pick = () => {
+                  setActionsMenuOpen(false);
+                  setActionsPanelKind(kind);
+                };
+                return (
+                  <li
+                    key={label}
+                    ref={(el) => { actionItemRefs.current[i] = el; }}
+                    role="menuitem"
+                    tabIndex={i === activeActionIdx ? 0 : -1}
+                    onClick={pick}
+                    onFocus={() => setActiveActionIdx(i)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); }
+                      else if (e.key === "ArrowDown") { e.preventDefault(); moveAction(1); }
+                      else if (e.key === "ArrowUp") { e.preventDefault(); moveAction(-1); }
+                    }}
+                  >
+                    {t(label)}
+                  </li>
+                );
+              })}
+            </ul>,
+            document.body
+          )}
+      </div>
+      )}
       </div>
       {routeModalOpen && <RouteSegmentsModal flight={flight} onClose={() => setRouteModalOpen(false)} />}
       {docPanelTransition.mounted && docPanelTransition.retained && (

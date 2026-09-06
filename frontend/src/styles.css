@@ -2739,6 +2739,12 @@ tr.row-hover { cursor: pointer; }
 .pnr-times div + div { margin-top: 4px; }
 
 .pnr-actions { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+/* .pnr-body's two children are DOM-reversed from how they're painted (see PnrView.tsx) so Tab
+   order runs table -> Check-in -> Actions while the actions bar still visually sits above the
+   table — `order` only affects paint position, not focus order. */
+.pnr-body { display: flex; flex-direction: column; }
+.pnr-body > .pnr-roster-panel { order: 2; }
+.pnr-body > .pnr-actions { order: 1; }
 .actions-menu-btn { display: inline-flex; align-items: center; gap: 6px; }
 .actions-menu-btn .chevron-rotated { transform: rotate(180deg); }
 .actions-menu { left: auto; width: 220px; }

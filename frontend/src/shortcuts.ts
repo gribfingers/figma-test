@@ -40,6 +40,7 @@ export const SHORTCUTS: ShortcutDef[] = [
   { id: "flow.finish", group: "Check-in flow", label: "Finish", defaultCombo: "alt|f" },
   { id: "flow.cart", group: "Check-in flow", label: "Cart", defaultCombo: "alt|c" },
   { id: "flow.flight-info", group: "Check-in flow", label: "Flight information", defaultCombo: "alt|i" },
+  { id: "checkin.add-pax", group: "Check-in flow", label: "Add pax", defaultCombo: "alt|a" },
   // Moves flowActiveId to the next/previous passenger in flowPassengers without leaving the
   // current step — the only other way is clicking a different roster row, the biggest friction
   // point for a multi-pax PNR (a family, say) going through seats/baggage/docs one at a time.
