@@ -324,7 +324,10 @@ function CheckedBagRow({ row, origin, segments, destinationOptions, calculated, 
         <>
           <span className="baggage-row-origin">{origin} -</span>
           {locked ? (
-            <span className="baggage-row-static mono" style={{ width: 110, flex: "0 0 auto" }}>{row.destination}</span>
+            <div className="field2 baggage-row-static-field" style={{ width: 110 }}>
+              <span className="baggage-row-static-value mono">{row.destination}</span>
+              <label>{t("To")}</label>
+            </div>
           ) : (
             <Select
               ref={toRef}
@@ -341,7 +344,10 @@ function CheckedBagRow({ row, origin, segments, destinationOptions, calculated, 
         </>
       )}
       {locked ? (
-        <span className="baggage-row-static baggage-row-static-weight mono" style={{ width: 110 }}>{row.weight} kg</span>
+        <div className="field2 baggage-row-static-field" style={{ width: 110 }}>
+          <span className="baggage-row-static-value mono">{row.weight} kg</span>
+          <label>{t("Weight, kg")}</label>
+        </div>
       ) : (
         <div className="field2" style={{ width: 110 }}>
           <input
@@ -364,7 +370,10 @@ function CheckedBagRow({ row, origin, segments, destinationOptions, calculated, 
         </div>
       )}
       {locked ? (
-        <span className="baggage-row-static baggage-row-static-type">{baggageTypeDisplay(row.typeId, t)}</span>
+        <div className="field2 baggage-row-static-field" style={{ flex: 1 }}>
+          <span className="baggage-row-static-value">{baggageTypeDisplay(row.typeId, t)}</span>
+          <label>{t("Type")}</label>
+        </div>
       ) : (
         <BaggageTypeSelect
           ref={typeRef}

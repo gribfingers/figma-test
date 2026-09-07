@@ -3217,9 +3217,22 @@ tr.row-hover { cursor: pointer; }
 /* Extra specificity (parent-scoped) so this beats the global button:hover rule. */
 .baggage-rows .baggage-row-chevron:hover { background: transparent; color: var(--field-value); }
 .baggage-row-origin { color: var(--muted); font-size: 13px; flex-shrink: 0; }
-.baggage-row-static { flex: 1; color: var(--muted); font-size: 13px; }
-.baggage-row-static-weight { flex: 0 0 auto; }
-.baggage-row-static-type { flex: 1; }
+/* A printed row's read-only To/Weight/Type — same field2 box its editable counterpart uses (only
+   border/background stripped), specifically so its label+value sit at the exact same position as
+   the live Select/input above/below it instead of just being centered text of its own. The label is
+   forced into the "floated" (has-a-value) position outright since a printed row always has one. */
+.baggage-row-static-field { flex-shrink: 0; border-color: transparent; background: transparent; cursor: default; }
+.baggage-row-static-field label { top: 7px; transform: translateY(0); font-size: 11px; font-weight: 500; }
+.baggage-row-static-value {
+  display: block;
+  width: 100%;
+  padding-top: 15px;
+  font-size: 14px;
+  color: var(--field-value);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 .baggage-row-print {
   all: unset;
