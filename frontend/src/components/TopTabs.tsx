@@ -13,8 +13,9 @@ import { useTabIcons } from "../tabIcons";
 import { useDesktopNotifications } from "../desktopNotifications";
 import { useLanguage } from "../i18n";
 import { useHotkey } from "../useShortcuts";
+import { useShortcutTitle } from "../shortcutHints";
 import { formatCombo } from "../shortcuts";
-import { ChatIcon, ChevronLeftIcon, ChevronRightIcon, CloseIcon, RestoreTabIcon, TabBoardingIcon, TabCheckinIcon, TabFlightsIcon } from "./Icon";
+import { ChatIcon, ChevronLeftIcon, ChevronRightIcon, CloseIcon, HelpIcon, RestoreTabIcon, TabBoardingIcon, TabCheckinIcon, TabFlightsIcon } from "./Icon";
 import { UserPanel } from "./UserPanel";
 import { Messenger } from "./Messenger";
 import { Modal } from "./Modal";
@@ -207,6 +208,9 @@ export function TopTabs() {
     const idx = tabs.findIndex((t) => t.path === activePath);
     if (idx !== -1 && idx < tabs.length - 1) navigate(tabs[idx + 1].path);
   });
+  // Only meaningful on the active tab's own close button — nav.tab-close always closes whichever
+  // tab is currently active, not whichever one's × you happen to be hovering.
+  const activeCloseTitle = useShortcutTitle("nav.tab-close", t("Close"));
 
   return (
     <div className="tabs-bar">
@@ -241,6 +245,7 @@ export function TopTabs() {
                   type="button"
                   className="top-tab-close"
                   aria-label={`${t("Close")} ${tab.label}`}
+                  title={selected ? activeCloseTitle : undefined}
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -283,6 +288,15 @@ export function TopTabs() {
           </button>
         )}
         <MoscowClock />
+        <a
+          className="tabs-icon-btn"
+          href="/help"
+          target="_blank"
+          rel="noopener noreferrer"
+          title={t("Keyboard shortcuts help")}
+        >
+          <HelpIcon size={18} />
+        </a>
         {user && (
           <button
             type="button"

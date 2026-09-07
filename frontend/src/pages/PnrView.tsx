@@ -31,6 +31,7 @@ import { usePersistentState } from "../usePersistentState";
 import { useLanguage } from "../i18n";
 import { useCanEdit } from "../auth";
 import { useHotkey } from "../useShortcuts";
+import { useShortcutTitle } from "../shortcutHints";
 import { trackEvent } from "../analytics";
 import { isFlightDeparted } from "../flightPhase";
 
@@ -165,6 +166,7 @@ function AddPaxButton({ flightId, excludeIds, onAdd }: AddPaxButtonProps) {
   const [results, setResults] = useState<Passenger[]>([]);
   const rootRef = useRef<HTMLDivElement>(null);
   useHotkey("checkin.add-pax", () => setOpen(true), !open);
+  const addPaxTitle = useShortcutTitle("checkin.add-pax", t("Add pax"));
 
   useEffect(() => {
     if (!open || !query.trim()) {
@@ -242,7 +244,7 @@ function AddPaxButton({ flightId, excludeIds, onAdd }: AddPaxButtonProps) {
         {/* Not in the Tab sequence (tabIndex=-1) — reached via its own Alt+A shortcut instead, so it
             doesn't sit between the roster table and Check-in/Actions in the keyboard flow. Still a
             normal click target. */}
-        <button type="button" className="secondary" tabIndex={-1} onClick={() => setOpen(true)}>
+        <button type="button" className="secondary" tabIndex={-1} title={addPaxTitle} onClick={() => setOpen(true)}>
           {t("Add pax")}
         </button>
       </div>
@@ -573,6 +575,11 @@ export function PnrView() {
   // this app controls). Mirrors each button's own visibility/disabled condition.
   useHotkey("checkin.start", () => startCheckinFlow(), canEdit && !flowStep && !departed && flowPassengers.length > 0 && allNotCheckedIn);
   useHotkey("checkin.actions-menu", () => setActionsMenuOpen((o) => !o), canEdit && !flowStep && flowPassengers.length > 0);
+  const flowCheckinTitle = useShortcutTitle("flow.checkin", t("Check-in"));
+  const flowNextTitle = useShortcutTitle("flow.next", t("Next"));
+  const flowFinishTitle = useShortcutTitle("flow.finish", t("Finish"));
+  const checkinStartTitle = useShortcutTitle("checkin.start", t("Check-in"));
+  const actionsMenuTitle = useShortcutTitle("checkin.actions-menu", t("Actions"));
 
   // Roving tabindex over the roster rows: one row is ever a Tab stop, Up/Down moves it — the header
   // checkbox is the Tab stop before it, and (after the DOM reorder in the render below, so keyboard
@@ -701,12 +708,13 @@ export function PnrView() {
               <button type="button" className="icon-button" aria-label={t("Refresh")}>
                 <RefreshIcon size={18} />
               </button>
-              <button type="button" className="tertiary" onClick={() => setFinishConfirmOpen(true)}>{t("Finish")}</button>
+              <button type="button" className="tertiary" title={flowFinishTitle} onClick={() => setFinishConfirmOpen(true)}>{t("Finish")}</button>
               <span className="pnr-flow-checkin-wrap">
                 <button
                   type="button"
                   className="secondary"
                   disabled={checkInDisabled}
+                  title={checkInDisabled ? undefined : flowCheckinTitle}
                   onClick={completeCheckin}
                 >
                   {t("Check-in")}
@@ -715,7 +723,7 @@ export function PnrView() {
                   <span className="pnr-flow-checkin-tooltip">{t("Seat and verify documents for all passengers first")}</span>
                 )}
               </span>
-              <button type="button" className="tertiary" disabled={flowStep === "services"} onClick={nextFlowStep}>{t("Next")}</button>
+              <button type="button" className="tertiary" disabled={flowStep === "services"} title={flowStep === "services" ? undefined : flowNextTitle} onClick={nextFlowStep}>{t("Next")}</button>
             </div>
           </div>
         )}
@@ -1063,7 +1071,7 @@ export function PnrView() {
               ? t("Selected passengers have different check-in status — select passengers with the same status.")
               : flowPassengers.length > 0 && !allNotCheckedIn
               ? t("Selected passengers are already checked in.")
-              : undefined
+              : checkinStartTitle
           }
           onClick={startCheckinFlow}
         >
@@ -1076,6 +1084,7 @@ export function PnrView() {
           disabled={flowPassengers.length === 0}
           aria-haspopup="menu"
           aria-expanded={actionsMenuOpen}
+          title={flowPassengers.length === 0 ? undefined : actionsMenuTitle}
           onClick={() => setActionsMenuOpen((o) => !o)}
         >
           {t("Actions")}

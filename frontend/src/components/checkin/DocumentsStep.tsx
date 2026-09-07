@@ -17,6 +17,7 @@ import { BirthDateField } from "../BirthDateField";
 import { DocScannedIcon } from "../Icon";
 import { useLanguage } from "../../i18n";
 import { useHotkey } from "../../useShortcuts";
+import { useShortcutTitle } from "../../shortcutHints";
 
 const EMPTY_DOC: PassengerDocument = { document_type: "P", document_number: "", nationality: "", doc_expiry: "" };
 const EMPTY_VISA: VisaDocument = {
@@ -202,6 +203,8 @@ export function DocumentsStep({ flightId, passenger, segments, onUpdated }: Prop
   // A standalone one-off action, same reasoning as checkin.start/Add pax elsewhere — not part of any
   // roving-tabindex group, so it needs its own combo rather than depending on Tab reaching it.
   useHotkey("flow.add-document", () => setEditing({ kind: tab, index: "new" }), !editing);
+  const verifyDocsTitle = useShortcutTitle("flow.verify-docs", t("Verify docs on all segments"));
+  const addDocumentTitle = useShortcutTitle("flow.add-document", t("Add document"));
 
   return (
     <div className="docs-step">
@@ -210,7 +213,7 @@ export function DocumentsStep({ flightId, passenger, segments, onUpdated }: Prop
         {extra.docVerified ? (
           <span className="docs-verify-link docs-verify-done">{t("Docs on all segments are verified")}</span>
         ) : (
-          <button type="button" className="tertiary docs-verify-link" onClick={() => saveExtraPatch({ docVerified: true })} disabled={saving}>
+          <button type="button" className="tertiary docs-verify-link" title={saving ? undefined : verifyDocsTitle} onClick={() => saveExtraPatch({ docVerified: true })} disabled={saving}>
             {t("Verify docs on all segments")}
           </button>
         )}
@@ -240,7 +243,7 @@ export function DocumentsStep({ flightId, passenger, segments, onUpdated }: Prop
         ))}
       </div>
 
-      <button type="button" className="tertiary docs-add-link" onClick={() => setEditing({ kind: tab, index: "new" })}>
+      <button type="button" className="tertiary docs-add-link" title={addDocumentTitle} onClick={() => setEditing({ kind: tab, index: "new" })}>
         {t("Add document")}
       </button>
 

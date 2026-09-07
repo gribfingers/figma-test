@@ -5,6 +5,7 @@ import { useCheckinFlow, FLOW_STEPS, FLOW_STEP_LABEL, FlowStep, pnrFlowPidFromPa
 import { tabKindForPath } from "../tabKind";
 import { useLanguage } from "../i18n";
 import { useHotkey } from "../useShortcuts";
+import { useShortcutTitle } from "../shortcutHints";
 import {
   BaggageFlowIcon,
   BoardingIcon,
@@ -72,6 +73,22 @@ export function SideDrawer() {
   useHotkey("flow.cart", () => setCartOpen(pnrPid!, true), showFlowIcons);
   useHotkey("flow.flight-info", () => setFlightInfoOpen(pnrPid!, true), showFlowIcons);
 
+  const flightsTitle = useShortcutTitle("nav.flights", t("Flight schedule"));
+  const checkinTitle = useShortcutTitle("nav.checkin-search", t("Check-in"));
+  const boardingTitle = useShortcutTitle("nav.boarding-search", t("Boarding"));
+  const cartTitle = useShortcutTitle("flow.cart", t("Cart"));
+  const flightInfoTitle = useShortcutTitle("flow.flight-info", t("Flight information"));
+  const docsStepTitle = useShortcutTitle("flow.step-docs", t(FLOW_STEP_LABEL.docs));
+  const seatsStepTitle = useShortcutTitle("flow.step-seats", t(FLOW_STEP_LABEL.seats));
+  const baggageStepTitle = useShortcutTitle("flow.step-baggage", t(FLOW_STEP_LABEL.baggage));
+  const servicesStepTitle = useShortcutTitle("flow.step-services", t(FLOW_STEP_LABEL.services));
+  const FLOW_STEP_TITLE: Record<FlowStep, string | undefined> = {
+    docs: docsStepTitle,
+    seats: seatsStepTitle,
+    baggage: baggageStepTitle,
+    services: servicesStepTitle,
+  };
+
   return (
     <nav className="side-drawer">
       {/* Opens links to other apps — not wired up yet. */}
@@ -83,18 +100,18 @@ export function SideDrawer() {
         <Link
           to="/"
           className={`side-item ${kind === "flights" ? "selected" : ""}`}
-          data-tooltip={t("Flight schedule")}
+          data-tooltip={flightsTitle}
         >
           <PlaneIcon size={20} />
         </Link>
         <Link
           to="/search"
           className={`side-item ${kind === "checkin" && !showFlowIcons ? "selected" : ""}`}
-          data-tooltip={t("Check-in")}
+          data-tooltip={checkinTitle}
         >
           <CheckInIcon size={20} />
         </Link>
-        <Link to="/boarding-search" className={`side-item ${kind === "boarding" ? "selected" : ""}`} data-tooltip={t("Boarding")}>
+        <Link to="/boarding-search" className={`side-item ${kind === "boarding" ? "selected" : ""}`} data-tooltip={boardingTitle}>
           <BoardingIcon size={20} />
         </Link>
         {showFlowIcons && (
@@ -105,7 +122,7 @@ export function SideDrawer() {
                 key={step}
                 type="button"
                 className={`side-item side-item-flow-step ${flowStep === step ? "selected" : ""}`}
-                data-tooltip={t(FLOW_STEP_LABEL[step])}
+                data-tooltip={FLOW_STEP_TITLE[step]}
                 onClick={() => setFlowStep(pnrPid!, step)}
               >
                 {FLOW_STEP_ICON[step](20)}
@@ -115,7 +132,7 @@ export function SideDrawer() {
             <button
               type="button"
               className={`side-item ${cartOpen ? "selected" : ""}`}
-              data-tooltip={t("Cart")}
+              data-tooltip={cartTitle}
               onClick={() => setCartOpen(pnrPid!, true)}
             >
               <CartFlowIcon size={20} />
@@ -123,7 +140,7 @@ export function SideDrawer() {
             <button
               type="button"
               className={`side-item ${flightInfoOpen ? "selected" : ""}`}
-              data-tooltip={t("Flight information")}
+              data-tooltip={flightInfoTitle}
               onClick={() => setFlightInfoOpen(pnrPid!, true)}
             >
               <InfoIcon size={20} />

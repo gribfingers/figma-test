@@ -4,6 +4,7 @@ import { useAuth } from "../auth";
 import { useTheme } from "../theme";
 import { useFontSize } from "../fontSize";
 import { useTabIcons } from "../tabIcons";
+import { useShortcutHints } from "../shortcutHints";
 import { useDesktopNotifications } from "../desktopNotifications";
 import { useLanguage } from "../i18n";
 import { resizeImageToDataUrl, userAvatarColor, userInitials } from "../userDisplay";
@@ -39,6 +40,7 @@ export function UserPanel({ open, onClose }: Props) {
   const { theme, setTheme, contrast, setContrast } = useTheme();
   const { fontSize, increase, decrease } = useFontSize();
   const { enabled: tabIconsEnabled, setEnabled: setTabIconsEnabled } = useTabIcons();
+  const { enabled: shortcutHintsEnabled, setEnabled: setShortcutHintsEnabled } = useShortcutHints();
   const { enabled: desktopNotificationsEnabled, supported: desktopNotificationsSupported, setEnabled: setDesktopNotificationsEnabled } = useDesktopNotifications();
   const { language, setLanguage, t } = useLanguage();
   const [settingsOpen, setSettingsOpen] = useState(true);
@@ -166,6 +168,16 @@ export function UserPanel({ open, onClose }: Props) {
                     type="checkbox"
                     checked={tabIconsEnabled}
                     onChange={(e) => setTabIconsEnabled(e.target.checked)}
+                  />
+                </label>
+              </div>
+              <div className="user-panel-theme-row">
+                <span>{t("Show keyboard shortcuts")}</span>
+                <label className="checkbox-row">
+                  <input
+                    type="checkbox"
+                    checked={shortcutHintsEnabled}
+                    onChange={(e) => setShortcutHintsEnabled(e.target.checked)}
                   />
                 </label>
               </div>

@@ -3486,3 +3486,66 @@ tr.row-hover { cursor: pointer; }
   button { padding: 9px 14px; font-size: 13px; }
   .analytics-stats { grid-template-columns: 1fr; }
 }
+
+/* A small, static (non-interactive) key-combo chip — used inline in HelpPage prose next to a plain
+   ArrowUp/Enter/Escape mention that isn't a registered SHORTCUTS id, and reused by HotkeyBadge for
+   ones that are. Deliberately not the same class as .shortcut-key (that one's a button with its own
+   hover/recording states — this is read-only text). */
+.kbd {
+  display: inline-block;
+  min-width: 22px;
+  text-align: center;
+  padding: 1px 6px;
+  margin: 0 1px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--field-value);
+  background: var(--field-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 5px;
+}
+
+/* HelpPage — a standalone route (no TopTabs/SideDrawer), so it needs its own scroll region and
+   page padding rather than relying on .content/.shell. */
+.help-page {
+  height: 100%;
+  overflow-y: auto;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
+.help-page-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 8px; }
+.help-page-title { display: flex; align-items: center; gap: 10px; color: var(--field-value); }
+.help-page-title h1 { margin: 0; font-size: 22px; }
+.help-intro { font-size: 14px; color: var(--field-value); line-height: 1.6; margin: 10px 0; }
+.help-intro-list { margin: 0 0 10px; padding-left: 20px; font-size: 14px; color: var(--field-value); line-height: 1.6; }
+.help-intro-list li { margin-bottom: 6px; }
+.help-section { margin-top: 36px; }
+.help-section h2 { font-size: 17px; margin: 0 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--panel-border); }
+.help-step { margin-bottom: 20px; }
+.help-step-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.help-step-n {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+.help-step h3 { margin: 0; font-size: 14px; color: var(--field-value); }
+.help-step ul { margin: 0; padding-left: 32px; font-size: 13px; color: var(--field-value); line-height: 1.9; }
+.help-reference-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 32px; }
+.help-reference-group { padding: 12px 0; border-top: 1px solid var(--panel-border); }
+.help-reference-group:first-child, .help-reference-group:nth-child(2) { border-top: none; }
+.help-reference-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 0; }
+
+@media (max-width: 640px) {
+  .help-reference-grid { grid-template-columns: 1fr; }
+  .help-reference-group:nth-child(2) { border-top: 1px solid var(--panel-border); }
+}

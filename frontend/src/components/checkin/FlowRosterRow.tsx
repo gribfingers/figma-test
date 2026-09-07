@@ -10,6 +10,7 @@ import { EmdModal } from "./EmdModal";
 import { useLanguage } from "../../i18n";
 import { usePopoverPosition } from "../../usePopoverPosition";
 import { useHotkey } from "../../useShortcuts";
+import { useShortcutTitle } from "../../shortcutHints";
 import { clickable } from "../../interactive";
 
 /** "Swap seat…" (Seats step, once seated) and "Reprint BP" tucked under one menu, same
@@ -74,6 +75,7 @@ function RowActionsMenu({ onSwapSeat }: { onSwapSeat?: () => void }) {
   // roster page's Actions button is explicitly disabled while flowStep is set), so this active
   // card's own Actions menu can reuse the same combo without colliding.
   useHotkey("checkin.actions-menu", () => setOpen((o) => !o), true);
+  const actionsMenuTitle = useShortcutTitle("checkin.actions-menu", t("Actions"));
 
   return (
     <div
@@ -81,7 +83,7 @@ function RowActionsMenu({ onSwapSeat }: { onSwapSeat?: () => void }) {
       className={`actions-select ${open ? "open" : ""}`}
       onClick={(e) => e.stopPropagation()}
     >
-      <button ref={btnRef} type="button" className="tertiary" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+      <button ref={btnRef} type="button" className="tertiary" aria-haspopup="menu" aria-expanded={open} title={actionsMenuTitle} onClick={() => setOpen((o) => !o)}>
         {t("Actions")} <ChevronDownIcon size={16} className="chevron-flip" />
       </button>
       {open &&

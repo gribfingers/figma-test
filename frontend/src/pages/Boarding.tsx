@@ -29,6 +29,7 @@ import {
 } from "../paxExtra";
 import { useCanEdit } from "../auth";
 import { useHotkey } from "../useShortcuts";
+import { useShortcutTitle } from "../shortcutHints";
 import { trackEvent } from "../analytics";
 import { clickable } from "../interactive";
 
@@ -330,6 +331,13 @@ export function Boarding() {
   useHotkey("boarding.filter-all", () => setQuickFilter("all"));
   useHotkey("boarding.filter-yet", () => setQuickFilter("yet"));
   useHotkey("boarding.filter-boarded", () => setQuickFilter("boarded"));
+  const selectAllTitle = useShortcutTitle("boarding.select-all");
+  const scanTitle = useShortcutTitle("boarding.scan", t("Scan a boarding pass"));
+  const boardTitle = useShortcutTitle("boarding.board", t("Board"));
+  const offloadTitle = useShortcutTitle("boarding.offload", t("Offload"));
+  const filterAllTitle = useShortcutTitle("boarding.filter-all", t("All"));
+  const filterYetTitle = useShortcutTitle("boarding.filter-yet", t("Yet to board"));
+  const filterBoardedTitle = useShortcutTitle("boarding.filter-boarded", t("Boarded"));
 
   if (notFound) return <EntityNotFound label={t("This flight")} />;
   if (!flight) return <div className="content">{t("Loading…")}</div>;
@@ -355,7 +363,7 @@ export function Boarding() {
 
         <div className="pnr-side">
           {canEdit && (
-            <button type="button" className="icon-button" data-tooltip={t("Scan a boarding pass")} onClick={() => setScanOpen((v) => !v)}>
+            <button type="button" className="icon-button" title={scanTitle} onClick={() => setScanOpen((v) => !v)}>
               <HandIcon size={20} />
             </button>
           )}
@@ -393,20 +401,20 @@ export function Boarding() {
 
       <div className="panel panel--flush boarding-table-panel">
         <div className="toolbar panel-head">
-          <button type="button" className={`quick-status-pill ${quickFilter === "all" ? "selected" : ""}`} onClick={() => setQuickFilter("all")}>
+          <button type="button" className={`quick-status-pill ${quickFilter === "all" ? "selected" : ""}`} title={filterAllTitle} onClick={() => setQuickFilter("all")}>
             {t("All")} ({passengers.length})
           </button>
-          <button type="button" className={`quick-status-pill ${quickFilter === "yet" ? "selected" : ""}`} onClick={() => setQuickFilter("yet")}>
+          <button type="button" className={`quick-status-pill ${quickFilter === "yet" ? "selected" : ""}`} title={filterYetTitle} onClick={() => setQuickFilter("yet")}>
             {t("Yet to board")} ({yetToBoardCount})
           </button>
-          <button type="button" className={`quick-status-pill ${quickFilter === "boarded" ? "selected" : ""}`} onClick={() => setQuickFilter("boarded")}>
+          <button type="button" className={`quick-status-pill ${quickFilter === "boarded" ? "selected" : ""}`} title={filterBoardedTitle} onClick={() => setQuickFilter("boarded")}>
             {t("Boarded")} ({boardedCount})
           </button>
           <div className="spacer" />
           {canEdit && selected.size > 0 && (
             <>
-              <button type="button" className="secondary small" disabled={closed} onClick={boardSelected}>{t("Board")} ({selected.size})</button>
-              <button type="button" className="danger small" disabled={closed} onClick={offloadSelected}>{t("Offload")} ({selected.size})</button>
+              <button type="button" className="secondary small" disabled={closed} title={closed ? undefined : boardTitle} onClick={boardSelected}>{t("Board")} ({selected.size})</button>
+              <button type="button" className="danger small" disabled={closed} title={closed ? undefined : offloadTitle} onClick={offloadSelected}>{t("Offload")} ({selected.size})</button>
             </>
           )}
           <button type="button" className="tertiary" onClick={showPnl}>PNL</button>
@@ -448,7 +456,7 @@ export function Boarding() {
             <thead>
               <tr>
                 <th>
-                  {canEdit && <input type="checkbox" checked={allSelected} onChange={toggleAllSelected} />}
+                  {canEdit && <input type="checkbox" checked={allSelected} title={selectAllTitle} onChange={toggleAllSelected} />}
                 </th>
                 <th>{t("Name")}</th>
                 <th>{t("Remarks")}</th>

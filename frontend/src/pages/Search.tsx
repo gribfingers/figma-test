@@ -6,6 +6,7 @@ import { clearPersistentState, usePersistentState } from "../usePersistentState"
 import { SortTh, useSort } from "../components/SortTh";
 import { useLanguage } from "../i18n";
 import { useHotkey } from "../useShortcuts";
+import { useShortcutTitle } from "../shortcutHints";
 
 type ResultSortKey = "name" | "destination" | "flight" | "std" | "pnr" | "status";
 const RESULT_SORT_GETTERS: Record<ResultSortKey, (p: PassengerSearchResult) => string | number> = {
@@ -70,6 +71,7 @@ export function Search() {
   const [paxQuickFilter, setPaxQuickFilter] = usePersistentState<PaxQuickFilterKey>("dcs_search_quick_filter", "all");
   const searchInputRef = useRef<HTMLInputElement>(null);
   useHotkey("nav.search-focus", () => searchInputRef.current?.focus());
+  const searchFocusTitle = useShortcutTitle("nav.search-focus");
 
   // Roving tabindex over the mode tabs (Last Name/PNR/…): only the selected one is a Tab stop, so
   // Tab from wherever the agent last was lands on the mode picker as a single stop, then Left/Right
@@ -186,6 +188,7 @@ export function Search() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t(SEARCH_MODES.find((m) => m.key === mode)?.placeholder ?? "Search")}
+                title={searchFocusTitle}
                 disabled={searching}
               />
             </div>

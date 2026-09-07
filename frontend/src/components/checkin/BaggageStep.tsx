@@ -14,6 +14,7 @@ import { TransferBagModal } from "./TransferBagModal";
 import { useToast } from "../../toast";
 import { useLanguage } from "../../i18n";
 import { useHotkey } from "../../useShortcuts";
+import { useShortcutTitle } from "../../shortcutHints";
 
 interface CarryOnRow {
   id: number;
@@ -165,25 +166,29 @@ export function BaggageStep({ flight, passenger, passengers, segments, initialRo
   useHotkey("baggage.allowance", () => setInfoOpen(true));
   useHotkey("baggage.calculate", calculate);
   useHotkey("baggage.confirm", confirm);
+  const addRowTitle = useShortcutTitle("baggage.add-row", t("Add baggage"));
+  const allowanceTitle = useShortcutTitle("baggage.allowance", t("Baggage allowance"));
+  const calculateTitle = useShortcutTitle("baggage.calculate", t("Calculate"));
+  const confirmTitle = useShortcutTitle("baggage.confirm", t("Confirm"));
 
   return (
     <div className="baggage-step">
       <div className="docs-step-top">
-        <button type="button" className="tertiary docs-add-link" onClick={() => mutateRows((prev) => [...prev, emptyBagRow(flight.destination)])}>
+        <button type="button" className="tertiary docs-add-link" title={addRowTitle} onClick={() => mutateRows((prev) => [...prev, emptyBagRow(flight.destination)])}>
           {t("Add baggage")}
         </button>
         <div className="baggage-step-actions">
-          <button type="button" className="icon-button" aria-label={t("Baggage allowance")} onClick={() => setInfoOpen(true)}>
+          <button type="button" className="icon-button" aria-label={t("Baggage allowance")} title={allowanceTitle} onClick={() => setInfoOpen(true)}>
             <InfoIcon size={18} />
           </button>
           {/* No bag-tag print preview wired up — present for layout, no action yet. */}
           <button type="button" className="icon-button" aria-label={t("Bag tag")}>
             <TagIcon size={18} />
           </button>
-          <button type="button" className="tertiary" onClick={calculate}>
+          <button type="button" className="tertiary" title={calculateTitle} onClick={calculate}>
             {t("Calculate")}
           </button>
-          <button type="button" className="tertiary" onClick={confirm}>{t("Confirm")}</button>
+          <button type="button" className="tertiary" title={confirmTitle} onClick={confirm}>{t("Confirm")}</button>
         </div>
       </div>
 

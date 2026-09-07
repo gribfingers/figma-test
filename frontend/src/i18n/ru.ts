@@ -782,4 +782,73 @@ export const RU: Record<string, string> = {
   "No events match.": "Нет подходящих событий.",
   Previous: "Назад",
   "Page {n} of {total}": "Страница {n} из {total}",
+
+  // ---- Keyboard shortcuts help (TopTabs' Help button, UserPanel's hint toggle, HelpPage.tsx) ----
+  "Keyboard shortcuts help": "Справка по горячим клавишам",
+  "Show keyboard shortcuts": "Показывать горячие клавиши",
+  "Step by step: Check-in Search → Extra services": "Пошагово: от Check-in Search до доп. услуг",
+  "This app can be driven almost entirely from the keyboard. Two kinds of shortcuts are used throughout, and both are shown here exactly as they work on your own operating system:":
+    "Почти всё приложение можно использовать с клавиатуры. Здесь используются два вида горячих клавиш, и оба показаны именно так, как они работают в вашей операционной системе:",
+  "Fixed combos (Alt/Ctrl + a key) for one-off actions — Confirm, Add, Verify, switching steps. These work the same everywhere in the app and can be rebound from Settings → Keyboard shortcuts.":
+    "Фиксированные сочетания (Alt/Ctrl + клавиша) для разовых действий — Confirm, Add, Verify, переключение шагов. Работают одинаково во всём приложении, их можно переназначить в Настройках → Горячие клавиши.",
+  "Arrow keys, Enter, Space and Escape for moving between and operating on items in a list or a row — seats, roster rows, document cards, baggage and service rows. These are fixed and the same on every OS; Tab alone isn't relied on to reach them, since whether Tab even stops on a button is a browser setting outside this app's control (Safari in particular skips buttons unless Full Keyboard Access is turned on).":
+    "Стрелки, Enter, Space и Escape — для перемещения между элементами списка или строки и работы с ними: места, строки ростера, карточки документов, строки багажа и доп. услуг. Это фиксированные клавиши, одинаковые в любой ОС; переход по Tab на них не используется — попадёт ли фокус по Tab на кнопку вообще, зависит от настроек браузера, а не от приложения (в частности, Safari по умолчанию пропускает кнопки, пока не включён Full Keyboard Access).",
+  'Turn on "Show keyboard shortcuts" in Settings (account menu) to see each shortcut next to its own button as a tooltip.':
+    "Включите «Показывать горячие клавиши» в Настройках (меню аккаунта), чтобы видеть сочетание рядом с каждой кнопкой в подсказке.",
+  "Open the Check-in Search tab from anywhere": "Открыть вкладку Check-in Search из любого места",
+  "Jump straight into the search field": "Сразу перейти в поле поиска",
+  "Switch between Last Name / PNR / E-ticket / Doc / Flight with a click, or Tab to them":
+    "Переключайтесь между Last Name / PNR / E-ticket / Doc / Flight кликом или через Tab",
+  "Press Enter in the field, or click Search": "Нажмите Enter в поле или кликните Search",
+  "Passenger roster (before check-in)": "Список пассажиров (до регистрации)",
+  "Tab reaches exactly one roster row at a time": "Tab попадает ровно на одну строку ростера за раз",
+  "Move between rows": "Перемещение между строками",
+  "Check or uncheck that row's box": "Отметить или снять отметку с чекбокса строки",
+  "Start check-in for every checked, not-yet-checked-in passenger": "Начать регистрацию для всех отмеченных ещё не зарегистрированных пассажиров",
+  "Open the Actions menu (Quick check-in, Cancel check-in, Move to another flight, and more)":
+    "Открыть меню Actions (Быстрая регистрация, Отмена регистрации, Перенос на другой рейс и другое)",
+  "Add a passenger": "Добавить пассажира",
+  "Check-in flow header": "Шапка процесса регистрации",
+  "Switch passengers within the same flow — a family or group PNR — without leaving the current step":
+    "Переключение между пассажирами внутри одного процесса — семья или групповой PNR — без выхода из текущего шага",
+  "Jump directly to a step once it's reachable": "Перейти сразу на нужный шаг, если он уже доступен",
+  "Next step": "Следующий шаг",
+  "Complete check-in, once Documents and Seats are behind you": "Завершить регистрацию, когда документы и места уже пройдены",
+  "Step 1 — Documents": "Шаг 1 — Документы",
+  "DOCS / DOCO / DOCA tabs switch which document type is shown — click, or Tab to them":
+    "Вкладки DOCS / DOCO / DOCA переключают тип отображаемого документа — кликом или через Tab",
+  "Document cards follow the same one-Tab-stop, arrow-key pattern as the roster":
+    "Карточки документов работают так же, как строки ростера: один Tab-стоп и перемещение стрелками",
+  "Inside the document editor, save with": "В редакторе документа сохранение —",
+  "Step 2 — Seats": "Шаг 2 — Места",
+  "Move the highlighted seat": "Переместить выделение по местам",
+  "Assign the highlighted seat, or complete a swap in progress": "Назначить выделенное место или завершить начатый обмен",
+  "Cancel a swap in progress": "Отменить начатый обмен местами",
+  "Switch the seat map's layout orientation": "Переключить ориентацию схемы салона",
+  "Open the Legend": "Открыть легенду",
+  "Open Layers": "Открыть слои",
+  "Close the Legend or Layers panel": "Закрыть панель Легенды или Слоёв",
+  "Step 3 — Baggage": "Шаг 3 — Багаж",
+  "Add a baggage row": "Добавить строку багажа",
+  "Within a row, the fields chain to each other without depending on Tab: from Weight, the arrow keys (or Enter) move into Destination and Type; ArrowLeft/ArrowRight step between Print tag and Remove":
+    "Поля внутри строки связаны друг с другом независимо от Tab: из поля Weight стрелки (или Enter) переводят в Destination и Type; ArrowLeft/ArrowRight переключают между Print tag и Remove",
+  "Print the highlighted row's tag": "Напечатать бирку для выделенной строки",
+  "Add a carry-on row": "Добавить строку ручной клади",
+  "Step 4 — Extra services": "Шаг 4 — Доп. услуги",
+  "Tab reaches exactly one service's checkbox at a time": "Tab попадает ровно на один чекбокс услуги за раз",
+  "Check or uncheck it": "Отметить или снять отметку",
+  "Once checked, step into that row's own controls — the segment picker (connecting itineraries only), the quantity stepper, then Confirm":
+    "После отметки — переход к элементам управления строки: выбору участков (только для стыковочных перелётов), счётчику количества, затем к Confirm",
+  "Step back toward the checkbox": "Вернуться назад к чекбоксу",
+  "Confirm turns into the price — click it, or press Enter once it has focus, to see the EMD":
+    "Confirm превращается в цену — кликните по ней (или нажмите Enter, когда на ней фокус), чтобы увидеть EMD",
+  Finishing: "Завершение",
+  "Once every step is done": "Когда все шаги пройдены",
+  or: "или",
+  "Full reference": "Полный справочник",
+  "Every shortcut in the app, grouped, showing your own current bindings.": "Все горячие клавиши приложения по группам — с вашими текущими сочетаниями.",
+  "Customizing shortcuts": "Настройка горячих клавиш",
+  "Any Alt/Ctrl shortcut can be rebound from Settings → Keyboard shortcuts (account menu, top right).":
+    "Любое сочетание с Alt/Ctrl можно переназначить в Настройках → Горячие клавиши (меню аккаунта в правом верхнем углу).",
+  "This page always reflects your own current bindings, not just the defaults.": "Эта страница всегда показывает ваши текущие сочетания, а не только значения по умолчанию.",
 };

@@ -12,6 +12,7 @@ import { FontSizeProvider } from "./fontSize";
 import { TabIconsProvider } from "./tabIcons";
 import { DesktopNotificationsProvider } from "./desktopNotifications";
 import { ShortcutsProvider } from "./useShortcuts";
+import { ShortcutHintsProvider } from "./shortcutHints";
 import { LanguageProvider } from "./i18n";
 import { Login } from "./pages/Login";
 import { Dashboard } from "./pages/Dashboard";
@@ -26,6 +27,7 @@ import { BoardingPax } from "./pages/BoardingPax";
 import { UserAdmin } from "./pages/UserAdmin";
 import { Analytics } from "./pages/Analytics";
 import { EmptyState } from "./pages/EmptyState";
+import { HelpPage } from "./pages/HelpPage";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
@@ -35,36 +37,42 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <FontSizeProvider>
             <TabIconsProvider>
               <ShortcutsProvider>
-                <ToastProvider>
-                  <ConfirmProvider>
-                    <DesktopNotificationsProvider>
-                      <AuthProvider>
-                        <TabsProvider>
-                          <Routes>
-                            <Route path="/login" element={<Login />} />
-                            <Route element={<RequireAuth />}>
-                              <Route path="/" element={<App />}>
-                                <Route index element={<Dashboard />} />
-                                <Route path="search" element={<Search />} />
-                                <Route path="boarding-search" element={<BoardingSearch />} />
-                                <Route path="checkin/:flightId/pnr/:passengerId" element={<PnrView />} />
-                                <Route path="flights/new" element={<NewFlight />} />
-                                <Route path="flights/:flightId" element={<FlightCard />} />
-                                <Route path="checkin/:flightId" element={<CheckIn />} />
-                                <Route path="boarding/:flightId" element={<Boarding />} />
-                                <Route path="boarding/:flightId/pax/:passengerId" element={<BoardingPax />} />
-                                <Route path="users-admin" element={<UserAdmin />} />
-                                <Route path="analytics" element={<Analytics />} />
-                                <Route path="empty" element={<EmptyState />} />
-                                <Route path="*" element={<Navigate to="/" replace />} />
+                <ShortcutHintsProvider>
+                  <ToastProvider>
+                    <ConfirmProvider>
+                      <DesktopNotificationsProvider>
+                        <AuthProvider>
+                          <TabsProvider>
+                            <Routes>
+                              <Route path="/login" element={<Login />} />
+                              <Route element={<RequireAuth />}>
+                                {/* Standalone — no TopTabs/SideDrawer chrome, since it's meant to be
+                                    opened in its own browser tab (see TopTabs' Help button) rather
+                                    than living in this app's own tab strip. */}
+                                <Route path="/help" element={<HelpPage />} />
+                                <Route path="/" element={<App />}>
+                                  <Route index element={<Dashboard />} />
+                                  <Route path="search" element={<Search />} />
+                                  <Route path="boarding-search" element={<BoardingSearch />} />
+                                  <Route path="checkin/:flightId/pnr/:passengerId" element={<PnrView />} />
+                                  <Route path="flights/new" element={<NewFlight />} />
+                                  <Route path="flights/:flightId" element={<FlightCard />} />
+                                  <Route path="checkin/:flightId" element={<CheckIn />} />
+                                  <Route path="boarding/:flightId" element={<Boarding />} />
+                                  <Route path="boarding/:flightId/pax/:passengerId" element={<BoardingPax />} />
+                                  <Route path="users-admin" element={<UserAdmin />} />
+                                  <Route path="analytics" element={<Analytics />} />
+                                  <Route path="empty" element={<EmptyState />} />
+                                  <Route path="*" element={<Navigate to="/" replace />} />
+                                </Route>
                               </Route>
-                            </Route>
-                          </Routes>
-                        </TabsProvider>
-                      </AuthProvider>
-                    </DesktopNotificationsProvider>
-                  </ConfirmProvider>
-                </ToastProvider>
+                            </Routes>
+                          </TabsProvider>
+                        </AuthProvider>
+                      </DesktopNotificationsProvider>
+                    </ConfirmProvider>
+                  </ToastProvider>
+                </ShortcutHintsProvider>
               </ShortcutsProvider>
             </TabIconsProvider>
           </FontSizeProvider>

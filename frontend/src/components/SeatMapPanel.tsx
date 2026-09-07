@@ -10,6 +10,7 @@ import { SeatInfoPopover } from "./SeatInfoPopover";
 import { SeatHistoryModal } from "./SeatHistoryModal";
 import { useLanguage } from "../i18n";
 import { useHotkey } from "../useShortcuts";
+import { useShortcutTitle } from "../shortcutHints";
 
 interface Props {
   flightId: number;
@@ -82,6 +83,9 @@ export function SeatMapPanel({
   useHotkey("seatmap.zoom-in", () => setZoom((z) => Math.min(150, z + 10)));
   useHotkey("seatmap.zoom-out", () => setZoom((z) => Math.max(50, z - 10)));
   useHotkey("seatmap.zoom-reset", () => setZoom(100));
+  const zoomInTitle = useShortcutTitle("seatmap.zoom-in", t("Zoom in"));
+  const zoomOutTitle = useShortcutTitle("seatmap.zoom-out", t("Zoom out"));
+  const zoomResetTitle = useShortcutTitle("seatmap.zoom-reset", t("Reset zoom to 100%"));
   const [internalOrientation, setInternalOrientation] = useState<"vertical" | "horizontal">("vertical");
   const orientation = orientationProp ?? internalOrientation;
   function toggleOrientation() {
@@ -99,6 +103,12 @@ export function SeatMapPanel({
   // skips plain buttons by default unless Full Keyboard Access is on) outside this app's control.
   useHotkey("seatmap.legend", () => setLegendOpen((o) => !o));
   useHotkey("seatmap.layers", () => setLayersOpen((o) => !o));
+  const rotateTitle = useShortcutTitle(
+    "seatmap.rotate",
+    orientation === "vertical" ? t("Switch to horizontal layout") : t("Switch to vertical layout")
+  );
+  const legendTitle = useShortcutTitle("seatmap.legend", t("Legend"));
+  const layersTitle = useShortcutTitle("seatmap.layers", t("Layers"));
   const [editingSeat, setEditingSeat] = useState<SeatCell | null>(null);
   const [infoSeat, setInfoSeat] = useState<{ seat: SeatCell; x: number; y: number } | null>(null);
   const [historySeat, setHistorySeat] = useState<string | null>(null);
@@ -181,13 +191,13 @@ export function SeatMapPanel({
           {/* tabIndex=-1: fully covered by the seatmap.zoom-in/out/reset shortcuts (+/-/0) — no need
               for these to also be a (poorly-focus-styled, all:unset) Tab stop. */}
           <div className="seatmap-zoom">
-            <button type="button" className="seatmap-zoom-btn" tabIndex={-1} onClick={() => setZoom((z) => Math.max(50, z - 10))} aria-label={t("Zoom out")}>
+            <button type="button" className="seatmap-zoom-btn" tabIndex={-1} onClick={() => setZoom((z) => Math.max(50, z - 10))} aria-label={t("Zoom out")} title={zoomOutTitle}>
               <MinusIcon size={14} />
             </button>
-            <button type="button" className="seatmap-zoom-value" tabIndex={-1} onClick={() => setZoom(100)} title={t("Reset zoom to 100%")}>
+            <button type="button" className="seatmap-zoom-value" tabIndex={-1} onClick={() => setZoom(100)} title={zoomResetTitle}>
               {zoom}%
             </button>
-            <button type="button" className="seatmap-zoom-btn" tabIndex={-1} onClick={() => setZoom((z) => Math.min(150, z + 10))} aria-label={t("Zoom in")}>
+            <button type="button" className="seatmap-zoom-btn" tabIndex={-1} onClick={() => setZoom((z) => Math.min(150, z + 10))} aria-label={t("Zoom in")} title={zoomInTitle}>
               <PlusIcon size={14} />
             </button>
           </div>
@@ -198,14 +208,14 @@ export function SeatMapPanel({
               type="button"
               className={`seatmap-tool-btn seatmap-orientation-btn ${orientation === "horizontal" ? "active" : ""}`}
               tabIndex={-1}
-              title={orientation === "vertical" ? t("Switch to horizontal layout") : t("Switch to vertical layout")}
+              title={rotateTitle}
               onClick={toggleOrientation}
             >
               <OrientationToggleIcon size={16} />
             </button>
           )}
           <div className="seatmap-popover-anchor" ref={legendRef}>
-            <button ref={legendBtnRef} type="button" className="seatmap-tool-btn" tabIndex={-1} title={t("Legend")} onClick={() => setLegendOpen((o) => !o)}>
+            <button ref={legendBtnRef} type="button" className="seatmap-tool-btn" tabIndex={-1} title={legendTitle} onClick={() => setLegendOpen((o) => !o)}>
               <RowsIcon size={16} />
             </button>
             {legendOpen && (
@@ -245,7 +255,7 @@ export function SeatMapPanel({
             )}
           </div>
           <div className="seatmap-popover-anchor" ref={layersRef}>
-            <button ref={layersBtnRef} type="button" className="seatmap-tool-btn" tabIndex={-1} title={t("Layers")} onClick={() => setLayersOpen((o) => !o)}>
+            <button ref={layersBtnRef} type="button" className="seatmap-tool-btn" tabIndex={-1} title={layersTitle} onClick={() => setLayersOpen((o) => !o)}>
               <LayersIcon size={16} />
             </button>
             {layersOpen && (

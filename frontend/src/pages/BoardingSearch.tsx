@@ -7,6 +7,7 @@ import { SortTh, useSort } from "../components/SortTh";
 import { useRegisterTab } from "../tabs";
 import { useLanguage } from "../i18n";
 import { useHotkey } from "../useShortcuts";
+import { useShortcutTitle } from "../shortcutHints";
 import { clickable } from "../interactive";
 
 // Matches Search.tsx's fmtStd — same UTC wall-clock convention as the rest of the app.
@@ -51,6 +52,7 @@ export function BoardingSearch() {
   const [destination, setDestination] = useState("");
   const queryInputRef = useRef<HTMLInputElement>(null);
   useHotkey("nav.search-focus", () => queryInputRef.current?.focus());
+  const searchFocusTitle = useShortcutTitle("nav.search-focus");
 
   useEffect(() => {
     api.listFlights().then(setFlights).catch((e) => setError(e.message));
@@ -88,7 +90,7 @@ export function BoardingSearch() {
       <div className="panel">
         <div className="toolbar" style={{ flexWrap: "wrap", alignItems: "flex-end" }}>
           <Field label={t("Flight")} style={{ minWidth: 160 }}>
-            <input ref={queryInputRef} value={query} onChange={(e) => setQuery(e.target.value)} placeholder="e.g. SU5678" autoFocus />
+            <input ref={queryInputRef} value={query} onChange={(e) => setQuery(e.target.value)} placeholder="e.g. SU5678" title={searchFocusTitle} autoFocus />
           </Field>
           <Select
             label={t("Status")}
