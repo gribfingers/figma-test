@@ -47,18 +47,38 @@ interface RowProps {
   onUpdate: (patch: Partial<RowState>) => void;
   onConfirm: () => void;
   onShowEmd: () => void;
+  /** Roving-tabindex plumbing for the checkbox column — see ExtraServicesStep. A checkbox is not a
+   *  text input, so (like every other control here) Safari without Full Keyboard Access skips it in
+   *  Tab order; only one checkbox in the whole list is a real Tab stop at a time, and ArrowUp/ArrowDown
+   *  move real focus between rows via registerRef. */
+  tabIndex: number;
+  onFocusCheckbox: () => void;
+  registerCheckboxRef: (el: HTMLInputElement | null) => void;
+  onMoveRow: (delta: 1 | -1) => void;
 }
 
 /**
- * One service row. Checking it (a real checkbox — always Tab/keyboard-reachable regardless of
- * Safari's Full Keyboard Access setting) reveals its own controls, none of which are text inputs —
- * so, same as BaggageStep's row, the checkbox and every revealed control chain to each other via
+ * One service row. Checking it reveals its own controls, none of which are text inputs — so, same
+ * as BaggageStep's row, the checkbox and every revealed control chain to each other via
  * ArrowLeft/ArrowRight and an explicit `.focus()` instead of depending on Tab to reach them.
  */
-function ExtraServiceRow({ option: o, row, segments, t, onToggle, onUpdate, onConfirm, onShowEmd }: RowProps) {
+function ExtraServiceRow({
+  option: o,
+  row,
+  segments,
+  t,
+  onToggle,
+  onUpdate,
+  onConfirm,
+  onShowEmd,
+  tabIndex,
+  onFocusCheckbox,
+  registerCheckboxRef,
+  onMoveRow,
+}: RowProps) {
   const checked = !!row;
   const hasSegPicker = segments.length > 1;
-  const checkboxRef = useRef<HTMLInputElement>(null);
+  const checkboxRef = useRef<HTMLInputElement | null>(null);
   const segRef = useRef<SelectHandle>(null);
   const minusRef = useRef<HTMLButtonElement>(null);
   const plusRef = useRef<HTMLButtonElement>(null);
@@ -79,14 +99,25 @@ function ExtraServiceRow({ option: o, row, segments, t, onToggle, onUpdate, onCo
     <div className="extra-service-row">
       <label className="extra-service-checkbox">
         <input
-          ref={checkboxRef}
+          ref={(el) => {
+            checkboxRef.current = el;
+            registerCheckboxRef(el);
+          }}
           type="checkbox"
           checked={checked}
+          tabIndex={tabIndex}
+          onFocus={onFocusCheckbox}
           onChange={(e) => onToggle(e.target.checked)}
           onKeyDown={(e) => {
             if (checked && e.key === "ArrowRight") {
               e.preventDefault();
               focusFirst();
+            } else if (e.key === "ArrowDown") {
+              e.preventDefault();
+              onMoveRow(1);
+            } else if (e.key === "ArrowUp") {
+              e.preventDefault();
+              onMoveRow(-1);
             }
           }}
         />
@@ -200,6 +231,14 @@ export function ExtraServicesStep({ flight, passenger, segments, onConfirmedChan
   const { t } = useLanguage();
   const [rows, setRows] = useState<Record<string, RowState>>({});
   const [emdItem, setEmdItem] = useState<SeatServiceItem | null>(null);
+  const [focusedId, setFocusedId] = useState(ALL_OPTIONS[0]?.id ?? "");
+  const checkboxRefs = useRef(new Map<string, HTMLInputElement>());
+
+  function moveRow(fromId: string, delta: 1 | -1) {
+    const idx = ALL_OPTIONS.findIndex((o) => o.id === fromId);
+    const next = ALL_OPTIONS[idx + delta];
+    if (next) checkboxRefs.current.get(next.id)?.focus();
+  }
 
   function toggle(id: string, checked: boolean) {
     if (checked) {
@@ -250,6 +289,13 @@ export function ExtraServicesStep({ flight, passenger, segments, onConfirmedChan
                   const row = rows[o.id];
                   if (row?.confirmed) setEmdItem({ rfisc: o.code, label: t(o.label), price: row.confirmed.price, paid: row.confirmed.paid });
                 }}
+                tabIndex={o.id === focusedId ? 0 : -1}
+                onFocusCheckbox={() => setFocusedId(o.id)}
+                registerCheckboxRef={(el) => {
+                  if (el) checkboxRefs.current.set(o.id, el);
+                  else checkboxRefs.current.delete(o.id);
+                }}
+                onMoveRow={(delta) => moveRow(o.id, delta)}
               />
             ))}
           </div>
