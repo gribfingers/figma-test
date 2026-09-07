@@ -109,7 +109,13 @@ function ExtraServiceRow({
           onFocus={onFocusCheckbox}
           onChange={(e) => onToggle(e.target.checked)}
           onKeyDown={(e) => {
-            if (checked && e.key === "ArrowRight") {
+            // A checkbox only toggles on Space natively — Enter does nothing by default. The
+            // roster's own row checkbox (PnrView) responds to both, so this does too for
+            // consistency across the app.
+            if (e.key === "Enter") {
+              e.preventDefault();
+              onToggle(!checked);
+            } else if (checked && e.key === "ArrowRight") {
               e.preventDefault();
               focusFirst();
             } else if (e.key === "ArrowDown") {
