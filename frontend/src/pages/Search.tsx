@@ -230,7 +230,20 @@ export function Search() {
           {/* tabIndex=-1: opt out of Chrome/Safari's automatic Tab-stop for scrollable regions —
               see the same note in PnrView.tsx's roster table. */}
           <div className="table-scroll" tabIndex={-1}>
-            <table>
+            {/* table-layout: fixed (via .pax-search-table) + this colgroup pin every column's width
+                to the header row alone — without it the browser's default table-layout:auto sizes
+                columns from whichever rows are currently visible, so switching a filter (a different
+                subset of names/PNRs/statuses, each a different width) visibly resized the columns
+                on every click. */}
+            <table className="pax-search-table">
+              <colgroup>
+                <col style={{ width: "24%" }} />
+                <col style={{ width: "13%" }} />
+                <col style={{ width: "13%" }} />
+                <col style={{ width: "18%" }} />
+                <col style={{ width: "14%" }} />
+                <col style={{ width: "18%" }} />
+              </colgroup>
               <thead>
                 <tr>
                   <SortTh id="name" label={t("Name")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />

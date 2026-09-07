@@ -2362,6 +2362,13 @@ a { color: var(--accent); }
 .pax-search-results-head { display: flex; align-items: center; gap: 16px; padding-top: 16px; padding-bottom: 12px; }
 .pax-search-results-head .passengers-count { margin-left: auto; }
 
+/* Fixes column widths to the <colgroup> below instead of the browser's default table-layout:auto,
+   which sizes each column from whichever rows happen to be visible — switching the status quick-
+   filter swaps in a different subset of names/PNRs/statuses (each a different width), so columns
+   were visibly resizing on every click. */
+.pax-search-table { table-layout: fixed; }
+.pax-search-table td { overflow: hidden; text-overflow: ellipsis; }
+
 .passengers-table th, .passengers-table td { padding: 8px 10px; white-space: nowrap; }
 .passengers-table thead th { position: sticky; top: 0; background: var(--panel); z-index: 1; }
 tr.pax-row-active { background: var(--accent-selected); box-shadow: inset 3px 0 0 0 var(--accent); }
