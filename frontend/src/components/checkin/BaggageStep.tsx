@@ -324,7 +324,7 @@ function CheckedBagRow({ row, origin, segments, destinationOptions, calculated, 
         <>
           <span className="baggage-row-origin">{origin} -</span>
           {locked ? (
-            <span className="baggage-row-static mono">{row.destination}</span>
+            <span className="baggage-row-static mono" style={{ width: 110, flex: "0 0 auto" }}>{row.destination}</span>
           ) : (
             <Select
               ref={toRef}
@@ -341,7 +341,7 @@ function CheckedBagRow({ row, origin, segments, destinationOptions, calculated, 
         </>
       )}
       {locked ? (
-        <span className="baggage-row-static baggage-row-static-weight mono">{row.weight} kg</span>
+        <span className="baggage-row-static baggage-row-static-weight mono" style={{ width: 110 }}>{row.weight} kg</span>
       ) : (
         <div className="field2" style={{ width: 110 }}>
           <input
@@ -439,11 +439,13 @@ function CheckedBagRow({ row, origin, segments, destinationOptions, calculated, 
           <button type="button" className="link-btn" onClick={() => onEmd(tone)}>
             EMD
           </button>
-          {row.tagNumber ? (
-            <span className="baggage-row-tag-display mono">{t("Tag")} {row.tagNumber}</span>
-          ) : (
-            <button type="button" className="link-btn" onClick={onManualTag}>{t("Tag manually")}</button>
-          )}
+          {/* Always a link, whether or not a tag number is set yet — switching to a plain <span> once
+              one is entered (the old behavior) changed this item's width/style and shifted everything
+              after it in the row. Clicking it when a number's already set just reopens the same modal
+              (already pre-fills from row.tagNumber) so the agent can see or correct it. */}
+          <button type="button" className={`link-btn ${row.tagNumber ? "mono" : ""}`} onClick={onManualTag}>
+            {row.tagNumber ? `${t("Tag")} ${row.tagNumber}` : t("Tag manually")}
+          </button>
           <button type="button" className="link-btn" onClick={onTransfer} disabled={otherPassengers.length === 0}>
             {t("Transfer to another passenger")}
           </button>
