@@ -14,7 +14,7 @@ import { TransferBagModal } from "./TransferBagModal";
 import { useToast } from "../../toast";
 import { useLanguage } from "../../i18n";
 import { useHotkey } from "../../useShortcuts";
-import { useShortcutTitle } from "../../shortcutHints";
+import { useShortcutTitle, ShortcutBadge } from "../../shortcutHints";
 
 interface CarryOnRow {
   id: number;
@@ -167,6 +167,7 @@ export function BaggageStep({ flight, passenger, passengers, segments, initialRo
   useHotkey("baggage.calculate", calculate);
   useHotkey("baggage.confirm", confirm);
   const addRowTitle = useShortcutTitle("baggage.add-row", t("Add baggage"));
+  const addCarryOnTitle = useShortcutTitle("baggage.add-carryon", t("Add carry-on"));
   const allowanceTitle = useShortcutTitle("baggage.allowance", t("Baggage allowance"));
   const calculateTitle = useShortcutTitle("baggage.calculate", t("Calculate"));
   const confirmTitle = useShortcutTitle("baggage.confirm", t("Confirm"));
@@ -174,7 +175,8 @@ export function BaggageStep({ flight, passenger, passengers, segments, initialRo
   return (
     <div className="baggage-step">
       <div className="docs-step-top">
-        <button type="button" className="tertiary docs-add-link" title={addRowTitle} onClick={() => mutateRows((prev) => [...prev, emptyBagRow(flight.destination)])}>
+        <button type="button" className="tertiary docs-add-link shortcut-hint-host" title={addRowTitle} onClick={() => mutateRows((prev) => [...prev, emptyBagRow(flight.destination)])}>
+          <ShortcutBadge id="baggage.add-row" />
           {t("Add baggage")}
         </button>
         <div className="baggage-step-actions">
@@ -185,10 +187,14 @@ export function BaggageStep({ flight, passenger, passengers, segments, initialRo
           <button type="button" className="icon-button" aria-label={t("Bag tag")}>
             <TagIcon size={18} />
           </button>
-          <button type="button" className="tertiary" title={calculateTitle} onClick={calculate}>
+          <button type="button" className="tertiary shortcut-hint-host" title={calculateTitle} onClick={calculate}>
+            <ShortcutBadge id="baggage.calculate" />
             {t("Calculate")}
           </button>
-          <button type="button" className="tertiary" title={confirmTitle} onClick={confirm}>{t("Confirm")}</button>
+          <button type="button" className="tertiary shortcut-hint-host" title={confirmTitle} onClick={confirm}>
+            <ShortcutBadge id="baggage.confirm" />
+            {t("Confirm")}
+          </button>
         </div>
       </div>
 
@@ -214,7 +220,8 @@ export function BaggageStep({ flight, passenger, passengers, segments, initialRo
       </div>
 
       <div className="baggage-carryon-section">
-        <button type="button" className="tertiary docs-add-link baggage-carryon-add" onClick={addCarryOn}>
+        <button type="button" className="tertiary docs-add-link baggage-carryon-add shortcut-hint-host" title={addCarryOnTitle} onClick={addCarryOn}>
+          <ShortcutBadge id="baggage.add-carryon" />
           {t("Add carry-on")}
         </button>
         {carryOn.length > 0 && (

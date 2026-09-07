@@ -62,3 +62,15 @@ export function useShortcutTitle(id: string, base?: string): string | undefined 
   if (!hint) return base;
   return base ? `${base} (${hint})` : hint;
 }
+
+/**
+ * Small always-visible combo tag pinned to a button's top-right corner — not a hover tooltip, so it
+ * reads at a glance without moving the mouse. Renders nothing when the "Show keyboard shortcuts"
+ * setting is off or the shortcut has no combo. The parent needs `position: relative` (see the
+ * `.shortcut-hint-host` class) so this positions against the button itself, not some ancestor.
+ */
+export function ShortcutBadge({ id }: { id: string }) {
+  const hint = useShortcutHint(id);
+  if (!hint) return null;
+  return <span className="shortcut-hint-badge">{hint}</span>;
+}

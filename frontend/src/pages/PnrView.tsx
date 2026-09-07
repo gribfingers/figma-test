@@ -31,7 +31,7 @@ import { usePersistentState } from "../usePersistentState";
 import { useLanguage } from "../i18n";
 import { useCanEdit } from "../auth";
 import { useHotkey } from "../useShortcuts";
-import { useShortcutTitle } from "../shortcutHints";
+import { useShortcutTitle, ShortcutBadge } from "../shortcutHints";
 import { trackEvent } from "../analytics";
 import { isFlightDeparted } from "../flightPhase";
 
@@ -708,7 +708,10 @@ export function PnrView() {
               <button type="button" className="icon-button" aria-label={t("Refresh")}>
                 <RefreshIcon size={18} />
               </button>
-              <button type="button" className="tertiary" title={flowFinishTitle} onClick={() => setFinishConfirmOpen(true)}>{t("Finish")}</button>
+              <button type="button" className="tertiary shortcut-hint-host" title={flowFinishTitle} onClick={() => setFinishConfirmOpen(true)}>
+                <ShortcutBadge id="flow.finish" />
+                {t("Finish")}
+              </button>
               <span className="pnr-flow-checkin-wrap">
                 <button
                   type="button"
@@ -723,7 +726,16 @@ export function PnrView() {
                   <span className="pnr-flow-checkin-tooltip">{t("Seat and verify documents for all passengers first")}</span>
                 )}
               </span>
-              <button type="button" className="tertiary" disabled={flowStep === "services"} title={flowStep === "services" ? undefined : flowNextTitle} onClick={nextFlowStep}>{t("Next")}</button>
+              <button
+                type="button"
+                className="tertiary shortcut-hint-host"
+                disabled={flowStep === "services"}
+                title={flowStep === "services" ? undefined : flowNextTitle}
+                onClick={nextFlowStep}
+              >
+                {flowStep !== "services" && <ShortcutBadge id="flow.next" />}
+                {t("Next")}
+              </button>
             </div>
           </div>
         )}

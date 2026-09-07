@@ -1,7 +1,8 @@
-import { Fragment, ReactNode } from "react";
+import { Fragment, ReactNode, useState } from "react";
 import { SHORTCUTS, formatCombo } from "../shortcuts";
 import { useShortcutSettings } from "../useShortcuts";
 import { useLanguage, Language } from "../i18n";
+import { RU } from "../i18n/ru";
 import { HelpIcon } from "../components/Icon";
 
 /** A single key/combo badge — always formatted for the viewer's own OS (⌥/⌘ on Mac, Alt/Ctrl
@@ -56,7 +57,12 @@ function Step({ n, title, children }: { n: number; title: string; children: Reac
 }
 
 export function HelpPage() {
-  const { t, language, setLanguage } = useLanguage();
+  // Deliberately its own local language state, seeded from the app's current setting but never
+  // written back to it (no shared LanguageProvider here) — this page opens in its own browser tab
+  // (see TopTabs' Help button), and flipping RUS/ENG here shouldn't also flip every other open tab.
+  const { language: appLanguage } = useLanguage();
+  const [language, setLanguage] = useState<Language>(appLanguage);
+  const t = (text: string) => (language === "en" ? text : RU[text] ?? text);
 
   return (
     <div className="help-page">

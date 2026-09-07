@@ -3487,6 +3487,24 @@ tr.row-hover { cursor: pointer; }
   .analytics-stats { grid-template-columns: 1fr; }
 }
 
+/* Always-visible combo tag pinned to a button's corner (ShortcutBadge, shortcutHints.tsx) — the
+   "Show keyboard shortcuts" setting's on-button hint, deliberately not a hover-only tooltip so it
+   reads at a glance. The host button needs this class for position:relative; padding-top makes room
+   so the badge doesn't overlap the button's own label. */
+.shortcut-hint-host { position: relative; padding-top: 15px !important; }
+.shortcut-hint-badge {
+  position: absolute;
+  top: 2px;
+  right: 6px;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 700;
+  font-family: var(--mono);
+  color: var(--ok);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
 /* A small, static (non-interactive) key-combo chip — used inline in HelpPage prose next to a plain
    ArrowUp/Enter/Escape mention that isn't a registered SHORTCUTS id, and reused by HotkeyBadge for
    ones that are. Deliberately not the same class as .shortcut-key (that one's a button with its own

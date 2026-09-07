@@ -10,7 +10,7 @@ import { EmdModal } from "./EmdModal";
 import { useLanguage } from "../../i18n";
 import { usePopoverPosition } from "../../usePopoverPosition";
 import { useHotkey } from "../../useShortcuts";
-import { useShortcutTitle } from "../../shortcutHints";
+import { useShortcutTitle, ShortcutBadge } from "../../shortcutHints";
 import { clickable } from "../../interactive";
 
 /** "Swap seat…" (Seats step, once seated) and "Reprint BP" tucked under one menu, same
@@ -83,7 +83,8 @@ function RowActionsMenu({ onSwapSeat }: { onSwapSeat?: () => void }) {
       className={`actions-select ${open ? "open" : ""}`}
       onClick={(e) => e.stopPropagation()}
     >
-      <button ref={btnRef} type="button" className="tertiary" aria-haspopup="menu" aria-expanded={open} title={actionsMenuTitle} onClick={() => setOpen((o) => !o)}>
+      <button ref={btnRef} type="button" className="tertiary shortcut-hint-host" aria-haspopup="menu" aria-expanded={open} title={actionsMenuTitle} onClick={() => setOpen((o) => !o)}>
+        <ShortcutBadge id="checkin.actions-menu" />
         {t("Actions")} <ChevronDownIcon size={16} className="chevron-flip" />
       </button>
       {open &&
