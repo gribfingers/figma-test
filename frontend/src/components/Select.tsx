@@ -29,6 +29,11 @@ interface Props {
   disabled?: boolean;
   error?: boolean;
   style?: React.CSSProperties;
+  /** Extra keydown handling layered on top of the trigger's own (open/close/arrow-within-menu) —
+   *  e.g. a toolbar chaining ArrowRight/Left across several fields the way BaggageStep's row chains
+   *  Weight -> To/Type by ref. Only called when the menu is closed; call e.preventDefault() to stop
+   *  the key reaching the trigger's default handling. */
+  onTriggerKeyDown?: (e: React.KeyboardEvent<HTMLButtonElement>) => void;
 }
 
 /**
@@ -40,7 +45,7 @@ interface Props {
  * overflow:hidden/auto — the app has no page-level scroll, so several
  * containers (e.g. the flight card body) now scroll/clip internally.
  */
-export const Select = forwardRef<SelectHandle, Props>(function Select({ label, value, onChange, options, disabled, error, style }, ref) {
+export const Select = forwardRef<SelectHandle, Props>(function Select({ label, value, onChange, options, disabled, error, style, onTriggerKeyDown }, ref) {
   const [open, setOpen] = useState(false);
   // Arrow-key cursor within the open listbox — independent of `value` until Enter commits it,
   // same as a native <select>'s open-menu behavior.
@@ -130,7 +135,9 @@ export const Select = forwardRef<SelectHandle, Props>(function Select({ label, v
           if (!open && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
             e.preventDefault();
             openMenu();
+            return;
           }
+          if (!open) onTriggerKeyDown?.(e);
         }}
       >
         {selected?.label ?? ""}

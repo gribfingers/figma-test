@@ -227,6 +227,9 @@ export function HelpPage() {
         <Step n={1} title={t("Boarding Search")}>
           <li>{t("Open Boarding Search from anywhere")} — <HotkeyBadge id="nav.boarding-search" /></li>
           <li>{t("Jump straight into the flight-number field")} — <Key combo="/" /></li>
+          <li>
+            {t("From the flight-number field, reach the Status/Departure/Arrival dropdowns")} — <Key combo="arrowdown" />, {t("then move between them")} — <Key combo="arrowleft" /> <Key combo="arrowright" />
+          </li>
           <li>{t("Tab reaches exactly one result row at a time")}</li>
           <li>
             {t("Move between rows")} — <Key combo="arrowup" /> <Key combo="arrowdown" />, {t("open it")} — <Key combo="enter" />
@@ -252,6 +255,9 @@ export function HelpPage() {
           <li>
             {t("The status filter (All/Yet to board/Boarded), the facet filter (Docs to verify, Services to pay, …) and the Sq №/Seat/Last Name search-mode tabs all follow the same one-Tab-stop-plus-arrow-keys pattern")}
           </li>
+          <li>
+            {t("From the search field, reach the toolbar above and below it")} — <Key combo="arrowup" /> <Key combo="arrowdown" />, {t("which chains all the way up to Start boarding/Close flight and the scan button")}
+          </li>
         </Step>
 
         <Step n={3} title={t("Passenger detail")}>
@@ -259,9 +265,14 @@ export function HelpPage() {
           <li>{t("Board this passenger")} — <HotkeyBadge id="boarding.board" /></li>
           <li>{t("Undo a boarding")} — <HotkeyBadge id="boarding.unboard" /></li>
           <li>{t("Open Pay, once a service payment is outstanding")} — <HotkeyBadge id="boarding.pay" /></li>
+          <li>{t("Reprint the boarding pass")} — <HotkeyBadge id="boarding.reprint" /></li>
           <li>
             {t("The Documents/Seats/Baggage/Extra services shortcut icons follow the same one-Tab-stop-plus-arrow-keys pattern; Enter opens that step in a new tab")}
           </li>
+          <li>
+            {t("From the search field, reach the step icons and the Board/Unboard/Pay and Reprint BP buttons")} — <Key combo="arrowdown" />
+          </li>
+          <li>{t("The seat map works with the same keyboard scheme as the check-in flow's Seats step — Tab reaches one seat, arrow keys move between seats")}</li>
         </Step>
       </Section>
 

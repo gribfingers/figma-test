@@ -166,6 +166,13 @@ export function BoardingPax() {
       setMessage({ kind: "error", text: e.message });
     }
   }
+  // Simulated, same as ActionsPanel's own PrintBoardingPassPanel — this app has no real printer
+  // integration, so both just confirm via toast.
+  function reprintThis() {
+    if (!canEdit) return;
+    trackEvent("action", "boarding.reprint");
+    showToast(t("Boarding pass sent to printer"));
+  }
 
   function runSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -188,9 +195,19 @@ export function BoardingPax() {
   useHotkey("boarding.board", boardThis, canEdit && canBoardThis);
   useHotkey("boarding.unboard", unboardThis, canEdit && isBoarded);
   useHotkey("boarding.pay", () => setPayOpen(true), canEdit && isUnpaid);
+  useHotkey("boarding.reprint", reprintThis, canEdit);
   const boardTitle = useShortcutTitle("boarding.board", t("Board"));
   const unboardTitle = useShortcutTitle("boarding.unboard", t("Unboard"));
   const payTitle = useShortcutTitle("boarding.pay", t("Pay"));
+  const reprintTitle = useShortcutTitle("boarding.reprint", t("Reprint boarding pass"));
+
+  // The action button (Board/Unboard/Pay) and Reprint BP are plain <button>s, each already reachable
+  // via its own hotkey above — these refs let the search field also chain arrow-key focus onto them
+  // and the step icons below, same reasoning as Boarding.tsx's toolbar chain: Tab actually landing on
+  // a <button> depends on a browser/OS setting (Safari's Full Keyboard Access) outside this app's
+  // control, so a keyboard-only agent who doesn't know the Alt-combos needs another way in.
+  const actionBtnRef = useRef<HTMLButtonElement>(null);
+  const reprintRef = useRef<HTMLButtonElement>(null);
 
   // Roving tabindex over the quick-jump-to-step icons (Documents/Seats/Baggage/Extra services) —
   // same one-Tab-stop-plus-arrow-keys pattern as everywhere else, so Tab reaching any of them at all
@@ -255,6 +272,13 @@ export function BoardingPax() {
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t("Search")}
             title={searchFocusTitle}
+            onKeyDown={(e) => {
+              // ArrowDown, not Right — Right already moves the text cursor within this input.
+              if (e.key === "ArrowDown" && canEdit) {
+                e.preventDefault();
+                (stepIconRefs.current.get(focusedStep) ?? actionBtnRef.current)?.focus();
+              }
+            }}
           />
         </form>
       </div>
@@ -290,6 +314,8 @@ export function BoardingPax() {
                   onKeyDown={(e) => {
                     if (e.key === "ArrowRight") { e.preventDefault(); moveStepIcon(1); }
                     else if (e.key === "ArrowLeft") { e.preventDefault(); moveStepIcon(-1); }
+                    else if (e.key === "ArrowUp") { e.preventDefault(); searchInputRef.current?.focus(); }
+                    else if (e.key === "ArrowDown") { e.preventDefault(); actionBtnRef.current?.focus(); }
                   }}
                   onClick={() => {
                     presetFlowSelection(passenger.id);
@@ -316,25 +342,62 @@ export function BoardingPax() {
           {canEdit && (
             <div className="boarding-pax-actions">
               {isBoarded ? (
-                <button type="button" className="secondary boarding-pax-action-btn" title={unboardTitle} onClick={unboardThis}>
+                <button
+                  ref={actionBtnRef}
+                  type="button"
+                  className="secondary boarding-pax-action-btn"
+                  title={unboardTitle}
+                  onClick={unboardThis}
+                  onKeyDown={(e) => {
+                    if (e.key === "ArrowUp") { e.preventDefault(); stepIconRefs.current.get(focusedStep)?.focus(); }
+                    else if (e.key === "ArrowRight") { e.preventDefault(); reprintRef.current?.focus(); }
+                  }}
+                >
                   {t("Unboard")}
                 </button>
               ) : isUnpaid ? (
-                <button type="button" className="boarding-pax-action-btn" title={payTitle} onClick={() => setPayOpen(true)}>
+                <button
+                  ref={actionBtnRef}
+                  type="button"
+                  className="boarding-pax-action-btn"
+                  title={payTitle}
+                  onClick={() => setPayOpen(true)}
+                  onKeyDown={(e) => {
+                    if (e.key === "ArrowUp") { e.preventDefault(); stepIconRefs.current.get(focusedStep)?.focus(); }
+                    else if (e.key === "ArrowRight") { e.preventDefault(); reprintRef.current?.focus(); }
+                  }}
+                >
                   {t("Pay")}
                 </button>
               ) : (
                 <button
+                  ref={actionBtnRef}
                   type="button"
                   className="boarding-pax-action-btn"
                   disabled={passenger.checkin_status !== "CHECKED_IN"}
                   title={passenger.checkin_status !== "CHECKED_IN" ? undefined : boardTitle}
                   onClick={boardThis}
+                  onKeyDown={(e) => {
+                    if (e.key === "ArrowUp") { e.preventDefault(); stepIconRefs.current.get(focusedStep)?.focus(); }
+                    else if (e.key === "ArrowRight") { e.preventDefault(); reprintRef.current?.focus(); }
+                  }}
                 >
                   {t("Board")}
                 </button>
               )}
-              <button type="button" className="secondary boarding-pax-action-btn">{t("Reprint BP")}</button>
+              <button
+                ref={reprintRef}
+                type="button"
+                className="secondary boarding-pax-action-btn"
+                title={reprintTitle}
+                onClick={reprintThis}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowUp") { e.preventDefault(); stepIconRefs.current.get(focusedStep)?.focus(); }
+                  else if (e.key === "ArrowLeft") { e.preventDefault(); actionBtnRef.current?.focus(); }
+                }}
+              >
+                {t("Reprint BP")}
+              </button>
             </div>
           )}
         </div>

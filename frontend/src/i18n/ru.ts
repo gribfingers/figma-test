@@ -521,6 +521,8 @@ export const RU: Record<string, string> = {
   "Flight Number": "Номер рейса",
   "{n} seats left": "Осталось мест: {n}",
   "Boarding passes sent to printer": "Посадочные талоны отправлены на печать",
+  "Boarding pass sent to printer": "Посадочный талон отправлен на печать",
+  "Reprint boarding pass": "Перепечатать посадочный талон",
   Print: "Печать",
   "No passengers selected.": "Пассажиры не выбраны.",
   "P1 — Elite": "P1 — Элитный",
@@ -861,6 +863,8 @@ export const RU: Record<string, string> = {
   // ---- HelpPage.tsx — Boarding walkthrough ----
   "Open Boarding Search from anywhere": "Открыть Boarding Search из любого места",
   "Jump straight into the flight-number field": "Сразу перейти в поле номера рейса",
+  "From the flight-number field, reach the Status/Departure/Arrival dropdowns": "Из поля номера рейса можно перейти к выпадающим спискам Status/Departure/Arrival",
+  "then move between them": "затем переключаться между ними",
   "Tab reaches exactly one result row at a time": "Tab попадает ровно на одну строку результата за раз",
   "open it": "открыть её",
   "Passenger list": "Список пассажиров",
@@ -876,11 +880,17 @@ export const RU: Record<string, string> = {
   "show the PFS": "показать PFS",
   "The status filter (All/Yet to board/Boarded), the facet filter (Docs to verify, Services to pay, …) and the Sq №/Seat/Last Name search-mode tabs all follow the same one-Tab-stop-plus-arrow-keys pattern":
     "Фильтр статуса (All/Yet to board/Boarded), фильтр по признаку (Docs to verify, Services to pay, …) и вкладки режима поиска (Sq №/Seat/Last Name) — все работают по тому же принципу: один Tab-стоп и перемещение стрелками",
+  "From the search field, reach the toolbar above and below it": "Из поля поиска можно перейти к панели инструментов сверху и снизу от него",
+  "which chains all the way up to Start boarding/Close flight and the scan button": "цепочка доходит до кнопки Start boarding/Close flight и кнопки сканирования",
   "Passenger detail": "Карточка пассажира",
   "Jump straight into the Sq № search field": "Сразу перейти в поле поиска по пор. №",
   "Board this passenger": "Посадить этого пассажира",
   "Undo a boarding": "Отменить посадку",
   "Open Pay, once a service payment is outstanding": "Открыть оплату, если есть неоплаченные услуги",
+  "Reprint the boarding pass": "Перепечатать посадочный талон",
   "The Documents/Seats/Baggage/Extra services shortcut icons follow the same one-Tab-stop-plus-arrow-keys pattern; Enter opens that step in a new tab":
     "Иконки-переходы Documents/Seats/Baggage/Extra services работают по тому же принципу: один Tab-стоп и перемещение стрелками; Enter открывает этот шаг в новой вкладке",
+  "From the search field, reach the step icons and the Board/Unboard/Pay and Reprint BP buttons": "Из поля поиска можно перейти к иконкам шагов и кнопкам Board/Unboard/Pay и Reprint BP",
+  "The seat map works with the same keyboard scheme as the check-in flow's Seats step — Tab reaches one seat, arrow keys move between seats":
+    "Карта мест работает с той же схемой клавиатуры, что и шаг Seats в потоке регистрации — Tab попадает на одно место, стрелки перемещают между местами",
 };

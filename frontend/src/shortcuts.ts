@@ -89,6 +89,7 @@ export const SHORTCUTS: ShortcutDef[] = [
   // same real action (board this one passenger); these two have no list-page equivalent.
   { id: "boarding.unboard", group: "Boarding", label: "Unboard", defaultCombo: "alt|u" },
   { id: "boarding.pay", group: "Boarding", label: "Pay", defaultCombo: "alt|j" },
+  { id: "boarding.reprint", group: "Boarding", label: "Reprint boarding pass", defaultCombo: "alt|p" },
 ];
 
 const MODIFIER_KEYS = new Set(["Control", "Alt", "Shift", "Meta"]);

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, Flight } from "../api";
 import { Field } from "../components/Field";
-import { Select } from "../components/Select";
+import { Select, SelectHandle } from "../components/Select";
 import { SortTh, useSort } from "../components/SortTh";
 import { useRegisterTab } from "../tabs";
 import { useLanguage } from "../i18n";
@@ -52,6 +52,15 @@ export function BoardingSearch() {
   const queryInputRef = useRef<HTMLInputElement>(null);
   useHotkey("nav.search-focus", () => queryInputRef.current?.focus());
   const searchFocusTitle = useShortcutTitle("nav.search-focus");
+
+  // Status/Departure/Arrival are custom-rendered Selects (plain <button> triggers under the hood),
+  // so — same reasoning as BaggageStep's row chaining — Tab actually landing on any of them depends
+  // on a browser/OS setting (Safari's Full Keyboard Access) outside this app's control. ArrowDown
+  // from the Flight input (a real text input, always reachable) opens/focuses Status; ArrowRight/Left
+  // then walks the three fields, ArrowLeft out of Status returning to the Flight input.
+  const statusRef = useRef<SelectHandle>(null);
+  const originRef = useRef<SelectHandle>(null);
+  const destinationRef = useRef<SelectHandle>(null);
 
   useEffect(() => {
     api.listFlights().then(setFlights).catch((e) => setError(e.message));
@@ -104,28 +113,56 @@ export function BoardingSearch() {
       <div className="panel">
         <div className="toolbar" style={{ flexWrap: "wrap", alignItems: "flex-end" }}>
           <Field label={t("Flight")} style={{ minWidth: 160 }}>
-            <input ref={queryInputRef} value={query} onChange={(e) => setQuery(e.target.value)} placeholder="e.g. SU5678" title={searchFocusTitle} autoFocus />
+            <input
+              ref={queryInputRef}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="e.g. SU5678"
+              title={searchFocusTitle}
+              autoFocus
+              onKeyDown={(e) => {
+                // ArrowDown, not Right — Right already moves the text cursor within this input.
+                // .focus(), not .open() — leaves the dropdown closed so a follow-up ArrowRight/Left
+                // chains sideways to Origin/Destination instead of being swallowed by the open menu's
+                // own ArrowUp/Down (which move the highlighted option, not the field).
+                if (e.key === "ArrowDown") { e.preventDefault(); statusRef.current?.focus(); }
+              }}
+            />
           </Field>
           <Select
+            ref={statusRef}
             label={t("Status")}
             style={{ minWidth: 180 }}
             value={status}
             onChange={setStatus}
             options={[{ value: "", label: t("All") }, ...OPEN_STATUSES.map((s) => ({ value: s, label: t(s) }))]}
+            onTriggerKeyDown={(e) => {
+              if (e.key === "ArrowRight") { e.preventDefault(); originRef.current?.focus(); }
+              else if (e.key === "ArrowLeft") { e.preventDefault(); queryInputRef.current?.focus(); }
+            }}
           />
           <Select
+            ref={originRef}
             label={t("Departure")}
             style={{ minWidth: 120 }}
             value={origin}
             onChange={setOrigin}
             options={[{ value: "", label: t("All") }, ...origins.map((o) => ({ value: o, label: o }))]}
+            onTriggerKeyDown={(e) => {
+              if (e.key === "ArrowRight") { e.preventDefault(); destinationRef.current?.focus(); }
+              else if (e.key === "ArrowLeft") { e.preventDefault(); statusRef.current?.focus(); }
+            }}
           />
           <Select
+            ref={destinationRef}
             label={t("Arrival")}
             style={{ minWidth: 120 }}
             value={destination}
             onChange={setDestination}
             options={[{ value: "", label: t("All") }, ...destinations.map((d) => ({ value: d, label: d }))]}
+            onTriggerKeyDown={(e) => {
+              if (e.key === "ArrowLeft") { e.preventDefault(); originRef.current?.focus(); }
+            }}
           />
         </div>
       </div>

@@ -187,6 +187,20 @@ export function Boarding() {
   useHotkey("nav.search-focus", () => searchInputRef.current?.focus());
   const searchFocusTitle = useShortcutTitle("nav.search-focus");
 
+  // Hand icon / Start boarding / PNL / PFS are plain <button>s reached today only via their own
+  // hotkey (see the useHotkey calls below) — Tab actually landing on any of them depends on a
+  // browser/OS setting (Safari's Full Keyboard Access) outside this app's control. These refs let
+  // the toolbar chain arrow-key focus through them too, same reasoning as BaggageStep's row chain,
+  // so a keyboard-only agent who doesn't know the Alt-combos can still reach every control by arrowing
+  // down from the top of the page (or up from the search field) instead of only by mouse.
+  const handIconRef = useRef<HTMLButtonElement>(null);
+  const startCloseRef = useRef<HTMLButtonElement>(null);
+  const pnlRef = useRef<HTMLButtonElement>(null);
+  const pfsRef = useRef<HTMLButtonElement>(null);
+  function focusQuickFilter() {
+    quickFilterRefs.current.get(quickFilter)?.focus();
+  }
+
   // Roving tabindex over the quick-status pills / facet pills / search-mode tabs — same one-Tab-
   // stop-plus-arrow-keys pattern as Search.tsx's own PAX_QUICK_FILTERS and SEARCH_MODES bars.
   const quickFilterRefs = useRef(new Map<QuickFilterKey, HTMLButtonElement>());
@@ -367,9 +381,12 @@ export function Boarding() {
   useHotkey("boarding.scan", () => setScanOpen((v) => !v), canEdit);
   useHotkey("boarding.board", boardSelected, canEdit && selected.size > 0 && !closed);
   useHotkey("boarding.offload", offloadSelected, canEdit && selected.size > 0 && !closed);
-  useHotkey("boarding.filter-all", () => setQuickFilter("all"));
-  useHotkey("boarding.filter-yet", () => setQuickFilter("yet"));
-  useHotkey("boarding.filter-boarded", () => setQuickFilter("boarded"));
+  // Also focuses the pill, not just sets the filter — otherwise the hotkey fires the action but
+  // leaves keyboard focus wherever it already was, same gap the toolbar chain below fixes for
+  // Tab/Arrow-only navigation without a memorized combo.
+  useHotkey("boarding.filter-all", () => { setQuickFilter("all"); quickFilterRefs.current.get("all")?.focus(); });
+  useHotkey("boarding.filter-yet", () => { setQuickFilter("yet"); quickFilterRefs.current.get("yet")?.focus(); });
+  useHotkey("boarding.filter-boarded", () => { setQuickFilter("boarded"); quickFilterRefs.current.get("boarded")?.focus(); });
   useHotkey("boarding.start", () => (flight?.status === "BOARDING" ? closeFlight() : startBoarding()), canEdit && !closed);
   useHotkey("boarding.pnl", showPnl);
   useHotkey("boarding.pfs", showPfs);
@@ -408,15 +425,51 @@ export function Boarding() {
 
         <div className="pnr-side">
           {canEdit && (
-            <button type="button" className="icon-button" title={scanTitle} onClick={() => setScanOpen((v) => !v)}>
+            <button
+              ref={handIconRef}
+              type="button"
+              className="icon-button"
+              title={scanTitle}
+              onClick={() => setScanOpen((v) => !v)}
+              onKeyDown={(e) => {
+                if (e.key === "ArrowRight") { e.preventDefault(); startCloseRef.current?.focus(); }
+                else if (e.key === "ArrowDown") { e.preventDefault(); focusQuickFilter(); }
+              }}
+            >
               <HandIcon size={20} />
             </button>
           )}
           {canEdit && (
             flight.status === "BOARDING" ? (
-              <button type="button" className="danger boarding-start-btn" title={closed ? undefined : startCloseTitle} onClick={closeFlight} disabled={closed}>{t("Close flight")}</button>
+              <button
+                ref={startCloseRef}
+                type="button"
+                className="danger boarding-start-btn"
+                title={closed ? undefined : startCloseTitle}
+                onClick={closeFlight}
+                disabled={closed}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowLeft") { e.preventDefault(); handIconRef.current?.focus(); }
+                  else if (e.key === "ArrowDown") { e.preventDefault(); focusQuickFilter(); }
+                }}
+              >
+                {t("Close flight")}
+              </button>
             ) : (
-              <button type="button" className="secondary boarding-start-btn" disabled={closed} title={closed ? undefined : startCloseTitle} onClick={startBoarding}>{t("Start boarding")}</button>
+              <button
+                ref={startCloseRef}
+                type="button"
+                className="secondary boarding-start-btn"
+                disabled={closed}
+                title={closed ? undefined : startCloseTitle}
+                onClick={startBoarding}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowLeft") { e.preventDefault(); handIconRef.current?.focus(); }
+                  else if (e.key === "ArrowDown") { e.preventDefault(); focusQuickFilter(); }
+                }}
+              >
+                {t("Start boarding")}
+              </button>
             )
           )}
         </div>
@@ -467,6 +520,8 @@ export function Boarding() {
                   onKeyDown={(e) => {
                     if (e.key === "ArrowRight") { e.preventDefault(); moveQuickFilter(1); }
                     else if (e.key === "ArrowLeft") { e.preventDefault(); moveQuickFilter(-1); }
+                    else if (e.key === "ArrowUp") { e.preventDefault(); (startCloseRef.current ?? handIconRef.current)?.focus(); }
+                    else if (e.key === "ArrowDown") { e.preventDefault(); pnlRef.current?.focus(); }
                   }}
                 >
                   {t(f.label)} ({count})
@@ -481,11 +536,33 @@ export function Boarding() {
               <button type="button" className="danger small" disabled={closed} title={closed ? undefined : offloadTitle} onClick={offloadSelected}>{t("Offload")} ({selected.size})</button>
             </>
           )}
-          <button type="button" className="tertiary shortcut-hint-host" title={pnlTitle} onClick={showPnl}>
+          <button
+            ref={pnlRef}
+            type="button"
+            className="tertiary shortcut-hint-host"
+            title={pnlTitle}
+            onClick={showPnl}
+            onKeyDown={(e) => {
+              if (e.key === "ArrowRight") { e.preventDefault(); pfsRef.current?.focus(); }
+              else if (e.key === "ArrowUp") { e.preventDefault(); focusQuickFilter(); }
+              else if (e.key === "ArrowDown") { e.preventDefault(); searchModeRefs.current.get(searchMode)?.focus(); }
+            }}
+          >
             <ShortcutBadge id="boarding.pnl" />
             PNL
           </button>
-          <button type="button" className="tertiary shortcut-hint-host" title={pfsTitle} onClick={showPfs}>
+          <button
+            ref={pfsRef}
+            type="button"
+            className="tertiary shortcut-hint-host"
+            title={pfsTitle}
+            onClick={showPfs}
+            onKeyDown={(e) => {
+              if (e.key === "ArrowLeft") { e.preventDefault(); pnlRef.current?.focus(); }
+              else if (e.key === "ArrowUp") { e.preventDefault(); focusQuickFilter(); }
+              else if (e.key === "ArrowDown") { e.preventDefault(); searchModeRefs.current.get(searchMode)?.focus(); }
+            }}
+          >
             <ShortcutBadge id="boarding.pfs" />
             PFS
           </button>
@@ -510,6 +587,8 @@ export function Boarding() {
                   onKeyDown={(e) => {
                     if (e.key === "ArrowRight") { e.preventDefault(); moveSearchMode(1); }
                     else if (e.key === "ArrowLeft") { e.preventDefault(); moveSearchMode(-1); }
+                    else if (e.key === "ArrowUp") { e.preventDefault(); pnlRef.current?.focus(); }
+                    else if (e.key === "ArrowDown") { e.preventDefault(); searchInputRef.current?.focus(); }
                   }}
                 >
                   {t(m.label)}
@@ -523,6 +602,13 @@ export function Boarding() {
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t("Search")}
               title={searchFocusTitle}
+              onKeyDown={(e) => {
+                // ArrowUp/Down, not Left/Right — those already move the text cursor within this
+                // input. Reaches the rest of the toolbar's <button>-based zones the same way
+                // BaggageStep's Weight field reaches its row's Select triggers.
+                if (e.key === "ArrowUp") { e.preventDefault(); searchModeRefs.current.get(searchMode)?.focus(); }
+                else if (e.key === "ArrowDown") { e.preventDefault(); facetRefs.current.get(facet)?.focus(); }
+              }}
             />
           </div>
           <div className="pax-quick-filters" role="tablist" aria-label={t("Facet filter")}>
@@ -542,6 +628,7 @@ export function Boarding() {
                 onKeyDown={(e) => {
                   if (e.key === "ArrowRight") { e.preventDefault(); moveFacet(1); }
                   else if (e.key === "ArrowLeft") { e.preventDefault(); moveFacet(-1); }
+                  else if (e.key === "ArrowUp") { e.preventDefault(); searchInputRef.current?.focus(); }
                 }}
               >
                 {t(f.label)} ({passengers.filter(f.test).length})
