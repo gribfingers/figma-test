@@ -7,6 +7,7 @@ import { SortTh, useSort } from "../components/SortTh";
 import { useLanguage } from "../i18n";
 import { useHotkey } from "../useShortcuts";
 import { useShortcutTitle } from "../shortcutHints";
+import { currentPhaseIndex } from "../flightPhase";
 
 type ResultSortKey = "name" | "destination" | "flight" | "std" | "pnr" | "status";
 const RESULT_SORT_GETTERS: Record<ResultSortKey, (p: PassengerSearchResult) => string | number> = {
@@ -34,6 +35,18 @@ const PAX_QUICK_FILTERS: { key: PaxQuickFilterKey; label: string; test: (p: Pass
   { key: "boarded", label: "Boarded", test: (p) => p.boarding_status === "BOARDED" },
   { key: "unknown", label: "Unknown", test: (p) => p.boarding_status === "OFFLOADED" || p.boarding_status === "NO_SHOW" },
 ];
+
+/**
+ * "Check-in only" (the results toolbar's own checkbox) — whether the owning flight is, right now,
+ * in its actual Check-in phase window. Deliberately doesn't trust the row's own `flight_status` (the
+ * DB's flights.status column): that only ever advances on an agent's manual action (Start boarding,
+ * Close flight — see backend's flightPhase.ts), so it can sit stale at CHECKIN_OPEN long after a
+ * flight has actually moved on. This instead derives the phase live from std/ops_status/extra, the
+ * same real-time computation PnrView and FlightCard already use to gate the Check-in button itself.
+ */
+function isCheckinPhase(p: PassengerSearchResult, now: Date): boolean {
+  return currentPhaseIndex({ ops_status: p.flight_ops_status, std: p.std, extra: p.flight_extra }, now) === 0;
+}
 
 // Matches FlightCardHeader's fmtCardDate style (DDMMMYY HH:mm), same UTC
 // wall-clock convention as the rest of the app.
@@ -69,6 +82,7 @@ export function Search() {
   const [error, setError] = useState("");
   const [searching, setSearching] = useState(false);
   const [paxQuickFilter, setPaxQuickFilter] = usePersistentState<PaxQuickFilterKey>("dcs_search_quick_filter", "all");
+  const [checkinOnly, setCheckinOnly] = usePersistentState("dcs_search_checkin_only", false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   useHotkey("nav.search-focus", () => searchInputRef.current?.focus());
   const searchFocusTitle = useShortcutTitle("nav.search-focus");
@@ -111,6 +125,7 @@ export function Search() {
         clearPersistentState("dcs_search_query");
         clearPersistentState("dcs_search_results");
         clearPersistentState("dcs_search_quick_filter");
+        clearPersistentState("dcs_search_checkin_only");
       }),
     [pathname, onTabClose]
   );
@@ -135,8 +150,11 @@ export function Search() {
   const filteredResults = useMemo(() => {
     if (!results) return [];
     const test = PAX_QUICK_FILTERS.find((f) => f.key === paxQuickFilter)?.test ?? (() => true);
-    return results.filter(test);
-  }, [results, paxQuickFilter]);
+    const quickFiltered = results.filter(test);
+    if (!checkinOnly) return quickFiltered;
+    const now = new Date();
+    return quickFiltered.filter((p) => isCheckinPhase(p, now));
+  }, [results, paxQuickFilter, checkinOnly]);
   const { sorted: sortedResults, sortKey, sortDir, onSort } = useSort(filteredResults, RESULT_SORT_GETTERS);
   const activeRowId = focusedRowId != null && sortedResults.some((p) => p.id === focusedRowId) ? focusedRowId : sortedResults[0]?.id ?? null;
   function moveRow(delta: 1 | -1) {
@@ -192,6 +210,10 @@ export function Search() {
                 disabled={searching}
               />
             </div>
+            <label className="checkbox-row search-checkin-only">
+              <input type="checkbox" checked={checkinOnly} onChange={(e) => setCheckinOnly(e.target.checked)} />
+              {t("Check-in only")}
+            </label>
             <button type="submit" disabled={searching || !query.trim()}>{t("Search")}</button>
           </div>
         </form>

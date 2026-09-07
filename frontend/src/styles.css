@@ -1123,6 +1123,7 @@ tr.row-hover:hover { background: var(--accent-soft); }
 }
 .search-mode-input:focus { outline: none; box-shadow: none; }
 .search-mode-input::placeholder { color: var(--field-placeholder); }
+.search-checkin-only { flex-shrink: 0; white-space: nowrap; }
 
 /* Plain (unboxed) inputs — fallback for any input outside .field2/.input-box, kept on the same tokens. */
 input, select {

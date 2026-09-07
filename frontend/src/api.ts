@@ -64,6 +64,12 @@ export interface PassengerSearchResult extends Passenger {
   destination: string;
   std: string;
   flight_status: string;
+  /** The owning flight's own ops_status/extra — not the passenger's own `extra` field above — kept
+   *  around so "Check-in only" (Search.tsx) can compute the flight's real-time phase the same way
+   *  PnrView/FlightCard do (see flightPhase.ts's currentPhaseIndex), rather than trusting the DB's
+   *  own `flight_status` column, which only advances on an agent's manual action and can go stale. */
+  flight_ops_status: OpsStatus;
+  flight_extra: string | null;
 }
 
 export interface SeatCell {

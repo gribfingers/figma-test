@@ -36,7 +36,7 @@ checkinRouter.get("/search", (req, res) => {
   if (by === "flight") {
     const rows = db
       .prepare(
-        `SELECT p.*, f.flight_number, f.carrier_code, f.origin, f.destination, f.std, f.status as flight_status
+        `SELECT p.*, f.flight_number, f.carrier_code, f.origin, f.destination, f.std, f.status as flight_status, f.ops_status as flight_ops_status, f.extra as flight_extra
          FROM passengers p JOIN flights f ON f.id = p.flight_id
          WHERE UPPER(f.carrier_code || f.flight_number) LIKE UPPER(?)
          ORDER BY f.std DESC, p.surname, p.given_name
@@ -44,7 +44,17 @@ checkinRouter.get("/search", (req, res) => {
       )
       .all(`%${q.replace(/\s+/g, "")}%`);
     return res.json(
-      rows.map((r: any) => ({ ...serializePassenger(r), flight_number: r.flight_number, carrier_code: r.carrier_code, origin: r.origin, destination: r.destination, std: r.std, flight_status: r.flight_status }))
+      rows.map((r: any) => ({
+        ...serializePassenger(r),
+        flight_number: r.flight_number,
+        carrier_code: r.carrier_code,
+        origin: r.origin,
+        destination: r.destination,
+        std: r.std,
+        flight_status: r.flight_status,
+        flight_ops_status: r.flight_ops_status,
+        flight_extra: r.flight_extra,
+      }))
     );
   }
 
@@ -54,14 +64,26 @@ checkinRouter.get("/search", (req, res) => {
   const exact = by === "pnr" || by === "eticket";
   const rows = db
     .prepare(
-      `SELECT p.*, f.flight_number, f.carrier_code, f.origin, f.destination, f.std, f.status as flight_status
+      `SELECT p.*, f.flight_number, f.carrier_code, f.origin, f.destination, f.std, f.status as flight_status, f.ops_status as flight_ops_status, f.extra as flight_extra
        FROM passengers p JOIN flights f ON f.id = p.flight_id
        WHERE UPPER(${column}) ${exact ? "= UPPER(?)" : "LIKE UPPER(?)"}
        ORDER BY f.std DESC
        LIMIT 50`
     )
     .all(exact ? q : `%${q}%`);
-  res.json(rows.map((r: any) => ({ ...serializePassenger(r), flight_number: r.flight_number, carrier_code: r.carrier_code, origin: r.origin, destination: r.destination, std: r.std, flight_status: r.flight_status })));
+  res.json(
+    rows.map((r: any) => ({
+      ...serializePassenger(r),
+      flight_number: r.flight_number,
+      carrier_code: r.carrier_code,
+      origin: r.origin,
+      destination: r.destination,
+      std: r.std,
+      flight_status: r.flight_status,
+      flight_ops_status: r.flight_ops_status,
+      flight_extra: r.flight_extra,
+    }))
+  );
 });
 
 /**

@@ -164,6 +164,7 @@ export const RU: Record<string, string> = {
 
   // ---- Search.tsx (Check-in Search) — SEARCH_MODES is also reused by PnrView's Add pax bar ----
   "Check-in Search": "Поиск для регистрации",
+  "Check-in only": "Только с открытой регистрацией",
   "Last Name": "Фамилия",
   "E-ticket": "Электронный билет",
   Doc: "Документ",

@@ -28,6 +28,10 @@ export interface PhaseOverrides {
   flyingMin: number;
 }
 
+/** Just the fields the phase computation below actually reads — lets a caller pass a search-result
+ *  row (PassengerSearchResult's flight_ops_status/flight_extra/std) without a full Flight object. */
+export type PhaseFlight = Pick<Flight, "ops_status" | "std" | "extra">;
+
 export const DEFAULT_PHASE_OVERRIDES: PhaseOverrides = {
   checkinMin: FLIGHT_PHASES[0].fromMin,
   boardingMin: FLIGHT_PHASES[1].fromMin,
@@ -36,7 +40,7 @@ export const DEFAULT_PHASE_OVERRIDES: PhaseOverrides = {
 };
 
 /** Reads a flight's own check-in/boarding/closing window overrides (Settings tab) out of Flight.extra, falling back to the defaults above. */
-export function phaseOverridesFromFlight(flight: Flight): PhaseOverrides {
+export function phaseOverridesFromFlight(flight: PhaseFlight): PhaseOverrides {
   let extra: Record<string, unknown> = {};
   try {
     extra = flight.extra ? JSON.parse(flight.extra) : {};
@@ -53,7 +57,7 @@ export function phaseOverridesFromFlight(flight: Flight): PhaseOverrides {
 }
 
 /** This flight's real phase windows — same shape as FLIGHT_PHASES, but with its own overrides (if any) applied. */
-export function flightPhases(flight: Flight): FlightPhase[] {
+export function flightPhases(flight: PhaseFlight): FlightPhase[] {
   const o = phaseOverridesFromFlight(flight);
   return [
     { key: "checkin", label: "Check-in", fromMin: o.checkinMin, toMin: o.boardingMin },
@@ -72,7 +76,7 @@ export function flightPhases(flight: Flight): FlightPhase[] {
  * every phase (i.e. departed). A cancelled flight isn't progressing through
  * phases at all, so it's always treated as none-reached.
  */
-export function currentPhaseIndex(flight: Flight, now: Date): number {
+export function currentPhaseIndex(flight: PhaseFlight, now: Date): number {
   if (flight.ops_status === "canceled_no_host") return -1;
   const phases = flightPhases(flight);
   const base = new Date(flight.std).getTime();
