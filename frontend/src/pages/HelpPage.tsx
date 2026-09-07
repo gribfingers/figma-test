@@ -1,4 +1,4 @@
-import { Fragment, ReactNode, useState } from "react";
+import { Fragment, ReactNode, useEffect, useState } from "react";
 import { SHORTCUTS, formatCombo } from "../shortcuts";
 import { useShortcutSettings } from "../useShortcuts";
 import { useLanguage, Language } from "../i18n";
@@ -63,6 +63,12 @@ export function HelpPage() {
   const { language: appLanguage } = useLanguage();
   const [language, setLanguage] = useState<Language>(appLanguage);
   const t = (text: string) => (language === "en" ? text : RU[text] ?? text);
+
+  // This page is a real standalone browser tab (see TopTabs' Help button, target="_blank"), unlike
+  // every other screen — those live inside the app's own tab strip under index.html's static title.
+  useEffect(() => {
+    document.title = "DCS - Keyboard shortcuts";
+  }, []);
 
   return (
     <div className="help-page">
