@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { usePopoverPosition } from "../usePopoverPosition";
 import { ChevronDownIcon } from "./Icon";
@@ -6,6 +6,19 @@ import { ChevronDownIcon } from "./Icon";
 export interface SelectOption {
   value: string;
   label: string;
+}
+
+/** Imperative handle for callers that need to move real keyboard focus/open this field themselves
+ *  (e.g. an adjacent input's own arrow-key handler) instead of depending on Tab reaching it — see
+ *  BaggageStep's row-to-row navigation, which needs this since Tab landing on a plain <button>
+ *  trigger like this one's depends on a browser/OS setting (Safari's Full Keyboard Access) outside
+ *  this app's control. `.focus()` and a follow-up keyboard `ArrowDown` always work regardless of
+ *  that setting — only the browser's own Tab-key traversal is gated by it. */
+export interface SelectHandle {
+  /** Focuses the trigger button and opens the listbox, cursor on the current value (or the first
+   *  option) — same as pressing ArrowDown on an already-focused, closed trigger. */
+  open: () => void;
+  focus: () => void;
 }
 
 interface Props {
@@ -27,13 +40,14 @@ interface Props {
  * overflow:hidden/auto — the app has no page-level scroll, so several
  * containers (e.g. the flight card body) now scroll/clip internally.
  */
-export function Select({ label, value, onChange, options, disabled, error, style }: Props) {
+export const Select = forwardRef<SelectHandle, Props>(function Select({ label, value, onChange, options, disabled, error, style }, ref) {
   const [open, setOpen] = useState(false);
   // Arrow-key cursor within the open listbox — independent of `value` until Enter commits it,
   // same as a native <select>'s open-menu behavior.
   const [highlighted, setHighlighted] = useState(-1);
   const rootRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLUListElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const selected = options.find((o) => o.value === value);
   const rect = usePopoverPosition(rootRef, open);
 
@@ -42,6 +56,14 @@ export function Select({ label, value, onChange, options, disabled, error, style
     setHighlighted(idx >= 0 ? idx : 0);
     setOpen(true);
   }
+
+  useImperativeHandle(ref, () => ({
+    open: () => {
+      triggerRef.current?.focus();
+      if (!disabled) openMenu();
+    },
+    focus: () => triggerRef.current?.focus(),
+  }));
 
   useEffect(() => {
     if (!open || highlighted < 0) return;
@@ -96,6 +118,7 @@ export function Select({ label, value, onChange, options, disabled, error, style
       style={style}
     >
       <button
+        ref={triggerRef}
         type="button"
         className="select-trigger"
         disabled={disabled}
@@ -143,4 +166,4 @@ export function Select({ label, value, onChange, options, disabled, error, style
         )}
     </div>
   );
-}
+});

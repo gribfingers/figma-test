@@ -4,7 +4,7 @@ import { FlightSegment } from "../../flightSegments";
 import { BagRow, CARRY_ON_TYPES, baggageTypeDisplay } from "../../baggageTypes";
 import { SeatServiceItem } from "../../paxExtra";
 import { BaggageTypeSelect } from "../BaggageTypeSelect";
-import { Select } from "../Select";
+import { Select, SelectHandle, SelectOption } from "../Select";
 import { ArrowNestedIcon, CloseIcon, InfoIcon, PrinterIcon, RefreshIcon, TagIcon } from "../Icon";
 import { BaggageFaresModal } from "./BaggageFaresModal";
 import { EmdModal } from "./EmdModal";
@@ -188,117 +188,24 @@ export function BaggageStep({ flight, passenger, passengers, segments, initialRo
       </div>
 
       <div className="baggage-rows">
-        {rows.map((row) => {
-          const complete = !!row.weight && !!row.typeId;
-          const tone = calculated && complete ? (rowPaid(`${seedRef.current}-${row.id}-${row.weight}-${row.typeId}`) ? "paid" : "unpaid") : "neutral";
-          const locked = row.printStatus === "printed";
-          return (
-            <div key={row.id} className={`baggage-row baggage-row-${row.printStatus}`}>
-              {segments.length > 1 && (
-                <>
-                  <span className="baggage-row-origin">{flight.origin} -</span>
-                  {locked ? (
-                    <span className="baggage-row-static mono">{row.destination}</span>
-                  ) : (
-                    <Select
-                      label={t("To")}
-                      value={row.destination}
-                      onChange={(v) => updateRow(row.id, { destination: v })}
-                      options={destinationOptions}
-                      style={{ width: 110 }}
-                    />
-                  )}
-                </>
-              )}
-              {locked ? (
-                <span className="baggage-row-static baggage-row-static-weight mono">{row.weight} kg</span>
-              ) : (
-                <div className="field2" style={{ width: 110 }}>
-                  <input
-                    value={row.weight}
-                    placeholder=" "
-                    onChange={(e) => updateRow(row.id, { weight: e.target.value.replace(/\D/g, "").slice(0, 3) })}
-                  />
-                  <label>{t("Weight, kg")}</label>
-                </div>
-              )}
-              {locked ? (
-                <span className="baggage-row-static baggage-row-static-type">{baggageTypeDisplay(row.typeId, t)}</span>
-              ) : (
-                <BaggageTypeSelect
-                  label={t("Type")}
-                  value={row.typeId}
-                  onChange={(id) => updateRow(row.id, { typeId: id })}
-                  style={{ flex: 1 }}
-                  tone={tone}
-                  disabled={!row.weight}
-                />
-              )}
-
-              {row.printStatus === "error" ? (
-                <button
-                  type="button"
-                  className="baggage-row-print error"
-                  onClick={() => attemptPrint(row, true)}
-                  title={t("Error 111, out of ink")}
-                  aria-label={t("Retry print")}
-                >
-                  <RefreshIcon size={16} />
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className={`baggage-row-print ${row.printStatus === "printed" ? "printed" : ""}`}
-                  disabled={!complete}
-                  onClick={() => attemptPrint(row, false)}
-                  aria-label={t("Print bag tag")}
-                >
-                  <PrinterIcon size={18} />
-                </button>
-              )}
-
-              {locked ? (
-                <button type="button" className="baggage-row-undo" onClick={() => updateRow(row.id, { printStatus: "idle" })} aria-label={t("Return bag")}>
-                  <ArrowNestedIcon size={16} />
-                </button>
-              ) : (
-                <button type="button" className="baggage-row-remove" onClick={() => removeRow(row.id)} aria-label={t("Remove")}>
-                  <CloseIcon size={16} />
-                </button>
-              )}
-
-              {!!row.typeId && (
-                <div className="baggage-row-detail baggage-row-detail-full">
-                  <button
-                    type="button"
-                    className="link-btn"
-                    onClick={() => setEmdItem({ rfisc: "0B5", label: baggageTypeDisplay(row.typeId, t), price: 12500, paid: tone === "paid" })}
-                  >
-                    EMD
-                  </button>
-                  {row.tagNumber ? (
-                    <span className="baggage-row-tag-display mono">{t("Tag")} {row.tagNumber}</span>
-                  ) : (
-                    <button type="button" className="link-btn" onClick={() => setManualTagRowId(row.id)}>{t("Tag manually")}</button>
-                  )}
-                  <button type="button" className="link-btn" onClick={() => setTransferRowId(row.id)} disabled={otherPassengers.length === 0}>
-                    {t("Transfer to another passenger")}
-                  </button>
-                  <div className="baggage-row-detail-checks">
-                    <label className="baggage-row-check">
-                      <input type="checkbox" checked={row.daa} onChange={(e) => updateRow(row.id, { daa: e.target.checked })} />
-                      DAA
-                    </label>
-                    <label className="baggage-row-check">
-                      <input type="checkbox" checked={row.dmg} onChange={(e) => updateRow(row.id, { dmg: e.target.checked })} />
-                      DMG
-                    </label>
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
+        {rows.map((row) => (
+          <CheckedBagRow
+            key={row.id}
+            row={row}
+            origin={flight.origin}
+            segments={segments}
+            destinationOptions={destinationOptions}
+            calculated={calculated}
+            seed={`${seedRef.current}-${row.id}-${row.weight}-${row.typeId}`}
+            otherPassengers={otherPassengers}
+            onUpdate={(patch) => updateRow(row.id, patch)}
+            onRemove={() => removeRow(row.id)}
+            onPrint={(isRetry) => attemptPrint(row, isRetry)}
+            onManualTag={() => setManualTagRowId(row.id)}
+            onTransfer={() => setTransferRowId(row.id)}
+            onEmd={(tone) => setEmdItem({ rfisc: "0B5", label: baggageTypeDisplay(row.typeId, t), price: 12500, paid: tone === "paid" })}
+          />
+        ))}
       </div>
 
       <div className="baggage-carryon-section">
@@ -367,6 +274,191 @@ export function BaggageStep({ flight, passenger, passengers, segments, initialRo
         />
       )}
       {emdItem && <EmdModal flight={flight} passenger={passenger} item={emdItem} onClose={() => setEmdItem(null)} />}
+    </div>
+  );
+}
+
+interface CheckedBagRowProps {
+  row: BagRow;
+  origin: string;
+  segments: FlightSegment[];
+  destinationOptions: SelectOption[];
+  calculated: boolean;
+  seed: string;
+  otherPassengers: Passenger[];
+  onUpdate: (patch: Partial<BagRow>) => void;
+  onRemove: () => void;
+  onPrint: (isRetry: boolean) => void;
+  onManualTag: () => void;
+  onTransfer: () => void;
+  onEmd: (tone: "neutral" | "paid" | "unpaid") => void;
+}
+
+/**
+ * One checked-bag row, split out of BaggageStep so it can own its own field refs — needed to chain
+ * To -> Weight -> Type -> Print -> Remove by explicit .focus()/.open() calls instead of depending
+ * on Tab reaching each one. Tab landing on a plain <button> (the To/Type triggers, Print, Remove)
+ * depends on a browser/OS setting (Safari's Full Keyboard Access) outside this app's control —
+ * .focus() and a follow-up keyboard ArrowDown always work regardless of that setting, only the
+ * browser's own Tab-key traversal is gated by it. Weight is the one field genuinely guaranteed
+ * reachable by Tab either way (a real text input, not a button), so it's the anchor the rest of the
+ * row is reached from: ArrowUp/ArrowDown there move to To/Type (picking a value in either then
+ * advances focus again, chaining onward) rather than Left/Right, which already mean "move the text
+ * cursor" inside a single-line input.
+ */
+function CheckedBagRow({ row, origin, segments, destinationOptions, calculated, seed, otherPassengers, onUpdate, onRemove, onPrint, onManualTag, onTransfer, onEmd }: CheckedBagRowProps) {
+  const { t } = useLanguage();
+  const toRef = useRef<SelectHandle>(null);
+  const weightRef = useRef<HTMLInputElement>(null);
+  const typeRef = useRef<SelectHandle>(null);
+  const printRef = useRef<HTMLButtonElement>(null);
+  const removeRef = useRef<HTMLButtonElement>(null);
+
+  const complete = !!row.weight && !!row.typeId;
+  const tone = calculated && complete ? (rowPaid(seed) ? "paid" : "unpaid") : "neutral";
+  const locked = row.printStatus === "printed";
+
+  return (
+    <div className={`baggage-row baggage-row-${row.printStatus}`}>
+      {segments.length > 1 && (
+        <>
+          <span className="baggage-row-origin">{origin} -</span>
+          {locked ? (
+            <span className="baggage-row-static mono">{row.destination}</span>
+          ) : (
+            <Select
+              ref={toRef}
+              label={t("To")}
+              value={row.destination}
+              onChange={(v) => {
+                onUpdate({ destination: v });
+                requestAnimationFrame(() => weightRef.current?.focus());
+              }}
+              options={destinationOptions}
+              style={{ width: 110 }}
+            />
+          )}
+        </>
+      )}
+      {locked ? (
+        <span className="baggage-row-static baggage-row-static-weight mono">{row.weight} kg</span>
+      ) : (
+        <div className="field2" style={{ width: 110 }}>
+          <input
+            ref={weightRef}
+            value={row.weight}
+            placeholder=" "
+            onChange={(e) => onUpdate({ weight: e.target.value.replace(/\D/g, "").slice(0, 3) })}
+            onKeyDown={(e) => {
+              // ArrowUp/Down, not Left/Right — those already move the text cursor within this input.
+              if (e.key === "ArrowUp" && segments.length > 1) {
+                e.preventDefault();
+                toRef.current?.open();
+              } else if ((e.key === "ArrowDown" || e.key === "Enter") && row.weight) {
+                e.preventDefault();
+                typeRef.current?.open();
+              }
+            }}
+          />
+          <label>{t("Weight, kg")}</label>
+        </div>
+      )}
+      {locked ? (
+        <span className="baggage-row-static baggage-row-static-type">{baggageTypeDisplay(row.typeId, t)}</span>
+      ) : (
+        <BaggageTypeSelect
+          ref={typeRef}
+          label={t("Type")}
+          value={row.typeId}
+          onChange={(id) => {
+            onUpdate({ typeId: id });
+            requestAnimationFrame(() => printRef.current?.focus());
+          }}
+          style={{ flex: 1 }}
+          tone={tone}
+          disabled={!row.weight}
+        />
+      )}
+
+      {row.printStatus === "error" ? (
+        <button
+          ref={printRef}
+          type="button"
+          className="baggage-row-print error"
+          onClick={() => onPrint(true)}
+          title={t("Error 111, out of ink")}
+          aria-label={t("Retry print")}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowRight") { e.preventDefault(); removeRef.current?.focus(); }
+          }}
+        >
+          <RefreshIcon size={16} />
+        </button>
+      ) : (
+        <button
+          ref={printRef}
+          type="button"
+          className={`baggage-row-print ${row.printStatus === "printed" ? "printed" : ""}`}
+          disabled={!complete}
+          onClick={() => onPrint(false)}
+          aria-label={t("Print bag tag")}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowRight") { e.preventDefault(); removeRef.current?.focus(); }
+          }}
+        >
+          <PrinterIcon size={18} />
+        </button>
+      )}
+
+      {locked ? (
+        <button
+          ref={removeRef}
+          type="button"
+          className="baggage-row-undo"
+          onClick={() => onUpdate({ printStatus: "idle" })}
+          aria-label={t("Return bag")}
+          onKeyDown={(e) => { if (e.key === "ArrowLeft") { e.preventDefault(); printRef.current?.focus(); } }}
+        >
+          <ArrowNestedIcon size={16} />
+        </button>
+      ) : (
+        <button
+          ref={removeRef}
+          type="button"
+          className="baggage-row-remove"
+          onClick={onRemove}
+          aria-label={t("Remove")}
+          onKeyDown={(e) => { if (e.key === "ArrowLeft") { e.preventDefault(); printRef.current?.focus(); } }}
+        >
+          <CloseIcon size={16} />
+        </button>
+      )}
+
+      {!!row.typeId && (
+        <div className="baggage-row-detail baggage-row-detail-full">
+          <button type="button" className="link-btn" onClick={() => onEmd(tone)}>
+            EMD
+          </button>
+          {row.tagNumber ? (
+            <span className="baggage-row-tag-display mono">{t("Tag")} {row.tagNumber}</span>
+          ) : (
+            <button type="button" className="link-btn" onClick={onManualTag}>{t("Tag manually")}</button>
+          )}
+          <button type="button" className="link-btn" onClick={onTransfer} disabled={otherPassengers.length === 0}>
+            {t("Transfer to another passenger")}
+          </button>
+          <div className="baggage-row-detail-checks">
+            <label className="baggage-row-check">
+              <input type="checkbox" checked={row.daa} onChange={(e) => onUpdate({ daa: e.target.checked })} />
+              DAA
+            </label>
+            <label className="baggage-row-check">
+              <input type="checkbox" checked={row.dmg} onChange={(e) => onUpdate({ dmg: e.target.checked })} />
+              DMG
+            </label>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

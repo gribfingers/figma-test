@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { usePopoverPosition } from "../usePopoverPosition";
 import { ChevronDownIcon } from "./Icon";
 import { BAGGAGE_SPECIAL_TYPES, BAGGAGE_TYPE_GROUPS, baggageTypeDisplay } from "../baggageTypes";
 import { useLanguage } from "../i18n";
+import { SelectHandle } from "./Select";
 
 interface Props {
   label: string;
@@ -19,12 +20,16 @@ interface Props {
 const FLAT_BAGGAGE_TYPES = [...BAGGAGE_TYPE_GROUPS.flatMap((g) => g.options), ...BAGGAGE_SPECIAL_TYPES];
 
 /** Same custom-dropdown pattern as Select/AirportSelect (field2 box, floating label), grouped (Standard/Oversize/Sport, then special handling types with no group of their own). */
-export function BaggageTypeSelect({ label, value, onChange, style, tone = "neutral", disabled }: Props) {
+export const BaggageTypeSelect = forwardRef<SelectHandle, Props>(function BaggageTypeSelect(
+  { label, value, onChange, style, tone = "neutral", disabled },
+  ref
+) {
   const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [highlighted, setHighlighted] = useState(-1);
   const rootRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLUListElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const rect = usePopoverPosition(rootRef, open);
 
   function openMenu() {
@@ -32,6 +37,17 @@ export function BaggageTypeSelect({ label, value, onChange, style, tone = "neutr
     setHighlighted(idx >= 0 ? idx : 0);
     setOpen(true);
   }
+
+  // Same reasoning as Select.tsx's own handle — BaggageStep's row-to-row navigation moves focus
+  // here explicitly rather than depending on Tab reaching this <button> (Safari's Full Keyboard
+  // Access again).
+  useImperativeHandle(ref, () => ({
+    open: () => {
+      triggerRef.current?.focus();
+      if (!disabled) openMenu();
+    },
+    focus: () => triggerRef.current?.focus(),
+  }));
 
   useEffect(() => {
     if (!open || highlighted < 0) return;
@@ -82,6 +98,7 @@ export function BaggageTypeSelect({ label, value, onChange, style, tone = "neutr
   return (
     <div ref={rootRef} className={`field2 select-field ${open ? "open" : ""} ${value ? "has-value" : ""}`} style={style}>
       <button
+        ref={triggerRef}
         type="button"
         className={`select-trigger baggage-type-trigger-${tone}`}
         disabled={disabled}
@@ -144,4 +161,4 @@ export function BaggageTypeSelect({ label, value, onChange, style, tone = "neutr
         )}
     </div>
   );
-}
+});
