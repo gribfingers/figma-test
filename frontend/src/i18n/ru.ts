@@ -574,8 +574,13 @@ export const RU: Record<string, string> = {
   "Docs to verify": "Документы для проверки",
   "Services to pay": "Услуги к оплате",
   "No pax match.": "Нет совпадений.",
+  "Status filter": "Фильтр статуса",
+  "Search by": "Искать по",
+  "Facet filter": "Фильтр по признаку",
+  "Start boarding / Close flight": "Начать посадку / Закрыть рейс",
 
   // ---- BoardingPax.tsx ----
+  "Jump to check-in step": "Перейти к шагу регистрации",
   "No passenger with Sq № {n}": "Нет пассажира с пор. № {n}",
   "Remain time for boarding": "Осталось времени до посадки",
   "Pax to board": "Пассажиров к посадке",
@@ -852,4 +857,30 @@ export const RU: Record<string, string> = {
   "Any Alt/Ctrl shortcut can be rebound from Settings → Keyboard shortcuts (account menu, top right).":
     "Любое сочетание с Alt/Ctrl можно переназначить в Настройках → Горячие клавиши (меню аккаунта в правом верхнем углу).",
   "This page always reflects your own current bindings, not just the defaults.": "Эта страница всегда показывает ваши текущие сочетания, а не только значения по умолчанию.",
+
+  // ---- HelpPage.tsx — Boarding walkthrough ----
+  "Open Boarding Search from anywhere": "Открыть Boarding Search из любого места",
+  "Jump straight into the flight-number field": "Сразу перейти в поле номера рейса",
+  "Tab reaches exactly one result row at a time": "Tab попадает ровно на одну строку результата за раз",
+  "open it": "открыть её",
+  "Passenger list": "Список пассажиров",
+  "Toggle the scan-a-boarding-pass panel": "Открыть/закрыть панель сканирования посадочного талона",
+  "Move the row cursor, independent of where Tab happens to be": "Переместить курсор строки — независимо от того, где сейчас Tab",
+  "Open the row under the cursor": "Открыть строку под курсором",
+  "toggle its checkbox": "отметить/снять чекбокс",
+  "Select/deselect every row": "Выбрать/снять выбор со всех строк",
+  "Board the checked rows": "Посадить отмеченные строки",
+  "offload them": "снять их с рейса",
+  "Start boarding, or close the flight once boarding": "Начать посадку или закрыть рейс во время посадки",
+  "Show the PNL": "Показать PNL",
+  "show the PFS": "показать PFS",
+  "The status filter (All/Yet to board/Boarded), the facet filter (Docs to verify, Services to pay, …) and the Sq №/Seat/Last Name search-mode tabs all follow the same one-Tab-stop-plus-arrow-keys pattern":
+    "Фильтр статуса (All/Yet to board/Boarded), фильтр по признаку (Docs to verify, Services to pay, …) и вкладки режима поиска (Sq №/Seat/Last Name) — все работают по тому же принципу: один Tab-стоп и перемещение стрелками",
+  "Passenger detail": "Карточка пассажира",
+  "Jump straight into the Sq № search field": "Сразу перейти в поле поиска по пор. №",
+  "Board this passenger": "Посадить этого пассажира",
+  "Undo a boarding": "Отменить посадку",
+  "Open Pay, once a service payment is outstanding": "Открыть оплату, если есть неоплаченные услуги",
+  "The Documents/Seats/Baggage/Extra services shortcut icons follow the same one-Tab-stop-plus-arrow-keys pattern; Enter opens that step in a new tab":
+    "Иконки-переходы Documents/Seats/Baggage/Extra services работают по тому же принципу: один Tab-стоп и перемещение стрелками; Enter открывает этот шаг в новой вкладке",
 };

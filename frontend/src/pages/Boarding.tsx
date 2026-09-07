@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api, Flight, Passenger, SeatCell } from "../api";
 import {
@@ -29,7 +29,7 @@ import {
 } from "../paxExtra";
 import { useCanEdit } from "../auth";
 import { useHotkey } from "../useShortcuts";
-import { useShortcutTitle } from "../shortcutHints";
+import { useShortcutTitle, ShortcutBadge } from "../shortcutHints";
 import { trackEvent } from "../analytics";
 import { clickable } from "../interactive";
 
@@ -127,6 +127,18 @@ type QuickFilterKey = "all" | "yet" | "boarded";
 type SearchMode = "seq" | "seat" | "lastname";
 type FacetKey = "all" | "docs" | "services" | "inbound" | "umnr" | "inf" | "wchr" | "strc";
 
+const QUICK_FILTERS: { key: QuickFilterKey; label: string }[] = [
+  { key: "all", label: "All" },
+  { key: "yet", label: "Yet to board" },
+  { key: "boarded", label: "Boarded" },
+];
+
+const SEARCH_MODES: { key: SearchMode; label: string }[] = [
+  { key: "seq", label: "Sq №" },
+  { key: "seat", label: "Seat" },
+  { key: "lastname", label: "Last Name" },
+];
+
 const FACETS: { key: FacetKey; label: string; test: (p: Passenger) => boolean }[] = [
   { key: "all", label: "All", test: () => true },
   { key: "docs", label: "Docs to verify", test: (p) => !parsePassengerExtra(p).docVerified },
@@ -171,6 +183,33 @@ export function Boarding() {
   const { showToast } = useToast();
   const { confirmDialog } = useConfirmDialog();
   const canEdit = useCanEdit();
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  useHotkey("nav.search-focus", () => searchInputRef.current?.focus());
+  const searchFocusTitle = useShortcutTitle("nav.search-focus");
+
+  // Roving tabindex over the quick-status pills / facet pills / search-mode tabs — same one-Tab-
+  // stop-plus-arrow-keys pattern as Search.tsx's own PAX_QUICK_FILTERS and SEARCH_MODES bars.
+  const quickFilterRefs = useRef(new Map<QuickFilterKey, HTMLButtonElement>());
+  function moveQuickFilter(delta: 1 | -1) {
+    const idx = QUICK_FILTERS.findIndex((f) => f.key === quickFilter);
+    const next = QUICK_FILTERS[(idx + delta + QUICK_FILTERS.length) % QUICK_FILTERS.length];
+    setQuickFilter(next.key);
+    quickFilterRefs.current.get(next.key)?.focus();
+  }
+  const facetRefs = useRef(new Map<FacetKey, HTMLButtonElement>());
+  function moveFacet(delta: 1 | -1) {
+    const idx = FACETS.findIndex((f) => f.key === facet);
+    const next = FACETS[(idx + delta + FACETS.length) % FACETS.length];
+    setFacet(next.key);
+    facetRefs.current.get(next.key)?.focus();
+  }
+  const searchModeRefs = useRef(new Map<SearchMode, HTMLButtonElement>());
+  function moveSearchMode(delta: 1 | -1) {
+    const idx = SEARCH_MODES.findIndex((m) => m.key === searchMode);
+    const next = SEARCH_MODES[(idx + delta + SEARCH_MODES.length) % SEARCH_MODES.length];
+    setSearchMode(next.key);
+    searchModeRefs.current.get(next.key)?.focus();
+  }
 
   const [notFound, setNotFound] = useState(false);
   function refresh() {
@@ -331,6 +370,9 @@ export function Boarding() {
   useHotkey("boarding.filter-all", () => setQuickFilter("all"));
   useHotkey("boarding.filter-yet", () => setQuickFilter("yet"));
   useHotkey("boarding.filter-boarded", () => setQuickFilter("boarded"));
+  useHotkey("boarding.start", () => (flight?.status === "BOARDING" ? closeFlight() : startBoarding()), canEdit && !closed);
+  useHotkey("boarding.pnl", showPnl);
+  useHotkey("boarding.pfs", showPfs);
   const selectAllTitle = useShortcutTitle("boarding.select-all");
   const scanTitle = useShortcutTitle("boarding.scan", t("Scan a boarding pass"));
   const boardTitle = useShortcutTitle("boarding.board", t("Board"));
@@ -338,6 +380,9 @@ export function Boarding() {
   const filterAllTitle = useShortcutTitle("boarding.filter-all", t("All"));
   const filterYetTitle = useShortcutTitle("boarding.filter-yet", t("Yet to board"));
   const filterBoardedTitle = useShortcutTitle("boarding.filter-boarded", t("Boarded"));
+  const startCloseTitle = useShortcutTitle("boarding.start", flight?.status === "BOARDING" ? t("Close flight") : t("Start boarding"));
+  const pnlTitle = useShortcutTitle("boarding.pnl", "PNL");
+  const pfsTitle = useShortcutTitle("boarding.pfs", "PFS");
 
   if (notFound) return <EntityNotFound label={t("This flight")} />;
   if (!flight) return <div className="content">{t("Loading…")}</div>;
@@ -369,9 +414,9 @@ export function Boarding() {
           )}
           {canEdit && (
             flight.status === "BOARDING" ? (
-              <button type="button" className="danger boarding-start-btn" onClick={closeFlight} disabled={closed}>{t("Close flight")}</button>
+              <button type="button" className="danger boarding-start-btn" title={closed ? undefined : startCloseTitle} onClick={closeFlight} disabled={closed}>{t("Close flight")}</button>
             ) : (
-              <button type="button" className="secondary boarding-start-btn" disabled={closed} onClick={startBoarding}>{t("Start boarding")}</button>
+              <button type="button" className="secondary boarding-start-btn" disabled={closed} title={closed ? undefined : startCloseTitle} onClick={startBoarding}>{t("Start boarding")}</button>
             )
           )}
         </div>
@@ -401,15 +446,34 @@ export function Boarding() {
 
       <div className="panel panel--flush boarding-table-panel">
         <div className="toolbar panel-head">
-          <button type="button" className={`quick-status-pill ${quickFilter === "all" ? "selected" : ""}`} title={filterAllTitle} onClick={() => setQuickFilter("all")}>
-            {t("All")} ({passengers.length})
-          </button>
-          <button type="button" className={`quick-status-pill ${quickFilter === "yet" ? "selected" : ""}`} title={filterYetTitle} onClick={() => setQuickFilter("yet")}>
-            {t("Yet to board")} ({yetToBoardCount})
-          </button>
-          <button type="button" className={`quick-status-pill ${quickFilter === "boarded" ? "selected" : ""}`} title={filterBoardedTitle} onClick={() => setQuickFilter("boarded")}>
-            {t("Boarded")} ({boardedCount})
-          </button>
+          <div className="pax-quick-filters" role="tablist" aria-label={t("Status filter")}>
+            {QUICK_FILTERS.map((f) => {
+              const count = f.key === "all" ? passengers.length : f.key === "yet" ? yetToBoardCount : boardedCount;
+              const title = f.key === "all" ? filterAllTitle : f.key === "yet" ? filterYetTitle : filterBoardedTitle;
+              return (
+                <button
+                  key={f.key}
+                  ref={(el) => {
+                    if (el) quickFilterRefs.current.set(f.key, el);
+                    else quickFilterRefs.current.delete(f.key);
+                  }}
+                  type="button"
+                  role="tab"
+                  aria-selected={quickFilter === f.key}
+                  tabIndex={quickFilter === f.key ? 0 : -1}
+                  className={`quick-status-pill ${quickFilter === f.key ? "selected" : ""}`}
+                  title={title}
+                  onClick={() => setQuickFilter(f.key)}
+                  onKeyDown={(e) => {
+                    if (e.key === "ArrowRight") { e.preventDefault(); moveQuickFilter(1); }
+                    else if (e.key === "ArrowLeft") { e.preventDefault(); moveQuickFilter(-1); }
+                  }}
+                >
+                  {t(f.label)} ({count})
+                </button>
+              );
+            })}
+          </div>
           <div className="spacer" />
           {canEdit && selected.size > 0 && (
             <>
@@ -417,31 +481,68 @@ export function Boarding() {
               <button type="button" className="danger small" disabled={closed} title={closed ? undefined : offloadTitle} onClick={offloadSelected}>{t("Offload")} ({selected.size})</button>
             </>
           )}
-          <button type="button" className="tertiary" onClick={showPnl}>PNL</button>
-          <button type="button" className="tertiary" onClick={showPfs}>PFS</button>
+          <button type="button" className="tertiary shortcut-hint-host" title={pnlTitle} onClick={showPnl}>
+            <ShortcutBadge id="boarding.pnl" />
+            PNL
+          </button>
+          <button type="button" className="tertiary shortcut-hint-host" title={pfsTitle} onClick={showPfs}>
+            <ShortcutBadge id="boarding.pfs" />
+            PFS
+          </button>
         </div>
 
         <div className="toolbar panel-head">
           <div className="search-mode-bar" style={{ flex: 1 }}>
-            <div className="search-mode-tabs">
-              <button type="button" className={`search-mode-tab ${searchMode === "seq" ? "selected" : ""}`} onClick={() => setSearchMode("seq")}>{t("Sq №")}</button>
-              <button type="button" className={`search-mode-tab ${searchMode === "seat" ? "selected" : ""}`} onClick={() => setSearchMode("seat")}>{t("Seat")}</button>
-              <button type="button" className={`search-mode-tab ${searchMode === "lastname" ? "selected" : ""}`} onClick={() => setSearchMode("lastname")}>{t("Last Name")}</button>
+            <div className="search-mode-tabs" role="tablist" aria-label={t("Search by")}>
+              {SEARCH_MODES.map((m) => (
+                <button
+                  key={m.key}
+                  ref={(el) => {
+                    if (el) searchModeRefs.current.set(m.key, el);
+                    else searchModeRefs.current.delete(m.key);
+                  }}
+                  type="button"
+                  role="tab"
+                  aria-selected={searchMode === m.key}
+                  tabIndex={searchMode === m.key ? 0 : -1}
+                  className={`search-mode-tab ${searchMode === m.key ? "selected" : ""}`}
+                  onClick={() => setSearchMode(m.key)}
+                  onKeyDown={(e) => {
+                    if (e.key === "ArrowRight") { e.preventDefault(); moveSearchMode(1); }
+                    else if (e.key === "ArrowLeft") { e.preventDefault(); moveSearchMode(-1); }
+                  }}
+                >
+                  {t(m.label)}
+                </button>
+              ))}
             </div>
             <input
+              ref={searchInputRef}
               className="search-mode-input"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t("Search")}
+              title={searchFocusTitle}
             />
           </div>
-          <div className="pax-quick-filters">
+          <div className="pax-quick-filters" role="tablist" aria-label={t("Facet filter")}>
             {FACETS.map((f) => (
               <button
                 key={f.key}
+                ref={(el) => {
+                  if (el) facetRefs.current.set(f.key, el);
+                  else facetRefs.current.delete(f.key);
+                }}
                 type="button"
+                role="tab"
+                aria-selected={facet === f.key}
+                tabIndex={facet === f.key ? 0 : -1}
                 className={`pax-quick-filter ${facet === f.key ? "selected" : ""}`}
                 onClick={() => setFacet(f.key)}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowRight") { e.preventDefault(); moveFacet(1); }
+                  else if (e.key === "ArrowLeft") { e.preventDefault(); moveFacet(-1); }
+                }}
               >
                 {t(f.label)} ({passengers.filter(f.test).length})
               </button>

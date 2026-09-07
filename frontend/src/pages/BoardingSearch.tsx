@@ -8,7 +8,6 @@ import { useRegisterTab } from "../tabs";
 import { useLanguage } from "../i18n";
 import { useHotkey } from "../useShortcuts";
 import { useShortcutTitle } from "../shortcutHints";
-import { clickable } from "../interactive";
 
 // Matches Search.tsx's fmtStd — same UTC wall-clock convention as the rest of the app.
 function fmtStd(iso: string): string {
@@ -83,6 +82,21 @@ export function BoardingSearch() {
     navigate(`/boarding/${f.id}`);
   }
 
+  // Roving tabindex over the results rows — same one-Tab-stop-plus-arrow-keys pattern as Search.tsx's
+  // own results table, instead of clickable()'s every-row-is-a-Tab-stop (still fine for mouse/click,
+  // but Tab reaching any of them at all depends on a browser setting outside this app's control).
+  const rowRefs = useRef(new Map<number, HTMLTableRowElement>());
+  const [focusedRowId, setFocusedRowId] = useState<number | null>(null);
+  const activeRowId = focusedRowId != null && sortedResults.some((f) => f.id === focusedRowId) ? focusedRowId : sortedResults[0]?.id ?? null;
+  function moveRow(delta: 1 | -1) {
+    const idx = sortedResults.findIndex((f) => f.id === activeRowId);
+    if (idx === -1) return;
+    const next = sortedResults[Math.max(0, Math.min(sortedResults.length - 1, idx + delta))];
+    if (!next) return;
+    setFocusedRowId(next.id);
+    rowRefs.current.get(next.id)?.focus();
+  }
+
   return (
     <div>
       {error && <div className="error-box">{error}</div>}
@@ -132,7 +146,29 @@ export function BoardingSearch() {
             </thead>
             <tbody>
               {sortedResults.map((f) => (
-                <tr key={f.id} className="row-hover" onClick={() => openFlight(f)} {...clickable(() => openFlight(f))}>
+                <tr
+                  key={f.id}
+                  ref={(el) => {
+                    if (el) rowRefs.current.set(f.id, el);
+                    else rowRefs.current.delete(f.id);
+                  }}
+                  className="row-hover"
+                  tabIndex={f.id === activeRowId ? 0 : -1}
+                  onFocus={() => setFocusedRowId(f.id)}
+                  onClick={() => openFlight(f)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      openFlight(f);
+                    } else if (e.key === "ArrowDown") {
+                      e.preventDefault();
+                      moveRow(1);
+                    } else if (e.key === "ArrowUp") {
+                      e.preventDefault();
+                      moveRow(-1);
+                    }
+                  }}
+                >
                   <td className="mono">{f.carrier_code}{f.flight_number}</td>
                   <td className="mono">{f.origin} → {f.destination}</td>
                   <td className="mono">{fmtStd(f.std)}</td>

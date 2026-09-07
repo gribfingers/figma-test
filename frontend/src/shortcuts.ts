@@ -80,6 +80,15 @@ export const SHORTCUTS: ShortcutDef[] = [
   { id: "boarding.filter-all", group: "Boarding", label: "All", defaultCombo: "1" },
   { id: "boarding.filter-yet", group: "Boarding", label: "Yet to board", defaultCombo: "2" },
   { id: "boarding.filter-boarded", group: "Boarding", label: "Boarded", defaultCombo: "3" },
+  // Same button toggles between the two depending on flight.status, same reasoning as
+  // flow.checkin's one id covering a button whose own label/enabled state also varies.
+  { id: "boarding.start", group: "Boarding", label: "Start boarding / Close flight", defaultCombo: "alt|t" },
+  { id: "boarding.pnl", group: "Boarding", label: "PNL", defaultCombo: "alt|q" },
+  { id: "boarding.pfs", group: "Boarding", label: "PFS", defaultCombo: "alt|w" },
+  // BoardingPax.tsx only (the per-passenger screen) — boarding.board above is reused here for the
+  // same real action (board this one passenger); these two have no list-page equivalent.
+  { id: "boarding.unboard", group: "Boarding", label: "Unboard", defaultCombo: "alt|u" },
+  { id: "boarding.pay", group: "Boarding", label: "Pay", defaultCombo: "alt|j" },
 ];
 
 const MODIFIER_KEYS = new Set(["Control", "Alt", "Shift", "Meta"]);

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api, Flight, Passenger, SeatCell } from "../api";
 import { cabinFeaturesFor } from "../cabinLayout";
@@ -17,6 +17,8 @@ import { useLanguage } from "../i18n";
 import { useCanEdit } from "../auth";
 import { trackEvent } from "../analytics";
 import { clickable } from "../interactive";
+import { useHotkey } from "../useShortcuts";
+import { useShortcutTitle, ShortcutBadge } from "../shortcutHints";
 
 // Matches Boarding.tsx's fmtCardDate/parseVersion/StatBar/statusLabel/statusChipClass — same
 // light duplication this session's other pages already use rather than a shared module
@@ -174,11 +176,38 @@ export function BoardingPax() {
     else setMessage({ kind: "error", text: t("No passenger with Sq № {n}").replace("{n}", q) });
   }
 
+  // The action button (Board/Unboard/Pay) swaps meaning depending on this one passenger's state —
+  // same single-id-covers-a-swapping-button reasoning as flow.checkin/boarding.start elsewhere.
+  const isBoarded = !!passenger && passenger.boarding_status === "BOARDED";
+  const isUnpaid = !!passenger && passenger.boarding_status !== "BOARDED" && passenger.checkin_status === "CHECKED_IN" && asvcStatus(passenger) === "conflict";
+  const canBoardThis = !!passenger && !isBoarded && !isUnpaid && passenger.checkin_status === "CHECKED_IN";
+
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  useHotkey("nav.search-focus", () => searchInputRef.current?.focus());
+  const searchFocusTitle = useShortcutTitle("nav.search-focus");
+  useHotkey("boarding.board", boardThis, canEdit && canBoardThis);
+  useHotkey("boarding.unboard", unboardThis, canEdit && isBoarded);
+  useHotkey("boarding.pay", () => setPayOpen(true), canEdit && isUnpaid);
+  const boardTitle = useShortcutTitle("boarding.board", t("Board"));
+  const unboardTitle = useShortcutTitle("boarding.unboard", t("Unboard"));
+  const payTitle = useShortcutTitle("boarding.pay", t("Pay"));
+
+  // Roving tabindex over the quick-jump-to-step icons (Documents/Seats/Baggage/Extra services) —
+  // same one-Tab-stop-plus-arrow-keys pattern as everywhere else, so Tab reaching any of them at all
+  // doesn't depend on a browser setting outside this app's control.
+  const stepIconRefs = useRef(new Map<FlowStep, HTMLAnchorElement>());
+  const [focusedStep, setFocusedStep] = useState<FlowStep>("docs");
+  function moveStepIcon(delta: 1 | -1) {
+    const idx = STEP_ICONS.findIndex((s) => s.step === focusedStep);
+    const next = STEP_ICONS[(idx + delta + STEP_ICONS.length) % STEP_ICONS.length];
+    setFocusedStep(next.step);
+    stepIconRefs.current.get(next.step)?.focus();
+  }
+
   if (notFound) return <EntityNotFound label={t("This flight")} />;
   if (!flight || !passenger) return <div className="content">{t("Loading…")}</div>;
 
   const extra = parsePassengerExtra(passenger);
-  const unpaid = passenger.boarding_status !== "BOARDED" && passenger.checkin_status === "CHECKED_IN" && asvcStatus(passenger) === "conflict";
   const comment = extra.comments?.boarding[0] ?? extra.comments?.checkin[0] ?? null;
   const ssr = passenger.ssr ?? [];
   const cabinFeatures = cabinFeaturesFor(flight.aircraft_type);
@@ -220,10 +249,12 @@ export function BoardingPax() {
             <button type="button" className="search-mode-tab selected">{t("Sq №")}</button>
           </div>
           <input
+            ref={searchInputRef}
             className="search-mode-input"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t("Search")}
+            title={searchFocusTitle}
           />
         </form>
       </div>
@@ -241,13 +272,25 @@ export function BoardingPax() {
             {passenger.surname} {passenger.given_name}
           </div>
           {canEdit && (
-            <div className="boarding-pax-steps">
+            <div className="boarding-pax-steps" role="tablist" aria-label={t("Jump to check-in step")}>
               {STEP_ICONS.map(({ step, icon, tooltip }) => (
                 <Link
                   key={step}
+                  ref={(el) => {
+                    if (el) stepIconRefs.current.set(step, el);
+                    else stepIconRefs.current.delete(step);
+                  }}
                   to={`/checkin/${fid}/pnr/${passenger.id}`}
                   target="_blank"
-                  data-tooltip={t(tooltip)}
+                  title={t(tooltip)}
+                  role="tab"
+                  aria-selected={focusedStep === step}
+                  tabIndex={focusedStep === step ? 0 : -1}
+                  onFocus={() => setFocusedStep(step)}
+                  onKeyDown={(e) => {
+                    if (e.key === "ArrowRight") { e.preventDefault(); moveStepIcon(1); }
+                    else if (e.key === "ArrowLeft") { e.preventDefault(); moveStepIcon(-1); }
+                  }}
                   onClick={() => {
                     presetFlowSelection(passenger.id);
                     presetCheckinStep(passenger.id, step);
@@ -272,12 +315,12 @@ export function BoardingPax() {
 
           {canEdit && (
             <div className="boarding-pax-actions">
-              {passenger.boarding_status === "BOARDED" ? (
-                <button type="button" className="secondary boarding-pax-action-btn" onClick={unboardThis}>
+              {isBoarded ? (
+                <button type="button" className="secondary boarding-pax-action-btn" title={unboardTitle} onClick={unboardThis}>
                   {t("Unboard")}
                 </button>
-              ) : unpaid ? (
-                <button type="button" className="boarding-pax-action-btn" onClick={() => setPayOpen(true)}>
+              ) : isUnpaid ? (
+                <button type="button" className="boarding-pax-action-btn" title={payTitle} onClick={() => setPayOpen(true)}>
                   {t("Pay")}
                 </button>
               ) : (
@@ -285,6 +328,7 @@ export function BoardingPax() {
                   type="button"
                   className="boarding-pax-action-btn"
                   disabled={passenger.checkin_status !== "CHECKED_IN"}
+                  title={passenger.checkin_status !== "CHECKED_IN" ? undefined : boardTitle}
                   onClick={boardThis}
                 >
                   {t("Board")}

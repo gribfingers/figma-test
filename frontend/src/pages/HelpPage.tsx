@@ -223,6 +223,48 @@ export function HelpPage() {
         </Step>
       </Section>
 
+      <Section title={t("Boarding")}>
+        <Step n={1} title={t("Boarding Search")}>
+          <li>{t("Open Boarding Search from anywhere")} — <HotkeyBadge id="nav.boarding-search" /></li>
+          <li>{t("Jump straight into the flight-number field")} — <Key combo="/" /></li>
+          <li>{t("Tab reaches exactly one result row at a time")}</li>
+          <li>
+            {t("Move between rows")} — <Key combo="arrowup" /> <Key combo="arrowdown" />, {t("open it")} — <Key combo="enter" />
+          </li>
+        </Step>
+
+        <Step n={2} title={t("Passenger list")}>
+          <li>{t("Toggle the scan-a-boarding-pass panel")} — <HotkeyBadge id="boarding.scan" /></li>
+          <li>
+            {t("Move the row cursor, independent of where Tab happens to be")} — <Key combo="arrowup" /> <Key combo="arrowdown" />
+          </li>
+          <li>
+            {t("Open the row under the cursor")} — <Key combo="enter" />, {t("toggle its checkbox")} — <Key combo="space" />
+          </li>
+          <li>{t("Select/deselect every row")} — <HotkeyBadge id="boarding.select-all" /></li>
+          <li>
+            {t("Board the checked rows")} — <HotkeyBadge id="boarding.board" />, {t("offload them")} — <HotkeyBadge id="boarding.offload" />
+          </li>
+          <li>{t("Start boarding, or close the flight once boarding")} — <HotkeyBadge id="boarding.start" /></li>
+          <li>
+            {t("Show the PNL")} — <HotkeyBadge id="boarding.pnl" />, {t("show the PFS")} — <HotkeyBadge id="boarding.pfs" />
+          </li>
+          <li>
+            {t("The status filter (All/Yet to board/Boarded), the facet filter (Docs to verify, Services to pay, …) and the Sq №/Seat/Last Name search-mode tabs all follow the same one-Tab-stop-plus-arrow-keys pattern")}
+          </li>
+        </Step>
+
+        <Step n={3} title={t("Passenger detail")}>
+          <li>{t("Jump straight into the Sq № search field")} — <Key combo="/" /></li>
+          <li>{t("Board this passenger")} — <HotkeyBadge id="boarding.board" /></li>
+          <li>{t("Undo a boarding")} — <HotkeyBadge id="boarding.unboard" /></li>
+          <li>{t("Open Pay, once a service payment is outstanding")} — <HotkeyBadge id="boarding.pay" /></li>
+          <li>
+            {t("The Documents/Seats/Baggage/Extra services shortcut icons follow the same one-Tab-stop-plus-arrow-keys pattern; Enter opens that step in a new tab")}
+          </li>
+        </Step>
+      </Section>
+
       <Section title={t("Full reference")}>
         <p className="help-intro">{t("Every shortcut in the app, grouped, showing your own current bindings.")}</p>
         <div className="help-reference-grid">
