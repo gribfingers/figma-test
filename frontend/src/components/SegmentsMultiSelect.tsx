@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { usePopoverPosition } from "../usePopoverPosition";
 import { FlightSegment } from "../flightSegments";
 import { ChevronDownIcon } from "./Icon";
+import { SelectHandle } from "./Select";
 
 interface Props {
   segments: FlightSegment[];
@@ -20,11 +21,15 @@ function segmentLabel(seg: FlightSegment): string {
  * closed trigger shows the one selected leg's route, or "Multi" once more
  * than one is checked.
  */
-export function SegmentsMultiSelect({ segments, selected, onChange }: Props) {
+export const SegmentsMultiSelect = forwardRef<SelectHandle, Props>(function SegmentsMultiSelect(
+  { segments, selected, onChange },
+  ref
+) {
   const [open, setOpen] = useState(false);
   const [highlighted, setHighlighted] = useState(-1);
   const rootRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLUListElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const rect = usePopoverPosition(rootRef, open);
 
   function toggle(i: number) {
@@ -33,6 +38,18 @@ export function SegmentsMultiSelect({ segments, selected, onChange }: Props) {
     else next.add(i);
     onChange(next);
   }
+
+  // Same reasoning as Select.tsx's own handle — ExtraServicesStep's row keyboard chain moves focus
+  // here explicitly rather than depending on Tab reaching this <button> (Safari's Full Keyboard
+  // Access again).
+  useImperativeHandle(ref, () => ({
+    open: () => {
+      triggerRef.current?.focus();
+      setHighlighted(-1);
+      setOpen(true);
+    },
+    focus: () => triggerRef.current?.focus(),
+  }));
 
   useEffect(() => {
     if (!open || highlighted < 0) return;
@@ -85,6 +102,7 @@ export function SegmentsMultiSelect({ segments, selected, onChange }: Props) {
   return (
     <div ref={rootRef} className={`field2 select-field ${open ? "open" : ""} ${selected.size ? "has-value" : ""}`}>
       <button
+        ref={triggerRef}
         type="button"
         className="select-trigger"
         aria-haspopup="listbox"
@@ -131,4 +149,4 @@ export function SegmentsMultiSelect({ segments, selected, onChange }: Props) {
         )}
     </div>
   );
-}
+});
