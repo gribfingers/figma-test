@@ -147,14 +147,19 @@ export function Search() {
     }
   }
 
-  const filteredResults = useMemo(() => {
+  // "Check-in only" narrows the base set every quick-filter tab (and its own count) works from — so
+  // a tab's count always matches what clicking it actually shows, instead of the tabs advertising
+  // full-result counts while the table itself is further narrowed underneath them.
+  const checkinOnlyResults = useMemo(() => {
     if (!results) return [];
-    const test = PAX_QUICK_FILTERS.find((f) => f.key === paxQuickFilter)?.test ?? (() => true);
-    const quickFiltered = results.filter(test);
-    if (!checkinOnly) return quickFiltered;
+    if (!checkinOnly) return results;
     const now = new Date();
-    return quickFiltered.filter((p) => isCheckinPhase(p, now));
-  }, [results, paxQuickFilter, checkinOnly]);
+    return results.filter((p) => isCheckinPhase(p, now));
+  }, [results, checkinOnly]);
+  const filteredResults = useMemo(() => {
+    const test = PAX_QUICK_FILTERS.find((f) => f.key === paxQuickFilter)?.test ?? (() => true);
+    return checkinOnlyResults.filter(test);
+  }, [checkinOnlyResults, paxQuickFilter]);
   const { sorted: sortedResults, sortKey, sortDir, onSort } = useSort(filteredResults, RESULT_SORT_GETTERS);
   const activeRowId = focusedRowId != null && sortedResults.some((p) => p.id === focusedRowId) ? focusedRowId : sortedResults[0]?.id ?? null;
   function moveRow(delta: 1 | -1) {
@@ -243,7 +248,7 @@ export function Search() {
                     else if (e.key === "ArrowLeft") { e.preventDefault(); moveFilter(-1); }
                   }}
                 >
-                  {t(f.label)} ({results.filter(f.test).length})
+                  {t(f.label)} ({checkinOnlyResults.filter(f.test).length})
                 </button>
               ))}
             </div>
