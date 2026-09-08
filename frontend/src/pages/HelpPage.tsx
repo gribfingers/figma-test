@@ -237,6 +237,7 @@ export function HelpPage() {
         </Step>
 
         <Step n={2} title={t("Passenger list")}>
+          <li>{t("Jump straight into the search field")} — <Key combo="/" /></li>
           <li>{t("Toggle the scan-a-boarding-pass panel")} — <HotkeyBadge id="boarding.scan" /></li>
           <li>
             {t("Move the row cursor, independent of where Tab happens to be")} — <Key combo="arrowup" /> <Key combo="arrowdown" />
@@ -248,21 +249,33 @@ export function HelpPage() {
           <li>
             {t("Board the checked rows")} — <HotkeyBadge id="boarding.board" />, {t("offload them")} — <HotkeyBadge id="boarding.offload" />
           </li>
+          <li className="help-note">
+            {t("Board only works once boarding has actually been opened for this flight (Start boarding pressed) — it stays disabled, and its shortcut does nothing, until then")}
+          </li>
           <li>{t("Start boarding, or close the flight once boarding")} — <HotkeyBadge id="boarding.start" /></li>
           <li>
             {t("Show the PNL")} — <HotkeyBadge id="boarding.pnl" />, {t("show the PFS")} — <HotkeyBadge id="boarding.pfs" />
           </li>
           <li>
-            {t("The status filter (All/Yet to board/Boarded), the facet filter (Docs to verify, Services to pay, …) and the Sq №/Seat/Last Name search-mode tabs all follow the same one-Tab-stop-plus-arrow-keys pattern")}
+            {t("Jump straight to a status tab, which also moves keyboard focus onto it")} — {t("All")} <HotkeyBadge id="boarding.filter-all" />, {t("Yet to board")} <HotkeyBadge id="boarding.filter-yet" />, {t("Boarded")} <HotkeyBadge id="boarding.filter-boarded" />
           </li>
           <li>
-            {t("From the search field, reach the toolbar above and below it")} — <Key combo="arrowup" /> <Key combo="arrowdown" />, {t("which chains all the way up to Start boarding/Close flight and the scan button")}
+            {t("Once focus is on any tab in the status filter, the facet filter (Docs to verify, Services to pay, …) or the Sq №/Seat/Last Name search-mode tabs, move within that group")} — <Key combo="arrowleft" /> <Key combo="arrowright" />
+          </li>
+          <li>
+            {t("The facet filter and search-mode tabs have no shortcut of their own — reach them by chaining from the search field")} — <Key combo="alt|arrowup" /> <Key combo="alt|arrowdown" />
+          </li>
+          <li>
+            {t("From the search field, that same chain reaches the whole toolbar")} — <Key combo="alt|arrowup" /> {t("goes up through the search-mode tabs, PNL/PFS and the status filter tabs, all the way to Start boarding/Close flight and the scan button")}; <Key combo="alt|arrowdown" /> {t("goes down to the facet filter")}
           </li>
         </Step>
 
         <Step n={3} title={t("Passenger detail")}>
           <li>{t("Jump straight into the Sq № search field")} — <Key combo="/" /></li>
           <li>{t("Board this passenger")} — <HotkeyBadge id="boarding.board" /></li>
+          <li className="help-note">
+            {t("Same rule as the passenger list — Board is disabled (and its shortcut does nothing) until Start boarding has been pressed for this flight")}
+          </li>
           <li>{t("Undo a boarding")} — <HotkeyBadge id="boarding.unboard" /></li>
           <li>{t("Open Pay, once a service payment is outstanding")} — <HotkeyBadge id="boarding.pay" /></li>
           <li>{t("Reprint the boarding pass")} — <HotkeyBadge id="boarding.reprint" /></li>
@@ -270,9 +283,9 @@ export function HelpPage() {
             {t("The Documents/Seats/Baggage/Extra services shortcut icons follow the same one-Tab-stop-plus-arrow-keys pattern; Enter opens that step in a new tab")}
           </li>
           <li>
-            {t("From the search field, reach the step icons and the Board/Unboard/Pay and Reprint BP buttons")} — <Key combo="arrowdown" />
+            {t("From the search field, reach the step icons")} — <Key combo="arrowdown" />, {t("then the Board/Unboard/Pay button")} — <Key combo="arrowdown" />, {t("then Reprint BP")} — <Key combo="arrowright" />
           </li>
-          <li>{t("The seat map works with the same keyboard scheme as the check-in flow's Seats step — Tab reaches one seat, arrow keys move between seats")}</li>
+          <li>{t("The seat map reaches one seat at a time and arrow keys move between seats, same scheme as the check-in flow's Seats step — but it's view-only here, so picking a seat doesn't reassign it")}</li>
         </Step>
       </Section>
 

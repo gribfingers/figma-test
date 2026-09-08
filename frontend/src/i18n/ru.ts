@@ -875,22 +875,33 @@ export const RU: Record<string, string> = {
   "Select/deselect every row": "Выбрать/снять выбор со всех строк",
   "Board the checked rows": "Посадить отмеченные строки",
   "offload them": "снять их с рейса",
+  "Board only works once boarding has actually been opened for this flight (Start boarding pressed) — it stays disabled, and its shortcut does nothing, until then":
+    "Board работает, только когда для этого рейса реально открыта посадка (нажата Start boarding) — до этого кнопка неактивна, а горячая клавиша ничего не делает",
   "Start boarding, or close the flight once boarding": "Начать посадку или закрыть рейс во время посадки",
   "Show the PNL": "Показать PNL",
   "show the PFS": "показать PFS",
-  "The status filter (All/Yet to board/Boarded), the facet filter (Docs to verify, Services to pay, …) and the Sq №/Seat/Last Name search-mode tabs all follow the same one-Tab-stop-plus-arrow-keys pattern":
-    "Фильтр статуса (All/Yet to board/Boarded), фильтр по признаку (Docs to verify, Services to pay, …) и вкладки режима поиска (Sq №/Seat/Last Name) — все работают по тому же принципу: один Tab-стоп и перемещение стрелками",
-  "From the search field, reach the toolbar above and below it": "Из поля поиска можно перейти к панели инструментов сверху и снизу от него",
-  "which chains all the way up to Start boarding/Close flight and the scan button": "цепочка доходит до кнопки Start boarding/Close flight и кнопки сканирования",
+  "Jump straight to a status tab, which also moves keyboard focus onto it": "Сразу переключить вкладку статуса — фокус клавиатуры тоже переместится на неё",
+  "Once focus is on any tab in the status filter, the facet filter (Docs to verify, Services to pay, …) or the Sq №/Seat/Last Name search-mode tabs, move within that group":
+    "Когда фокус на любой вкладке фильтра статуса, фильтра по признаку (Docs to verify, Services to pay, …) или режима поиска (Sq №/Seat/Last Name) — перемещение внутри этой группы",
+  "The facet filter and search-mode tabs have no shortcut of their own — reach them by chaining from the search field":
+    "У фильтра по признаку и вкладок режима поиска нет своей горячей клавиши — переходите к ним цепочкой из поля поиска",
+  "From the search field, that same chain reaches the whole toolbar": "Из поля поиска та же цепочка ведёт по всей панели инструментов",
+  "goes up through the search-mode tabs, PNL/PFS and the status filter tabs, all the way to Start boarding/Close flight and the scan button":
+    "вверх — через вкладки режима поиска, PNL/PFS и вкладки фильтра статуса, вплоть до кнопки Start boarding/Close flight и кнопки сканирования",
+  "goes down to the facet filter": "вниз — к фильтру по признаку",
   "Passenger detail": "Карточка пассажира",
   "Jump straight into the Sq № search field": "Сразу перейти в поле поиска по пор. №",
   "Board this passenger": "Посадить этого пассажира",
+  "Same rule as the passenger list — Board is disabled (and its shortcut does nothing) until Start boarding has been pressed for this flight":
+    "То же правило, что и в списке пассажиров — Board неактивна (и горячая клавиша ничего не делает), пока для этого рейса не нажата Start boarding",
   "Undo a boarding": "Отменить посадку",
   "Open Pay, once a service payment is outstanding": "Открыть оплату, если есть неоплаченные услуги",
   "Reprint the boarding pass": "Перепечатать посадочный талон",
   "The Documents/Seats/Baggage/Extra services shortcut icons follow the same one-Tab-stop-plus-arrow-keys pattern; Enter opens that step in a new tab":
     "Иконки-переходы Documents/Seats/Baggage/Extra services работают по тому же принципу: один Tab-стоп и перемещение стрелками; Enter открывает этот шаг в новой вкладке",
-  "From the search field, reach the step icons and the Board/Unboard/Pay and Reprint BP buttons": "Из поля поиска можно перейти к иконкам шагов и кнопкам Board/Unboard/Pay и Reprint BP",
-  "The seat map works with the same keyboard scheme as the check-in flow's Seats step — Tab reaches one seat, arrow keys move between seats":
-    "Карта мест работает с той же схемой клавиатуры, что и шаг Seats в потоке регистрации — Tab попадает на одно место, стрелки перемещают между местами",
+  "From the search field, reach the step icons": "Из поля поиска можно перейти к иконкам шагов",
+  "then the Board/Unboard/Pay button": "затем к кнопке Board/Unboard/Pay",
+  "then Reprint BP": "затем к Reprint BP",
+  "The seat map reaches one seat at a time and arrow keys move between seats, same scheme as the check-in flow's Seats step — but it's view-only here, so picking a seat doesn't reassign it":
+    "Карта мест: фокус попадает на одно место, стрелки перемещают между местами — та же схема, что и на шаге Seats в потоке регистрации, но здесь карта только для просмотра, выбор места ничего не переназначает",
 };

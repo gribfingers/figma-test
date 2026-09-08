@@ -3587,6 +3587,9 @@ button.tertiary.shortcut-hint-host { padding-top: 15px !important; }
 }
 .help-step h3 { margin: 0; font-size: 14px; color: var(--field-value); }
 .help-step ul { margin: 0; padding-left: 32px; font-size: 13px; color: var(--field-value); line-height: 1.9; }
+/* A caveat about the bullet just above it (e.g. "this shortcut is disabled until…") rather than a
+   feature of its own — muted/italic so it reads as a note, not another equal-weight bullet point. */
+.help-step li.help-note { color: var(--muted); font-style: italic; }
 .help-reference-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 32px; }
 .help-reference-group { padding: 12px 0; border-top: 1px solid var(--panel-border); }
 .help-reference-group:first-child, .help-reference-group:nth-child(2) { border-top: none; }
