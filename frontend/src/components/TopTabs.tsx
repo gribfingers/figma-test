@@ -293,7 +293,7 @@ export function TopTabs() {
           href="/help"
           target="_blank"
           rel="noopener noreferrer"
-          title={t("Keyboard shortcuts help")}
+          title={t("Help")}
         >
           <HelpIcon size={18} />
         </a>

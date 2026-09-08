@@ -33,12 +33,23 @@ function groupShortcuts() {
 }
 const GROUPED = groupShortcuts();
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (
-    <section className="help-section">
+    <section className="help-section" id={id}>
       <h2>{title}</h2>
       {children}
     </section>
+  );
+}
+
+/** A titled sub-block inside a Section — used to split "Keyboard shortcuts" into its own walkthrough/
+ *  reference/customizing pieces without each one reading as a top-level section of its own. */
+function Subsection({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div className="help-subsection">
+      <h3 className="help-subsection-title">{title}</h3>
+      {children}
+    </div>
   );
 }
 
@@ -67,15 +78,25 @@ export function HelpPage() {
   // This page is a real standalone browser tab (see TopTabs' Help button, target="_blank"), unlike
   // every other screen — those live inside the app's own tab strip under index.html's static title.
   useEffect(() => {
-    document.title = "DCS - Keyboard shortcuts";
+    document.title = "DCS - Help";
   }, []);
+
+  const TOC: { id: string; label: string }[] = [
+    { id: "overview", label: t("Overview") },
+    { id: "flights", label: t("Flights") },
+    { id: "checkin-guide", label: t("Check-in") },
+    { id: "boarding-guide", label: t("Boarding") },
+    { id: "admin", label: t("Admin & Analytics") },
+    { id: "settings", label: t("Settings") },
+    { id: "shortcuts", label: t("Keyboard shortcuts") },
+  ];
 
   return (
     <div className="help-page">
       <div className="help-page-header">
         <div className="help-page-title">
           <HelpIcon size={22} />
-          <h1>{t("Keyboard shortcuts")}</h1>
+          <h1>{t("DCS User Guide")}</h1>
         </div>
         <div className="user-panel-theme-toggle">
           {(["ru", "en"] as Language[]).map((l) => (
@@ -86,6 +107,101 @@ export function HelpPage() {
         </div>
       </div>
 
+      <p className="help-intro">
+        {t(
+          "A Departure Control System for check-in and boarding agents: build and manage the day's flights, check passengers in, and board them at the gate. This page covers every screen, plus a full keyboard-shortcut reference at the end."
+        )}
+      </p>
+      <nav className="help-toc" aria-label={t("On this page")}>
+        {TOC.map((item) => (
+          <a key={item.id} href={`#${item.id}`}>{item.label}</a>
+        ))}
+      </nav>
+
+      <Section id="overview" title={t("Overview")}>
+        <p>
+          {t(
+            "The sidebar (left) is the same on every screen: Flights, Check-in, Boarding, and — for superadmins only — UX Analytics and User administration. While you're inside a check-in flow, the sidebar also grows shortcut icons for the current Documents/Seats/Baggage/Extra services step, Cart and Flight information, so you don't have to go back to the flow header for them."
+          )}
+        </p>
+        <p>
+          {t(
+            "Across the top, every screen you open stays as its own tab in the strip — closable, reopenable (the ↺ icon bottom-left brings back the last closed one), and independent of your browser's own tabs. The top-right corner has the current time, this Help page, an internal Messenger for reaching other agents, and your account menu (avatar) with Settings and sign-out."
+          )}
+        </p>
+        <p>
+          {t(
+            "A test account without edit rights sees a banner across the top of every screen and can look around freely, but every change is blocked — the same restriction the backend itself enforces, not just the UI hiding buttons."
+          )}
+        </p>
+      </Section>
+
+      <Section id="flights" title={t("Flights")}>
+        <p>
+          {t(
+            "The Flights board (the plane icon, and where the app opens) lists every flight, defaulting to today's. Search by airline/flight number/route/date range, or use the quick filter fields directly above the table; every column sorts by clicking its header."
+          )}
+        </p>
+        <p>
+          {t(
+            "Opening a flight (click its row) gives you its full card: Main (schedule, aircraft, status), Counters, Pax, Transfers and Settings tabs. \"New flight\" builds one from scratch — segments, codeshare/interline/own agreement, and the same boarding-control checklist shown on the card's own Main tab."
+          )}
+        </p>
+      </Section>
+
+      <Section id="checkin-guide" title={t("Check-in")}>
+        <p>
+          {t(
+            "Check-in Search (the person-with-magnifier icon) finds a booking by Last Name, PNR, E-ticket, Document number or Flight. Opening a result lands you on that PNR's roster — every passenger on the booking, checked-in or not."
+          )}
+        </p>
+        <p>
+          {t(
+            "Check the passengers you want and press Check-in to start the flow for all of them together (a family or group checks in as one pass, not one at a time). The flow has four steps — Documents, Seats, Baggage, Extra services — reachable in order or, once unlocked, directly; Cart and Flight information open as side panels from the same header. Finish leaves the flow at any point; the flow's own Check-in button only lights up once Documents and Seats are behind you."
+          )}
+        </p>
+        <p>
+          {t(
+            "The roster's Actions menu covers what isn't a step of its own: printing a boarding pass, moving a passenger to another flight, the priority list, adding or removing a remark, and transferring."
+          )}
+        </p>
+      </Section>
+
+      <Section id="boarding-guide" title={t("Boarding")}>
+        <p>
+          {t(
+            "Boarding Search (the boarding-pass icon) lists every flight currently open for check-in or boarding; opening one takes you to its passenger list. Scan a boarding pass, or check rows and Board/Offload them directly — Board only works once the flight's own Start boarding has been pressed, and Close flight ends boarding and marks anyone still not boarded as a no-show. PNL and PFS open the passenger/preliminary flight manifests."
+          )}
+        </p>
+        <p>
+          {t(
+            "Opening a single passenger (click their row) shows their status next to the real seat map — for reference only here, picking a seat doesn't reassign it. Board, Unboard, Pay (once a service payment is outstanding) and Reprint BP act on that one passenger; the same Documents/Seats/Baggage/Extra services icons as check-in jump straight to that passenger's own flow, opened as a new tab in this app rather than a real browser tab."
+          )}
+        </p>
+      </Section>
+
+      <Section id="admin" title={t("Admin & Analytics")}>
+        <p>
+          {t(
+            "Both of these are superadmin-only and only appear in the sidebar for that role. User administration adds, edits and deactivates accounts — role (user/superadmin) and the per-user can_edit flag, which is what actually decides whether a regular user can change anything or only look (a superadmin can always edit)."
+          )}
+        </p>
+        <p>
+          {t(
+            "UX Analytics reads back what the app has been quietly recording as agents use it — page views, actions, which keyboard shortcuts actually get used, and JS/API errors — as a dashboard rather than raw logs."
+          )}
+        </p>
+      </Section>
+
+      <Section id="settings" title={t("Settings")}>
+        <p>
+          {t(
+            "Open your account menu (top-right avatar) → Settings for: interface language (RUS/ENG) and theme (Light/Dark) plus a high-contrast option, font size, whether tabs show a small icon for their section, this app's own desktop notifications for new Messenger messages, and your timezone. \"Show keyboard shortcuts\" is the one most relevant to this page — it puts a small always-visible combo badge on every shortcut-bound button, not just this reference. The same menu has a Keyboard shortcuts section for rebinding any Alt/Ctrl combo, and a Security section for changing your password."
+          )}
+        </p>
+      </Section>
+
+      <Section id="shortcuts" title={t("Keyboard shortcuts")}>
       <p className="help-intro">
         {t(
           "This app can be driven almost entirely from the keyboard. Two kinds of shortcuts are used throughout, and both are shown here exactly as they work on your own operating system:"
@@ -107,7 +223,7 @@ export function HelpPage() {
         {t('Turn on "Show keyboard shortcuts" in Settings (account menu) to see each shortcut next to its own button as a tooltip.')}
       </p>
 
-      <Section title={t("Step by step: Check-in Search → Extra services")}>
+      <Subsection title={t("Check-in — step by step")}>
         <Step n={1} title={t("Check-in Search")}>
           <li>{t("Open the Check-in Search tab from anywhere")} — <HotkeyBadge id="nav.checkin-search" /></li>
           <li>{t("Jump straight into the search field")} — <Key combo="/" /></li>
@@ -221,9 +337,9 @@ export function HelpPage() {
             {t("Once every step is done")} — <HotkeyBadge id="flow.checkin" /> {t("or")} <HotkeyBadge id="flow.finish" />
           </li>
         </Step>
-      </Section>
+      </Subsection>
 
-      <Section title={t("Boarding")}>
+      <Subsection title={t("Boarding — step by step")}>
         <Step n={1} title={t("Boarding Search")}>
           <li>{t("Open Boarding Search from anywhere")} — <HotkeyBadge id="nav.boarding-search" /></li>
           <li>{t("Jump straight into the flight-number field")} — <Key combo="/" /></li>
@@ -287,9 +403,9 @@ export function HelpPage() {
           </li>
           <li>{t("The seat map reaches one seat at a time and arrow keys move between seats, same scheme as the check-in flow's Seats step — but it's view-only here, so picking a seat doesn't reassign it")}</li>
         </Step>
-      </Section>
+      </Subsection>
 
-      <Section title={t("Full reference")}>
+      <Subsection title={t("Full reference")}>
         <p className="help-intro">{t("Every shortcut in the app, grouped, showing your own current bindings.")}</p>
         <div className="help-reference-grid">
           {GROUPED.map(({ group, items }) => (
@@ -306,13 +422,14 @@ export function HelpPage() {
             </div>
           ))}
         </div>
-      </Section>
+      </Subsection>
 
-      <Section title={t("Customizing shortcuts")}>
+      <Subsection title={t("Customizing shortcuts")}>
         <ul>
           <li>{t("Any Alt/Ctrl shortcut can be rebound from Settings → Keyboard shortcuts (account menu, top right).")}</li>
           <li>{t("This page always reflects your own current bindings, not just the defaults.")}</li>
         </ul>
+      </Subsection>
       </Section>
     </div>
   );
