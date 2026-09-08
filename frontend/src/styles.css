@@ -3512,19 +3512,18 @@ tr.row-hover { cursor: pointer; }
 /* Always-visible combo tag pinned to a button's corner (ShortcutBadge, shortcutHints.tsx) — the
    "Show keyboard shortcuts" setting's on-button hint, deliberately not a hover-only tooltip so it
    reads at a glance. The host button needs this class for position:relative only — the badge is
-   itself absolutely positioned (never in flow), so it floats over the corner rather than reserving
-   space via padding, which used to push the button's own centered label off-center vertically on
-   every fixed-height button this class is used on (Start boarding, Reprint BP, …). */
+   itself absolutely positioned (never in flow, doesn't affect the host's own box size at all), so
+   it floats above the button's top edge rather than reserving space via padding. Reserving space
+   via padding (an earlier version of this) either pushed a fixed-height button's own centered label
+   off-center (Start boarding, Reprint BP, …), or — even with height:auto tertiary buttons, which
+   don't suffer that themselves — grew their box just enough to throw off vertical alignment against
+   a plain-height sibling in the same flex row (PnrView's Finish/Check-in/Next). Floating above avoids
+   both: the host's own box, and therefore its centering against any neighbor, never changes. */
 .shortcut-hint-host { position: relative; }
-/* .tertiary is the one exception: height:auto + padding:0 means it hugs its label tightly with no
-   natural room above it — unlike a fixed-height button, growing its own box via padding-top doesn't
-   push anything off-center (there's no fixed height to eat into), so it can still reserve space
-   this way without the problem above. PNL/PFS are the only .shortcut-hint-host buttons this small. */
-button.tertiary.shortcut-hint-host { padding-top: 15px !important; }
 .shortcut-hint-badge {
   position: absolute;
-  top: 2px;
-  right: 6px;
+  top: -13px;
+  right: 2px;
   font-size: 10px;
   line-height: 1;
   font-weight: 700;
