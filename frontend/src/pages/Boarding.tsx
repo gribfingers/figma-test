@@ -29,6 +29,7 @@ import {
 } from "../paxExtra";
 import { useCanEdit } from "../auth";
 import { isFlightDeparted } from "../flightPhase";
+import { SortTh, useSort } from "../components/SortTh";
 import { useHotkey } from "../useShortcuts";
 import { useShortcutTitle, ShortcutBadge } from "../shortcutHints";
 import { trackEvent } from "../analytics";
@@ -127,6 +128,7 @@ function buildRows(passengers: Passenger[]): PaxRow[] {
 type QuickFilterKey = "all" | "yet" | "boarded";
 type SearchMode = "seq" | "seat" | "lastname";
 type FacetKey = "all" | "docs" | "services" | "inbound" | "umnr" | "inf" | "wchr" | "strc";
+type BoardingSortKey = "name" | "class" | "pnr" | "gender" | "status" | "docs" | "baggage" | "seat";
 
 const QUICK_FILTERS: { key: QuickFilterKey; label: string }[] = [
   { key: "all", label: "All" },
@@ -270,11 +272,31 @@ export function Boarding() {
     });
   }, [facetFiltered, quickFilter, searchQuery, searchMode]);
 
-  const rows = useMemo(() => buildRows(filteredPassengers), [filteredPassengers]);
+  // Class needs seatByCode (an infant's own guardian-class fallback lives in classFor), so these
+  // getters are built per-render rather than as a module-level constant like BoardingSearch's own.
+  const SORT_GETTERS: Record<BoardingSortKey, (p: Passenger) => string | number> = useMemo(
+    () => ({
+      name: (p) => `${p.surname} ${p.given_name}`,
+      class: (p) => classFor(p, seatByCode) ?? "",
+      pnr: (p) => p.record_locator,
+      gender: (p) => p.gender ?? "",
+      status: (p) => statusLabel(p),
+      docs: (p) => (parsePassengerExtra(p).docVerified ? 1 : 0),
+      baggage: (p) => p.bag_count ?? 0,
+      seat: (p) => p.seat ?? "",
+    }),
+    [seatByCode]
+  );
+  const { sorted: sortedPassengers, sortKey, sortDir, onSort } = useSort<Passenger, BoardingSortKey>(filteredPassengers, SORT_GETTERS);
+
+  // Sorting the (non-nested) passengers before nesting infants under their guardian, rather than
+  // sorting the built rows directly, keeps an infant glued right after its guardian regardless of
+  // sort column/direction instead of scattering the family across the table.
+  const rows = useMemo(() => buildRows(sortedPassengers), [sortedPassengers]);
 
   // A keyboard-focused row (see boarding.row-* shortcuts) only means something for the currently
-  // visible rows — drop it whenever the filter/search narrows or reorders the list.
-  useEffect(() => setFocusedIndex(-1), [facet, quickFilter, searchQuery, searchMode]);
+  // visible rows — drop it whenever the filter/search/sort narrows or reorders the list.
+  useEffect(() => setFocusedIndex(-1), [facet, quickFilter, searchQuery, searchMode, sortKey, sortDir]);
 
   async function boardDirectly(p: Passenger) {
     if (!canEdit || !p.bcbp) return;
@@ -662,16 +684,16 @@ export function Boarding() {
                 <th>
                   {canEdit && <input type="checkbox" checked={allSelected} title={selectAllTitle} onChange={toggleAllSelected} />}
                 </th>
-                <th>{t("Name")}</th>
+                <SortTh id="name" label={t("Name")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
                 <th>{t("Remarks")}</th>
                 <th>{t("Route")}</th>
-                <th>{t("Class")}</th>
-                <th>PNR</th>
-                <th>{t("Gender")}</th>
-                <th>{t("Status")}</th>
-                <th>{t("Docs")}</th>
-                <th>{t("Baggage")}</th>
-                <th>{t("Seat")}</th>
+                <SortTh id="class" label={t("Class")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="pnr" label="PNR" sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="gender" label={t("Gender")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="status" label={t("Status")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="docs" label={t("Docs")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="baggage" label={t("Baggage")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
+                <SortTh id="seat" label={t("Seat")} sortKey={sortKey} sortDir={sortDir} onSort={onSort} />
               </tr>
             </thead>
             <tbody>
