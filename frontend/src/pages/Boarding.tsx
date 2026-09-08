@@ -192,7 +192,11 @@ export function Boarding() {
   // browser/OS setting (Safari's Full Keyboard Access) outside this app's control. These refs let
   // the toolbar chain arrow-key focus through them too, same reasoning as BaggageStep's row chain,
   // so a keyboard-only agent who doesn't know the Alt-combos can still reach every control by arrowing
-  // down from the top of the page (or up from the search field) instead of only by mouse.
+  // down from the top of the page (or up from the search field) instead of only by mouse. Gated on
+  // Alt (Alt+ArrowUp/Down, not bare) because bare ArrowUp/Down are already boarding.row-up/row-down —
+  // a *global* hotkey that moves the row cursor "independent of where Tab happens to be" (see those
+  // useHotkey calls below) and would otherwise fire on the very same keypress and move two things
+  // at once.
   const handIconRef = useRef<HTMLButtonElement>(null);
   const startCloseRef = useRef<HTMLButtonElement>(null);
   const pnlRef = useRef<HTMLButtonElement>(null);
@@ -433,7 +437,7 @@ export function Boarding() {
               onClick={() => setScanOpen((v) => !v)}
               onKeyDown={(e) => {
                 if (e.key === "ArrowRight") { e.preventDefault(); startCloseRef.current?.focus(); }
-                else if (e.key === "ArrowDown") { e.preventDefault(); focusQuickFilter(); }
+                else if (e.altKey && e.key === "ArrowDown") { e.preventDefault(); focusQuickFilter(); }
               }}
             >
               <HandIcon size={20} />
@@ -444,30 +448,32 @@ export function Boarding() {
               <button
                 ref={startCloseRef}
                 type="button"
-                className="danger boarding-start-btn"
+                className="danger boarding-start-btn shortcut-hint-host"
                 title={closed ? undefined : startCloseTitle}
                 onClick={closeFlight}
                 disabled={closed}
                 onKeyDown={(e) => {
                   if (e.key === "ArrowLeft") { e.preventDefault(); handIconRef.current?.focus(); }
-                  else if (e.key === "ArrowDown") { e.preventDefault(); focusQuickFilter(); }
+                  else if (e.altKey && e.key === "ArrowDown") { e.preventDefault(); focusQuickFilter(); }
                 }}
               >
+                {!closed && <ShortcutBadge id="boarding.start" />}
                 {t("Close flight")}
               </button>
             ) : (
               <button
                 ref={startCloseRef}
                 type="button"
-                className="secondary boarding-start-btn"
+                className="secondary boarding-start-btn shortcut-hint-host"
                 disabled={closed}
                 title={closed ? undefined : startCloseTitle}
                 onClick={startBoarding}
                 onKeyDown={(e) => {
                   if (e.key === "ArrowLeft") { e.preventDefault(); handIconRef.current?.focus(); }
-                  else if (e.key === "ArrowDown") { e.preventDefault(); focusQuickFilter(); }
+                  else if (e.altKey && e.key === "ArrowDown") { e.preventDefault(); focusQuickFilter(); }
                 }}
               >
+                {!closed && <ShortcutBadge id="boarding.start" />}
                 {t("Start boarding")}
               </button>
             )
@@ -499,7 +505,7 @@ export function Boarding() {
 
       <div className="panel panel--flush boarding-table-panel">
         <div className="toolbar panel-head">
-          <div className="pax-quick-filters" role="tablist" aria-label={t("Status filter")}>
+          <div className="quick-status-pills" role="tablist" aria-label={t("Status filter")}>
             {QUICK_FILTERS.map((f) => {
               const count = f.key === "all" ? passengers.length : f.key === "yet" ? yetToBoardCount : boardedCount;
               const title = f.key === "all" ? filterAllTitle : f.key === "yet" ? filterYetTitle : filterBoardedTitle;
@@ -520,8 +526,8 @@ export function Boarding() {
                   onKeyDown={(e) => {
                     if (e.key === "ArrowRight") { e.preventDefault(); moveQuickFilter(1); }
                     else if (e.key === "ArrowLeft") { e.preventDefault(); moveQuickFilter(-1); }
-                    else if (e.key === "ArrowUp") { e.preventDefault(); (startCloseRef.current ?? handIconRef.current)?.focus(); }
-                    else if (e.key === "ArrowDown") { e.preventDefault(); pnlRef.current?.focus(); }
+                    else if (e.altKey && e.key === "ArrowUp") { e.preventDefault(); (startCloseRef.current ?? handIconRef.current)?.focus(); }
+                    else if (e.altKey && e.key === "ArrowDown") { e.preventDefault(); pnlRef.current?.focus(); }
                   }}
                 >
                   {t(f.label)} ({count})
@@ -544,8 +550,8 @@ export function Boarding() {
             onClick={showPnl}
             onKeyDown={(e) => {
               if (e.key === "ArrowRight") { e.preventDefault(); pfsRef.current?.focus(); }
-              else if (e.key === "ArrowUp") { e.preventDefault(); focusQuickFilter(); }
-              else if (e.key === "ArrowDown") { e.preventDefault(); searchModeRefs.current.get(searchMode)?.focus(); }
+              else if (e.altKey && e.key === "ArrowUp") { e.preventDefault(); focusQuickFilter(); }
+              else if (e.altKey && e.key === "ArrowDown") { e.preventDefault(); searchModeRefs.current.get(searchMode)?.focus(); }
             }}
           >
             <ShortcutBadge id="boarding.pnl" />
@@ -559,8 +565,8 @@ export function Boarding() {
             onClick={showPfs}
             onKeyDown={(e) => {
               if (e.key === "ArrowLeft") { e.preventDefault(); pnlRef.current?.focus(); }
-              else if (e.key === "ArrowUp") { e.preventDefault(); focusQuickFilter(); }
-              else if (e.key === "ArrowDown") { e.preventDefault(); searchModeRefs.current.get(searchMode)?.focus(); }
+              else if (e.altKey && e.key === "ArrowUp") { e.preventDefault(); focusQuickFilter(); }
+              else if (e.altKey && e.key === "ArrowDown") { e.preventDefault(); searchModeRefs.current.get(searchMode)?.focus(); }
             }}
           >
             <ShortcutBadge id="boarding.pfs" />
@@ -587,8 +593,8 @@ export function Boarding() {
                   onKeyDown={(e) => {
                     if (e.key === "ArrowRight") { e.preventDefault(); moveSearchMode(1); }
                     else if (e.key === "ArrowLeft") { e.preventDefault(); moveSearchMode(-1); }
-                    else if (e.key === "ArrowUp") { e.preventDefault(); pnlRef.current?.focus(); }
-                    else if (e.key === "ArrowDown") { e.preventDefault(); searchInputRef.current?.focus(); }
+                    else if (e.altKey && e.key === "ArrowUp") { e.preventDefault(); pnlRef.current?.focus(); }
+                    else if (e.altKey && e.key === "ArrowDown") { e.preventDefault(); searchInputRef.current?.focus(); }
                   }}
                 >
                   {t(m.label)}
@@ -603,11 +609,13 @@ export function Boarding() {
               placeholder={t("Search")}
               title={searchFocusTitle}
               onKeyDown={(e) => {
-                // ArrowUp/Down, not Left/Right — those already move the text cursor within this
-                // input. Reaches the rest of the toolbar's <button>-based zones the same way
+                // Alt+ArrowUp/Down, not bare — bare Left/Right already move the text cursor within
+                // this input, and bare Up/Down are boarding.row-up/row-down (a global hotkey that
+                // moves the row cursor regardless of focus, see the note above searchInputRef's
+                // declaration). Reaches the rest of the toolbar's <button>-based zones the same way
                 // BaggageStep's Weight field reaches its row's Select triggers.
-                if (e.key === "ArrowUp") { e.preventDefault(); searchModeRefs.current.get(searchMode)?.focus(); }
-                else if (e.key === "ArrowDown") { e.preventDefault(); facetRefs.current.get(facet)?.focus(); }
+                if (e.altKey && e.key === "ArrowUp") { e.preventDefault(); searchModeRefs.current.get(searchMode)?.focus(); }
+                else if (e.altKey && e.key === "ArrowDown") { e.preventDefault(); facetRefs.current.get(facet)?.focus(); }
               }}
             />
           </div>
@@ -628,7 +636,7 @@ export function Boarding() {
                 onKeyDown={(e) => {
                   if (e.key === "ArrowRight") { e.preventDefault(); moveFacet(1); }
                   else if (e.key === "ArrowLeft") { e.preventDefault(); moveFacet(-1); }
-                  else if (e.key === "ArrowUp") { e.preventDefault(); searchInputRef.current?.focus(); }
+                  else if (e.altKey && e.key === "ArrowUp") { e.preventDefault(); searchInputRef.current?.focus(); }
                 }}
               >
                 {t(f.label)} ({passengers.filter(f.test).length})

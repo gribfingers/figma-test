@@ -133,6 +133,10 @@ export function BoardingPax() {
     return b;
   }, [passengers, seatByCode]);
   const yetToBoardCount = passengers.filter((p) => p.boarding_status !== "BOARDED").length;
+  // Same check as Boarding.tsx's own `closed` — without it Board stayed enabled after the flight
+  // closed, and "Flight is already closed for boarding" only ever surfaced from the backend's
+  // rejection of the scan, i.e. only after actually clicking/firing Board instead of proactively.
+  const closed = flight?.status === "CLOSED" || flight?.status === "DEPARTED";
 
   const remainMin = flight
     ? Math.max(0, Math.round((new Date(flight.std).getTime() + BOARDING_TO_MIN * 60000 - Date.now()) / 60000))
@@ -187,7 +191,7 @@ export function BoardingPax() {
   // same single-id-covers-a-swapping-button reasoning as flow.checkin/boarding.start elsewhere.
   const isBoarded = !!passenger && passenger.boarding_status === "BOARDED";
   const isUnpaid = !!passenger && passenger.boarding_status !== "BOARDED" && passenger.checkin_status === "CHECKED_IN" && asvcStatus(passenger) === "conflict";
-  const canBoardThis = !!passenger && !isBoarded && !isUnpaid && passenger.checkin_status === "CHECKED_IN";
+  const canBoardThis = !!passenger && !isBoarded && !isUnpaid && passenger.checkin_status === "CHECKED_IN" && !closed;
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   useHotkey("nav.search-focus", () => searchInputRef.current?.focus());
@@ -345,7 +349,7 @@ export function BoardingPax() {
                 <button
                   ref={actionBtnRef}
                   type="button"
-                  className="secondary boarding-pax-action-btn"
+                  className="secondary boarding-pax-action-btn shortcut-hint-host"
                   title={unboardTitle}
                   onClick={unboardThis}
                   onKeyDown={(e) => {
@@ -353,13 +357,14 @@ export function BoardingPax() {
                     else if (e.key === "ArrowRight") { e.preventDefault(); reprintRef.current?.focus(); }
                   }}
                 >
+                  <ShortcutBadge id="boarding.unboard" />
                   {t("Unboard")}
                 </button>
               ) : isUnpaid ? (
                 <button
                   ref={actionBtnRef}
                   type="button"
-                  className="boarding-pax-action-btn"
+                  className="boarding-pax-action-btn shortcut-hint-host"
                   title={payTitle}
                   onClick={() => setPayOpen(true)}
                   onKeyDown={(e) => {
@@ -367,28 +372,30 @@ export function BoardingPax() {
                     else if (e.key === "ArrowRight") { e.preventDefault(); reprintRef.current?.focus(); }
                   }}
                 >
+                  <ShortcutBadge id="boarding.pay" />
                   {t("Pay")}
                 </button>
               ) : (
                 <button
                   ref={actionBtnRef}
                   type="button"
-                  className="boarding-pax-action-btn"
-                  disabled={passenger.checkin_status !== "CHECKED_IN"}
-                  title={passenger.checkin_status !== "CHECKED_IN" ? undefined : boardTitle}
+                  className="boarding-pax-action-btn shortcut-hint-host"
+                  disabled={passenger.checkin_status !== "CHECKED_IN" || closed}
+                  title={passenger.checkin_status !== "CHECKED_IN" || closed ? undefined : boardTitle}
                   onClick={boardThis}
                   onKeyDown={(e) => {
                     if (e.key === "ArrowUp") { e.preventDefault(); stepIconRefs.current.get(focusedStep)?.focus(); }
                     else if (e.key === "ArrowRight") { e.preventDefault(); reprintRef.current?.focus(); }
                   }}
                 >
+                  {passenger.checkin_status === "CHECKED_IN" && !closed && <ShortcutBadge id="boarding.board" />}
                   {t("Board")}
                 </button>
               )}
               <button
                 ref={reprintRef}
                 type="button"
-                className="secondary boarding-pax-action-btn"
+                className="secondary boarding-pax-action-btn shortcut-hint-host"
                 title={reprintTitle}
                 onClick={reprintThis}
                 onKeyDown={(e) => {
@@ -396,6 +403,7 @@ export function BoardingPax() {
                   else if (e.key === "ArrowLeft") { e.preventDefault(); actionBtnRef.current?.focus(); }
                 }}
               >
+                <ShortcutBadge id="boarding.reprint" />
                 {t("Reprint BP")}
               </button>
             </div>
