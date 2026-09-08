@@ -3511,9 +3511,16 @@ tr.row-hover { cursor: pointer; }
 
 /* Always-visible combo tag pinned to a button's corner (ShortcutBadge, shortcutHints.tsx) — the
    "Show keyboard shortcuts" setting's on-button hint, deliberately not a hover-only tooltip so it
-   reads at a glance. The host button needs this class for position:relative; padding-top makes room
-   so the badge doesn't overlap the button's own label. */
-.shortcut-hint-host { position: relative; padding-top: 15px !important; }
+   reads at a glance. The host button needs this class for position:relative only — the badge is
+   itself absolutely positioned (never in flow), so it floats over the corner rather than reserving
+   space via padding, which used to push the button's own centered label off-center vertically on
+   every fixed-height button this class is used on (Start boarding, Reprint BP, …). */
+.shortcut-hint-host { position: relative; }
+/* .tertiary is the one exception: height:auto + padding:0 means it hugs its label tightly with no
+   natural room above it — unlike a fixed-height button, growing its own box via padding-top doesn't
+   push anything off-center (there's no fixed height to eat into), so it can still reserve space
+   this way without the problem above. PNL/PFS are the only .shortcut-hint-host buttons this small. */
+button.tertiary.shortcut-hint-host { padding-top: 15px !important; }
 .shortcut-hint-badge {
   position: absolute;
   top: 2px;
