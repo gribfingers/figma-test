@@ -2843,6 +2843,15 @@ tr.row-hover { cursor: pointer; }
 /* Only the passenger table scrolls — everything else (header, filters) stays put,
    same "page itself must not scroll" approach as .pnr-view-flow. */
 .boarding-page { display: flex; flex-direction: column; height: 100%; min-height: 0; gap: 16px; }
+/* .boarding-page already spaces its children via flex `gap` above — .panel/.pnr-head/.error-box/
+   .ok-box each carry their own margin-bottom too (needed where they're used in plain document flow,
+   e.g. PnrView's own .pnr-head), which stacked on top of the flex gap here and doubled the visible
+   gap after the flight-info header to 32px instead of the 16px every other panel-to-panel gap uses
+   (e.g. BoardingSearch's filter panel to its results panel). */
+.boarding-page > .panel,
+.boarding-page > .pnr-head,
+.boarding-page > .error-box,
+.boarding-page > .ok-box { margin-bottom: 0; }
 .boarding-table-panel { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 .boarding-table-panel .table-scroll { flex: 1; min-height: 0; overflow-y: auto; }
 /* Fixed width so the button doesn't resize when "Start boarding" becomes "Close flight". */
