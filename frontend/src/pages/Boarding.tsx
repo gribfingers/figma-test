@@ -298,6 +298,17 @@ export function Boarding() {
   // visible rows — drop it whenever the filter/search/sort narrows or reorders the list.
   useEffect(() => setFocusedIndex(-1), [facet, quickFilter, searchQuery, searchMode, sortKey, sortDir]);
 
+  // The row cursor is a plain focusedIndex state, not real DOM focus (see the "Not made a real
+  // Tab-stop" comment on the row below) — a real .focus() call scrolls its target into view for
+  // free, but this doesn't, so boarding.row-up/row-down could walk the cursor straight off the
+  // bottom/top of .table-scroll without the table ever following it. block:"nearest" only scrolls
+  // when the row isn't already visible, instead of re-centering it on every keypress.
+  const rowRefs = useRef(new Map<number, HTMLTableRowElement>());
+  useEffect(() => {
+    if (focusedIndex < 0) return;
+    rowRefs.current.get(focusedIndex)?.scrollIntoView({ block: "nearest" });
+  }, [focusedIndex]);
+
   async function boardDirectly(p: Passenger) {
     if (!canEdit || !p.bcbp) return;
     try {
@@ -710,6 +721,10 @@ export function Boarding() {
                   // now-keyboard-operable name/flag cells below.
                   <tr
                     key={p.id}
+                    ref={(el) => {
+                      if (el) rowRefs.current.set(idx, el);
+                      else rowRefs.current.delete(idx);
+                    }}
                     className={`clickable ${selected.has(p.id) ? "pax-row-active" : ""} ${idx === focusedIndex ? "pax-row-focused" : ""}`}
                     onClick={() => navigate(`/boarding/${fid}/pax/${p.id}`)}
                   >
