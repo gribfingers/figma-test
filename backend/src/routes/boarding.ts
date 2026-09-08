@@ -55,6 +55,11 @@ boardingRouter.post("/scan", requireEdit, (req, res) => {
   ) {
     return res.status(409).json({ error: "Flight is already closed for boarding", passenger: serializePassenger(passenger) });
   }
+  // Checked before the more general "not checked in" — boarding can only actually happen once the
+  // gate agent has opened it (Start boarding), not just because check-in is still open.
+  if (passenger.flight_status !== "BOARDING") {
+    return res.status(409).json({ error: "Boarding has not started for this flight yet", passenger: serializePassenger(passenger) });
+  }
   if (passenger.checkin_status !== "CHECKED_IN") {
     return res.status(409).json({ error: "Passenger is not checked in", passenger: serializePassenger(passenger) });
   }

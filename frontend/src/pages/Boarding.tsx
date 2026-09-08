@@ -28,6 +28,7 @@ import {
   trStatus,
 } from "../paxExtra";
 import { useCanEdit } from "../auth";
+import { isFlightDeparted } from "../flightPhase";
 import { useHotkey } from "../useShortcuts";
 import { useShortcutTitle, ShortcutBadge } from "../shortcutHints";
 import { trackEvent } from "../analytics";
@@ -360,7 +361,14 @@ export function Boarding() {
     setSelected(allSelected ? new Set() : new Set(rows.map((r) => r.passenger.id)));
   }
 
-  const closed = flight?.status === "CLOSED" || flight?.status === "DEPARTED";
+  // isFlightDeparted catches a flight that's actually past its std but whose status an agent never
+  // manually advanced to CLOSED/DEPARTED — see its own doc comment (flightPhase.ts) for why that's
+  // possible. Without it Board/Offload/Start-close stayed enabled on such a flight, and the backend's
+  // rejection only surfaced after the fact instead of the button being disabled up front.
+  const closed = flight?.status === "CLOSED" || flight?.status === "DEPARTED" || (!!flight && isFlightDeparted(flight, new Date()));
+  // Boarding can only actually happen once the gate agent has opened it (Start boarding) — matches
+  // the backend's own /scan check, which now rejects a scan on any flight_status other than BOARDING.
+  const boardingNotOpen = flight?.status !== "BOARDING";
 
   // Row navigation — see UserPanel's Keyboard shortcuts section for rebinding these.
   useHotkey("boarding.row-up", () => setFocusedIndex((i) => (i <= 0 ? 0 : i - 1)), rows.length > 0);
@@ -383,7 +391,7 @@ export function Boarding() {
   );
   useHotkey("boarding.select-all", toggleAllSelected, canEdit && rows.length > 0);
   useHotkey("boarding.scan", () => setScanOpen((v) => !v), canEdit);
-  useHotkey("boarding.board", boardSelected, canEdit && selected.size > 0 && !closed);
+  useHotkey("boarding.board", boardSelected, canEdit && selected.size > 0 && !closed && !boardingNotOpen);
   useHotkey("boarding.offload", offloadSelected, canEdit && selected.size > 0 && !closed);
   // Also focuses the pill, not just sets the filter — otherwise the hotkey fires the action but
   // leaves keyboard focus wherever it already was, same gap the toolbar chain below fixes for
@@ -538,7 +546,7 @@ export function Boarding() {
           <div className="spacer" />
           {canEdit && selected.size > 0 && (
             <>
-              <button type="button" className="secondary small" disabled={closed} title={closed ? undefined : boardTitle} onClick={boardSelected}>{t("Board")} ({selected.size})</button>
+              <button type="button" className="secondary small" disabled={closed || boardingNotOpen} title={closed || boardingNotOpen ? undefined : boardTitle} onClick={boardSelected}>{t("Board")} ({selected.size})</button>
               <button type="button" className="danger small" disabled={closed} title={closed ? undefined : offloadTitle} onClick={offloadSelected}>{t("Offload")} ({selected.size})</button>
             </>
           )}

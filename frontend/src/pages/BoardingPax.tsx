@@ -15,6 +15,7 @@ import { usePanelTransition } from "../usePanelMounted";
 import { EntityNotFound } from "../components/EntityNotFound";
 import { useLanguage } from "../i18n";
 import { useCanEdit } from "../auth";
+import { isFlightDeparted } from "../flightPhase";
 import { trackEvent } from "../analytics";
 import { clickable } from "../interactive";
 import { useHotkey } from "../useShortcuts";
@@ -136,7 +137,12 @@ export function BoardingPax() {
   // Same check as Boarding.tsx's own `closed` — without it Board stayed enabled after the flight
   // closed, and "Flight is already closed for boarding" only ever surfaced from the backend's
   // rejection of the scan, i.e. only after actually clicking/firing Board instead of proactively.
-  const closed = flight?.status === "CLOSED" || flight?.status === "DEPARTED";
+  // isFlightDeparted also catches a flight that's actually past its std but whose status an agent
+  // never manually advanced to CLOSED/DEPARTED — see its own doc comment (flightPhase.ts).
+  const closed = flight?.status === "CLOSED" || flight?.status === "DEPARTED" || (!!flight && isFlightDeparted(flight, new Date()));
+  // Boarding can only actually happen once the gate agent has opened it (Start boarding) — matches
+  // the backend's own /scan check, which now rejects a scan on any flight_status other than BOARDING.
+  const boardingNotOpen = flight?.status !== "BOARDING";
 
   const remainMin = flight
     ? Math.max(0, Math.round((new Date(flight.std).getTime() + BOARDING_TO_MIN * 60000 - Date.now()) / 60000))
@@ -191,7 +197,7 @@ export function BoardingPax() {
   // same single-id-covers-a-swapping-button reasoning as flow.checkin/boarding.start elsewhere.
   const isBoarded = !!passenger && passenger.boarding_status === "BOARDED";
   const isUnpaid = !!passenger && passenger.boarding_status !== "BOARDED" && passenger.checkin_status === "CHECKED_IN" && asvcStatus(passenger) === "conflict";
-  const canBoardThis = !!passenger && !isBoarded && !isUnpaid && passenger.checkin_status === "CHECKED_IN" && !closed;
+  const canBoardThis = !!passenger && !isBoarded && !isUnpaid && passenger.checkin_status === "CHECKED_IN" && !closed && !boardingNotOpen;
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   useHotkey("nav.search-focus", () => searchInputRef.current?.focus());
@@ -380,15 +386,15 @@ export function BoardingPax() {
                   ref={actionBtnRef}
                   type="button"
                   className="boarding-pax-action-btn shortcut-hint-host"
-                  disabled={passenger.checkin_status !== "CHECKED_IN" || closed}
-                  title={passenger.checkin_status !== "CHECKED_IN" || closed ? undefined : boardTitle}
+                  disabled={passenger.checkin_status !== "CHECKED_IN" || closed || boardingNotOpen}
+                  title={passenger.checkin_status !== "CHECKED_IN" || closed || boardingNotOpen ? undefined : boardTitle}
                   onClick={boardThis}
                   onKeyDown={(e) => {
                     if (e.key === "ArrowUp") { e.preventDefault(); stepIconRefs.current.get(focusedStep)?.focus(); }
                     else if (e.key === "ArrowRight") { e.preventDefault(); reprintRef.current?.focus(); }
                   }}
                 >
-                  {passenger.checkin_status === "CHECKED_IN" && !closed && <ShortcutBadge id="boarding.board" />}
+                  {passenger.checkin_status === "CHECKED_IN" && !closed && !boardingNotOpen && <ShortcutBadge id="boarding.board" />}
                   {t("Board")}
                 </button>
               )}
