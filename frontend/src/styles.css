@@ -3511,19 +3511,13 @@ tr.row-hover { cursor: pointer; }
 
 /* Always-visible combo tag pinned to a button's corner (ShortcutBadge, shortcutHints.tsx) — the
    "Show keyboard shortcuts" setting's on-button hint, deliberately not a hover-only tooltip so it
-   reads at a glance. The host button needs this class for position:relative only — the badge is
-   itself absolutely positioned (never in flow, doesn't affect the host's own box size at all), so
-   it floats above the button's top edge rather than reserving space via padding. Reserving space
-   via padding (an earlier version of this) either pushed a fixed-height button's own centered label
-   off-center (Start boarding, Reprint BP, …), or — even with height:auto tertiary buttons, which
-   don't suffer that themselves — grew their box just enough to throw off vertical alignment against
-   a plain-height sibling in the same flex row (PnrView's Finish/Check-in/Next). Floating above avoids
-   both: the host's own box, and therefore its centering against any neighbor, never changes. */
-.shortcut-hint-host { position: relative; }
+   reads at a glance. The host button needs this class for position:relative; padding-top makes room
+   so the badge doesn't overlap the button's own label. */
+.shortcut-hint-host { position: relative; padding-top: 15px !important; }
 .shortcut-hint-badge {
   position: absolute;
-  top: -13px;
-  right: 2px;
+  top: 2px;
+  right: 6px;
   font-size: 10px;
   line-height: 1;
   font-weight: 700;
@@ -3532,6 +3526,11 @@ tr.row-hover { cursor: pointer; }
   pointer-events: none;
   white-space: nowrap;
 }
+/* var(--ok) green reads fine on a bordered/transparent host (Start boarding, PNL/PFS, Reprint BP,
+   Finish/Next, …) but not on a solid-filled one — Board and Pay (plain button, filled accent-blue)
+   and Close flight (.danger, filled red) both need white instead for contrast. .secondary/.tertiary
+   are the bordered/transparent variants, so excluding them from this leaves exactly the filled ones. */
+.shortcut-hint-host:not(.secondary):not(.tertiary) .shortcut-hint-badge { color: #fff; }
 
 /* A small, static (non-interactive) key-combo chip — used inline in HelpPage prose next to a plain
    ArrowUp/Enter/Escape mention that isn't a registered SHORTCUTS id, and reused by HotkeyBadge for
