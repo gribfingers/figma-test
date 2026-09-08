@@ -92,8 +92,8 @@ const STEP_ICONS: { step: FlowStep; icon: (size: number) => JSX.Element; tooltip
  * Boarding/gate workstation: the per-passenger boarding screen, reached by
  * clicking a row on the passenger list (Boarding.tsx). Shows that one
  * passenger's boarding status/remarks/comments next to the real seat map,
- * with quick links (opened in a new tab) to jump straight to any step of
- * their check-in flow.
+ * with quick links (opened as a new tab in the app's own tab strip, not a
+ * real new browser tab) to jump straight to any step of their check-in flow.
  */
 export function BoardingPax() {
   const { t } = useLanguage();
@@ -315,7 +315,6 @@ export function BoardingPax() {
                     else stepIconRefs.current.delete(step);
                   }}
                   to={`/checkin/${fid}/pnr/${passenger.id}`}
-                  target="_blank"
                   title={t(tooltip)}
                   role="tab"
                   aria-selected={focusedStep === step}
