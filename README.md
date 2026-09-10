@@ -43,14 +43,20 @@ check-in and boarding workstations for each demo flight.
 The in-app Messenger (top-right icon) has a mic button that dictates a
 message via a local [whisper.cpp](https://github.com/ggml-org/whisper.cpp)
 server — no third-party API, audio never leaves your server. It's off by
-default (the button falls back to a "not set up" toast) until you build it:
+default (the button falls back to a "not set up" toast) until whisper.cpp
+is built:
 
-```bash
-backend/scripts/setup-whisper.sh   # needs cmake, a C++ compiler, ffmpeg, ~500MB download
-```
-
-Then restart the backend. See the script for picking a different model size
-(`WHISPER_MODEL=base backend/scripts/setup-whisper.sh` for a lighter one).
+- **Docker / Coolify deploys** — nothing to do. `backend/Dockerfile` builds
+  whisper.cpp and downloads the model (`small` by default) as part of the
+  image itself, so it's there after every deploy. Override the model with
+  the `WHISPER_MODEL` build arg (e.g. `base` for a lighter/faster one) in
+  Coolify's build settings if you want something other than `small`.
+- **Running the backend directly** (`npm run dev` / `npm start`, no Docker)
+  — build it once with:
+  ```bash
+  backend/scripts/setup-whisper.sh   # needs cmake, a C++ compiler, ffmpeg, ~500MB download
+  ```
+  then restart the backend. `WHISPER_MODEL=base backend/scripts/setup-whisper.sh` picks a different model size.
 
 ## End-to-end scenario
 
