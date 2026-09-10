@@ -12,9 +12,12 @@ import { authRouter } from "./routes/auth";
 import { usersRouter } from "./routes/users";
 import { messagesRouter } from "./routes/messages";
 import { analyticsRouter } from "./routes/analytics";
+import { transcribeRouter } from "./routes/transcribe";
 import { requireAuth } from "./middleware/auth";
+import { startWhisperServer } from "./whisper";
 
 ensureSuperadmin();
+startWhisperServer();
 const backfilled = backfillMissingBcbp();
 if (backfilled.updated > 0) console.log(`Backfilled bcbp/checkin_sequence for ${backfilled.updated} checked-in passenger(s).`);
 const openStatusBackfilled = backfillOpenStatus();
@@ -29,6 +32,7 @@ app.get("/api/health", (_req, res) => res.json({ ok: true }));
 app.use("/api/auth", authRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/messages", messagesRouter);
+app.use("/api/transcribe", requireAuth, transcribeRouter);
 // Every operational route requires a logged-in session — this app has no anonymous/read-only browsing.
 app.use("/api/flights", requireAuth, flightsRouter);
 app.use("/api/checkin", requireAuth, checkinRouter);

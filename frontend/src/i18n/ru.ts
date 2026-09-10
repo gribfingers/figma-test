@@ -646,6 +646,13 @@ export const RU: Record<string, string> = {
   "Remove image": "Удалить изображение",
   "Attach image": "Прикрепить изображение",
   "Take a screenshot": "Сделать скриншот",
+  "Voice input": "Голосовой ввод",
+  "Stop recording": "Остановить запись",
+  "Listening…": "Слушаю…",
+  "Transcribing…": "Распознаю…",
+  "Couldn't access the microphone": "Не удалось получить доступ к микрофону",
+  "Didn't catch that — try again": "Не удалось распознать — попробуйте ещё раз",
+  "Voice input isn't available right now": "Голосовой ввод сейчас недоступен",
   Send: "Отправить",
 
   // ---- SeatHistoryModal.tsx ----

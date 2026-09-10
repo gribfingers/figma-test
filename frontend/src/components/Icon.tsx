@@ -339,6 +339,18 @@ export function CameraIcon({ size = 18, className }: IconProps) {
   );
 }
 
+/** Microphone — voice-input button in the messenger composer. */
+export function MicIcon({ size = 18, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <rect x="9" y="3" width="6" height="11" rx="3" />
+      <path d="M5 11a7 7 0 0 0 14 0" />
+      <path d="M12 18v3" />
+      <path d="M9 21h6" />
+    </svg>
+  );
+}
+
 /** Paperclip — attach-image button in the messenger composer. */
 export function AttachIcon({ size = 18, className }: IconProps) {
   return (

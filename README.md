@@ -38,6 +38,20 @@ npm run dev      # http://localhost:5173, proxies /api to the backend
 Open `http://localhost:5173` — a flight board with links to the
 check-in and boarding workstations for each demo flight.
 
+### Optional: voice input in Messenger
+
+The in-app Messenger (top-right icon) has a mic button that dictates a
+message via a local [whisper.cpp](https://github.com/ggml-org/whisper.cpp)
+server — no third-party API, audio never leaves your server. It's off by
+default (the button falls back to a "not set up" toast) until you build it:
+
+```bash
+backend/scripts/setup-whisper.sh   # needs cmake, a C++ compiler, ffmpeg, ~500MB download
+```
+
+Then restart the backend. See the script for picking a different model size
+(`WHISPER_MODEL=base backend/scripts/setup-whisper.sh` for a lighter one).
+
 ## End-to-end scenario
 
 1. **Flight board** (`/`) — create a flight or open a demo one.

@@ -5,3 +5,5 @@ backend/data.sqlite3
 backend/data.sqlite3-*
 .DS_Store
 *.tsbuildinfo
+# whisper.cpp is fetched/built by backend/scripts/setup-whisper.sh, not committed
+backend/vendor/

@@ -2,8 +2,22 @@ import { ChangeEvent, ClipboardEvent, KeyboardEvent, useEffect, useRef, useState
 import { api, Contact, Message } from "../api";
 import { useAuth } from "../auth";
 import { resizeDataUrl, resizeImageToDataUrl, userAvatarColor, userInitials } from "../userDisplay";
-import { ArrowBackIcon, AttachIcon, CameraIcon, CloseIcon, SendIcon } from "./Icon";
+import { ArrowBackIcon, AttachIcon, CameraIcon, CloseIcon, MicIcon, SendIcon } from "./Icon";
 import { useLanguage } from "../i18n";
+import { useToast } from "../toast";
+
+// A safety cap, not a UX target — voice input is meant for short dictated messages, and this just
+// stops someone forgetting the mic is on from recording (and uploading) an hour of audio.
+const MAX_RECORDING_MS = 120_000;
+
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+}
 
 interface Props {
   open: boolean;
@@ -82,6 +96,7 @@ async function captureScreenshot(hide: () => void, show: () => void): Promise<st
 export function Messenger({ open, onClose }: Props) {
   const { t } = useLanguage();
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [query, setQuery] = useState("");
   const [activeContact, setActiveContact] = useState<Contact | null>(null);
@@ -92,9 +107,13 @@ export function Messenger({ open, onClose }: Props) {
   const [capturing, setCapturing] = useState(false);
   const [hiddenForCapture, setHiddenForCapture] = useState(false);
   const [lightbox, setLightbox] = useState<string | null>(null);
+  const [recording, setRecording] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const recordingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function loadContacts() {
     api.listContacts().then(setContacts).catch(() => {});
@@ -194,6 +213,59 @@ export function Messenger({ open, onClose }: Props) {
       setCapturing(false);
     }
   }
+
+  async function startRecording() {
+    let stream: MediaStream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      showToast(t("Couldn't access the microphone"), "error");
+      return;
+    }
+    const chunks: BlobPart[] = [];
+    const recorder = new MediaRecorder(stream);
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) chunks.push(e.data);
+    };
+    recorder.onstop = async () => {
+      stream.getTracks().forEach((tr) => tr.stop());
+      if (recordingTimeoutRef.current) {
+        clearTimeout(recordingTimeoutRef.current);
+        recordingTimeoutRef.current = null;
+      }
+      recorderRef.current = null;
+      setRecording(false);
+      if (chunks.length === 0) return;
+      setTranscribing(true);
+      try {
+        const dataUrl = await blobToDataUrl(new Blob(chunks, { type: recorder.mimeType }));
+        const { text } = await api.transcribeAudio(dataUrl);
+        if (text) setDraft((prev) => (prev.trim() ? `${prev.trim()} ${text}` : text));
+        else showToast(t("Didn't catch that — try again"), "info");
+      } catch {
+        showToast(t("Voice input isn't available right now"), "error");
+      } finally {
+        setTranscribing(false);
+      }
+    };
+    recorderRef.current = recorder;
+    recorder.start();
+    setRecording(true);
+    recordingTimeoutRef.current = setTimeout(() => recorderRef.current?.stop(), MAX_RECORDING_MS);
+  }
+
+  function toggleRecording() {
+    if (recording) recorderRef.current?.stop();
+    else startRecording();
+  }
+
+  // Recording must not survive closing the panel or switching threads mid-dictation.
+  useEffect(() => {
+    if (!open) recorderRef.current?.stop();
+  }, [open]);
+  useEffect(() => {
+    recorderRef.current?.stop();
+  }, [activeContact]);
 
   const filteredContacts = contacts.filter((c) => {
     const q = query.trim().toLowerCase();
@@ -301,7 +373,7 @@ export function Messenger({ open, onClose }: Props) {
                   onChange={(e) => setDraft(e.target.value)}
                   onKeyDown={onComposerKeyDown}
                   onPaste={onPaste}
-                  placeholder={t("Write a message…")}
+                  placeholder={recording ? t("Listening…") : transcribing ? t("Transcribing…") : t("Write a message…")}
                   rows={1}
                 />
                 <input ref={fileInputRef} type="file" accept="image/*" hidden onChange={onFilePick} />
@@ -310,6 +382,15 @@ export function Messenger({ open, onClose }: Props) {
                 </button>
                 <button type="button" className="icon-button" title={t("Take a screenshot")} disabled={capturing} onClick={onScreenshot}>
                   <CameraIcon size={18} />
+                </button>
+                <button
+                  type="button"
+                  className={`icon-button messenger-mic ${recording ? "recording" : ""}`}
+                  title={recording ? t("Stop recording") : t("Voice input")}
+                  disabled={transcribing}
+                  onClick={toggleRecording}
+                >
+                  <MicIcon size={18} />
                 </button>
                 <button
                   type="button"

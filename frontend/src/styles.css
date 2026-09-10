@@ -1753,6 +1753,11 @@ tr.pax-row-focused { outline: 2px solid var(--accent); outline-offset: -2px; }
 .messenger-composer-row .icon-button { flex-shrink: 0; }
 .messenger-composer-row .messenger-send { color: var(--accent); }
 .messenger-composer-row .messenger-send:disabled { color: var(--muted); cursor: not-allowed; }
+.messenger-composer-row .messenger-mic.recording { color: var(--danger); animation: messenger-mic-pulse 1.4s ease-in-out infinite; }
+@keyframes messenger-mic-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
 
 .messenger-lightbox {
   position: fixed;
