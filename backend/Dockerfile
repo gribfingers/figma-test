@@ -16,7 +16,7 @@ RUN npm run build
 # exact CPU of whichever machine happened to build the image.
 FROM node:20-bookworm-slim AS whisper
 WORKDIR /whisper
-RUN apt-get update && apt-get install -y --no-install-recommends git cmake build-essential ca-certificates \
+RUN apt-get update && apt-get install -y --no-install-recommends git cmake build-essential ca-certificates curl \
     && rm -rf /var/lib/apt/lists/*
 ARG WHISPER_MODEL=small
 # -DBUILD_SHARED_LIBS=OFF: statically link libggml/libwhisper into the binary — the runtime stage
