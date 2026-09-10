@@ -242,7 +242,10 @@ export function Messenger({ open, onClose }: Props) {
         const { text } = await api.transcribeAudio(dataUrl);
         if (text) setDraft((prev) => (prev.trim() ? `${prev.trim()} ${text}` : text));
         else showToast(t("Didn't catch that — try again"), "info");
-      } catch {
+      } catch (err) {
+        // The toast stays generic (agents don't need server internals), but this is the one place
+        // to look when voice input is misbehaving — the backend logs the same failure server-side.
+        console.error("Voice transcription failed:", err);
         showToast(t("Voice input isn't available right now"), "error");
       } finally {
         setTranscribing(false);

@@ -28,8 +28,11 @@ export function isAvailable(): boolean {
 export function startWhisperServer() {
   if (!isAvailable()) {
     if (!warnedMissing) {
+      const missing = [!existsSync(SERVER_BIN) && `binary (${SERVER_BIN})`, !existsSync(MODEL_PATH) && `model (${MODEL_PATH})`]
+        .filter(Boolean)
+        .join(", ");
       console.log(
-        "Voice input disabled: whisper.cpp isn't built. Run `backend/scripts/setup-whisper.sh` and restart the backend to enable it."
+        `Voice input disabled: whisper.cpp isn't built — missing ${missing}. Run \`backend/scripts/setup-whisper.sh\` (or rebuild the Docker image) and restart the backend to enable it.`
       );
       warnedMissing = true;
     }
@@ -37,21 +40,35 @@ export function startWhisperServer() {
   }
   if (serverProcess) return;
 
+  // whisper-server logs its own request/model lines to stderr even on success, so this is only
+  // kept for the exit handler below to print if the process dies unexpectedly — not mirrored to
+  // the backend's own log on every line, which would just be noise.
+  let recentStderr = "";
   serverProcess = spawn(
     SERVER_BIN,
     ["-m", MODEL_PATH, "--host", HOST, "--port", String(PORT), "-l", "auto", "--convert", "-nt"],
     { stdio: ["ignore", "ignore", "pipe"] }
   );
-  serverProcess.stderr?.on("data", (chunk) => {
-    // whisper-server logs its own request/model lines to stderr even on success; only surface it if
-    // the process actually dies (see "exit" below) rather than spamming the backend's own log.
-    void chunk;
+  serverProcess.stderr?.on("data", (chunk: Buffer) => {
+    recentStderr = (recentStderr + chunk.toString()).slice(-4000);
   });
   serverProcess.on("exit", (code) => {
     console.log(`whisper-server exited (code ${code}) — voice input unavailable until the backend restarts.`);
+    if (recentStderr.trim()) console.log(`whisper-server's last output:\n${recentStderr}`);
     serverProcess = null;
   });
   console.log(`whisper-server starting on :${PORT} (model: ${path.basename(MODEL_PATH)})`);
+
+  // Confirm it actually came up rather than just trusting the process didn't immediately exit —
+  // model loading takes a few seconds, so give it a moment before probing.
+  setTimeout(async () => {
+    try {
+      const res = await fetch(`http://${HOST}:${PORT}/health`);
+      console.log(res.ok ? "whisper-server is up and healthy." : `whisper-server health check returned ${res.status}.`);
+    } catch (err) {
+      console.log(`whisper-server health check failed: ${err instanceof Error ? err.message : err}`);
+    }
+  }, 3000);
 }
 
 /**
