@@ -86,16 +86,15 @@ async function probeHealth(attemptsLeft = 30) {
  * itself (`--convert`, via ffmpeg) — so any format MediaRecorder produces
  * (webm/opus, ogg, …) works without us doing our own conversion.
  *
- * `language` overrides the server's own "auto" default per request — passing the UI's current
- * language (the caller already knows it — the agent picked it) skips whisper's own language-
- * detection pass, which is both quicker and avoids it occasionally guessing wrong on a short clip.
+ * Language is left as "auto": the UI's language toggle is the interface language, not necessarily
+ * what the agent is actually speaking, and forcing the wrong one makes whisper translate into that
+ * language instead of transcribing what was said — worse than just auto-detecting per clip.
  */
-export async function transcribe(audio: Buffer, mimeType: string, language?: string): Promise<string> {
+export async function transcribe(audio: Buffer, mimeType: string): Promise<string> {
   const form = new FormData();
   const ext = mimeType.includes("ogg") ? "ogg" : mimeType.includes("mp4") ? "mp4" : "webm";
   form.append("file", new Blob([audio], { type: mimeType }), `voice.${ext}`);
   form.append("response_format", "json");
-  form.append("language", language || "auto");
 
   const res = await fetch(`http://${HOST}:${PORT}/inference`, { method: "POST", body: form });
   if (!res.ok) throw new Error(`whisper-server responded ${res.status}`);

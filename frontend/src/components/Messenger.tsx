@@ -94,7 +94,7 @@ async function captureScreenshot(hide: () => void, show: () => void): Promise<st
 }
 
 export function Messenger({ open, onClose }: Props) {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const { user } = useAuth();
   const { showToast } = useToast();
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -241,7 +241,7 @@ export function Messenger({ open, onClose }: Props) {
       setTranscribing(true);
       try {
         const dataUrl = await blobToDataUrl(new Blob(chunks, { type: recorder.mimeType }));
-        const { text } = await api.transcribeAudio(dataUrl, language);
+        const { text } = await api.transcribeAudio(dataUrl);
         if (text) setDraft((prev) => (prev.trim() ? `${prev.trim()} ${text}` : text));
         else showToast(t("Didn't catch that — try again"), "info");
       } catch (err) {
