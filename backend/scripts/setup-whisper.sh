@@ -11,7 +11,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-MODEL="${WHISPER_MODEL:-small}" # small = good ru/en accuracy on CPU; use "base" for a lighter/faster model
+MODEL="${WHISPER_MODEL:-medium}" # medium = best ru/en accuracy this repo defaults to; "small"/"base" are lighter/faster
 
 mkdir -p vendor
 cd vendor

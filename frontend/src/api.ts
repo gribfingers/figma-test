@@ -308,7 +308,8 @@ export const api = {
   sendMessage: (userId: number, data: { body?: string; image?: string }) =>
     request<Message>(`/messages/${userId}`, { method: "POST", body: JSON.stringify(data) }),
   /** `audio` is a data URL (see resizeImageToDataUrl-style helpers) holding whatever format MediaRecorder produced. */
-  transcribeAudio: (audio: string) => request<{ text: string }>("/transcribe", { method: "POST", body: JSON.stringify({ audio }) }),
+  transcribeAudio: (audio: string, language?: string) =>
+    request<{ text: string }>("/transcribe", { method: "POST", body: JSON.stringify({ audio, language }) }),
 
   /** Fire-and-forget batch upload — see analytics.ts, which is the only caller. */
   trackEvents: (events: unknown[]) => request<void>("/analytics/track", { method: "POST", body: JSON.stringify({ events }) }),

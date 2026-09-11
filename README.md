@@ -47,14 +47,16 @@ default (the button falls back to a "not set up" toast) until whisper.cpp
 is built:
 
 - **Docker / Coolify deploys** — nothing to do. `backend/Dockerfile` builds
-  whisper.cpp and downloads the model (`small` by default) as part of the
-  image itself, so it's there after every deploy. Override the model with
-  the `WHISPER_MODEL` build arg (e.g. `base` for a lighter/faster one) in
-  Coolify's build settings if you want something other than `small`.
+  whisper.cpp and downloads the model (`medium` by default — better ru/en
+  accuracy, at the cost of a slower CPU transcription and a ~1.5GB image
+  layer) as part of the image itself, so it's there after every deploy.
+  Override the model with the `WHISPER_MODEL` build arg (e.g. `small` or
+  `base` for something faster/lighter) in Coolify's build settings — it's
+  read at both build and run time, so one setting is enough.
 - **Running the backend directly** (`npm run dev` / `npm start`, no Docker)
   — build it once with:
   ```bash
-  backend/scripts/setup-whisper.sh   # needs cmake, a C++ compiler, ffmpeg, ~500MB download
+  backend/scripts/setup-whisper.sh   # needs cmake, a C++ compiler, ffmpeg, ~1.5GB download for the default "medium" model
   ```
   then restart the backend. `WHISPER_MODEL=base backend/scripts/setup-whisper.sh` picks a different model size.
 
