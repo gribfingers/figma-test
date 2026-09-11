@@ -90,13 +90,13 @@ async function probeHealth(attemptsLeft = 30) {
  * what the agent is actually speaking, and forcing the wrong one makes whisper translate into that
  * language instead of transcribing what was said — worse than just auto-detecting per clip.
  */
-export async function transcribe(audio: Buffer, mimeType: string): Promise<string> {
+export async function transcribe(audio: Buffer, mimeType: string, signal?: AbortSignal): Promise<string> {
   const form = new FormData();
   const ext = mimeType.includes("ogg") ? "ogg" : mimeType.includes("mp4") ? "mp4" : "webm";
   form.append("file", new Blob([audio], { type: mimeType }), `voice.${ext}`);
   form.append("response_format", "json");
 
-  const res = await fetch(`http://${HOST}:${PORT}/inference`, { method: "POST", body: form });
+  const res = await fetch(`http://${HOST}:${PORT}/inference`, { method: "POST", body: form, signal });
   if (!res.ok) throw new Error(`whisper-server responded ${res.status}`);
   const data = (await res.json()) as { text?: string };
   return (data.text ?? "").trim();

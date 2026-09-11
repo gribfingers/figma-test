@@ -3640,6 +3640,19 @@ tr.row-hover { cursor: pointer; }
 .transcribe-demo-controls button { display: inline-flex; align-items: center; gap: 8px; }
 .transcribe-demo-status { margin-top: 14px; font-size: 13px; color: var(--muted); }
 .transcribe-demo-status.recording { color: var(--danger); font-weight: 600; }
+.transcribe-demo-status-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.transcribe-demo-progress {
+  margin-top: 8px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--field-border);
+  overflow: hidden;
+}
+.transcribe-demo-progress-bar {
+  height: 100%;
+  background: var(--accent);
+  transition: width 150ms linear;
+}
 .transcribe-demo-result {
   width: 100%;
   margin-top: 16px;

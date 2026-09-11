@@ -25,10 +25,18 @@ transcribeRouter.post("/", async (req, res) => {
   const parsed = typeof audio === "string" ? parseDataUrl(audio) : null;
   if (!parsed) return res.status(400).json({ error: "Missing or invalid audio data" });
 
+  // If the client cancels (or just disconnects) before we've responded, stop waiting on
+  // whisper-server too — otherwise an abandoned request still burns CPU to completion for nobody.
+  const controller = new AbortController();
+  res.on("close", () => {
+    if (!res.writableEnded) controller.abort();
+  });
+
   try {
-    const text = await transcribe(parsed.buffer, parsed.mimeType);
+    const text = await transcribe(parsed.buffer, parsed.mimeType, controller.signal);
     res.json({ text });
   } catch (err) {
+    if (controller.signal.aborted) return; // client is gone — nothing to send back
     console.error("Transcription failed:", err);
     res.status(502).json({ error: "Transcription failed" });
   }
