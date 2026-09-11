@@ -3624,3 +3624,33 @@ tr.row-hover { cursor: pointer; }
   .help-reference-grid { grid-template-columns: 1fr; }
   .help-reference-group:nth-child(2) { border-top: 1px solid var(--panel-border); }
 }
+
+/* TranscribeDemo — standalone, unauthenticated page (no TopTabs/SideDrawer), same reasoning as
+   .help-page above: its own scroll region and page padding instead of relying on .content/.shell. */
+.transcribe-demo-page {
+  height: 100%;
+  overflow-y: auto;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
+.transcribe-demo-page h1 { margin: 0 0 8px; font-size: 22px; color: var(--field-value); }
+.transcribe-demo-intro { font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0 0 24px; }
+.transcribe-demo-controls { display: flex; gap: 10px; flex-wrap: wrap; }
+.transcribe-demo-controls button { display: inline-flex; align-items: center; gap: 8px; }
+.transcribe-demo-status { margin-top: 14px; font-size: 13px; color: var(--muted); }
+.transcribe-demo-status.recording { color: var(--danger); font-weight: 600; }
+.transcribe-demo-result {
+  width: 100%;
+  margin-top: 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius);
+  background: var(--field-bg);
+  color: var(--field-value);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.6;
+  resize: vertical;
+}
+.transcribe-demo-result:focus { outline: none; border-color: var(--field-border-focus); background: var(--field-bg-focus); }

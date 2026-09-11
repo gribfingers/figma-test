@@ -33,6 +33,10 @@ app.use("/api/auth", authRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/messages", messagesRouter);
 app.use("/api/transcribe", requireAuth, transcribeRouter);
+// Public, unauthenticated mirror of the same route for the standalone demo page
+// (frontend's /transcribe-demo, no login) — transcribeRouter itself never reads req.user, so this
+// is just a second, open entry point onto the same handler, not a duplicate implementation.
+app.use("/api/transcribe-demo", transcribeRouter);
 // Every operational route requires a logged-in session — this app has no anonymous/read-only browsing.
 app.use("/api/flights", requireAuth, flightsRouter);
 app.use("/api/checkin", requireAuth, checkinRouter);

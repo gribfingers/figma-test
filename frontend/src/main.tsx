@@ -28,6 +28,7 @@ import { UserAdmin } from "./pages/UserAdmin";
 import { Analytics } from "./pages/Analytics";
 import { EmptyState } from "./pages/EmptyState";
 import { HelpPage } from "./pages/HelpPage";
+import { TranscribeDemo } from "./pages/TranscribeDemo";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
@@ -45,6 +46,8 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
                           <TabsProvider>
                             <Routes>
                               <Route path="/login" element={<Login />} />
+                              {/* Public demo — no login, meant to be shared/shown on its own. */}
+                              <Route path="/transcribe-demo" element={<TranscribeDemo />} />
                               <Route element={<RequireAuth />}>
                                 {/* Standalone — no TopTabs/SideDrawer chrome, since it's meant to be
                                     opened in its own browser tab (see TopTabs' Help button) rather
