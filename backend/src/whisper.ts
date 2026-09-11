@@ -14,7 +14,7 @@ import path from "path";
 
 const VENDOR_DIR = path.join(__dirname, "..", "vendor", "whisper.cpp");
 const SERVER_BIN = path.join(VENDOR_DIR, "build", "bin", "whisper-server");
-const MODEL_PATH = path.join(VENDOR_DIR, "models", `ggml-${process.env.WHISPER_MODEL ?? "medium"}.bin`);
+const MODEL_PATH = path.join(VENDOR_DIR, "models", `ggml-${process.env.WHISPER_MODEL ?? "small"}.bin`);
 const HOST = "127.0.0.1";
 const PORT = Number(process.env.WHISPER_PORT ?? 8088);
 

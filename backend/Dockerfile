@@ -18,7 +18,7 @@ FROM node:20-bookworm-slim AS whisper
 WORKDIR /whisper
 RUN apt-get update && apt-get install -y --no-install-recommends git cmake build-essential ca-certificates curl \
     && rm -rf /var/lib/apt/lists/*
-ARG WHISPER_MODEL=medium
+ARG WHISPER_MODEL=small
 # -DBUILD_SHARED_LIBS=OFF: statically link libggml/libwhisper into the binary — the runtime stage
 # below only copies the whisper-server executable itself, not any .so files.
 RUN git clone --depth 1 https://github.com/ggml-org/whisper.cpp.git . \
@@ -32,7 +32,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 # Re-declared so it can carry the same value into ENV below — build ARGs don't cross stages on
 # their own, and whisper.ts needs to know at runtime which model file name to actually look for.
-ARG WHISPER_MODEL=medium
+ARG WHISPER_MODEL=small
 ENV WHISPER_MODEL=${WHISPER_MODEL}
 # ffmpeg backs whisper-server's --convert (decodes whatever format the browser recorded);
 # libgomp1 is whisper-server's OpenMP runtime — g++ doesn't pull it in on its own.

@@ -11,7 +11,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-MODEL="${WHISPER_MODEL:-medium}" # medium = best ru/en accuracy this repo defaults to; "small"/"base" are lighter/faster
+MODEL="${WHISPER_MODEL:-small}" # small = safe default on a modest VPS (~1GB resident); "medium" is much more RAM-hungry and can get OOM-killed
 
 mkdir -p vendor
 cd vendor
