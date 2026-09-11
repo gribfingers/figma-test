@@ -7,3 +7,5 @@ backend/data.sqlite3-*
 *.tsbuildinfo
 # whisper.cpp is fetched/built by backend/scripts/setup-whisper.sh, not committed
 backend/vendor/
+# whisper-server's --convert temp files, if --tmp-dir ever isn't picked up
+backend/whisper-server-*.wav

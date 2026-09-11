@@ -57,7 +57,9 @@ export function startWhisperServer() {
   const threads = String(Math.max(1, os.cpus().length));
   serverProcess = spawn(
     SERVER_BIN,
-    ["-m", MODEL_PATH, "--host", HOST, "--port", String(PORT), "-t", threads, "-l", "auto", "--convert", "-nt"],
+    // --tmp-dir: without it, --convert's ffmpeg transcodes drop straight into whisper-server's own
+    // cwd (the backend directory when run via `npm run dev`) instead of a real temp location.
+    ["-m", MODEL_PATH, "--host", HOST, "--port", String(PORT), "-t", threads, "-l", "auto", "--convert", "--tmp-dir", os.tmpdir(), "-nt"],
     { stdio: ["ignore", "ignore", "pipe"] }
   );
   serverProcess.stderr?.on("data", (chunk: Buffer) => {
