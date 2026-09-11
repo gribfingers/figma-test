@@ -21,7 +21,7 @@ transcribeRouter.post("/", async (req, res) => {
       error: "Voice input isn't set up on this server yet. Run backend/scripts/setup-whisper.sh and restart the backend.",
     });
   }
-  const { audio } = req.body ?? {};
+  const { audio, diarize } = req.body ?? {};
   const parsed = typeof audio === "string" ? parseDataUrl(audio) : null;
   if (!parsed) return res.status(400).json({ error: "Missing or invalid audio data" });
 
@@ -33,7 +33,7 @@ transcribeRouter.post("/", async (req, res) => {
   });
 
   try {
-    const text = await transcribe(parsed.buffer, parsed.mimeType, controller.signal);
+    const text = await transcribe(parsed.buffer, parsed.mimeType, controller.signal, diarize === true);
     res.json({ text });
   } catch (err) {
     if (controller.signal.aborted) return; // client is gone — nothing to send back

@@ -59,6 +59,7 @@ export function TranscribeDemo() {
   const [remainingSec, setRemainingSec] = useState(0);
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [diarize, setDiarize] = useState(false);
 
   const recorderRef = useRef<MediaRecorder | null>(null);
   const recordingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -97,7 +98,7 @@ export function TranscribeDemo() {
     setProgress(finishedOk ? 100 : 0);
   }
 
-  async function sendForTranscription(dataUrl: string, durationSec: number | null) {
+  async function sendForTranscription(dataUrl: string, durationSec: number | null, wantDiarize = false) {
     setError(null);
     setTranscribing(true);
     startProgress(estimateDurationMs(durationSec));
@@ -107,7 +108,7 @@ export function TranscribeDemo() {
       const res = await fetch("/api/transcribe-demo", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ audio: dataUrl }),
+        body: JSON.stringify({ audio: dataUrl, diarize: wantDiarize }),
         signal: controller.signal,
       });
       // A body over the server's own JSON size limit comes back as a plain-text/HTML error page,
@@ -187,7 +188,7 @@ export function TranscribeDemo() {
     }
     setError(null);
     const [dataUrl, durationSec] = await Promise.all([blobToDataUrl(file), getAudioDuration(file)]);
-    await sendForTranscription(dataUrl, durationSec);
+    await sendForTranscription(dataUrl, durationSec, diarize);
   }
 
   return (
@@ -209,6 +210,12 @@ export function TranscribeDemo() {
           Загрузить файл
         </button>
       </div>
+
+      <label className="transcribe-demo-diarize">
+        <input type="checkbox" checked={diarize} onChange={(e) => setDiarize(e.target.checked)} disabled={recording || transcribing} />
+        Разделять говорящих по каналам (только для загруженного стерео-файла, где каждый говорящий записан в
+        отдельном канале — с микрофоном не работает)
+      </label>
 
       {recording && <div className="transcribe-demo-status recording">● Идёт запись…</div>}
       {transcribing && (

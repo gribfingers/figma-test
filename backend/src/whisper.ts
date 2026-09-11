@@ -101,11 +101,18 @@ async function probeHealth(attemptsLeft = 30) {
  * what the agent is actually speaking, and forcing the wrong one makes whisper translate into that
  * language instead of transcribing what was said — worse than just auto-detecting per clip.
  */
-export async function transcribe(audio: Buffer, mimeType: string, signal?: AbortSignal): Promise<string> {
+/**
+ * `diarize` only does anything when the source audio is genuinely 2-channel with each speaker on
+ * their own channel — whisper.cpp's diarization is just "which channel is louder in this segment",
+ * not real voice-based speaker separation. A single mono microphone has nothing for it to work
+ * with, so this is only useful for an already-stereo uploaded file, not a live recording.
+ */
+export async function transcribe(audio: Buffer, mimeType: string, signal?: AbortSignal, diarize?: boolean): Promise<string> {
   const form = new FormData();
   const ext = mimeType.includes("ogg") ? "ogg" : mimeType.includes("mp4") ? "mp4" : "webm";
   form.append("file", new Blob([audio], { type: mimeType }), `voice.${ext}`);
   form.append("response_format", "json");
+  if (diarize) form.append("diarize", "true");
 
   const stuckProcess = serverProcess;
   const watchdog = setTimeout(() => {

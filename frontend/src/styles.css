@@ -3638,6 +3638,17 @@ tr.row-hover { cursor: pointer; }
 .transcribe-demo-intro { font-size: 14px; color: var(--muted); line-height: 1.6; margin: 0 0 24px; }
 .transcribe-demo-controls { display: flex; gap: 10px; flex-wrap: wrap; }
 .transcribe-demo-controls button { display: inline-flex; align-items: center; gap: 8px; }
+.transcribe-demo-diarize {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+  cursor: pointer;
+}
+.transcribe-demo-diarize input { margin-top: 2px; flex-shrink: 0; }
 .transcribe-demo-status { margin-top: 14px; font-size: 13px; color: var(--muted); }
 .transcribe-demo-status.recording { color: var(--danger); font-weight: 600; }
 .transcribe-demo-status-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
