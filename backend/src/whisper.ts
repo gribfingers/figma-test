@@ -17,6 +17,13 @@ const SERVER_BIN = path.join(VENDOR_DIR, "build", "bin", "whisper-server");
 const MODEL_PATH = path.join(VENDOR_DIR, "models", `ggml-${process.env.WHISPER_MODEL ?? "small"}.bin`);
 const HOST = "127.0.0.1";
 const PORT = Number(process.env.WHISPER_PORT ?? 8088);
+// whisper.cpp's decode loop doesn't check for a cancelled HTTP connection mid-inference — it just
+// keeps running on the server regardless of what the client does. Certain inputs (music/singing
+// especially, as opposed to clean speech) can make it loop far longer than any real clip should
+// ever take. A client Abort (see transcribe() below) stops the browser from waiting, but the only
+// way to actually reclaim the CPU from a stuck request is to kill and restart this process.
+const MAX_INFERENCE_MS = 5 * 60_000;
+const RESPAWN_DELAY_MS = 2000;
 
 let serverProcess: ChildProcess | null = null;
 let warnedMissing = false;
@@ -57,9 +64,13 @@ export function startWhisperServer() {
     recentStderr = (recentStderr + chunk.toString()).slice(-4000);
   });
   serverProcess.on("exit", (code) => {
-    console.log(`whisper-server exited (code ${code}) — voice input unavailable until the backend restarts.`);
+    console.log(`whisper-server exited (code ${code}) — restarting it in ${RESPAWN_DELAY_MS}ms.`);
     if (recentStderr.trim()) console.log(`whisper-server's last output:\n${recentStderr}`);
     serverProcess = null;
+    // Covers a crash, an OOM kill, and the watchdog in transcribe() below killing a stuck request —
+    // in every case the fix is the same: get a fresh process back up rather than staying down until
+    // someone notices and restarts the whole backend.
+    setTimeout(startWhisperServer, RESPAWN_DELAY_MS);
   });
   console.log(`whisper-server starting on :${PORT} (model: ${path.basename(MODEL_PATH)})`);
 
@@ -96,8 +107,18 @@ export async function transcribe(audio: Buffer, mimeType: string, signal?: Abort
   form.append("file", new Blob([audio], { type: mimeType }), `voice.${ext}`);
   form.append("response_format", "json");
 
-  const res = await fetch(`http://${HOST}:${PORT}/inference`, { method: "POST", body: form, signal });
-  if (!res.ok) throw new Error(`whisper-server responded ${res.status}`);
-  const data = (await res.json()) as { text?: string };
-  return (data.text ?? "").trim();
+  const stuckProcess = serverProcess;
+  const watchdog = setTimeout(() => {
+    console.log(`whisper-server inference exceeded ${MAX_INFERENCE_MS}ms — killing it to reclaim the CPU (it'll restart itself).`);
+    stuckProcess?.kill("SIGKILL");
+  }, MAX_INFERENCE_MS);
+
+  try {
+    const res = await fetch(`http://${HOST}:${PORT}/inference`, { method: "POST", body: form, signal });
+    if (!res.ok) throw new Error(`whisper-server responded ${res.status}`);
+    const data = (await res.json()) as { text?: string };
+    return (data.text ?? "").trim();
+  } finally {
+    clearTimeout(watchdog);
+  }
 }
