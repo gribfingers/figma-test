@@ -86,3 +86,16 @@ export interface Passenger {
   /** Booked cabin, independent of whether a seat has been picked yet — see the db.ts column comment. */
   class: "C" | "Y";
 }
+
+export type CounterStatus = "OPEN" | "CLOSED";
+
+export interface Counter {
+  id: number;
+  label: string;
+  status: CounterStatus;
+  agent_id: number | null;
+  flight_id: number | null;
+  opened_at: string | null;
+  closed_at: string | null;
+  created_at: string;
+}

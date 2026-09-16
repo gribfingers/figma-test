@@ -12,6 +12,8 @@ import { authRouter } from "./routes/auth";
 import { usersRouter } from "./routes/users";
 import { messagesRouter } from "./routes/messages";
 import { analyticsRouter } from "./routes/analytics";
+import { countersRouter } from "./routes/counters";
+import { statsRouter } from "./routes/stats";
 import { transcribeRouter } from "./routes/transcribe";
 import { requireAuth } from "./middleware/auth";
 import { startWhisperServer } from "./whisper";
@@ -45,6 +47,10 @@ app.use("/api/manifest", requireAuth, manifestRouter);
 // analyticsRouter applies requireAuth (and requireSuperadmin for the read endpoints) itself — see
 // routes/analytics.ts — since /track needs to accept any logged-in user, not just superadmins.
 app.use("/api/analytics", analyticsRouter);
+app.use("/api/counters", requireAuth, countersRouter);
+// statsRouter applies requireSuperadmin itself (see routes/stats.ts) — shift/agent throughput is
+// supervisor-only, unlike most other routes here which any logged-in "user" can read.
+app.use("/api/stats", requireAuth, statsRouter);
 
 const port = Number(process.env.PORT ?? 4000);
 app.listen(port, () => {
