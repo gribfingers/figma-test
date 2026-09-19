@@ -142,6 +142,24 @@ CREATE INDEX IF NOT EXISTS idx_analytics_events_created ON analytics_events(crea
 CREATE INDEX IF NOT EXISTS idx_analytics_events_type ON analytics_events(event_type, event_name);
 CREATE INDEX IF NOT EXISTS idx_analytics_events_user ON analytics_events(user_id);
 CREATE INDEX IF NOT EXISTS idx_analytics_events_session ON analytics_events(session_id);
+
+-- A physical check-in counter/desk. There's no separate "queue" table: a counter's queue is
+-- derived at read time as the NOT_CHECKED_IN passengers of the flight it's currently serving
+-- (see routes/counters.ts) — there's no scanner/kiosk in this system tracking a physical line.
+CREATE TABLE IF NOT EXISTS counters (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  label TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'CLOSED',
+  agent_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  flight_id INTEGER REFERENCES flights(id) ON DELETE SET NULL,
+  opened_at TEXT,
+  closed_at TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_counters_agent ON counters(agent_id);
+CREATE INDEX IF NOT EXISTS idx_counters_flight ON counters(flight_id);
+
+CREATE INDEX IF NOT EXISTS idx_seat_events_event_created ON seat_events(event, created_at);
 `);
 
 // Lightweight migration for databases created before the FIDS columns existed.
