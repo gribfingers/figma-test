@@ -223,6 +223,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   myCounterStatus: () => request<CounterLockStatus>("/counters/my-status"),
+  /** Best-effort — callers should swallow failures (e.g. .catch(() => {})); see counters.ts. */
+  setMyFlight: (flightId: number) =>
+    request<{ ok: true }>("/counters/my-flight", { method: "POST", body: JSON.stringify({ flight_id: flightId }) }),
+  setMyFocus: (passengerId: number | null) =>
+    request<{ ok: true }>("/counters/my-focus", { method: "POST", body: JSON.stringify({ passenger_id: passengerId }) }),
 
   listFlights: () => request<Flight[]>("/flights"),
   getFlight: (id: number) => request<Flight>(`/flights/${id}`),

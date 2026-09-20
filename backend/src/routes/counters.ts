@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db } from "../db";
 import { Counter } from "../types";
 import { requireEdit, requireSuperadmin } from "../middleware/auth";
+import { blockIfTakenOver } from "../middleware/takeover";
 
 export const countersRouter = Router();
 
@@ -12,11 +13,13 @@ const SELECT_COUNTERS = `
     u.first_name AS agent_first_name, u.last_name AS agent_last_name,
     f.flight_number AS flight_number, f.carrier_code AS flight_carrier_code, f.std AS flight_std,
     s.first_name AS takeover_first_name, s.last_name AS takeover_last_name,
+    fp.surname AS focus_surname, fp.given_name AS focus_given_name, fp.record_locator AS focus_record_locator,
     (SELECT COUNT(*) FROM passengers p WHERE p.flight_id = c.flight_id AND p.checkin_status = 'NOT_CHECKED_IN') AS queue_length
   FROM counters c
   LEFT JOIN users u ON u.id = c.agent_id
   LEFT JOIN flights f ON f.id = c.flight_id
   LEFT JOIN users s ON s.id = c.takeover_by
+  LEFT JOIN passengers fp ON fp.id = c.focus_passenger_id
 `;
 
 /**
@@ -40,6 +43,50 @@ countersRouter.get("/my-status", (req, res) => {
     supervisorLastName: counter.takeover_last_name,
     since: counter.takeover_at,
   });
+});
+
+/**
+ * Live-handoff signal #1: the web check-in workstation calls this whenever the logged-in agent
+ * opens a flight to check passengers in, so their assigned counter's flight_id follows them
+ * automatically instead of a supervisor having to set it by hand first. No-ops (200) if the
+ * caller has no counter assigned yet. Blocked while taken over — see blockIfTakenOver — so an
+ * agent browsing elsewhere mid-takeover can't yank the flight out from under the supervisor.
+ */
+countersRouter.post("/my-flight", blockIfTakenOver, (req, res) => {
+  const { flight_id } = req.body ?? {};
+  if (!flight_id || !db.prepare("SELECT id FROM flights WHERE id = ?").get(flight_id)) {
+    return res.status(400).json({ error: "Unknown flight_id" });
+  }
+  const counter = db.prepare("SELECT id, flight_id FROM counters WHERE agent_id = ?").get(req.user!.id) as
+    | { id: number; flight_id: number | null }
+    | undefined;
+  if (!counter) return res.json({ ok: true });
+  if (counter.flight_id !== flight_id) {
+    db.prepare("UPDATE counters SET flight_id = ? WHERE id = ?").run(flight_id, counter.id);
+  }
+  res.json({ ok: true });
+});
+
+/**
+ * Live-handoff signal #2: the web check-in workstation calls this whenever the agent selects a
+ * passenger in the PNR search results, so a supervisor who takes this counter over lands
+ * straight on the passenger the agent was actually working on instead of the whole flight
+ * roster (see the mobile app's checkin roster screen). Purely cosmetic — never read by any
+ * enforcement logic — so a stale value is harmless. passenger_id: null clears it.
+ */
+countersRouter.post("/my-focus", blockIfTakenOver, (req, res) => {
+  const { passenger_id } = req.body ?? {};
+  if (passenger_id != null && !db.prepare("SELECT id FROM passengers WHERE id = ?").get(passenger_id)) {
+    return res.status(400).json({ error: "Unknown passenger_id" });
+  }
+  const counter = db.prepare("SELECT id FROM counters WHERE agent_id = ?").get(req.user!.id) as { id: number } | undefined;
+  if (!counter) return res.json({ ok: true });
+  db.prepare("UPDATE counters SET focus_passenger_id = ?, focus_at = ? WHERE id = ?").run(
+    passenger_id ?? null,
+    passenger_id != null ? new Date().toISOString() : null,
+    counter.id
+  );
+  res.json({ ok: true });
 });
 
 countersRouter.get("/", (_req, res) => {

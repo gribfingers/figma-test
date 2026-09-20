@@ -99,7 +99,11 @@ export interface Counter {
   closed_at: string | null;
   created_at: string;
   /** Supervisor currently running check-in at this counter in place of its assigned agent — see
-   *  routes/counters.ts's /takeover and /release, and routes/checkin.ts's blockIfTakenOver. */
+   *  routes/counters.ts's /takeover and /release, and middleware/takeover.ts's blockIfTakenOver. */
   takeover_by: number | null;
   takeover_at: string | null;
+  /** The agent's own live-handoff signal: which passenger they currently have open on the web
+   *  check-in workstation — see routes/counters.ts's /my-focus. Cosmetic only. */
+  focus_passenger_id: number | null;
+  focus_at: string | null;
 }
