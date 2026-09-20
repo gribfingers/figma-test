@@ -3,6 +3,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import { SideDrawer } from "./components/SideDrawer";
 import { TopTabs } from "./components/TopTabs";
 import { ReadOnlyBanner } from "./components/ReadOnlyBanner";
+import { TakeoverBanner } from "./components/TakeoverBanner";
 import { CheckinFlowProvider } from "./checkinFlow";
 import { trackPageView } from "./analytics";
 
@@ -18,6 +19,7 @@ export function App() {
         <SideDrawer />
         <div className="shell">
           <ReadOnlyBanner />
+          <TakeoverBanner />
           <header>
             <TopTabs />
           </header>

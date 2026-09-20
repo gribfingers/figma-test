@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { NextFunction, Request, Response, Router } from "express";
 import { db } from "../db";
 import { Flight, Passenger } from "../types";
 import { serializePassenger } from "../serialize";
@@ -9,6 +9,30 @@ import { logSeatEvent } from "../seatHistory";
 import { isFlightDeparted } from "../flightPhase";
 
 export const checkinRouter = Router();
+
+/**
+ * Blocks a non-superadmin agent's check-in mutations while a supervisor has taken over the
+ * counter they're assigned to (see routes/counters.ts's /takeover). Superadmins are never
+ * blocked — they're the ones doing the taking-over, and may also be checking in passengers
+ * themselves outside of any counter. 423 Locked, not 403: this is a temporary hand-off, not a
+ * permissions problem — the frontend's TakeoverBanner explains it in plain language.
+ */
+function blockIfTakenOver(req: Request, res: Response, next: NextFunction) {
+  if (req.user!.role === "superadmin") return next();
+  const counter = db
+    .prepare(
+      `SELECT c.id, u.first_name, u.last_name FROM counters c
+       LEFT JOIN users u ON u.id = c.takeover_by
+       WHERE c.agent_id = ? AND c.takeover_by IS NOT NULL LIMIT 1`
+    )
+    .get(req.user!.id) as { id: number; first_name: string; last_name: string } | undefined;
+  if (counter) {
+    return res.status(423).json({
+      error: `Check-in at your counter is temporarily being handled by supervisor ${counter.first_name} ${counter.last_name}`,
+    });
+  }
+  next();
+}
 
 const SEARCH_COLUMN: Record<string, string> = {
   surname: "p.surname",
@@ -91,7 +115,7 @@ checkinRouter.get("/search", (req, res) => {
  * have a seat assigned. Registered ahead of POST /:passengerId so "swap-seats"
  * isn't swallowed as a passengerId by that route.
  */
-checkinRouter.post("/swap-seats", requireEdit, (req, res) => {
+checkinRouter.post("/swap-seats", requireEdit, blockIfTakenOver, (req, res) => {
   const { passengerId, otherPassengerId } = req.body;
   const a = db.prepare("SELECT * FROM passengers WHERE id = ?").get(passengerId) as Passenger | undefined;
   const b = db.prepare("SELECT * FROM passengers WHERE id = ?").get(otherPassengerId) as Passenger | undefined;
@@ -122,7 +146,7 @@ checkinRouter.post("/swap-seats", requireEdit, (req, res) => {
  * Perform check-in for a passenger: capture travel document (APIS-style
  * data), assign a seat, record baggage, issue the boarding pass (BCBP).
  */
-checkinRouter.post("/:passengerId", requireEdit, (req, res) => {
+checkinRouter.post("/:passengerId", requireEdit, blockIfTakenOver, (req, res) => {
   const passenger = db.prepare("SELECT * FROM passengers WHERE id = ?").get(req.params.passengerId) as Passenger | undefined;
   if (!passenger) return res.status(404).json({ error: "Passenger not found" });
 
@@ -206,7 +230,7 @@ checkinRouter.post("/:passengerId", requireEdit, (req, res) => {
  * past boarding_status would leave the record inconsistent — unboard
  * first (boarding.ts's /unboard).
  */
-checkinRouter.post("/:passengerId/cancel", requireEdit, (req, res) => {
+checkinRouter.post("/:passengerId/cancel", requireEdit, blockIfTakenOver, (req, res) => {
   const passenger = db.prepare("SELECT * FROM passengers WHERE id = ?").get(req.params.passengerId) as Passenger | undefined;
   if (!passenger) return res.status(404).json({ error: "Passenger not found" });
   if (passenger.checkin_status !== "CHECKED_IN") {
@@ -276,7 +300,7 @@ checkinRouter.post("/:passengerId/cancel", requireEdit, (req, res) => {
 });
 
 /** Change seat assignment for an already checked-in passenger (before boarding). seat: null unassigns. */
-checkinRouter.post("/:passengerId/seat", requireEdit, (req, res) => {
+checkinRouter.post("/:passengerId/seat", requireEdit, blockIfTakenOver, (req, res) => {
   const passenger = db.prepare("SELECT * FROM passengers WHERE id = ?").get(req.params.passengerId) as Passenger | undefined;
   if (!passenger) return res.status(404).json({ error: "Passenger not found" });
   if (passenger.boarding_status === "BOARDED") return res.status(409).json({ error: "Passenger already boarded" });

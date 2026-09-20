@@ -98,4 +98,8 @@ export interface Counter {
   opened_at: string | null;
   closed_at: string | null;
   created_at: string;
+  /** Supervisor currently running check-in at this counter in place of its assigned agent — see
+   *  routes/counters.ts's /takeover and /release, and routes/checkin.ts's blockIfTakenOver. */
+  takeover_by: number | null;
+  takeover_at: string | null;
 }
