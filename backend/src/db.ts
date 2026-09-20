@@ -154,7 +154,12 @@ CREATE TABLE IF NOT EXISTS counters (
   flight_id INTEGER REFERENCES flights(id) ON DELETE SET NULL,
   opened_at TEXT,
   closed_at TEXT,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  -- Set while a supervisor has taken over this counter's check-in duties from its assigned
+  -- agent (see routes/counters.ts's /takeover and /release) — the agent's own check-in
+  -- mutations are rejected while this is set (see routes/checkin.ts's blockIfTakenOver).
+  takeover_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  takeover_at TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_counters_agent ON counters(agent_id);
 CREATE INDEX IF NOT EXISTS idx_counters_flight ON counters(flight_id);
@@ -198,3 +203,14 @@ const existingSeatColumns = new Set(
   (db.prepare("PRAGMA table_info(seats)").all() as { name: string }[]).map((c) => c.name)
 );
 if (!existingSeatColumns.has("extra")) db.exec("ALTER TABLE seats ADD COLUMN extra TEXT");
+
+const existingCounterColumns = new Set(
+  (db.prepare("PRAGMA table_info(counters)").all() as { name: string }[]).map((c) => c.name)
+);
+const counterMigrations: [string, string][] = [
+  ["takeover_by", "ALTER TABLE counters ADD COLUMN takeover_by INTEGER REFERENCES users(id) ON DELETE SET NULL"],
+  ["takeover_at", "ALTER TABLE counters ADD COLUMN takeover_at TEXT"],
+];
+for (const [column, ddl] of counterMigrations) {
+  if (!existingCounterColumns.has(column)) db.exec(ddl);
+}
