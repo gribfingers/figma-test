@@ -55,6 +55,19 @@ export interface Passenger {
   class: "C" | "Y";
 }
 
+/** GET /counters/my-status — whether a supervisor has taken over check-in at the counter this
+ *  (agent) user is assigned to. See TakeoverBanner.tsx and backend/src/routes/counters.ts. */
+export type CounterLockStatus =
+  | { locked: false }
+  | {
+      locked: true;
+      counterId: number;
+      counterLabel: string;
+      supervisorFirstName: string | null;
+      supervisorLastName: string | null;
+      since: string | null;
+    };
+
 export type PassengerSearchMode = "surname" | "pnr" | "eticket" | "doc" | "flight";
 
 export interface PassengerSearchResult extends Passenger {
@@ -209,6 +222,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  myCounterStatus: () => request<CounterLockStatus>("/counters/my-status"),
+
   listFlights: () => request<Flight[]>("/flights"),
   getFlight: (id: number) => request<Flight>(`/flights/${id}`),
   createFlight: (data: Partial<Flight>) =>
