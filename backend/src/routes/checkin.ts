@@ -1,38 +1,15 @@
-import { NextFunction, Request, Response, Router } from "express";
+import { Router } from "express";
 import { db } from "../db";
 import { Flight, Passenger } from "../types";
 import { serializePassenger } from "../serialize";
 import { encodeBcbp, PAX_STATUS } from "../bcbp";
 import { toJulianDayOfYear } from "../utils/julian";
 import { requireEdit } from "../middleware/auth";
+import { blockIfTakenOver } from "../middleware/takeover";
 import { logSeatEvent } from "../seatHistory";
 import { isFlightDeparted } from "../flightPhase";
 
 export const checkinRouter = Router();
-
-/**
- * Blocks a non-superadmin agent's check-in mutations while a supervisor has taken over the
- * counter they're assigned to (see routes/counters.ts's /takeover). Superadmins are never
- * blocked — they're the ones doing the taking-over, and may also be checking in passengers
- * themselves outside of any counter. 423 Locked, not 403: this is a temporary hand-off, not a
- * permissions problem — the frontend's TakeoverBanner explains it in plain language.
- */
-function blockIfTakenOver(req: Request, res: Response, next: NextFunction) {
-  if (req.user!.role === "superadmin") return next();
-  const counter = db
-    .prepare(
-      `SELECT c.id, u.first_name, u.last_name FROM counters c
-       LEFT JOIN users u ON u.id = c.takeover_by
-       WHERE c.agent_id = ? AND c.takeover_by IS NOT NULL LIMIT 1`
-    )
-    .get(req.user!.id) as { id: number; first_name: string; last_name: string } | undefined;
-  if (counter) {
-    return res.status(423).json({
-      error: `Check-in at your counter is temporarily being handled by supervisor ${counter.first_name} ${counter.last_name}`,
-    });
-  }
-  next();
-}
 
 const SEARCH_COLUMN: Record<string, string> = {
   surname: "p.surname",

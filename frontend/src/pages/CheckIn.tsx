@@ -55,6 +55,10 @@ export function CheckIn() {
       .then(setFlight)
       .catch(() => setNotFound(true));
     refreshSeats();
+    // Live-handoff signal: lets a supervisor's counter follow whichever flight this agent is
+    // actually working on, instead of having to be set by hand — see counters.ts's /my-flight.
+    // Best-effort: a no-op for a superadmin with no counter of their own, or while taken over.
+    api.setMyFlight(fid).catch(() => {});
   }, [fid]);
 
   useEffect(() => {
@@ -75,6 +79,8 @@ export function CheckIn() {
       doc_expiry: p.doc_expiry ?? "",
     });
     setBags({ bag_count: p.bag_count ?? 0, bag_weight_kg: p.bag_weight_kg ?? 0 });
+    // Live-handoff signal — see the setMyFlight call above and counters.ts's /my-focus.
+    api.setMyFocus(p.id).catch(() => {});
   }
 
   async function submitCheckin(e: React.FormEvent) {
@@ -88,6 +94,9 @@ export function CheckIn() {
       setSelected(passenger);
       refreshSeats();
       showToast("Passenger checked in");
+      // This passenger is done — clear the live-handoff focus so a supervisor's roster doesn't
+      // keep pinning someone who's already checked in.
+      api.setMyFocus(null).catch(() => {});
     } catch (e: any) {
       setError(e.message);
     }

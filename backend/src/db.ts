@@ -159,7 +159,13 @@ CREATE TABLE IF NOT EXISTS counters (
   -- agent (see routes/counters.ts's /takeover and /release) — the agent's own check-in
   -- mutations are rejected while this is set (see routes/checkin.ts's blockIfTakenOver).
   takeover_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
-  takeover_at TEXT
+  takeover_at TEXT,
+  -- The agent's own live-handoff signals — set by the web check-in workstation as the agent
+  -- opens a flight and selects a passenger (see routes/counters.ts's /my-flight and /my-focus),
+  -- so a supervisor taking this counter over lands on exactly what the agent was doing instead
+  -- of the whole flight roster. Cosmetic/best-effort: never read by any enforcement logic.
+  focus_passenger_id INTEGER REFERENCES passengers(id) ON DELETE SET NULL,
+  focus_at TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_counters_agent ON counters(agent_id);
 CREATE INDEX IF NOT EXISTS idx_counters_flight ON counters(flight_id);
@@ -210,6 +216,8 @@ const existingCounterColumns = new Set(
 const counterMigrations: [string, string][] = [
   ["takeover_by", "ALTER TABLE counters ADD COLUMN takeover_by INTEGER REFERENCES users(id) ON DELETE SET NULL"],
   ["takeover_at", "ALTER TABLE counters ADD COLUMN takeover_at TEXT"],
+  ["focus_passenger_id", "ALTER TABLE counters ADD COLUMN focus_passenger_id INTEGER REFERENCES passengers(id) ON DELETE SET NULL"],
+  ["focus_at", "ALTER TABLE counters ADD COLUMN focus_at TEXT"],
 ];
 for (const [column, ddl] of counterMigrations) {
   if (!existingCounterColumns.has(column)) db.exec(ddl);
