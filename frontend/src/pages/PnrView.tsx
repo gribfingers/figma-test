@@ -482,6 +482,10 @@ export function PnrView() {
       passengersCache.set(fid, ps);
       setPassengers(ps);
     });
+    // Live-handoff signal: lets a supervisor's counter follow whichever flight this agent is
+    // actually working on — see counters.ts's /my-flight. Best-effort: a no-op for a superadmin
+    // with no counter of their own, or while the counter is already taken over.
+    api.setMyFlight(fid).catch(() => {});
   }, [fid]);
 
   const clicked = passengers.find((p) => p.id === pid);
@@ -519,6 +523,15 @@ export function PnrView() {
   const rosterPassengers = [...pnrPassengers, ...extraPassengers.filter((p) => !pnrIds.has(p.id))];
   const flowPassengers = rosterPassengers.filter((p) => checked.has(p.id));
   const flowActive = flowPassengers.find((p) => p.id === flowActiveId) ?? flowPassengers[0];
+
+  // Live-handoff signal: whichever passenger the agent is actually looking at right now (the
+  // active one mid-flow, or else whoever this tab was opened on) — see counters.ts's /my-focus.
+  // So a supervisor who takes this counter over lands on exactly this passenger, not the roster.
+  const focusPassengerId = flowActive?.id ?? clicked?.id ?? pid;
+  useEffect(() => {
+    if (!focusPassengerId) return;
+    api.setMyFocus(focusPassengerId).catch(() => {});
+  }, [focusPassengerId]);
 
   // Mirror the flow header's own Check-in/Next/Finish buttons and their disabled conditions — must
   // stay a fixed hook call above both early returns below (rules of hooks), so the enabled checks
@@ -680,10 +693,39 @@ export function PnrView() {
     const idx = FLOW_STEPS.indexOf(flowStep!);
     if (idx < FLOW_STEPS.length - 1) setFlowStep(FLOW_STEPS[idx + 1]);
   }
-  // Only reachable once seats and documents are behind us (see checkInDisabled below) — no
-  // check-in API exists yet, so this just tells the agent it's done and closes the tab, the
-  // same way Finish does once its confirm is accepted.
-  function completeCheckin() {
+  // Only reachable once seats and documents are behind us (see checkInDisabled below) — actually
+  // issues the check-in (POST /checkin/:passengerId per passenger — document/nationality/DOB were
+  // already saved live by DocumentsStep's api.updatePassenger calls, and seat by SeatsStep's
+  // api.changeSeat, so this just needs to flip checkin_status and mint the boarding pass) before
+  // telling the agent it's done and closing the tab, the same way Finish does once confirmed.
+  async function completeCheckin() {
+    const notReady = flowPassengers.filter((p) => !p.document_number || !p.doc_expiry || !p.seat);
+    if (notReady.length > 0) {
+      showToast(t("Seat and verify documents for all passengers first"), "error");
+      return;
+    }
+    try {
+      for (const p of flowPassengers) {
+        if (p.checkin_status === "CHECKED_IN") continue;
+        await api.checkin(p.id, {
+          document_type: p.document_type ?? "P",
+          document_number: p.document_number,
+          nationality: p.nationality ?? undefined,
+          dob: p.dob ?? undefined,
+          doc_expiry: p.doc_expiry,
+          seat: p.seat,
+          bag_count: p.bag_count ?? 0,
+          bag_weight_kg: p.bag_weight_kg ?? 0,
+          ssr: p.ssr,
+        });
+      }
+    } catch (e: any) {
+      showToast(e.message, "error");
+      return;
+    }
+    const fresh = await api.passengers(fid);
+    passengersCache.set(fid, fresh);
+    setPassengers(fresh);
     const names = flowPassengers.map((p) => `${p.surname} ${p.given_name}`).join(", ");
     trackEvent("action", "checkin.complete", { count: flowPassengers.length });
     showToast(t("{names} checked in").replace("{names}", names), "success", () => closeTab(pathname));

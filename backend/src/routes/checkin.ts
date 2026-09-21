@@ -148,7 +148,12 @@ checkinRouter.post("/:passengerId", requireEdit, blockIfTakenOver, (req, res) =>
   if (!seat) return res.status(400).json({ error: "seat is required" });
   const seatRow = db.prepare("SELECT * FROM seats WHERE flight_id = ? AND seat = ?").get(flight.id, seat) as any;
   if (!seatRow) return res.status(400).json({ error: `Seat ${seat} does not exist on this aircraft` });
-  if (seatRow.passenger_id) return res.status(409).json({ error: `Seat ${seat} is already occupied` });
+  // Same "occupied by someone else" check as POST /:passengerId/seat below — a passenger who
+  // already had this exact seat pre-assigned (e.g. picked in the Seats step before check-in is
+  // finalized) isn't "occupying" it in the sense this guard means to catch.
+  if (seatRow.passenger_id && seatRow.passenger_id !== passenger.id) {
+    return res.status(409).json({ error: `Seat ${seat} is already occupied` });
+  }
 
   const nextSeq = flight.last_checkin_sequence + 1;
 
