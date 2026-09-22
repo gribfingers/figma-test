@@ -79,6 +79,9 @@ export function KioskBagDrop() {
   if (step === "lookup") {
     return (
       <KioskFrame headerTitle="Сдача багажа" headerSub="Self bag-drop">
+        <div className="kiosk-illustration">
+          <TagIcon size={44} />
+        </div>
         <p className="kiosk-instruction">Отсканируйте бирку багажа</p>
         <form onSubmit={submitTag}>
           <input
@@ -90,6 +93,7 @@ export function KioskBagDrop() {
             inputMode="numeric"
           />
           <button type="submit" className="kiosk-btn kiosk-btn-primary" disabled={loading || !tag.trim()}>
+            {loading && <span className="kiosk-spinner" />}
             {loading ? "Ищем…" : "Найти по бирке"}
           </button>
         </form>
@@ -101,6 +105,7 @@ export function KioskBagDrop() {
           <input className="kiosk-field" value={surname} onChange={(e) => setSurname(e.target.value.toUpperCase())} maxLength={40} />
           {error && <div className="kiosk-error">{error}</div>}
           <button type="submit" className="kiosk-btn kiosk-btn-secondary" disabled={loading || !pnr.trim() || !surname.trim()}>
+            {loading && <span className="kiosk-spinner" />}
             {loading ? "Ищем…" : "Найти по брони"}
           </button>
         </form>

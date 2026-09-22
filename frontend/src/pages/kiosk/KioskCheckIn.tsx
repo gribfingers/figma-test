@@ -83,6 +83,9 @@ export function KioskCheckIn() {
   if (step === "lookup") {
     return (
       <KioskFrame headerTitle="Самостоятельная регистрация" headerSub="Self-service check-in">
+        <div className="kiosk-illustration">
+          <PlaneIcon size={44} />
+        </div>
         <p className="kiosk-instruction">Найдите вашу бронь</p>
         <p className="kiosk-sub">Введите код бронирования и фамилию, как в билете</p>
         <form onSubmit={submitLookup}>
@@ -105,6 +108,7 @@ export function KioskCheckIn() {
           />
           {error && <div className="kiosk-error">{error}</div>}
           <button type="submit" className="kiosk-btn kiosk-btn-primary" disabled={loading || !pnr.trim() || !surname.trim()}>
+            {loading && <span className="kiosk-spinner" />}
             {loading ? "Ищем…" : "Найти бронь"}
           </button>
         </form>
@@ -209,6 +213,7 @@ export function KioskCheckIn() {
         </ul>
         {error && <div className="kiosk-error">{error}</div>}
         <button type="button" className="kiosk-btn kiosk-btn-primary" onClick={confirmCheckin} disabled={loading}>
+          {loading && <span className="kiosk-spinner" />}
           {loading ? "Регистрируем…" : "Ознакомлен(а), продолжить"}
         </button>
       </KioskFrame>
