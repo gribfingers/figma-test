@@ -15,6 +15,7 @@ import { analyticsRouter } from "./routes/analytics";
 import { countersRouter } from "./routes/counters";
 import { statsRouter } from "./routes/stats";
 import { transcribeRouter } from "./routes/transcribe";
+import { kioskRouter } from "./routes/kiosk";
 import { requireAuth } from "./middleware/auth";
 import { startWhisperServer } from "./whisper";
 
@@ -39,6 +40,11 @@ app.use("/api/transcribe", requireAuth, transcribeRouter);
 // (frontend's /transcribe-demo, no login) — transcribeRouter itself never reads req.user, so this
 // is just a second, open entry point onto the same handler, not a duplicate implementation.
 app.use("/api/transcribe-demo", transcribeRouter);
+// Also deliberately public — passenger-facing self-service kiosk (check-in +
+// bag-drop), same reasoning as transcribe-demo above: no agent session to
+// log in with at an airport kiosk. Scoped to its own booking-reference
+// lookups rather than the agent search, see routes/kiosk.ts.
+app.use("/api/kiosk", kioskRouter);
 // Every operational route requires a logged-in session — this app has no anonymous/read-only browsing.
 app.use("/api/flights", requireAuth, flightsRouter);
 app.use("/api/checkin", requireAuth, checkinRouter);

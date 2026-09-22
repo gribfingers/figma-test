@@ -29,6 +29,8 @@ import { Analytics } from "./pages/Analytics";
 import { EmptyState } from "./pages/EmptyState";
 import { HelpPage } from "./pages/HelpPage";
 import { TranscribeDemo } from "./pages/TranscribeDemo";
+import { KioskCheckIn } from "./pages/kiosk/KioskCheckIn";
+import { KioskBagDrop } from "./pages/kiosk/KioskBagDrop";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
@@ -48,6 +50,11 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
                               <Route path="/login" element={<Login />} />
                               {/* Public demo — no login, meant to be shared/shown on its own. */}
                               <Route path="/transcribe-demo" element={<TranscribeDemo />} />
+                              {/* Passenger-facing self-service kiosk — no login (there's no agent
+                                  at an unattended terminal), scoped to its own /api/kiosk
+                                  endpoints rather than the agent check-in API. */}
+                              <Route path="/kiosk" element={<KioskCheckIn />} />
+                              <Route path="/kiosk/bag-drop" element={<KioskBagDrop />} />
                               <Route element={<RequireAuth />}>
                                 {/* Standalone — no TopTabs/SideDrawer chrome, since it's meant to be
                                     opened in its own browser tab (see TopTabs' Help button) rather

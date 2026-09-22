@@ -3695,3 +3695,197 @@ tr.row-hover { cursor: pointer; }
   resize: vertical;
 }
 .transcribe-demo-result:focus { outline: none; border-color: var(--field-border-focus); background: var(--field-bg-focus); }
+
+/* ---- Self-service kiosk (check-in + bag-drop) ----
+   Deliberately its own small palette rather than the app's --accent/theme
+   vars: a real airport kiosk has its own standalone branding, not the
+   agent workstation's UI theme, and there's no logged-in user here to have
+   a theme preference for. Layout mimics the elongated-screen self-service
+   terminal form factor: a tall narrow "device" panel centered on a filled
+   background, one big instruction + one primary action per step. */
+.kiosk-page {
+  --kiosk-teal: #0d9488;
+  --kiosk-teal-dark: #0f766e;
+  --kiosk-ink: #0f172a;
+  --kiosk-muted: #64748b;
+  --kiosk-border: #e2e8f0;
+  min-height: 100svh;
+  background: linear-gradient(160deg, #0f172a 0%, #1e293b 45%, #0f172a 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  font-family: var(--font);
+}
+.kiosk-device {
+  width: 100%;
+  max-width: 420px;
+  min-height: min(780px, calc(100svh - 48px));
+  background: #ffffff;
+  border-radius: 28px;
+  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.6), 0 0 0 8px #1e293b, 0 0 0 9px #334155;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.kiosk-header {
+  background: var(--kiosk-teal);
+  color: #fff;
+  padding: 18px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.kiosk-header-title { font-size: 15px; font-weight: 700; letter-spacing: 0.02em; }
+.kiosk-header-sub { font-size: 12px; opacity: 0.85; }
+.kiosk-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 28px 22px;
+  overflow-y: auto;
+  color: var(--kiosk-ink);
+}
+.kiosk-instruction {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: center;
+  margin: 0 0 22px;
+}
+.kiosk-sub {
+  font-size: 14px;
+  color: var(--kiosk-muted);
+  text-align: center;
+  margin: -14px 0 22px;
+}
+.kiosk-spacer { flex: 1; }
+.kiosk-illustration {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 8px 0 24px;
+  color: var(--kiosk-teal);
+}
+.kiosk-btn {
+  display: block;
+  width: 100%;
+  padding: 18px 16px;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+  border: none;
+  cursor: pointer;
+  margin-bottom: 12px;
+  transition: transform 80ms ease, opacity 80ms ease;
+}
+.kiosk-btn:active { transform: scale(0.98); }
+.kiosk-btn:disabled { opacity: 0.5; cursor: default; transform: none; }
+.kiosk-btn-primary { background: var(--kiosk-teal); color: #fff; }
+.kiosk-btn-primary:not(:disabled):hover { background: var(--kiosk-teal-dark); }
+.kiosk-btn-secondary { background: #f1f5f9; color: var(--kiosk-ink); }
+.kiosk-btn-secondary:not(:disabled):hover { background: #e2e8f0; }
+.kiosk-btn-ghost { background: transparent; color: var(--kiosk-muted); text-decoration: underline; padding: 10px; }
+.kiosk-btn-ghost:not(:disabled):hover { background: transparent; color: var(--kiosk-teal); }
+.kiosk-field {
+  width: 100%;
+  padding: 16px 14px;
+  font-size: 16px;
+  border: 2px solid var(--kiosk-border);
+  border-radius: 12px;
+  margin-bottom: 14px;
+  box-sizing: border-box;
+}
+.kiosk-field:focus { outline: none; border-color: var(--kiosk-teal); }
+.kiosk-field-label { font-size: 12px; font-weight: 700; color: var(--kiosk-muted); text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 6px; }
+.kiosk-error { background: #fef2f2; color: #b91c1c; padding: 12px 14px; border-radius: 10px; font-size: 13px; margin-bottom: 14px; }
+.kiosk-ticket {
+  border: 1px solid var(--kiosk-border);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.kiosk-ticket-route { font-size: 22px; font-weight: 800; letter-spacing: 0.02em; }
+.kiosk-ticket-row { display: flex; justify-content: space-between; font-size: 14px; color: var(--kiosk-muted); margin-top: 4px; }
+.kiosk-ticket-name { font-size: 16px; font-weight: 700; margin-top: 10px; }
+.kiosk-rules-list { list-style: none; padding: 0; margin: 0 0 20px; }
+.kiosk-rules-list li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 14px;
+  color: var(--kiosk-ink);
+  padding: 10px 0;
+  border-bottom: 1px solid var(--kiosk-border);
+}
+.kiosk-rules-list li:last-child { border-bottom: none; }
+.kiosk-bag-counter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  margin: 10px 0 24px;
+}
+.kiosk-bag-counter button {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 2px solid var(--kiosk-teal);
+  background: #fff;
+  color: var(--kiosk-teal);
+  font-size: 24px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.kiosk-bag-counter button:hover:not(:disabled) { background: var(--kiosk-teal); color: #fff; }
+.kiosk-bag-counter button:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.35); }
+.kiosk-bag-counter button:disabled { opacity: 0.35; cursor: default; }
+.kiosk-bag-counter-value { font-size: 34px; font-weight: 800; min-width: 40px; text-align: center; }
+.kiosk-tag-strip {
+  font-family: var(--mono-font, monospace);
+  background: #f8fafc;
+  border: 1px dashed var(--kiosk-border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  text-align: center;
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  margin-bottom: 10px;
+}
+.kiosk-success-icon {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  background: var(--kiosk-teal);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 8px auto 22px;
+  font-size: 40px;
+}
+.kiosk-success-title { font-size: 22px; font-weight: 800; text-align: center; margin: 0 0 10px; }
+.kiosk-desk-callout {
+  background: var(--kiosk-teal);
+  color: #fff;
+  border-radius: 14px;
+  padding: 18px;
+  text-align: center;
+  margin: 12px 0 20px;
+}
+.kiosk-desk-callout-num { font-size: 40px; font-weight: 900; line-height: 1; }
+.kiosk-desk-callout-label { font-size: 13px; opacity: 0.9; margin-top: 4px; }
+.kiosk-progress-dots { display: flex; gap: 6px; justify-content: center; margin-bottom: 22px; }
+.kiosk-progress-dots span { width: 7px; height: 7px; border-radius: 50%; background: var(--kiosk-border); }
+.kiosk-progress-dots span.active { background: var(--kiosk-teal); width: 20px; border-radius: 4px; }
+.kiosk-nav-link {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  text-decoration: none;
+}
+.kiosk-nav-link:hover { color: rgba(255, 255, 255, 0.85); }
