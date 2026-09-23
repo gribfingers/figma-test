@@ -25,11 +25,16 @@ export interface KioskFlight {
   std: string;
 }
 
-export interface LookupResult {
+/** One member of the travel party sharing a PNR + flight. */
+export interface PartyMember {
   passenger: KioskPassenger;
-  flight: KioskFlight;
   bagTags: string[];
   bagDroppedAt: string | null;
+}
+
+export interface LookupResult {
+  members: PartyMember[];
+  flight: KioskFlight;
 }
 
 export interface CheckinResult {

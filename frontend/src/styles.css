@@ -3943,3 +3943,39 @@ tr.row-hover { cursor: pointer; }
   z-index: 2;
 }
 .kiosk-nav-link:hover { color: rgba(15, 40, 70, 0.8); }
+
+/* Party (group check-in) member picker — a family/group on one PNR is
+   selected and processed together rather than one kiosk visit per person. */
+.kiosk-party-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+.kiosk-party-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  border-radius: 18px;
+  border: 2.5px solid var(--kiosk-border);
+  cursor: pointer;
+  transition: border-color 100ms ease, background 100ms ease;
+  min-height: 44px;
+}
+.kiosk-party-row:hover:not(.done) { border-color: var(--kiosk-teal-light); }
+.kiosk-party-row.selected { border-color: var(--kiosk-teal); background: rgba(13, 148, 136, 0.07); }
+.kiosk-party-row.done { cursor: default; background: #f8fafc; }
+.kiosk-party-checkbox {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  border: 2.5px solid var(--kiosk-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+  transition: background 100ms ease, border-color 100ms ease;
+}
+.kiosk-party-row.selected .kiosk-party-checkbox { background: var(--kiosk-teal); border-color: var(--kiosk-teal); }
+.kiosk-party-row.done .kiosk-party-checkbox { background: var(--kiosk-muted); border-color: var(--kiosk-muted); }
+.kiosk-party-name { font-weight: 800; font-size: 17px; }
+.kiosk-party-sub { font-size: 13.5px; color: var(--kiosk-muted); margin-top: 3px; }

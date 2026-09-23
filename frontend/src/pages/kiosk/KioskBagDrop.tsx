@@ -2,9 +2,13 @@ import { FormEvent, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { KioskFrame } from "../../components/kiosk/KioskFrame";
 import { TagIcon } from "../../components/Icon";
-import { BagDropResult, kioskApi, LookupResult } from "../../kioskApi";
+import { BagDropResult, kioskApi, LookupResult, PartyMember } from "../../kioskApi";
 
 type Step = "lookup" | "confirm" | "weighing" | "success" | "none";
+
+function fullName(m: PartyMember) {
+  return `${m.passenger.surname}/${m.passenger.given_name}`;
+}
 
 export function KioskBagDrop() {
   const [params] = useSearchParams();
@@ -22,7 +26,7 @@ export function KioskBagDrop() {
     setError(null);
     try {
       const r = await finder();
-      if (r.bagDroppedAt) {
+      if (r.members.every((m) => m.bagDroppedAt)) {
         setLookup(r);
         setStep("none");
         return;
@@ -65,8 +69,14 @@ export function KioskBagDrop() {
       // Brief simulated weighing pause — a real belt scale takes a moment; this just makes the
       // step legible instead of the confirmation appearing instantly.
       await new Promise((r) => setTimeout(r, 1400));
-      const r = await kioskApi.bagDrop(lookup.passenger.id);
-      setDrop(r);
+      // Confirm every party member's bags in this one visit — one at a time, same booking-derived
+      // desk number for all of them (see routes/kiosk.ts's bag-drop desk assignment).
+      const pending = lookup.members.filter((m) => !m.bagDroppedAt);
+      let last: BagDropResult | null = null;
+      for (const m of pending) {
+        last = await kioskApi.bagDrop(m.passenger.id);
+      }
+      if (last) setDrop(last);
       setStep("success");
     } catch (e) {
       setError((e as Error).message);
@@ -114,11 +124,12 @@ export function KioskBagDrop() {
   }
 
   if (step === "none" && lookup) {
+    const isGroup = lookup.members.length > 1;
     return (
       <KioskFrame headerTitle="Сдача багажа">
         <p className="kiosk-instruction">Багаж уже сдан</p>
         <p className="kiosk-sub">
-          {lookup.passenger.surname}/{lookup.passenger.given_name}, рейс {lookup.flight.flightNumber} — все места багажа уже приняты.
+          {isGroup ? "Все пассажиры этой брони" : fullName(lookup.members[0])}, рейс {lookup.flight.flightNumber} — все места багажа уже приняты.
         </p>
         <Link to="/kiosk/bag-drop" className="kiosk-btn kiosk-btn-secondary">
           Начать заново
@@ -128,26 +139,30 @@ export function KioskBagDrop() {
   }
 
   if (step === "confirm" && lookup) {
+    const isGroup = lookup.members.length > 1;
+    const totalTags = lookup.members.reduce((n, m) => n + m.bagTags.length, 0);
     return (
       <KioskFrame headerTitle={lookup.flight.flightNumber} headerSub={`${lookup.flight.origin} → ${lookup.flight.destination}`} step={1} totalSteps={2}>
         <p className="kiosk-instruction">Разместите багаж на ленте</p>
-        <div className="kiosk-ticket">
-          <div className="kiosk-ticket-name">
-            {lookup.passenger.surname}/{lookup.passenger.given_name}
-          </div>
-          <div className="kiosk-ticket-row">
-            <span>Мест багажа</span>
-            <span>{lookup.bagTags.length}</span>
-          </div>
-        </div>
-        {lookup.bagTags.map((t) => (
-          <div key={t} className="kiosk-tag-strip">
-            <TagIcon size={14} /> {t}
+        {lookup.members.map((m) => (
+          <div className="kiosk-ticket" key={m.passenger.id}>
+            {isGroup && <div className="kiosk-ticket-name">{fullName(m)}</div>}
+            <div className="kiosk-ticket-row">
+              <span>Мест багажа</span>
+              <span>{m.bagTags.length}</span>
+            </div>
+            {m.bagTags.map((t) => (
+              <div key={t} className="kiosk-tag-strip" style={{ marginTop: 8 }}>
+                <TagIcon size={14} /> {t}
+              </div>
+            ))}
           </div>
         ))}
+        {isGroup && <p className="kiosk-sub" style={{ marginTop: 0 }}>Всего мест багажа: {totalTags}</p>}
         {error && <div className="kiosk-error">{error}</div>}
         <div className="kiosk-spacer" />
         <button type="button" className="kiosk-btn kiosk-btn-primary" onClick={confirmDrop} disabled={loading}>
+          {loading && <span className="kiosk-spinner" />}
           Багаж размещён на весах
         </button>
       </KioskFrame>
@@ -167,17 +182,18 @@ export function KioskBagDrop() {
   }
 
   if (step === "success" && drop && lookup) {
+    const isGroup = lookup.members.length > 1;
     return (
       <KioskFrame headerTitle={lookup.flight.flightNumber} step={2} totalSteps={2}>
         <div className="kiosk-success-icon">✓</div>
-        <p className="kiosk-success-title">Поздравляем! Ваш багаж сдан!</p>
+        <p className="kiosk-success-title">{isGroup ? "Поздравляем! Весь багаж сдан!" : "Поздравляем! Ваш багаж сдан!"}</p>
         <div className="kiosk-desk-callout">
           <div className="kiosk-desk-callout-num">№ {drop.bagDropDesk}</div>
           <div className="kiosk-desk-callout-label">стойка отправки багажа</div>
         </div>
         <p className="kiosk-sub">Проходите на посадку по указателям к вашему выходу.</p>
         <Link to="/kiosk/bag-drop" className="kiosk-btn kiosk-btn-secondary">
-          Сдать багаж другого пассажира
+          Сдать багаж другой брони
         </Link>
       </KioskFrame>
     );
