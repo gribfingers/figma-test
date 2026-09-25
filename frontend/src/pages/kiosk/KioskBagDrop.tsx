@@ -1,7 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { KioskFrame } from "../../components/kiosk/KioskFrame";
-import { TagIcon } from "../../components/Icon";
 import { BagDropResult, kioskApi, LookupResult, PartyMember } from "../../kioskApi";
 
 type Step = "lookup" | "confirm" | "weighing" | "success" | "none";
@@ -88,11 +87,9 @@ export function KioskBagDrop() {
 
   if (step === "lookup") {
     return (
-      <KioskFrame headerTitle="Сдача багажа" headerSub="Self bag-drop">
-        <div className="kiosk-illustration">
-          <TagIcon size={44} />
-        </div>
-        <p className="kiosk-instruction">Отсканируйте бирку багажа</p>
+      <KioskFrame terminal="Терминал C">
+        <h1 className="kiosk-title">Сдача багажа</h1>
+        <p className="kiosk-sub">Отсканируйте бирку багажа</p>
         <form onSubmit={submitTag}>
           <input
             className="kiosk-field"
@@ -102,22 +99,28 @@ export function KioskBagDrop() {
             autoFocus
             inputMode="numeric"
           />
-          <button type="submit" className="kiosk-btn kiosk-btn-primary" disabled={loading || !tag.trim()}>
-            {loading && <span className="kiosk-spinner" />}
-            {loading ? "Ищем…" : "Найти по бирке"}
-          </button>
+          <div className="kiosk-card-stack" style={{ paddingTop: 0, marginTop: 0 }}>
+            <button type="submit" className="kiosk-card md primary" disabled={loading || !tag.trim()}>
+              {loading && <span className="kiosk-spinner-dark" />}
+              {loading ? "Ищем…" : "Найти по бирке"}
+            </button>
+          </div>
         </form>
-        <p className="kiosk-sub">или, если бирки под рукой нет —</p>
+        <p className="kiosk-sub" style={{ marginTop: 24 }}>
+          или, если бирки под рукой нет —
+        </p>
         <form onSubmit={submitPnr}>
           <div className="kiosk-field-label">Код бронирования (PNR)</div>
           <input className="kiosk-field" value={pnr} onChange={(e) => setPnr(e.target.value.toUpperCase())} maxLength={10} />
           <div className="kiosk-field-label">Фамилия</div>
           <input className="kiosk-field" value={surname} onChange={(e) => setSurname(e.target.value.toUpperCase())} maxLength={40} />
           {error && <div className="kiosk-error">{error}</div>}
-          <button type="submit" className="kiosk-btn kiosk-btn-secondary" disabled={loading || !pnr.trim() || !surname.trim()}>
-            {loading && <span className="kiosk-spinner" />}
-            {loading ? "Ищем…" : "Найти по брони"}
-          </button>
+          <div className="kiosk-card-stack" style={{ paddingTop: 0, marginTop: 0 }}>
+            <button type="submit" className="kiosk-card md" disabled={loading || !pnr.trim() || !surname.trim()}>
+              {loading && <span className="kiosk-spinner-dark" />}
+              {loading ? "Ищем…" : "Найти по брони"}
+            </button>
+          </div>
         </form>
       </KioskFrame>
     );
@@ -126,14 +129,16 @@ export function KioskBagDrop() {
   if (step === "none" && lookup) {
     const isGroup = lookup.members.length > 1;
     return (
-      <KioskFrame headerTitle="Сдача багажа">
-        <p className="kiosk-instruction">Багаж уже сдан</p>
+      <KioskFrame>
+        <h1 className="kiosk-title">Багаж уже сдан</h1>
         <p className="kiosk-sub">
           {isGroup ? "Все пассажиры этой брони" : fullName(lookup.members[0])}, рейс {lookup.flight.flightNumber} — все места багажа уже приняты.
         </p>
-        <Link to="/kiosk/bag-drop" className="kiosk-btn kiosk-btn-secondary">
-          Начать заново
-        </Link>
+        <div className="kiosk-card-stack">
+          <Link to="/kiosk/bag-drop" className="kiosk-card md">
+            Начать заново
+          </Link>
+        </div>
       </KioskFrame>
     );
   }
@@ -142,40 +147,35 @@ export function KioskBagDrop() {
     const isGroup = lookup.members.length > 1;
     const totalTags = lookup.members.reduce((n, m) => n + m.bagTags.length, 0);
     return (
-      <KioskFrame headerTitle={lookup.flight.flightNumber} headerSub={`${lookup.flight.origin} → ${lookup.flight.destination}`} step={1} totalSteps={2}>
-        <p className="kiosk-instruction">Разместите багаж на ленте</p>
+      <KioskFrame flightLabel={lookup.flight.flightNumber} stepBadge="Шаг 1 из 2">
+        <h1 className="kiosk-title">Разместите багаж на ленте</h1>
         {lookup.members.map((m) => (
-          <div className="kiosk-ticket" key={m.passenger.id}>
-            {isGroup && <div className="kiosk-ticket-name">{fullName(m)}</div>}
-            <div className="kiosk-ticket-row">
-              <span>Мест багажа</span>
-              <span>{m.bagTags.length}</span>
-            </div>
+          <div className="kiosk-confirm-row" style={{ marginBottom: 12 }} key={m.passenger.id}>
+            {isGroup && <div className="kiosk-confirm-name">{fullName(m)}</div>}
+            <div className="kiosk-confirm-seat">Мест багажа: {m.bagTags.length}</div>
             {m.bagTags.map((t) => (
-              <div key={t} className="kiosk-tag-strip" style={{ marginTop: 8 }}>
-                <TagIcon size={14} /> {t}
+              <div key={t} className="kiosk-tag-card" style={{ fontSize: 16, marginTop: 8, marginBottom: 0 }}>
+                {t}
               </div>
             ))}
           </div>
         ))}
-        {isGroup && <p className="kiosk-sub" style={{ marginTop: 0 }}>Всего мест багажа: {totalTags}</p>}
+        {isGroup && <p className="kiosk-sub">Всего мест багажа: {totalTags}</p>}
         {error && <div className="kiosk-error">{error}</div>}
-        <div className="kiosk-spacer" />
-        <button type="button" className="kiosk-btn kiosk-btn-primary" onClick={confirmDrop} disabled={loading}>
-          {loading && <span className="kiosk-spinner" />}
-          Багаж размещён на весах
-        </button>
+        <div className="kiosk-card-stack">
+          <button type="button" className="kiosk-card md primary" onClick={confirmDrop} disabled={loading}>
+            {loading && <span className="kiosk-spinner-dark" />}
+            Багаж размещён на весах
+          </button>
+        </div>
       </KioskFrame>
     );
   }
 
   if (step === "weighing") {
     return (
-      <KioskFrame headerTitle="Сдача багажа" step={2} totalSteps={2}>
-        <p className="kiosk-instruction">Взвешивание и сверка данных…</p>
-        <div className="kiosk-illustration">
-          <TagIcon size={64} />
-        </div>
+      <KioskFrame stepBadge="Шаг 2 из 2">
+        <h1 className="kiosk-title">Взвешивание и сверка данных…</h1>
         <p className="kiosk-sub">Не убирайте багаж с ленты</p>
       </KioskFrame>
     );
@@ -184,17 +184,18 @@ export function KioskBagDrop() {
   if (step === "success" && drop && lookup) {
     const isGroup = lookup.members.length > 1;
     return (
-      <KioskFrame headerTitle={lookup.flight.flightNumber} step={2} totalSteps={2}>
-        <div className="kiosk-success-icon">✓</div>
-        <p className="kiosk-success-title">{isGroup ? "Поздравляем! Весь багаж сдан!" : "Поздравляем! Ваш багаж сдан!"}</p>
+      <KioskFrame flightLabel={lookup.flight.flightNumber} stepBadge="Шаг 2 из 2">
+        <h1 className="kiosk-title success">{isGroup ? "Поздравляем! Весь багаж сдан!" : "Поздравляем! Ваш багаж сдан!"}</h1>
         <div className="kiosk-desk-callout">
           <div className="kiosk-desk-callout-num">№ {drop.bagDropDesk}</div>
           <div className="kiosk-desk-callout-label">стойка отправки багажа</div>
         </div>
-        <p className="kiosk-sub">Проходите на посадку по указателям к вашему выходу.</p>
-        <Link to="/kiosk/bag-drop" className="kiosk-btn kiosk-btn-secondary">
-          Сдать багаж другой брони
-        </Link>
+        <p className="kiosk-instruction">Проходите на посадку по указателям к вашему выходу.</p>
+        <div className="kiosk-card-stack">
+          <Link to="/kiosk/bag-drop" className="kiosk-card md">
+            Сдать багаж другой брони
+          </Link>
+        </div>
       </KioskFrame>
     );
   }

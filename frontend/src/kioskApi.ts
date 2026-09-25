@@ -2,9 +2,17 @@
 // no auth token, no 401/dcs-unauthorized handling (kiosk endpoints are
 // public and never 401), unlike api.ts's request(). Keeps the kiosk surface
 // fully independent of the agent app's auth machinery.
+//
+// SeatCell is imported type-only from api.ts so the kiosk's seat picker can
+// reuse the same SeatMapGrid component the agent app uses (per the real
+// seat map, not a kiosk-specific reimplementation) — this has zero runtime
+// dependency on api.ts's auth machinery, just the shared shape.
+import type { SeatCell } from "./api";
+export type { SeatCell };
 
 export interface KioskPassenger {
   id: number;
+  flight_id: number;
   record_locator: string;
   surname: string;
   given_name: string;
@@ -66,8 +74,13 @@ export const kioskApi = {
   lookupByPnr: (pnr: string, surname: string) =>
     request<LookupResult>(`/lookup?pnr=${encodeURIComponent(pnr)}&surname=${encodeURIComponent(surname)}`),
   lookupByEticket: (eticket: string) => request<LookupResult>(`/lookup?eticket=${encodeURIComponent(eticket)}`),
-  checkin: (passengerId: number, data: { document_number: string; nationality?: string; dob?: string; doc_expiry: string; bag_count: number }) =>
-    request<CheckinResult>(`/${passengerId}/checkin`, { method: "POST", body: JSON.stringify(data) }),
+  checkin: (
+    passengerId: number,
+    data: { document_number: string; nationality?: string; dob?: string; doc_expiry: string; bag_count: number; seat?: string }
+  ) => request<CheckinResult>(`/${passengerId}/checkin`, { method: "POST", body: JSON.stringify(data) }),
+  seatmap: (flightId: number) => request<SeatCell[]>(`/seatmap/${flightId}`),
+  addBags: (passengerId: number, count: number) =>
+    request<{ bagTags: string[]; allBagTags: string[] }>(`/${passengerId}/bags`, { method: "POST", body: JSON.stringify({ count }) }),
   bagDropLookupByTag: (tag: string) => request<LookupResult>(`/bag-drop/lookup?tag=${encodeURIComponent(tag)}`),
   bagDropLookupByPnr: (pnr: string, surname: string) =>
     request<LookupResult>(`/bag-drop/lookup?pnr=${encodeURIComponent(pnr)}&surname=${encodeURIComponent(surname)}`),

@@ -119,6 +119,21 @@ kioskRouter.get("/lookup", (req, res) => {
   res.json({ members: party.map(memberJson), flight: flightLabel(anchor) });
 });
 
+/** Public mirror of GET /api/flights/:id/seatmap (routes/flights.ts) — same query, just reachable
+ *  without an agent session, so the kiosk's seat-picker step can reuse the real seat map (SeatMapGrid
+ *  on the frontend) instead of only auto-assigning. Read-only: no seat-attribute editing here. */
+kioskRouter.get("/seatmap/:flightId", (req, res) => {
+  const seats = db
+    .prepare(
+      `SELECT s.seat, s.cabin_class, s.exit_row, s.passenger_id, s.extra,
+              p.surname, p.given_name, p.record_locator, p.boarding_status, p.dob
+       FROM seats s LEFT JOIN passengers p ON p.id = s.passenger_id
+       WHERE s.flight_id = ? ORDER BY s.seat`
+    )
+    .all(req.params.flightId);
+  res.json(seats);
+});
+
 /**
  * Self-service check-in: capture a travel document (normally a passport
  * scan; here the kiosk UI simulates the scan and posts the resulting
@@ -144,7 +159,7 @@ kioskRouter.post("/:passengerId/checkin", (req, res) => {
     return res.status(409).json({ error: "Already checked in" });
   }
 
-  const { document_number, nationality, dob, doc_expiry, bag_count } = req.body;
+  const { document_number, nationality, dob, doc_expiry, bag_count, seat: requestedSeat } = req.body;
   if (!document_number || !doc_expiry) {
     return res.status(400).json({ error: "document_number and doc_expiry are required" });
   }
@@ -157,17 +172,30 @@ kioskRouter.post("/:passengerId/checkin", (req, res) => {
   // seats.cabin_class uses "J"/"Y" (matches the physical cabin), while passenger.class uses "C"/"Y"
   // (the booked fare) — same mapping as frontend/src/paxExtra.ts's classFor, just inverted.
   const cabinClass = passenger.class === "C" ? "J" : "Y";
-  const seatRow = db
-    .prepare(
-      `SELECT seat, cabin_class FROM seats WHERE flight_id = ? AND cabin_class = ? AND passenger_id IS NULL AND exit_row = 0 ORDER BY seat LIMIT 1`
-    )
-    .get(flight.id, cabinClass) as { seat: string; cabin_class: string } | undefined;
-  const fallbackSeatRow = seatRow
-    ? undefined
-    : (db
-        .prepare(`SELECT seat, cabin_class FROM seats WHERE flight_id = ? AND cabin_class = ? AND passenger_id IS NULL ORDER BY seat LIMIT 1`)
-        .get(flight.id, cabinClass) as { seat: string; cabin_class: string } | undefined);
-  const chosen = seatRow ?? fallbackSeatRow;
+
+  let chosen: { seat: string; cabin_class: string } | undefined;
+  if (requestedSeat) {
+    // The kiosk UI lets the passenger pick their own seat on the real seat map (see
+    // /kiosk/seatmap/:flightId) rather than always auto-assigning — honor that pick if it's
+    // still actually free (another party member's own pick, or someone else entirely, could
+    // have taken it between the map loading and this submit).
+    chosen = db
+      .prepare(`SELECT seat, cabin_class FROM seats WHERE flight_id = ? AND seat = ? AND passenger_id IS NULL`)
+      .get(flight.id, requestedSeat) as { seat: string; cabin_class: string } | undefined;
+    if (!chosen) return res.status(409).json({ error: `Seat ${requestedSeat} is no longer available — please choose another` });
+  } else {
+    const seatRow = db
+      .prepare(
+        `SELECT seat, cabin_class FROM seats WHERE flight_id = ? AND cabin_class = ? AND passenger_id IS NULL AND exit_row = 0 ORDER BY seat LIMIT 1`
+      )
+      .get(flight.id, cabinClass) as { seat: string; cabin_class: string } | undefined;
+    const fallbackSeatRow = seatRow
+      ? undefined
+      : (db
+          .prepare(`SELECT seat, cabin_class FROM seats WHERE flight_id = ? AND cabin_class = ? AND passenger_id IS NULL ORDER BY seat LIMIT 1`)
+          .get(flight.id, cabinClass) as { seat: string; cabin_class: string } | undefined);
+    chosen = seatRow ?? fallbackSeatRow;
+  }
   if (!chosen) return res.status(409).json({ error: "No seats available — please see a check-in agent" });
   const seat = chosen.seat;
 
@@ -203,6 +231,36 @@ kioskRouter.post("/:passengerId/checkin", (req, res) => {
 
   const updated = db.prepare("SELECT * FROM passengers WHERE id = ?").get(passenger.id) as Passenger;
   res.json({ passenger: serializePassenger(updated), flight: flightLabel(flight), bcbp, bagTags });
+});
+
+/**
+ * Register bag(s) for an already checked-in passenger — a separate step
+ * from check-in itself, matching the kiosk UI's own baggage screen (add one
+ * bag card at a time, "print tags" once ready) rather than folding bag
+ * count into the check-in form. Generates `count` new tags and appends
+ * them to whatever tags the passenger already has (normally none yet, but
+ * idempotent-friendly if called again). Bumps passengers.bag_count by the
+ * same amount.
+ */
+kioskRouter.post("/:passengerId/bags", (req, res) => {
+  const passenger = db.prepare("SELECT * FROM passengers WHERE id = ?").get(req.params.passengerId) as Passenger | undefined;
+  if (!passenger) return res.status(404).json({ error: "Passenger not found" });
+  if (passenger.checkin_status !== "CHECKED_IN") {
+    return res.status(409).json({ error: "Check in before registering baggage" });
+  }
+
+  const count = Math.max(0, Math.min(9, Number(req.body?.count) || 0));
+  if (count === 0) return res.status(400).json({ error: "count must be at least 1" });
+
+  const extra = readExtra(passenger);
+  const existingTags = extra.bagTags ?? [];
+  const newTags = Array.from({ length: count }, (_, i) => generateTag(passenger.id, existingTags.length + i));
+  const bagTags = [...existingTags, ...newTags];
+  const nextExtra: KioskExtra = { ...extra, bagTags };
+
+  db.prepare("UPDATE passengers SET bag_count = ?, extra = ? WHERE id = ?").run(passenger.bag_count + count, JSON.stringify(nextExtra), passenger.id);
+
+  res.json({ bagTags: newTags, allBagTags: bagTags });
 });
 
 /** Bag-drop station's own lookup — by a printed tag number, or the same pnr+surname pair as check-in (in case the passenger goes straight there without the physical tag in hand, e.g. re-print scenarios). Returns the whole checked-in party sharing that booking + flight, same grouping as check-in, so one visit can drop bags for everyone traveling together. */
