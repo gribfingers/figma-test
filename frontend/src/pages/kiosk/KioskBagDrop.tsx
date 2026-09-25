@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { KioskFrame } from "../../components/kiosk/KioskFrame";
+import { useKioskLanguage } from "../../kioskI18n";
 import { BagDropResult, kioskApi, LookupResult, PartyMember } from "../../kioskApi";
 
 type Step = "lookup" | "confirm" | "weighing" | "success" | "none";
@@ -10,6 +11,7 @@ function fullName(m: PartyMember) {
 }
 
 export function KioskBagDrop() {
+  const { t } = useKioskLanguage();
   const [params] = useSearchParams();
   const [step, setStep] = useState<Step>("lookup");
   const [tag, setTag] = useState("");
@@ -87,38 +89,38 @@ export function KioskBagDrop() {
 
   if (step === "lookup") {
     return (
-      <KioskFrame terminal="Терминал C">
-        <h1 className="kiosk-title">Сдача багажа</h1>
-        <p className="kiosk-sub">Отсканируйте бирку багажа</p>
+      <KioskFrame>
+        <h1 className="kiosk-title">{t("Сдача багажа")}</h1>
+        <p className="kiosk-sub">{t("Отсканируйте бирку багажа")}</p>
         <form onSubmit={submitTag}>
           <input
             className="kiosk-field"
             value={tag}
             onChange={(e) => setTag(e.target.value.replace(/\D/g, "").slice(0, 8))}
-            placeholder="Номер бирки"
+            placeholder={t("Номер бирки")}
             autoFocus
             inputMode="numeric"
           />
           <div className="kiosk-card-stack" style={{ paddingTop: 0, marginTop: 0 }}>
             <button type="submit" className="kiosk-card md primary" disabled={loading || !tag.trim()}>
               {loading && <span className="kiosk-spinner-dark" />}
-              {loading ? "Ищем…" : "Найти по бирке"}
+              {loading ? t("Ищем…") : t("Найти по бирке")}
             </button>
           </div>
         </form>
         <p className="kiosk-sub" style={{ marginTop: 24 }}>
-          или, если бирки под рукой нет —
+          {t("или, если бирки под рукой нет —")}
         </p>
         <form onSubmit={submitPnr}>
-          <div className="kiosk-field-label">Код бронирования (PNR)</div>
+          <div className="kiosk-field-label">{t("Код бронирования (PNR)")}</div>
           <input className="kiosk-field" value={pnr} onChange={(e) => setPnr(e.target.value.toUpperCase())} maxLength={10} />
-          <div className="kiosk-field-label">Фамилия</div>
+          <div className="kiosk-field-label">{t("Фамилия")}</div>
           <input className="kiosk-field" value={surname} onChange={(e) => setSurname(e.target.value.toUpperCase())} maxLength={40} />
           {error && <div className="kiosk-error">{error}</div>}
           <div className="kiosk-card-stack" style={{ paddingTop: 0, marginTop: 0 }}>
             <button type="submit" className="kiosk-card md" disabled={loading || !pnr.trim() || !surname.trim()}>
               {loading && <span className="kiosk-spinner-dark" />}
-              {loading ? "Ищем…" : "Найти по брони"}
+              {loading ? t("Ищем…") : t("Найти по брони")}
             </button>
           </div>
         </form>
@@ -130,13 +132,16 @@ export function KioskBagDrop() {
     const isGroup = lookup.members.length > 1;
     return (
       <KioskFrame>
-        <h1 className="kiosk-title">Багаж уже сдан</h1>
+        <h1 className="kiosk-title">{t("Багаж уже сдан")}</h1>
         <p className="kiosk-sub">
-          {isGroup ? "Все пассажиры этой брони" : fullName(lookup.members[0])}, рейс {lookup.flight.flightNumber} — все места багажа уже приняты.
+          {t("{who}, рейс {flight} — все места багажа уже приняты.", {
+            who: isGroup ? t("Все пассажиры этой брони") : fullName(lookup.members[0]),
+            flight: lookup.flight.flightNumber,
+          })}
         </p>
         <div className="kiosk-card-stack">
           <Link to="/kiosk/bag-drop" className="kiosk-card md">
-            Начать заново
+            {t("Начать заново")}
           </Link>
         </div>
       </KioskFrame>
@@ -147,25 +152,25 @@ export function KioskBagDrop() {
     const isGroup = lookup.members.length > 1;
     const totalTags = lookup.members.reduce((n, m) => n + m.bagTags.length, 0);
     return (
-      <KioskFrame flightLabel={lookup.flight.flightNumber} stepBadge="Шаг 1 из 2">
-        <h1 className="kiosk-title">Разместите багаж на ленте</h1>
+      <KioskFrame flightLabel={lookup.flight.flightNumber} stepBadge={t("Шаг {n} из 2", { n: 1 })}>
+        <h1 className="kiosk-title">{t("Разместите багаж на ленте")}</h1>
         {lookup.members.map((m) => (
           <div className="kiosk-confirm-row" style={{ marginBottom: 12 }} key={m.passenger.id}>
             {isGroup && <div className="kiosk-confirm-name">{fullName(m)}</div>}
-            <div className="kiosk-confirm-seat">Мест багажа: {m.bagTags.length}</div>
-            {m.bagTags.map((t) => (
-              <div key={t} className="kiosk-tag-card" style={{ fontSize: 16, marginTop: 8, marginBottom: 0 }}>
-                {t}
+            <div className="kiosk-confirm-seat">{t("Мест багажа: {n}", { n: m.bagTags.length })}</div>
+            {m.bagTags.map((tg) => (
+              <div key={tg} className="kiosk-tag-card" style={{ fontSize: 16, marginTop: 8, marginBottom: 0 }}>
+                {tg}
               </div>
             ))}
           </div>
         ))}
-        {isGroup && <p className="kiosk-sub">Всего мест багажа: {totalTags}</p>}
+        {isGroup && <p className="kiosk-sub">{t("Всего мест багажа: {n}", { n: totalTags })}</p>}
         {error && <div className="kiosk-error">{error}</div>}
         <div className="kiosk-card-stack">
           <button type="button" className="kiosk-card md primary" onClick={confirmDrop} disabled={loading}>
             {loading && <span className="kiosk-spinner-dark" />}
-            Багаж размещён на весах
+            {t("Багаж размещён на весах")}
           </button>
         </div>
       </KioskFrame>
@@ -174,9 +179,9 @@ export function KioskBagDrop() {
 
   if (step === "weighing") {
     return (
-      <KioskFrame stepBadge="Шаг 2 из 2">
-        <h1 className="kiosk-title">Взвешивание и сверка данных…</h1>
-        <p className="kiosk-sub">Не убирайте багаж с ленты</p>
+      <KioskFrame stepBadge={t("Шаг {n} из 2", { n: 2 })}>
+        <h1 className="kiosk-title">{t("Взвешивание и сверка данных…")}</h1>
+        <p className="kiosk-sub">{t("Не убирайте багаж с ленты")}</p>
       </KioskFrame>
     );
   }
@@ -184,16 +189,16 @@ export function KioskBagDrop() {
   if (step === "success" && drop && lookup) {
     const isGroup = lookup.members.length > 1;
     return (
-      <KioskFrame flightLabel={lookup.flight.flightNumber} stepBadge="Шаг 2 из 2">
-        <h1 className="kiosk-title success">{isGroup ? "Поздравляем! Весь багаж сдан!" : "Поздравляем! Ваш багаж сдан!"}</h1>
+      <KioskFrame flightLabel={lookup.flight.flightNumber} stepBadge={t("Шаг {n} из 2", { n: 2 })}>
+        <h1 className="kiosk-title success">{isGroup ? t("Поздравляем! Весь багаж сдан!") : t("Поздравляем! Ваш багаж сдан!")}</h1>
         <div className="kiosk-desk-callout">
-          <div className="kiosk-desk-callout-num">№ {drop.bagDropDesk}</div>
-          <div className="kiosk-desk-callout-label">стойка отправки багажа</div>
+          <div className="kiosk-desk-callout-num">{t("№ {n}", { n: drop.bagDropDesk })}</div>
+          <div className="kiosk-desk-callout-label">{t("стойка отправки багажа")}</div>
         </div>
-        <p className="kiosk-instruction">Проходите на посадку по указателям к вашему выходу.</p>
+        <p className="kiosk-instruction">{t("Проходите на посадку по указателям к вашему выходу.")}</p>
         <div className="kiosk-card-stack">
           <Link to="/kiosk/bag-drop" className="kiosk-card md">
-            Сдать багаж другой брони
+            {t("Сдать багаж другой брони")}
           </Link>
         </div>
       </KioskFrame>

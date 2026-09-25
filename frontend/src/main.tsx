@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import "./styles.css";
 import { App } from "./App";
 import { TabsProvider } from "./tabs";
@@ -14,6 +14,7 @@ import { DesktopNotificationsProvider } from "./desktopNotifications";
 import { ShortcutsProvider } from "./useShortcuts";
 import { ShortcutHintsProvider } from "./shortcutHints";
 import { LanguageProvider } from "./i18n";
+import { KioskLanguageProvider } from "./kioskI18n";
 import { Login } from "./pages/Login";
 import { Dashboard } from "./pages/Dashboard";
 import { Search } from "./pages/Search";
@@ -53,8 +54,10 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
                               {/* Passenger-facing self-service kiosk — no login (there's no agent
                                   at an unattended terminal), scoped to its own /api/kiosk
                                   endpoints rather than the agent check-in API. */}
-                              <Route path="/kiosk" element={<KioskCheckIn />} />
-                              <Route path="/kiosk/bag-drop" element={<KioskBagDrop />} />
+                              <Route element={<KioskLanguageProvider><Outlet /></KioskLanguageProvider>}>
+                                <Route path="/kiosk" element={<KioskCheckIn />} />
+                                <Route path="/kiosk/bag-drop" element={<KioskBagDrop />} />
+                              </Route>
                               <Route element={<RequireAuth />}>
                                 {/* Standalone — no TopTabs/SideDrawer chrome, since it's meant to be
                                     opened in its own browser tab (see TopTabs' Help button) rather

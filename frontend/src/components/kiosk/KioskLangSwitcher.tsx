@@ -1,17 +1,20 @@
-import { useState } from "react";
+import { KioskLang, useKioskLanguage } from "../../kioskI18n";
 
-const LANGS = ["RU", "EN", "中文"] as const;
+const LANGS: { code: KioskLang; label: string }[] = [
+  { code: "ru", label: "RU" },
+  { code: "en", label: "EN" },
+  { code: "zh", label: "中文" },
+];
 
-/** Cosmetic per the design spec — only RU is actually wired to content right now (no i18n plumbing for the kiosk yet); EN/中文 are visually selectable but don't change any text. */
 export function KioskLangSwitcher() {
-  const [lang, setLang] = useState<(typeof LANGS)[number]>("RU");
+  const { lang, setLang } = useKioskLanguage();
   return (
     <div className="kiosk-lang-switcher">
       {LANGS.map((l, i) => (
-        <span key={l} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <span key={l.code} style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {i > 0 && <span>|</span>}
-          <button type="button" className={lang === l ? "active" : ""} onClick={() => setLang(l)}>
-            {l}
+          <button type="button" className={lang === l.code ? "active" : ""} onClick={() => setLang(l.code)}>
+            {l.label}
           </button>
         </span>
       ))}

@@ -4,6 +4,7 @@ import { KioskFrame } from "../../components/kiosk/KioskFrame";
 import { KioskLangSwitcher } from "../../components/kiosk/KioskLangSwitcher";
 import { FlameIcon, GasCylinderIcon, LiquidIcon, ToxicIcon, WeaponIcon } from "../../components/kiosk/KioskRuleIcons";
 import { SeatMapGrid } from "../../components/SeatMapGrid";
+import { useKioskLanguage } from "../../kioskI18n";
 import { CheckinResult, kioskApi, LookupResult, PartyMember, SeatCell } from "../../kioskApi";
 
 type Step = "welcome" | "rules" | "lookup" | "found" | "seats" | "confirm" | "baggage" | "success";
@@ -29,6 +30,7 @@ function randomWeight(): number {
 }
 
 export function KioskCheckIn() {
+  const { t } = useKioskLanguage();
   const [step, setStep] = useState<Step>("welcome");
   const [pnr, setPnr] = useState("");
   const [surname, setSurname] = useState("");
@@ -168,12 +170,12 @@ export function KioskCheckIn() {
   // ---- Screen 1: Welcome ----
   if (step === "welcome") {
     return (
-      <KioskFrame terminal="Терминал C">
+      <KioskFrame>
         <KioskLangSwitcher />
-        <h1 className="kiosk-title">Добро пожаловать в киоск регистрации пассажиров на рейс</h1>
-        <div className="kiosk-card-stack">
+        <h1 className="kiosk-title">{t("Добро пожаловать в киоск регистрации пассажиров на рейс")}</h1>
+        <div className="kiosk-card-stack kiosk-card-stack-top">
           <button type="button" className="kiosk-card lg primary" onClick={() => setStep("rules")}>
-            Продолжить
+            {t("Продолжить")}
           </button>
         </div>
       </KioskFrame>
@@ -184,23 +186,23 @@ export function KioskCheckIn() {
   if (step === "rules") {
     return (
       <KioskFrame flightLabel={lookup?.flight.flightNumber}>
-        <h1 className="kiosk-title">Что запрещено к провозу</h1>
+        <h1 className="kiosk-title">{t("Что запрещено к провозу")}</h1>
         <ul className="kiosk-rules-list">
           {PROHIBITED.map(({ icon: Icon, label }) => (
             <li key={label}>
               <span className="kiosk-rule-icon">
                 <Icon />
               </span>
-              <span className="label">{label}</span>
+              <span className="label">{t(label)}</span>
             </li>
           ))}
         </ul>
         <div className="kiosk-card-stack">
           <button type="button" className="kiosk-card md primary" onClick={() => setStep("lookup")}>
-            Начать регистрацию
+            {t("Начать регистрацию")}
           </button>
           <button type="button" className="kiosk-card sm" onClick={() => setStep("welcome")}>
-            Назад
+            {t("Назад")}
           </button>
         </div>
       </KioskFrame>
@@ -212,22 +214,31 @@ export function KioskCheckIn() {
   // styled in the same system. ----
   if (step === "lookup") {
     return (
-      <KioskFrame stepBadge="Шаг 1 из 3">
-        <h1 className="kiosk-title">Найдите вашу бронь</h1>
-        <p className="kiosk-sub">Введите код бронирования и фамилию любого пассажира — если летите группой, зарегистрируем всех сразу</p>
+      <KioskFrame stepBadge={t("Шаг {n} из 3", { n: 1 })}>
+        <h1 className="kiosk-title">{t("Найдите вашу бронь")}</h1>
+        <p className="kiosk-sub">
+          {t("Введите код бронирования и фамилию любого пассажира — если летите группой, зарегистрируем всех сразу")}
+        </p>
         <form onSubmit={submitLookup}>
-          <div className="kiosk-field-label">Код бронирования (PNR)</div>
-          <input className="kiosk-field" value={pnr} onChange={(e) => setPnr(e.target.value.toUpperCase())} placeholder="Например, ABC123" autoFocus maxLength={10} />
-          <div className="kiosk-field-label">Фамилия</div>
+          <div className="kiosk-field-label">{t("Код бронирования (PNR)")}</div>
+          <input
+            className="kiosk-field"
+            value={pnr}
+            onChange={(e) => setPnr(e.target.value.toUpperCase())}
+            placeholder={t("Например, ABC123")}
+            autoFocus
+            maxLength={10}
+          />
+          <div className="kiosk-field-label">{t("Фамилия")}</div>
           <input className="kiosk-field" value={surname} onChange={(e) => setSurname(e.target.value.toUpperCase())} placeholder="IVANOV" maxLength={40} />
           {error && <div className="kiosk-error">{error}</div>}
           <div className="kiosk-card-stack">
             <button type="submit" className="kiosk-card md primary" disabled={loading || !pnr.trim() || !surname.trim()}>
               {loading && <span className="kiosk-spinner-dark" />}
-              {loading ? "Ищем…" : "Найти бронь"}
+              {loading ? t("Ищем…") : t("Найти бронь")}
             </button>
             <button type="button" className="kiosk-card sm" onClick={() => setStep("rules")}>
-              Назад
+              {t("Назад")}
             </button>
           </div>
         </form>
@@ -240,15 +251,15 @@ export function KioskCheckIn() {
     if (queue.length === 0) {
       const anyBags = lookup.members.find((m) => m.bagTags.length > 0 && !m.bagDroppedAt);
       return (
-        <KioskFrame flightLabel={lookup.flight.flightNumber} stepBadge="Шаг 1 из 3">
-          <h1 className="kiosk-title">На рейс {lookup.flight.flightNumber} уже зарегистрированы все пассажиры этой брони</h1>
+        <KioskFrame flightLabel={lookup.flight.flightNumber} stepBadge={t("Шаг {n} из 3", { n: 1 })}>
+          <h1 className="kiosk-title">{t("На рейс {flight} уже зарегистрированы все пассажиры этой брони", { flight: lookup.flight.flightNumber })}</h1>
           <div className="kiosk-found-list">
             {lookup.members.map((m) => (
               <div className="kiosk-found-row" key={m.passenger.id}>
                 <span className="kiosk-found-dot" />
                 <div>
                   <div className="kiosk-found-name">{fullName(m.passenger)}</div>
-                  <div className="kiosk-found-sub">Место {m.passenger.seat}</div>
+                  <div className="kiosk-found-sub">{t("Место {seat}", { seat: m.passenger.seat ?? "" })}</div>
                 </div>
               </div>
             ))}
@@ -256,38 +267,40 @@ export function KioskCheckIn() {
           <div className="kiosk-card-stack">
             {anyBags && (
               <Link to={`/kiosk/bag-drop?pnr=${anyBags.passenger.record_locator}&surname=${anyBags.passenger.surname}`} className="kiosk-card md primary">
-                Сдать багаж
+                {t("Сдать багаж")}
               </Link>
             )}
             <button type="button" className="kiosk-card sm" onClick={resetAll}>
-              Назад
+              {t("Назад")}
             </button>
           </div>
         </KioskFrame>
       );
     }
     return (
-      <KioskFrame flightLabel={lookup.flight.flightNumber} stepBadge="Шаг 1 из 3">
-        <p className="kiosk-flight-line">Ваш рейс {lookup.flight.flightNumber}</p>
+      <KioskFrame flightLabel={lookup.flight.flightNumber} stepBadge={t("Шаг {n} из 3", { n: 1 })}>
+        <p className="kiosk-flight-line">{t("Ваш рейс {flight}", { flight: lookup.flight.flightNumber })}</p>
         <div className="kiosk-found-list">
           {lookup.members.map((m) => (
             <div className="kiosk-found-row" key={m.passenger.id}>
               <span className="kiosk-found-dot" />
               <div>
                 <div className="kiosk-found-name">{fullName(m.passenger)}</div>
-                {m.passenger.checkin_status === "CHECKED_IN" && <div className="kiosk-found-sub">Уже зарегистрирован(а) · место {m.passenger.seat}</div>}
+                {m.passenger.checkin_status === "CHECKED_IN" && (
+                  <div className="kiosk-found-sub">{t("Уже зарегистрирован(а) · место {seat}", { seat: m.passenger.seat ?? "" })}</div>
+                )}
               </div>
             </div>
           ))}
         </div>
-        <p className="kiosk-sub">Теперь вы можете перейти к выбору мест в салоне самолёта</p>
+        <p className="kiosk-sub">{t("Теперь вы можете перейти к выбору мест в салоне самолёта")}</p>
         <div className="kiosk-card-stack">
           <button type="button" className="kiosk-card md primary" onClick={proceedToSeats} disabled={loading}>
             {loading && <span className="kiosk-spinner-dark" />}
-            Перейти к выбору мест
+            {t("Перейти к выбору мест")}
           </button>
           <button type="button" className="kiosk-card sm" onClick={resetAll}>
-            Назад
+            {t("Назад")}
           </button>
         </div>
       </KioskFrame>
@@ -301,8 +314,8 @@ export function KioskCheckIn() {
     const ineligible = new Set([...occupied, ...takenByOthers]);
     const allPicked = queue.every((m) => seatPicks[m.passenger.id]);
     return (
-      <KioskFrame flightLabel={lookup.flight.flightNumber} stepBadge="Шаг 2 из 3">
-        <h1 className="kiosk-title alt">Выбор места</h1>
+      <KioskFrame flightLabel={lookup.flight.flightNumber} stepBadge={t("Шаг {n} из 3", { n: 2 })}>
+        <h1 className="kiosk-title alt">{t("Выбор места")}</h1>
         <div className="kiosk-pax-tabs">
           {queue.map((m) => (
             <button
@@ -323,15 +336,17 @@ export function KioskCheckIn() {
             )}
           </div>
         </div>
-        <p className="kiosk-seatmap-hint">Выберите места в салоне самолёта. После этого вы сможете зарегистрироваться на рейс, а затем — оформить багаж</p>
+        <p className="kiosk-seatmap-hint">
+          {t("Выберите места в салоне самолёта. После этого вы сможете зарегистрироваться на рейс, а затем — оформить багаж")}
+        </p>
         {error && <div className="kiosk-error">{error}</div>}
         <div className="kiosk-card-stack">
           <button type="button" className="kiosk-card md primary" onClick={confirmCheckinAll} disabled={!allPicked || loading}>
             {loading && <span className="kiosk-spinner-dark" />}
-            {loading ? "Регистрируем…" : "Зарегистрировать"}
+            {loading ? t("Регистрируем…") : t("Зарегистрировать")}
           </button>
           <button type="button" className="kiosk-card sm" onClick={() => setStep("found")}>
-            Назад
+            {t("Назад")}
           </button>
         </div>
       </KioskFrame>
@@ -341,24 +356,22 @@ export function KioskCheckIn() {
   // ---- Screen 6: confirmation ----
   if (step === "confirm" && checkinResults.length > 0) {
     return (
-      <KioskFrame flightLabel={checkinResults[0].flight.flightNumber} stepBadge="Шаг 3 из 3">
-        <h1 className="kiosk-title alt">На рейс {checkinResults[0].flight.flightNumber} зарегистрированы:</h1>
+      <KioskFrame flightLabel={checkinResults[0].flight.flightNumber} stepBadge={t("Шаг {n} из 3", { n: 3 })}>
+        <h1 className="kiosk-title alt">{t("На рейс {flight} зарегистрированы:", { flight: checkinResults[0].flight.flightNumber })}</h1>
         <div className="kiosk-confirm-list">
           {checkinResults.map((r) => (
             <div className="kiosk-confirm-row" key={r.passenger.id}>
               <div className="kiosk-confirm-name">{fullName(r.passenger)}</div>
-              <div className="kiosk-confirm-seat">Место {r.passenger.seat}</div>
+              <div className="kiosk-confirm-seat">{t("Место {seat}", { seat: r.passenger.seat ?? "" })}</div>
             </div>
           ))}
         </div>
         {checkinWarnings.length > 0 && (
-          <div className="kiosk-error">
-            Не удалось зарегистрировать: {checkinWarnings.join("; ")}
-          </div>
+          <div className="kiosk-error">{t("Не удалось зарегистрировать: {list}", { list: checkinWarnings.join("; ") })}</div>
         )}
         <div className="kiosk-card-stack">
           <button type="button" className="kiosk-card md primary" onClick={goToBaggage}>
-            Перейти к регистрации багажа
+            {t("Перейти к регистрации багажа")}
           </button>
         </div>
       </KioskFrame>
@@ -369,20 +382,22 @@ export function KioskCheckIn() {
   if (step === "baggage" && checkinResults[bagIndex]) {
     const current = checkinResults[bagIndex];
     const isLast = bagIndex + 1 >= checkinResults.length;
+    const stepBadge =
+      t("Шаг {n} из 3", { n: 3 }) + (checkinResults.length > 1 ? ` · ${bagIndex + 1}/${checkinResults.length}` : "");
     return (
-      <KioskFrame flightLabel={current.flight.flightNumber} stepBadge={`Шаг 3 из 3${checkinResults.length > 1 ? ` · ${bagIndex + 1}/${checkinResults.length}` : ""}`}>
-        <h1 className="kiosk-title">Регистрация багажа</h1>
+      <KioskFrame flightLabel={current.flight.flightNumber} stepBadge={stepBadge}>
+        <h1 className="kiosk-title">{t("Регистрация багажа")}</h1>
         <p className="kiosk-instruction">
           {checkinResults.length > 1 && <>{fullName(current.passenger)}. </>}
-          Поставьте одно место вашего багажа на платформу слева от дисплея
+          {t("Поставьте одно место вашего багажа на платформу слева от дисплея")}
         </p>
         {bagWeights.length > 0 && (
           <div className="kiosk-bag-weight-list">
             {bagWeights.map((w, i) => (
               <div className="kiosk-bag-weight-card" key={i}>
-                <span className="kiosk-bag-weight-value">{w} кг</span>
+                <span className="kiosk-bag-weight-value">{t("{w} кг", { w })}</span>
                 <button type="button" className="kiosk-bag-weight-remove" onClick={() => setBagWeights((ws) => ws.filter((_, idx) => idx !== i))}>
-                  Удалить
+                  {t("Удалить")}
                 </button>
               </div>
             ))}
@@ -391,11 +406,17 @@ export function KioskCheckIn() {
         {error && <div className="kiosk-error">{error}</div>}
         <div className="kiosk-card-stack">
           <button type="button" className="kiosk-card md" onClick={() => setBagWeights((ws) => [...ws, randomWeight()])} disabled={bagWeights.length >= 9}>
-            Добавить место багажа
+            {t("Добавить место багажа")}
           </button>
           <button type="button" className="kiosk-card md primary" onClick={printBagsAndAdvance} disabled={loading}>
             {loading && <span className="kiosk-spinner-dark" />}
-            {loading ? "Печатаем…" : bagWeights.length > 0 ? "Распечатать багажные бирки" : isLast ? "Без багажа — завершить" : "Без багажа — далее"}
+            {loading
+              ? t("Печатаем…")
+              : bagWeights.length > 0
+              ? t("Распечатать багажные бирки")
+              : isLast
+              ? t("Без багажа — завершить")
+              : t("Без багажа — далее")}
           </button>
         </div>
       </KioskFrame>
@@ -406,17 +427,17 @@ export function KioskCheckIn() {
   if (step === "success") {
     return (
       <KioskFrame flightLabel={checkinResults[0]?.flight.flightNumber}>
-        <h1 className="kiosk-title success">Счастливого полёта!</h1>
+        <h1 className="kiosk-title success">{t("Счастливого полёта!")}</h1>
         {allBagTags.length > 0 && (
           <>
-            <div className="kiosk-tags-label">Багажные бирки:</div>
+            <div className="kiosk-tags-label">{t("Багажные бирки:")}</div>
             {allBagTags.map((tag) => (
               <div key={tag} className="kiosk-tag-card">
                 {tag}
               </div>
             ))}
             <p className="kiosk-instruction" style={{ marginTop: 20 }}>
-              Теперь вам следует отнести багаж на ленту транспортёра
+              {t("Теперь вам следует отнести багаж на ленту транспортёра")}
             </p>
             <img
               className="kiosk-belt-photo"
@@ -425,10 +446,10 @@ export function KioskCheckIn() {
             />
           </>
         )}
-        {allBagTags.length === 0 && <p className="kiosk-instruction">Багажа нет — проходите к выходу на посадку по указателям.</p>}
+        {allBagTags.length === 0 && <p className="kiosk-instruction">{t("Багажа нет — проходите к выходу на посадку по указателям.")}</p>}
         <div className="kiosk-card-stack">
           <button type="button" className="kiosk-card md primary" onClick={resetAll}>
-            Закончить сеанс регистрации
+            {t("Закончить сеанс регистрации")}
           </button>
         </div>
       </KioskFrame>

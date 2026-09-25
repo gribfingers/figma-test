@@ -3730,7 +3730,9 @@ tr.row-hover { cursor: pointer; }
   --k-font-title: "Manrope", var(--font);
   --k-font: "Rubik", var(--font);
   min-height: 100svh;
-  background: linear-gradient(180deg, #f7fbff 0%, #eef4fa 55%, #f2f7fc 100%);
+  /* Dark-gray backdrop outside the 420px frame — the gradient/cloud sky lives only on
+     .kiosk-frame itself (see below), not across the full viewport. */
+  background: #242428;
   display: flex;
   justify-content: center;
   font-family: var(--k-font);
@@ -3746,6 +3748,7 @@ tr.row-hover { cursor: pointer; }
   box-sizing: border-box;
   position: relative;
   overflow: hidden;
+  background: linear-gradient(180deg, #f7fbff 0%, #eef4fa 55%, #f2f7fc 100%);
 }
 /* Decorative cloud background — layered soft ellipses, denser/more opaque
    toward the bottom, fainter toward the top, per spec. Pure CSS (no image
@@ -3782,6 +3785,8 @@ tr.row-hover { cursor: pointer; }
 
 /* ---- Header navigation ---- */
 .kiosk-navbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-shrink: 0; }
+/* No flight known yet — nothing on the left to balance against, so center the time/terminal group. */
+.kiosk-navbar.kiosk-navbar-centered { justify-content: center; }
 .kiosk-navbar-flight { font-family: var(--k-font); font-weight: 700; font-size: 14px; color: var(--k-ink); }
 .kiosk-navbar-right { display: flex; align-items: center; gap: 10px; }
 .kiosk-navbar-time { font-family: var(--k-font); font-weight: 600; font-size: 14px; color: var(--k-blue); font-variant-numeric: tabular-nums; }
@@ -3832,6 +3837,9 @@ tr.row-hover { cursor: pointer; }
   font-weight: 500;
   color: var(--k-ink);
 }
+/* Overrides the app-wide `button:hover:not(:disabled) { background: var(--accent-hover) }` rule,
+   which otherwise paints a blue fill behind these language buttons on hover. */
+.kiosk-lang-switcher button:hover:not(:disabled) { background: none; }
 .kiosk-lang-switcher button.active { font-weight: 700; color: var(--k-blue); font-size: 19px; }
 .kiosk-lang-switcher span { color: #94a3b8; font-weight: 400; font-size: 18px; }
 
@@ -3873,13 +3881,28 @@ tr.row-hover { cursor: pointer; }
   flex-shrink: 0;
 }
 .kiosk-card:active:not(:disabled) { transform: scale(0.98); }
-.kiosk-card:hover:not(:disabled) { border-color: var(--k-blue); }
+/* The app-wide `button:hover:not(:disabled) { background: var(--accent-hover) }` rule (styles.css
+   ~line 1166) outranks a bare `.kiosk-card:hover` on `background` (more specific pseudo-classes),
+   so every kiosk-card button was picking up a stray blue hover fill — pin the background back
+   explicitly rather than just the border-color. */
+.kiosk-card:hover:not(:disabled) { background: #fff; border-color: var(--k-blue); }
 .kiosk-card:disabled { opacity: 0.45; cursor: default; transform: none; }
 .kiosk-card.lg { min-height: 135px; justify-content: center; text-align: center; font-size: 18px; font-weight: 700; }
 .kiosk-card.md { min-height: 106px; justify-content: center; text-align: center; font-size: 16px; font-weight: 700; }
 .kiosk-card.sm { min-height: 58px; justify-content: center; text-align: center; font-size: 15px; font-weight: 600; color: var(--k-muted); }
 .kiosk-card.primary { border-color: var(--k-blue); background: linear-gradient(180deg, #fff, var(--k-blue-soft)); color: var(--k-blue-dark); }
+.kiosk-card.primary:hover:not(:disabled) { background: linear-gradient(180deg, #fff, var(--k-blue-soft)); }
+/* Welcome screen's "Continue" — flat white card, not the blue-gradient primary look. */
+.kiosk-card.lg.primary {
+  background: #fff;
+  border-color: var(--k-blue-border);
+  color: var(--k-ink);
+  box-shadow: 0 10px 24px -10px rgba(15, 23, 42, 0.04), 0 1px 2px 0 rgba(15, 23, 42, 0.03);
+}
+.kiosk-card.lg.primary:hover:not(:disabled) { background: #fff; border-color: var(--k-blue-border); }
 .kiosk-card-stack { display: flex; flex-direction: column; gap: 14px; margin-top: auto; padding-top: 24px; flex-shrink: 0; }
+/* Welcome screen only — the button sits right under the greeting instead of pinned to the bottom. */
+.kiosk-card-stack.kiosk-card-stack-top { margin-top: 32px; }
 .kiosk-spinner-dark { width: 18px; height: 18px; border-radius: 50%; border: 3px solid rgba(37, 99, 235, 0.2); border-top-color: var(--k-blue); animation: kiosk-spin 700ms linear infinite; flex-shrink: 0; }
 @keyframes kiosk-spin { to { transform: rotate(360deg); } }
 
@@ -4154,5 +4177,3 @@ tr.row-hover { cursor: pointer; }
 
 .kiosk-sub { font-family: var(--k-font); font-size: 13px; color: var(--k-muted); text-align: center; margin: 0 0 20px; }
 .kiosk-spacer { flex: 1; }
-.kiosk-nav-link { display: inline-block; margin-bottom: 10px; color: rgba(15, 23, 42, 0.35); font-family: var(--k-font); font-size: 12px; font-weight: 600; text-decoration: none; flex-shrink: 0; }
-.kiosk-nav-link:hover { color: rgba(15, 23, 42, 0.7); }
