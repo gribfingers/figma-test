@@ -3881,27 +3881,27 @@ tr.row-hover { cursor: pointer; }
   flex-shrink: 0;
 }
 .kiosk-card:active:not(:disabled) { transform: scale(0.98); }
-/* The app-wide `button:hover:not(:disabled) { background: var(--accent-hover) }` rule (styles.css
-   ~line 1166) outranks a bare `.kiosk-card:hover` on `background` (more specific pseudo-classes),
-   so every kiosk-card button was picking up a stray blue hover fill — pin the background back
-   explicitly rather than just the border-color. */
-.kiosk-card:hover:not(:disabled) { background: #fff; border-color: var(--k-blue); }
+/* This is a touchscreen kiosk — taps, not mouse hover — so :hover should never change how anything
+   looks. It still has to be declared, though: the app-wide `button:hover:not(:disabled) { background:
+   var(--accent-hover) }` rule (styles.css ~line 1166) outranks a bare `.kiosk-card:hover` on
+   `background` (more specific pseudo-classes), so every kiosk-card button would otherwise pick up a
+   stray blue hover fill. Pinning it back to the resting value neutralizes that instead of adding a
+   real hover effect. */
+.kiosk-card:hover:not(:disabled) { background: #fff; border-color: var(--k-blue-border); }
 .kiosk-card:disabled { opacity: 0.45; cursor: default; transform: none; }
 .kiosk-card.lg { min-height: 135px; justify-content: center; text-align: center; font-size: 18px; font-weight: 700; }
 .kiosk-card.md { min-height: 106px; justify-content: center; text-align: center; font-size: 16px; font-weight: 700; }
 .kiosk-card.sm { min-height: 58px; justify-content: center; text-align: center; font-size: 15px; font-weight: 600; color: var(--k-muted); }
-.kiosk-card.primary { border-color: var(--k-blue); background: linear-gradient(180deg, #fff, var(--k-blue-soft)); color: var(--k-blue-dark); }
-.kiosk-card.primary:hover:not(:disabled) { background: linear-gradient(180deg, #fff, var(--k-blue-soft)); }
-/* Welcome screen's "Continue" — flat white card, not the blue-gradient primary look. */
-.kiosk-card.lg.primary {
+/* Primary cards are flat white, not blue-gradient — same standard card look as everything else,
+   just used to mark the main action on a screen. */
+.kiosk-card.primary {
   background: #fff;
   border-color: var(--k-blue-border);
   color: var(--k-ink);
   box-shadow: 0 10px 24px -10px rgba(15, 23, 42, 0.04), 0 1px 2px 0 rgba(15, 23, 42, 0.03);
 }
-.kiosk-card.lg.primary:hover:not(:disabled) { background: #fff; border-color: var(--k-blue-border); }
 .kiosk-card-stack { display: flex; flex-direction: column; gap: 14px; margin-top: auto; padding-top: 24px; flex-shrink: 0; }
-/* Welcome screen only — the button sits right under the greeting instead of pinned to the bottom. */
+/* Buttons sit right under the screen's content instead of pinned to the bottom. */
 .kiosk-card-stack.kiosk-card-stack-top { margin-top: 32px; }
 .kiosk-spinner-dark { width: 18px; height: 18px; border-radius: 50%; border: 3px solid rgba(37, 99, 235, 0.2); border-top-color: var(--k-blue); animation: kiosk-spin 700ms linear infinite; flex-shrink: 0; }
 @keyframes kiosk-spin { to { transform: rotate(360deg); } }
@@ -4024,6 +4024,8 @@ tr.row-hover { cursor: pointer; }
   text-align: left;
 }
 .kiosk-pax-tab.active { background: var(--k-blue-tab); }
+.kiosk-pax-tab:hover:not(:disabled) { background: none; }
+.kiosk-pax-tab.active:hover:not(:disabled) { background: var(--k-blue-tab); }
 .kiosk-pax-tab-name { font-family: var(--k-font); font-weight: 500; font-size: 18px; color: #000; }
 .kiosk-pax-seat-badge {
   min-width: 42px;
@@ -4094,7 +4096,7 @@ tr.row-hover { cursor: pointer; }
   color: var(--k-muted);
   cursor: pointer;
 }
-.kiosk-bag-weight-remove:hover { color: #b91c1c; border-color: #fca5a5; }
+.kiosk-bag-weight-remove:hover:not(:disabled) { background: #fff; color: var(--k-muted); border-color: var(--k-blue-border); }
 
 /* ---- Bag tags (success screen) ---- */
 .kiosk-tags-label { font-family: var(--k-font); font-weight: 500; font-size: 19px; color: #000; margin: 0 0 12px; }
@@ -4154,7 +4156,7 @@ tr.row-hover { cursor: pointer; }
   cursor: pointer;
   transition: border-color 100ms ease, background 100ms ease;
 }
-.kiosk-party-row:hover:not(.done) { border-color: var(--k-blue); }
+.kiosk-party-row:hover:not(.done) { border-color: var(--k-blue-border); }
 .kiosk-party-row.selected { border-color: var(--k-blue); background: var(--k-blue-soft); }
 .kiosk-party-row.done { cursor: default; background: #f8fafc; }
 .kiosk-party-checkbox {

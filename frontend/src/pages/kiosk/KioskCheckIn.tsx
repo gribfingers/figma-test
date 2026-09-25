@@ -197,7 +197,7 @@ export function KioskCheckIn() {
             </li>
           ))}
         </ul>
-        <div className="kiosk-card-stack">
+        <div className="kiosk-card-stack kiosk-card-stack-top">
           <button type="button" className="kiosk-card md primary" onClick={() => setStep("lookup")}>
             {t("Начать регистрацию")}
           </button>
