@@ -96,7 +96,7 @@ kioskRouter.get("/lookup", (req, res) => {
   if (eticket) {
     anchor = db
       .prepare(
-        `SELECT p.*, f.flight_number, f.carrier_code, f.origin, f.destination, f.std, f.status as flight_status
+        `SELECT p.*, f.flight_number, f.carrier_code, f.origin, f.destination, f.std, f.status as flight_status, f.ops_status
          FROM passengers p JOIN flights f ON f.id = p.flight_id
          WHERE UPPER(p.ticket_number) = UPPER(?)`
       )
@@ -104,7 +104,7 @@ kioskRouter.get("/lookup", (req, res) => {
   } else if (pnr && surname) {
     anchor = db
       .prepare(
-        `SELECT p.*, f.flight_number, f.carrier_code, f.origin, f.destination, f.std, f.status as flight_status
+        `SELECT p.*, f.flight_number, f.carrier_code, f.origin, f.destination, f.std, f.status as flight_status, f.ops_status
          FROM passengers p JOIN flights f ON f.id = p.flight_id
          WHERE UPPER(p.record_locator) = UPPER(?) AND UPPER(p.surname) = UPPER(?)`
       )
@@ -114,6 +114,12 @@ kioskRouter.get("/lookup", (req, res) => {
   }
 
   if (!anchor) return res.status(404).json({ error: "Booking not found — check your reference and last name" });
+
+  // Same guard as POST /:passengerId/checkin — surface "check-in is closed" as soon as we know
+  // the flight, not only after the passenger has already picked seats and tried to submit.
+  if (anchor.flight_status === "CLOSED" || anchor.flight_status === "DEPARTED" || isFlightDeparted(anchor)) {
+    return res.status(409).json({ error: `Check-in is closed for flight ${anchor.carrier_code}${anchor.flight_number}` });
+  }
 
   const party = loadParty(anchor.record_locator, anchor.flight_id);
   res.json({ members: party.map(memberJson), flight: flightLabel(anchor) });

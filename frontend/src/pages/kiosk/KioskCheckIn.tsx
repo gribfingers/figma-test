@@ -364,13 +364,11 @@ export function KioskCheckIn() {
           {t("Выберите места в салоне самолёта. После этого вы сможете зарегистрироваться на рейс, а затем — оформить багаж")}
         </p>
         {error && <div className="kiosk-error">{error}</div>}
-        <div className="kiosk-card-stack kiosk-card-stack-top">
+        <div className="kiosk-card-stack">
           <button type="button" className="kiosk-card md primary" onClick={confirmCheckinAll} disabled={!allPicked || loading}>
             {loading && <span className="kiosk-spinner-dark" />}
             {loading ? t("Регистрируем…") : t("Зарегистрировать")}
           </button>
-        </div>
-        <div className="kiosk-card-stack">
           <button type="button" className="kiosk-card sm" onClick={() => setStep("found")}>
             {t("Назад")}
           </button>
