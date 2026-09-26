@@ -25,6 +25,11 @@ function yearsFromNow(n: number): string {
 function fullName(p: { surname: string; given_name: string }) {
   return `${p.surname}/${p.given_name}`;
 }
+/** Seats are stored/keyed as zero-padded "004C" so they sort and match correctly — strip the
+ * padding for anything shown to a passenger (e.g. "4C"). */
+function formatSeat(seat: string): string {
+  return seat.replace(/^0+(?=\d)/, "");
+}
 function randomWeight(): number {
   return 5 + Math.round(Math.random() * 23);
 }
@@ -259,7 +264,7 @@ export function KioskCheckIn() {
                 <span className="kiosk-found-dot" />
                 <div>
                   <div className="kiosk-found-name">{fullName(m.passenger)}</div>
-                  <div className="kiosk-found-sub">{t("Место {seat}", { seat: m.passenger.seat ?? "" })}</div>
+                  <div className="kiosk-found-sub">{t("Место {seat}", { seat: m.passenger.seat ? formatSeat(m.passenger.seat) : "" })}</div>
                 </div>
               </div>
             ))}
@@ -287,7 +292,9 @@ export function KioskCheckIn() {
               <div>
                 <div className="kiosk-found-name">{fullName(m.passenger)}</div>
                 {m.passenger.checkin_status === "CHECKED_IN" && (
-                  <div className="kiosk-found-sub">{t("Уже зарегистрирован(а) · место {seat}", { seat: m.passenger.seat ?? "" })}</div>
+                  <div className="kiosk-found-sub">
+                    {t("Уже зарегистрирован(а) · место {seat}", { seat: m.passenger.seat ? formatSeat(m.passenger.seat) : "" })}
+                  </div>
                 )}
               </div>
             </div>
@@ -325,7 +332,9 @@ export function KioskCheckIn() {
               onClick={() => setActivePaxId(m.passenger.id)}
             >
               <span className="kiosk-pax-tab-name">{fullName(m.passenger)}</span>
-              <span className={`kiosk-pax-seat-badge${seatPicks[m.passenger.id] ? "" : " empty"}`}>{seatPicks[m.passenger.id] ?? "—"}</span>
+              <span className={`kiosk-pax-seat-badge${seatPicks[m.passenger.id] ? "" : " empty"}`}>
+                {seatPicks[m.passenger.id] ? formatSeat(seatPicks[m.passenger.id]) : "—"}
+              </span>
             </button>
           ))}
         </div>
@@ -362,7 +371,7 @@ export function KioskCheckIn() {
           {checkinResults.map((r) => (
             <div className="kiosk-confirm-row" key={r.passenger.id}>
               <div className="kiosk-confirm-name">{fullName(r.passenger)}</div>
-              <div className="kiosk-confirm-seat">{t("Место {seat}", { seat: r.passenger.seat ?? "" })}</div>
+              <div className="kiosk-confirm-seat">{t("Место {seat}", { seat: r.passenger.seat ? formatSeat(r.passenger.seat) : "" })}</div>
             </div>
           ))}
         </div>

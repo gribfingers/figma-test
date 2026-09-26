@@ -4070,6 +4070,11 @@ tr.row-hover { cursor: pointer; }
   padding: 12px 0;
 }
 .kiosk-seatmap-scroll { overflow: auto; max-height: 46svh; }
+/* The shared seatmap's BUSINESS/ECONOMY section label sits right up against the sticky column-
+   header row (only 4px margin-top, styles.css ~line 1990) — barely visible in the base app's
+   fuller layout, but reads as cramped/overlapping in the kiosk's shorter, always-scrolled column.
+   Scoped to the kiosk only so the agent app's denser seatmap is unaffected. */
+.kiosk-seatmap-scroll .cabin-section-row { margin-top: 14px; }
 .kiosk-seatmap-hint { font-family: var(--k-font); font-weight: 400; font-size: 13px; color: var(--k-muted); text-align: center; margin: 0 0 20px; }
 
 /* ---- Confirmation list ---- */
