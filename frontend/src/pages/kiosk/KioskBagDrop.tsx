@@ -139,7 +139,7 @@ export function KioskBagDrop() {
             flight: lookup.flight.flightNumber,
           })}
         </p>
-        <div className="kiosk-card-stack">
+        <div className="kiosk-card-stack kiosk-card-stack-top">
           <Link to="/kiosk/bag-drop" className="kiosk-card md">
             {t("Начать заново")}
           </Link>
@@ -167,7 +167,7 @@ export function KioskBagDrop() {
         ))}
         {isGroup && <p className="kiosk-sub">{t("Всего мест багажа: {n}", { n: totalTags })}</p>}
         {error && <div className="kiosk-error">{error}</div>}
-        <div className="kiosk-card-stack">
+        <div className="kiosk-card-stack kiosk-card-stack-top">
           <button type="button" className="kiosk-card md primary" onClick={confirmDrop} disabled={loading}>
             {loading && <span className="kiosk-spinner-dark" />}
             {t("Багаж размещён на весах")}
@@ -196,7 +196,7 @@ export function KioskBagDrop() {
           <div className="kiosk-desk-callout-label">{t("стойка отправки багажа")}</div>
         </div>
         <p className="kiosk-instruction">{t("Проходите на посадку по указателям к вашему выходу.")}</p>
-        <div className="kiosk-card-stack">
+        <div className="kiosk-card-stack kiosk-card-stack-top">
           <Link to="/kiosk/bag-drop" className="kiosk-card md">
             {t("Сдать багаж другой брони")}
           </Link>

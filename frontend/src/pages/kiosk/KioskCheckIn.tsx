@@ -246,11 +246,13 @@ export function KioskCheckIn() {
           <div className="kiosk-field-label">{t("Фамилия")}</div>
           <input className="kiosk-field" value={surname} onChange={(e) => setSurname(e.target.value.toUpperCase())} placeholder="IVANOV" maxLength={40} />
           {error && <div className="kiosk-error">{error}</div>}
-          <div className="kiosk-card-stack">
+          <div className="kiosk-card-stack kiosk-card-stack-top">
             <button type="submit" className="kiosk-card md primary" disabled={loading || !pnr.trim() || !surname.trim()}>
               {loading && <span className="kiosk-spinner-dark" />}
               {loading ? t("Ищем…") : t("Найти бронь")}
             </button>
+          </div>
+          <div className="kiosk-card-stack">
             <button type="button" className="kiosk-card sm" onClick={() => setStep("rules")}>
               {t("Назад")}
             </button>
@@ -278,12 +280,14 @@ export function KioskCheckIn() {
               </div>
             ))}
           </div>
-          <div className="kiosk-card-stack">
-            {anyBags && (
+          {anyBags && (
+            <div className="kiosk-card-stack kiosk-card-stack-top">
               <Link to={`/kiosk/bag-drop?pnr=${anyBags.passenger.record_locator}&surname=${anyBags.passenger.surname}`} className="kiosk-card md primary">
                 {t("Сдать багаж")}
               </Link>
-            )}
+            </div>
+          )}
+          <div className="kiosk-card-stack">
             <button type="button" className="kiosk-card sm" onClick={resetAll}>
               {t("Назад")}
             </button>
@@ -310,11 +314,13 @@ export function KioskCheckIn() {
           ))}
         </div>
         <p className="kiosk-sub">{t("Теперь вы можете перейти к выбору мест в салоне самолёта")}</p>
-        <div className="kiosk-card-stack">
+        <div className="kiosk-card-stack kiosk-card-stack-top">
           <button type="button" className="kiosk-card md primary" onClick={proceedToSeats} disabled={loading}>
             {loading && <span className="kiosk-spinner-dark" />}
             {t("Перейти к выбору мест")}
           </button>
+        </div>
+        <div className="kiosk-card-stack">
           <button type="button" className="kiosk-card sm" onClick={resetAll}>
             {t("Назад")}
           </button>
@@ -358,11 +364,13 @@ export function KioskCheckIn() {
           {t("Выберите места в салоне самолёта. После этого вы сможете зарегистрироваться на рейс, а затем — оформить багаж")}
         </p>
         {error && <div className="kiosk-error">{error}</div>}
-        <div className="kiosk-card-stack">
+        <div className="kiosk-card-stack kiosk-card-stack-top">
           <button type="button" className="kiosk-card md primary" onClick={confirmCheckinAll} disabled={!allPicked || loading}>
             {loading && <span className="kiosk-spinner-dark" />}
             {loading ? t("Регистрируем…") : t("Зарегистрировать")}
           </button>
+        </div>
+        <div className="kiosk-card-stack">
           <button type="button" className="kiosk-card sm" onClick={() => setStep("found")}>
             {t("Назад")}
           </button>
@@ -387,7 +395,7 @@ export function KioskCheckIn() {
         {checkinWarnings.length > 0 && (
           <div className="kiosk-error">{t("Не удалось зарегистрировать: {list}", { list: checkinWarnings.join("; ") })}</div>
         )}
-        <div className="kiosk-card-stack">
+        <div className="kiosk-card-stack kiosk-card-stack-top">
           <button type="button" className="kiosk-card md primary" onClick={goToBaggage}>
             {t("Перейти к регистрации багажа")}
           </button>
@@ -422,7 +430,7 @@ export function KioskCheckIn() {
           </div>
         )}
         {error && <div className="kiosk-error">{error}</div>}
-        <div className="kiosk-card-stack">
+        <div className="kiosk-card-stack kiosk-card-stack-top">
           <button type="button" className="kiosk-card md" onClick={() => setBagWeights((ws) => [...ws, randomWeight()])} disabled={bagWeights.length >= 9}>
             {t("Добавить место багажа")}
           </button>
@@ -465,7 +473,7 @@ export function KioskCheckIn() {
           </>
         )}
         {allBagTags.length === 0 && <p className="kiosk-instruction">{t("Багажа нет — проходите к выходу на посадку по указателям.")}</p>}
-        <div className="kiosk-card-stack">
+        <div className="kiosk-card-stack kiosk-card-stack-top">
           <button type="button" className="kiosk-card md primary" onClick={resetAll}>
             {t("Закончить сеанс регистрации")}
           </button>
