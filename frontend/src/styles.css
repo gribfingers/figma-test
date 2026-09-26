@@ -3903,6 +3903,11 @@ tr.row-hover { cursor: pointer; }
 .kiosk-card-stack { display: flex; flex-direction: column; gap: 14px; margin-top: auto; padding-top: 24px; flex-shrink: 0; }
 /* Buttons sit right under the screen's content instead of pinned to the bottom. */
 .kiosk-card-stack.kiosk-card-stack-top { margin-top: 32px; }
+/* A <form> is a block box, not a flex item that grows — wrapping a .kiosk-card-stack in one (so its
+   submit button double as the Enter-key handler) breaks the flex chain from .kiosk-frame-body down,
+   so the stack's `margin-top: auto` no longer has any free space to consume and it stops pinning to
+   the bottom. Make the form itself a growing flex column so that chain continues through it. */
+.kiosk-form-fill { display: flex; flex-direction: column; flex: 1; }
 .kiosk-spinner-dark { width: 18px; height: 18px; border-radius: 50%; border: 3px solid rgba(37, 99, 235, 0.2); border-top-color: var(--k-blue); animation: kiosk-spin 700ms linear infinite; flex-shrink: 0; }
 @keyframes kiosk-spin { to { transform: rotate(360deg); } }
 

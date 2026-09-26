@@ -140,7 +140,14 @@ export function KioskCheckIn() {
     setCheckinResults(results);
     setCheckinWarnings(warnings);
     setLoading(false);
-    setStep("confirm");
+    if (results.length > 0) {
+      setStep("confirm");
+    } else {
+      // Every passenger failed to check in (e.g. a seat got taken in the meantime) — the confirm
+      // screen has nothing to show in that case, so stay put and surface the error instead of
+      // advancing to a step that would render blank.
+      setError(warnings.join("; "));
+    }
   }
 
   function goToBaggage() {
@@ -226,7 +233,7 @@ export function KioskCheckIn() {
         <p className="kiosk-sub">
           {t("Введите код бронирования и фамилию любого пассажира — если летите группой, зарегистрируем всех сразу")}
         </p>
-        <form onSubmit={submitLookup}>
+        <form onSubmit={submitLookup} className="kiosk-form-fill">
           <div className="kiosk-field-label">{t("Код бронирования (PNR)")}</div>
           <input
             className="kiosk-field"
