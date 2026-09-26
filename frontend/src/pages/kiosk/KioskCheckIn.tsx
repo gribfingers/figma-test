@@ -206,6 +206,8 @@ export function KioskCheckIn() {
           <button type="button" className="kiosk-card md primary" onClick={() => setStep("lookup")}>
             {t("Начать регистрацию")}
           </button>
+        </div>
+        <div className="kiosk-card-stack">
           <button type="button" className="kiosk-card sm" onClick={() => setStep("welcome")}>
             {t("Назад")}
           </button>
