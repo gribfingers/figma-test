@@ -3923,7 +3923,21 @@ tr.row-hover { cursor: pointer; }
   margin-bottom: 16px;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
 }
-.kiosk-field:focus { outline: none; border-color: var(--k-blue); box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12); }
+/* Touchscreen kiosk — no real mouse hover — so pin the border-color the app-wide
+   `input:hover, select:hover` rule would otherwise tint. */
+.kiosk-field:hover { border-color: var(--k-blue-border); }
+/* Re-pins padding/border-width/background explicitly — the app-wide `input:focus, select:focus`
+   rule (styles.css ~line 1138) is more specific than a bare `.kiosk-field` on those properties
+   (though not on border-color, which .kiosk-field:focus already overrides), and was otherwise
+   shrinking the field's padding from 16px/18px to 6px/9px on focus — the field visibly resized
+   every time focus moved between fields. */
+.kiosk-field:focus {
+  outline: none;
+  padding: 16px 18px;
+  border: 1.5px solid var(--k-blue);
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
 .kiosk-error {
   background: #fef2f2;
   color: #b91c1c;
